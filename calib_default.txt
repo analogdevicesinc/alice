@@ -1,0 +1,56 @@
+# Example M1K calibration file assuming perfect operation (no offset or gain errors).
+#
+# See https://wiki.analog.com/university/tools/m1k-calibration to create a
+# calibration file for a real device.
+
+# Channel A, measure V
+</>
+<0.0000, 0.0000>
+<2.5000, 2.5000>
+<\>
+
+# Channel A, measure I
+</>
+<0.0000, 0.0000>
+<0.1000, 0.1000>
+<-0.1000, -0.1000>
+<\>
+
+# Channel A, source V
+</>
+<0.0000, 0.0000>
+<2.5000, 2.5000>
+<\>
+
+# Channel A, source I
+</>
+<0.0000, 0.0000>
+<0.1000, 0.1000>
+<-0.1000, -0.1000>
+<\>
+
+# Channel B, measure V
+</>
+<0.0000, 0.0000>
+<2.5000, 2.5000>
+<\>
+
+# Channel B, measure I
+</>
+<0.0000, 0.0000>
+<0.1000, 0.1000>
+<-0.1000, -0.1000>
+<\>
+
+# Channel B, source V
+</>
+<0.0000, 0.0000>
+<2.5000, 2.5000>
+<\>
+
+# Channel B source I
+</>
+<0.0000, 0.0000>
+<0.1000, 0.1000>
+<-0.1000, -0.1000>
+<\>
