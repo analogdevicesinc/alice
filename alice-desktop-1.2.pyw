@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 alice-desktop 1.2.py(w) (2-22-2018)
+# ADALM1000 alice-desktop 1.2.py(w) (3-10-2018)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu.rework >= 1.0 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -33,8 +33,8 @@ try:
 except:
     pysmu_found = False
 #
-RevDate = "(22 Feb 2018)"
-Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.2.0/alice-desktop-1.2-setup.exe'
+RevDate = "(10 March 2018)"
+Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.2.1/alice-desktop-1.2-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
 R0lGODlhIAAgAHAAACH5BAEAAAIALAAAAAAgACAAgQAAAP///wAAAAAAAAJJhI+py+0PYwtBWkDp
@@ -72,6 +72,7 @@ GRHIA = 400                  # Height of the grid 400 default
 X0LIA = 37                    # Left top X value of grid
 Y0TIA = 25                    # Left top Y value of grid
 MouseX = MouseY = -10
+MouseCAV = MouseCAI = MouseCBV = MouseCBI = -10
 # Colors that can be modified
 COLORframes = "#000080"   # Color = "#rrggbb" rr=red gg=green bb=blue, Hexadecimal values 00 - ff
 COLORcanvas = "#000000"   # 100% black
@@ -1174,11 +1175,33 @@ def BSaveData():
 
     # open file to save data
     filename = asksaveasfilename(defaultextension = ".csv", filetypes=[("Comma Separated Values", "*.csv")])
-    DataFile = open(filename, 'a')
+    DataFile = open(filename, 'w')
     DataFile.write( 'Sample-#, CA-V, CA-I, CB-V, CB-I \n' )
     for index in range(len(VBuffA)):
         DataFile.write( str(index) + ', ' + str(VBuffA[index]) + ', ' + str(IBuffA[index]) + ', '
                         + str(VBuffB[index]) + ', ' + str(IBuffB[index]) + '\n')
+    DataFile.close()
+#
+def BSaveChannelData():
+    global SAMPLErate, VBuffA, VBuffB, IBuffA, IBuffB
+
+    # ask user for channel to save
+    Channel = askstring("Choose Channel", "CA-V, CB-V, CA-I or CB-I\n\nChannel:\n", initialvalue="CA-V")
+    if (Channel == None):         # If Cancel pressed, then None
+        return
+    # open file to save data
+    filename = asksaveasfilename(defaultextension = ".txt", filetypes=[("Text Columns", "*.txt")])
+    DataFile = open(filename, 'w')
+    for index in range(len(VBuffA)):
+        TimePnt = float((index+0.0)/SAMPLErate)
+        if Channel == "CA-V":
+            DataFile.write( str(TimePnt) + ', ' + str(VBuffA[index]) + '\n')
+        elif Channel == "CA-I":
+            DataFile.write( str(TimePnt) + ', ' + str(IBuffA[index]) + '\n')
+        elif Channel == "CB-V":
+            DataFile.write( str(TimePnt) + ', ' + str(VBuffB[index]) + '\n')
+        elif Channel == "CB-I":
+            DataFile.write( str(TimePnt) + ', ' + str(IBuffB[index]) + '\n')
     DataFile.close()
 #
 def BReadData():
@@ -1188,7 +1211,9 @@ def BReadData():
     filename = askopenfilename(defaultextension = ".csv", filetypes=[("CSV files", "*.csv")])
     try:
         CSVFile = open(filename)
-        csv_f = csv.reader(CSVFile)
+        dialect = csv.Sniffer().sniff(CSVFile.read(2048))
+        CSVFile.seek(0)
+        csv_f = csv.reader(CSVFile, dialect)
         VBuffA = []
         VBuffB = []
         IBuffA = []
@@ -3255,7 +3280,7 @@ def MakeTimeTrace():    # Make the traces
     global Tmathline, TMXline, TMYline
     global MathString, MathAxis, MathXString, MathYString, MathXAxis, MathYAxis
     global Triggerline, Triggersymbol, TgInput, TgEdge, HoldOff, HoldOffentry
-    global X0L, Y0T, GRW, GRH
+    global X0L, Y0T, GRW, GRH, MouseX, MouseY, MouseCAV, MouseCAI, MouseCBV, MouseCBI
     global Ymin, Ymax, Xmin, Xmax
     global SHOWsamples, ZOHold, AWGBMode
     global ShowC1_V, ShowC1_I, ShowC2_V, ShowC2_I
@@ -3568,6 +3593,11 @@ def MakeTimeTrace():    # Make the traces
         t = 0
     x = 0                           # Horizontal screen pixel
 #
+    ypv1 = int(c1 - Yconv1 * (VBuffA[t] - CHAOffset))
+    ypi1 = int(c1 - YIconv1 * (IBuffA[t] - CHAIOffset))
+    ypv2 = int(c2 - Yconv2 * (VBuffB[t] - CHBOffset))
+    ypi2 = int(c1 - YIconv2 * (IBuffB[t] - CHBIOffset))
+#
     if (DISsamples <= GRW):
         Xstep = GRW / DISsamples
         if AWGBMode.get() == 2:
@@ -3814,7 +3844,8 @@ def MakeTimeTrace():    # Make the traces
                         y1 = int(c1 - XconvMxy * MathResult)
                     except:
                         RUNstatus.set(0)
-                        BEnterMathString()
+                        x = Xlimit + 1 # exit loop
+                        BEnterMathXString()
                         
                     if y1 < Ymin: # clip waveform if going off grid
                         y1 = Ymin
@@ -3836,7 +3867,8 @@ def MakeTimeTrace():    # Make the traces
                         y1 = int(c1 - YconvMxy * MathResult)
                     except:
                         RUNstatus.set(0)
-                        BEnterMathString()
+                        x = Xlimit + 1 # exit loop
+                        BEnterMathYString()
                         
                     if y1 < Ymin: # clip waveform if going off grid
                         y1 = Ymin
@@ -3851,6 +3883,12 @@ def MakeTimeTrace():    # Make the traces
                         TMYline.append(int(x1))
                         TMYline.append(int(y1))
                     ypmy = y1
+            # remember trace verticle pixel at X mouse location
+            if (MouseX - X0L) > (x - Xstep) and (MouseX - X0L) < (x + Xstep):
+                MouseCAV = ypv1
+                MouseCAI = ypi1
+                MouseCBV = ypv2
+                MouseCBI = ypi2
             t = int(t + Tstep)
             x = x + Xstep
             xa = xa + Xstep
@@ -3896,7 +3934,6 @@ def MakeTimeTrace():    # Make the traces
                         ylo = Ymin
                     if (ylo > Ymax):
                         ylo = Ymax
-
                     if (yhi < Ymin):
                         yhi = Ymin
                     if (yhi > Ymax):
@@ -3905,6 +3942,7 @@ def MakeTimeTrace():    # Make the traces
                     T1Vline.append(int(ylo))        
                     T1Vline.append(int(x1))
                     T1Vline.append(int(yhi))
+                    ypv1 = ylo
                 if ( ShowC1_I.get() == 1 ):    
                     ilo = int(c1 - YIconv1 * ilo)
                     ihi = int(c1 - YIconv1 * ihi)
@@ -3912,7 +3950,6 @@ def MakeTimeTrace():    # Make the traces
                         ilo = Ymin
                     if (ilo > Ymax):
                         ilo = Ymax
-
                     if (ihi < Ymin):
                         ihi = Ymin
                     if (ihi > Ymax):
@@ -3920,7 +3957,8 @@ def MakeTimeTrace():    # Make the traces
                     T1Iline.append(int(x1))
                     T1Iline.append(int(ilo))        
                     T1Iline.append(int(x1))
-                    T1Iline.append(int(ihi)) 
+                    T1Iline.append(int(ihi))
+                    ypi1 = ilo
                 ylo = VBuffB[t] - CHBOffset
                 ilo = IBuffB[t] - CHBIOffset
                 yhi = ylo
@@ -3957,6 +3995,7 @@ def MakeTimeTrace():    # Make the traces
                         T2Vline.append(int(ylo))        
                         T2Vline.append(int(x1))
                         T2Vline.append(int(yhi))
+                        ypv2 = ylo
                     if ( ShowC2_I.get() == 1 ):
                         ilo = int(c2 - YIconv2 * ilo)
                         ihi = int(c2 - YIconv2 * ihi)
@@ -3964,7 +4003,6 @@ def MakeTimeTrace():    # Make the traces
                             ilo = Ymin
                         if (ilo > Ymax):
                             ilo = Ymax
-
                         if (ihi < Ymin):
                             ihi = Ymin
                         if (ihi > Ymax):
@@ -3973,6 +4011,7 @@ def MakeTimeTrace():    # Make the traces
                         T2Iline.append(int(ilo))        
                         T2Iline.append(int(x1))
                         T2Iline.append(int(ihi))
+                        ypi2 = ilo
                 else:
                     if Show_CBA.get() == 1 and len(VBuffMA)>4:
                         if t < len(VBuffMA):
@@ -3992,7 +4031,6 @@ def MakeTimeTrace():    # Make the traces
                             ylo = Ymin
                         if (ylo > Ymax):
                             ylo = Ymax
-
                         if (yhi < Ymin):
                              yhi = Ymin
                         if (yhi > Ymax):
@@ -4019,7 +4057,6 @@ def MakeTimeTrace():    # Make the traces
                             ylo = Ymin
                         if (ylo > Ymax):
                             ylo = Ymax
-
                         if (yhi < Ymin):
                              yhi = Ymin
                         if (yhi > Ymax):
@@ -4046,7 +4083,6 @@ def MakeTimeTrace():    # Make the traces
                             ylo = Ymin
                         if (ylo > Ymax):
                             ylo = Ymax
-
                         if (yhi < Ymin):
                              yhi = Ymin
                         if (yhi > Ymax):
@@ -4073,7 +4109,6 @@ def MakeTimeTrace():    # Make the traces
                             ylo = Ymin
                         if (ylo > Ymax):
                             ylo = Ymax
-
                         if (yhi < Ymin):
                              yhi = Ymin
                         if (yhi > Ymax):
@@ -4096,7 +4131,6 @@ def MakeTimeTrace():    # Make the traces
                             ilo = Ymin
                         if (ilo > Ymax):
                             ilo = Ymax
-
                         if (ihi < Ymin):
                             ihi = Ymin
                         if (ihi > Ymax):
@@ -4166,6 +4200,7 @@ def MakeTimeTrace():    # Make the traces
                             y1 = int(c1 - YconvM * MathResult)
                         except:
                             RUNstatus.set(0)
+                            x = GRW + 1
                             BEnterMathString()
                         
                     if (y1 < Ymin):
@@ -4188,7 +4223,8 @@ def MakeTimeTrace():    # Make the traces
                         y1 = int(c1 - XconvMxy * MathResult)
                     except:
                         RUNstatus.set(0)
-                        BEnterMathString()
+                        x = GRW + 1
+                        BEnterMathXString()
                         
                     if y1 < Ymin: # clip waveform if going off grid
                         y1 = Ymin
@@ -4210,7 +4246,8 @@ def MakeTimeTrace():    # Make the traces
                         y1 = int(c1 - YconvMxy * MathResult)
                     except:
                         RUNstatus.set(0)
-                        BEnterMathString()
+                        x = GRW + 1
+                        BEnterMathYString()
                         
                     if y1 < Ymin: # clip waveform if going off grid
                         y1 = Ymin
@@ -4226,6 +4263,11 @@ def MakeTimeTrace():    # Make the traces
                         TMYline.append(int(y1))
                     ypmy = y1
             ft = ft + Tstep
+            if (MouseX - X0L) > (x - 1) and (MouseX - X0L) < (x + 1):
+                MouseCAV = ypv1
+                MouseCAI = ypi1
+                MouseCBV = ypv2
+                MouseCBI = ypi2
             t = int(ft)
             x = x + Xstep
 
@@ -4538,7 +4580,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
     global Y0T          # Left top Y value
     global GRW          # Screenwidth
     global GRH          # Screenheight
-    global MouseX, MouseY, MouseWidget
+    global MouseX, MouseY, MouseWidget, MouseCAV, MouseCAI, MouseCBV, MouseCBI
     global Ymin, Ymax
     global ShowXCur, ShowYCur, TCursor, VCursor
     global SHOWsamples  # Number of samples in data record
@@ -4867,22 +4909,31 @@ def MakeTimeScreen():     # Update the screen with traces and text
         x = X0L + (GRW/2) + 12
         ca.create_text(x, Ymin-8, text=TgLabel, fill=COLORtrigger, anchor="w", font=("arial", 8 ))
     # Draw T - V Cursor lines if required
+    if MarkerScale.get() == 0:
+        Yconv1 = float(GRH/10.0) / CH1pdvRange
+        Yoffset1 = CHAOffset
+        COLORmarker = COLORtrace1
+        Units = " V"
     if MarkerScale.get() == 1:
+        MouseY = MouseCAV
         Yconv1 = float(GRH/10.0) / CH1pdvRange
         Yoffset1 = CHAOffset
         COLORmarker = COLORtrace1
         Units = " V"
     if MarkerScale.get() == 2:
+        MouseY = MouseCBV
         Yconv1 = float(GRH/10.0) / CH2pdvRange
         Yoffset1 = CHBOffset
         COLORmarker = COLORtrace2
         Units = " V"
     if MarkerScale.get() == 3:
+        MouseY = MouseCAI
         Yconv1 = float(GRH/10.0) / CH1IpdvRange
         Yoffset1 = CHAIOffset
         COLORmarker = COLORtrace3
         Units = " mA"
     if MarkerScale.get() == 4:
+        MouseY = MouseCBI
         Yconv1 = float(GRH/10.0) / CH2IpdvRange
         Yoffset1 = CHBIOffset
         COLORmarker = COLORtrace4
@@ -6029,38 +6080,50 @@ def MakeXYScreen():
 def SetScaleA():
     global MarkerScale, CHAlab, CHBlab, CHAIlab, CHBIlab
 
-    MarkerScale.set(1)
-    CHAlab.config(style="Rtrace1.TButton")
-    CHBlab.config(style="Strace2.TButton")
-    CHAIlab.config(style="Strace3.TButton")
-    CHBIlab.config(style="Strace4.TButton")
+    if MarkerScale.get() != 1:
+        MarkerScale.set(1)
+        CHAlab.config(style="Rtrace1.TButton")
+        CHBlab.config(style="Strace2.TButton")
+        CHAIlab.config(style="Strace3.TButton")
+        CHBIlab.config(style="Strace4.TButton")
+    else:
+        MarkerScale.set(0)
     
 def SetScaleIA():
     global MarkerScale, CHAlab, CHBlab, CHAIlab, CHBIlab
 
-    MarkerScale.set(3)
-    CHAlab.config(style="Strace1.TButton")
-    CHBlab.config(style="Strace2.TButton")
-    CHAIlab.config(style="Rtrace3.TButton")
-    CHBIlab.config(style="Strace4.TButton")
+    if MarkerScale.get() != 3:
+        MarkerScale.set(3)
+        CHAlab.config(style="Strace1.TButton")
+        CHBlab.config(style="Strace2.TButton")
+        CHAIlab.config(style="Rtrace3.TButton")
+        CHBIlab.config(style="Strace4.TButton")
+    else:
+        MarkerScale.set(0)
 
 def SetScaleB():
     global MarkerScale, CHAlab, CHBlab, CHAIlab, CHBIlab
 
-    MarkerScale.set(2)
-    CHAlab.config(style="Strace1.TButton")
-    CHBlab.config(style="Rtrace2.TButton")
-    CHAIlab.config(style="Strace3.TButton")
-    CHBIlab.config(style="Strace4.TButton")
+    if MarkerScale.get() != 2:
+        MarkerScale.set(2)
+        CHAlab.config(style="Strace1.TButton")
+        CHBlab.config(style="Rtrace2.TButton")
+        CHAIlab.config(style="Strace3.TButton")
+        CHBIlab.config(style="Strace4.TButton")
+    else:
+        MarkerScale.set(0)
 
 def SetScaleIB():
     global MarkerScale, CHAlab, CHBlab, CHAIlab, CHBIlab
 
-    MarkerScale.set(4)
-    CHAlab.config(style="Strace1.TButton")
-    CHBlab.config(style="Strace2.TButton")
-    CHAIlab.config(style="Strace3.TButton")
-    CHBIlab.config(style="Rtrace4.TButton")
+    if MarkerScale.get() != 3:
+        MarkerScale.set(4)
+        CHAlab.config(style="Strace1.TButton")
+        CHBlab.config(style="Strace2.TButton")
+        CHAIlab.config(style="Strace3.TButton")
+        CHBIlab.config(style="Rtrace4.TButton")
+    else:
+        MarkerScale.set(0)
 #
 def SetXYScaleA():
     global MarkerXYScale, CHAxylab, CHBxylab
@@ -6889,9 +6952,12 @@ def AWGAReadFile():
     filename = askopenfilename(defaultextension = ".csv", filetypes=[("CSV files", "*.csv")], parent=awgwindow)
     try:
         CSVFile = open(filename)
-        csv_f = csv.reader(CSVFile)
+        dialect = csv.Sniffer().sniff(CSVFile.read(2048))
+        CSVFile.seek(0)
+        csv_f = csv.reader(CSVFile, dialect)
     except:
         showwarning("WARNING","No such file found or wrong format!", parent=awgwindow)
+    # print csv_f.dialect
     AWGAwaveform = []
     ColumnNum = 0
     ColumnSel = 0
@@ -7535,7 +7601,9 @@ def AWGBReadFile():
     filename = askopenfilename(defaultextension = ".csv", filetypes=[("CSV files", "*.csv")], parent=awgwindow)
     try:
         CSVFile = open(filename)
-        csv_f = csv.reader(CSVFile)
+        dialect = csv.Sniffer().sniff(CSVFile.read(2048))
+        CSVFile.seek(0)
+        csv_f = csv.reader(CSVFile, dialect)
     except:
         showwarning("WARNING","No such file found or wrong format!", parent=awgwindow)
     AWGBwaveform = []
@@ -8963,8 +9031,16 @@ def MakeFreqTrace():        # Update the grid and trace
         StopFrequency = float(StopFreqEntry.get())
     except:
         StopFreqEntry.delete(0,"end")
-        StopFreqEntry.insert(0,100)
-        StopFrequency = 100
+        StopFreqEntry.insert(0,10000)
+        StopFrequency = 10000
+    if StartFrequency > StopFrequency :
+        StopFreqEntry.delete(0,"end")
+        StopFreqEntry.insert(0,50000)
+        StopFrequency = 50000
+    if StopFrequency < StartFrequency :
+        StopFreqEntry.delete(0,"end")
+        StopFreqEntry.insert(0,50000)
+        StopFrequency = 50000
     if ShowC1_VdB.get() == 1 or ShowMathSA.get() > 0:
         TRACEsize = len(FFTresultA)     # Set the trace length
     elif ShowC2_VdB.get() == 1 or ShowMathSA.get() > 0:
@@ -14436,6 +14512,7 @@ Filemenu.menu.add_command(label="Load Adj", command=BLoadCal)
 Filemenu.menu.add_command(label="Save Screen", command=BSaveScreen)
 Filemenu.menu.add_command(label="Save To CSV", command=BSaveData)
 Filemenu.menu.add_command(label="Load From CSV", command=BReadData)
+Filemenu.menu.add_command(label="Save PWL Data", command=BSaveChannelData)
 Filemenu.menu.add_command(label="Help", command=BHelp)
 Filemenu.menu.add_command(label="About", command=BAbout)
 Filemenu.pack(side=LEFT, anchor=W)
