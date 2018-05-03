@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM2000 alice-desktop 2.0.py(w) (2-22-2018)
+# ADALM2000 alice-desktop 2.0.py(w) (5-2-2018)
 # For Python version > = 2.7.8
 # With external module iio.py 
 # 
@@ -34,9 +34,9 @@ except:
     libiio_found = False
 from sys import argv
 #
-RevDate = "(22 Feb 2018)"
+RevDate = "(2 May 2018)"
 SwTitle = "ALICE DeskTop 2.0 "
-Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/2.0.0/alice-desktop-2.0-setup.exe'
+Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/2.0.1/alice-desktop-2.0-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
 R0lGODlhIAAgAHAAACH5BAEAAAIALAAAAAAgACAAgQAAAP///wAAAAAAAAJJhI+py+0PYwtBWkDp
@@ -209,7 +209,8 @@ AwgLayout = "Horz"
 Style_String = 'alt'
 MarkerLoc = 'UL' # can be UL, UR, LL, LR
 LoopBackGain = 2.305 # 8.12
-TriggerMethod = "HW" # use SW or sw for software trigger use HW or hw for hardware trigger
+TriggerMethod = IntVar(0) # use SW or sw for software trigger use HW or hw for hardware trigger
+TriggerMethod.set(1)
 # Check if there is an alice_init.ini file to read in
 try:
     InitFile = open("alice_init.ini")
@@ -1296,10 +1297,28 @@ def BSaveData():
 
     # open file to save data
     filename = asksaveasfilename(defaultextension = ".csv", filetypes=[("Comma Separated Values", "*.csv")])
-    DataFile = open(filename, 'a')
+    DataFile = open(filename, 'w')
     DataFile.write( 'Sample-#, C1-V, C1-V, Sample Rate = ' + str(SAMPLErate) + '\n' )
     for index in range(len(VBuffA)):
         DataFile.write( str(index) + ', ' + str(VBuffA[index]) + ', ' + str(VBuffB[index]) + '\n')
+    DataFile.close()
+#
+def BSaveChannelData():
+    global SAMPLErate, VBuffA, VBuffB
+
+    # ask user for channel to save
+    Channel = askstring("Choose Channel", "CA-V or CB-V\n\nChannel:\n", initialvalue="CA-V")
+    if (Channel == None):         # If Cancel pressed, then None
+        return
+    # open file to save data
+    filename = asksaveasfilename(defaultextension = ".txt", filetypes=[("Text Columns", "*.txt")])
+    DataFile = open(filename, 'w')
+    for index in range(len(VBuffA)):
+        TimePnt = float((index+0.0)/SAMPLErate)
+        if Channel == "CA-V":
+            DataFile.write( str(TimePnt) + ', ' + str(VBuffA[index]) + '\n')
+        elif Channel == "CB-V":
+            DataFile.write( str(TimePnt) + ', ' + str(VBuffB[index]) + '\n')
     DataFile.close()
 #
 def BReadData():
@@ -1309,7 +1328,9 @@ def BReadData():
     filename = askopenfilename(defaultextension = ".csv", filetypes=[("CSV files", "*.csv")])
     try:
         CSVFile = open(filename)
-        csv_f = csv.reader(CSVFile)
+        dialect = csv.Sniffer().sniff(CSVFile.read(2048))
+        CSVFile.seek(0)
+        csv_f = csv.reader(CSVFile, dialect)
         VBuffA = []
         VBuffB = []
         SHOWsamples = 0
@@ -2171,7 +2192,7 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
     global CH1_H_Gain10M, CH1_L_Gain10M, CH2_H_Gain10M, CH2_L_Gain10M
     global CH1_H_Gain100M, CH1_L_Gain100M, CH2_H_Gain100M, CH2_L_Gain100M
     global Scope1Offset, CH1hwOffset, Scope2Offset, CH2hwOffset, ad5625, ctx
-    
+
     # get time scale in mS/div
     OldShowSamples = SHOWsamples
     if ShowLoopBack.get() == 1:
@@ -2290,6 +2311,8 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
     except:
         TRIGGERentry.delete(0,END)
         TRIGGERentry.insert(0, TRIGGERlevel)
+    ShiftedCH1Trigger = TRIGGERlevel
+    ShiftedCH2Trigger = TRIGGERlevel
 # get the vertical ranges
     try:
         CH1pdvRange = float(eval(CHAsb.get()))
@@ -2302,6 +2325,9 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
         CHBsb.delete(0,END)
         CHBsb.insert(0, CH2vpdvRange)
     if CH1pdvRange < 1.0:
+        ShiftedCH1Trigger = TRIGGERlevel-CHAOffset
+        if ShowLoopBack.get() == 1: 
+            ShiftedCH1Trigger = ((ShiftedCH1Trigger+CHAOffset)/(LoopBackGain*ADC_0_gain))
         if OldCH1pdvRange != CH1pdvRange:
             m2k_adc0.attrs["gain"].value = 'high'
             ch1_multiplier = CH1_H_Gain
@@ -2316,6 +2342,9 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
         else:
             Scope1Offset.attrs["raw"].value = str(NewOffset)
     else:
+        ShiftedCH1Trigger = TRIGGERlevel # -CHAOffset
+        if ShowLoopBack.get() == 1:
+            ShiftedCH1Trigger = (ShiftedCH1Trigger/(LoopBackGain*ADC_0_gain))
         if OldCH1pdvRange != CH1pdvRange:
             m2k_adc0.attrs["gain"].value = 'low'
             ch1_multiplier = CH1_L_Gain
@@ -2323,6 +2352,9 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
         # NewOffset = CH1hwOffset - HwOffset
         Scope1Offset.attrs["raw"].value = str(CH1hwOffset)
     if CH2pdvRange < 1.0:
+        ShiftedCH2Trigger = TRIGGERlevel-CHBOffset
+        if ShowLoopBack.get() == 1: 
+            ShiftedCH2Trigger = ((ShiftedCH2Trigger+CHBOffset)/(LoopBackGain*ADC_1_gain))
         if OldCH2pdvRange != CH2pdvRange:
             m2k_adc1.attrs["gain"].value = 'high'
             ch2_multiplier = CH2_H_Gain
@@ -2337,6 +2369,9 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
         else:
             Scope2Offset.attrs["raw"].value = str(NewOffset)
     else:
+        ShiftedCH2Trigger = TRIGGERlevel # -CHBOffset
+        if ShowLoopBack.get() == 1: 
+            ShiftedCH2Trigger = (ShiftedCH2Trigger/(LoopBackGain*ADC_1_gain))
         if OldCH2pdvRange != CH2pdvRange:
             m2k_adc1.attrs["gain"].value = 'low'
             ch2_multiplier = CH2_L_Gain
@@ -2361,20 +2396,21 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
         HozPossentry.delete(0,END)
         HozPossentry.insert(0, HozPoss)
 #
-    if TriggerMethod == "HW" or TriggerMethod == "hw":
+    if TriggerMethod.get() == 1: # Using Hardware triggering
+        TRIGGERsample = 0 # reset pointer to zero when using HW trigger
         if TgInput.get() == 0:
             m2k_adc4_trigger.attrs["mode"].value = 'always'
             m2k_adc5_trigger.attrs["mode"].value = 'always'
         elif TgInput.get() == 1:
             m2k_adc4_trigger.attrs["mode"].value = 'analog'
             m2k_adc5_trigger.attrs["mode"].value = 'always'
-            tgl_a = int((TRIGGERlevel*2048.0)/ch1_multiplier)
+            tgl_a = int((ShiftedCH1Trigger*2048.0)/ch1_multiplier)
             m2k_adc0_trigger.attrs["trigger_level"].value = str(tgl_a)
             m2k_adc6_trigger.attrs["logic_mode"].value = 'a'
         elif TgInput.get() == 3:
             m2k_adc4_trigger.attrs["mode"].value = 'always'
             m2k_adc5_trigger.attrs["mode"].value = 'analog'
-            tgl_b = int((TRIGGERlevel*2048.0)/ch2_multiplier)
+            tgl_b = int((ShiftedCH2Trigger*2048.0)/ch2_multiplier)
             m2k_adc1_trigger.attrs["trigger_level"].value = str(tgl_b)
             m2k_adc6_trigger.attrs["logic_mode"].value = 'b'
         if TgEdge.get() == 0:
@@ -2411,7 +2447,7 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
     if OldShowSamples != SHOWsamples: # number of samples has changed
         del(TimeBuffer) # delete old buffer and make a new one
         TimeBuffer = iio.Buffer(m2k_adc, SHOWsamples, False)
-    if TriggerMethod == "HW" or TriggerMethod == "hw":
+    if TriggerMethod.get() == 1:
         Is_Triggered = m2k_adc_trigger.reg_read(0x3c) # m2k_adc_trigger.attrs["triggered"].value
         if Is_Triggered != 0:
             m2k_adc_trigger.reg_write(0x3c, 0x01)
@@ -2432,7 +2468,7 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
     while n < rec_length:
         VCH1 = float(ADsignal1[n])
         VCH2 = float(ADsignal1[n+1])
-        if ShowLoopBack.get() == 1: # /Awg_divider *8.25
+        if ShowLoopBack.get() == 1: #
             TempV = (((VCH1/2048.0)*LoopBackGain)*ADC_0_gain*CH1_H_Gain) - CHAOffset # scale to volts
             VBuffA.append(TempV) 
             TempV = (((VCH2/2048.0)*LoopBackGain)*ADC_1_gain*CH2_H_Gain) - CHBOffset
@@ -2466,11 +2502,11 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
             else:
                 VBuffB = numpy.convolve(VBuffB, DFiltBCoef)
 #
-    if TriggerMethod == "SW" or TriggerMethod == "sw":
-        FindTriggerSample() # Find trigger sample point if necessary
+    if TriggerMethod.get() == 0: # Using software triggering
+        FindTriggerSample() # Find trigger sample point by software method if necessary
     if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
         # Average mode 1, add difference / TRACEaverage to array
-        if TriggerMethod == "SW" or TriggerMethod == "sw":
+        if TriggerMethod.get() == 0: # Using software triggering
             # FindTriggerSample() # Find trigger sample point if necessary
             if TgInput.get() > 0: # if triggering left shift all arrays such that trigger point is at index 0
                 LShift = 0 - TRIGGERsample
@@ -7581,7 +7617,9 @@ def AWGAReadFile():
     filename = askopenfilename(defaultextension = ".csv", filetypes=[("CSV files", "*.csv")], parent=awgwindow)
     try:
         CSVFile = open(filename)
-        csv_f = csv.reader(CSVFile)
+        dialect = csv.Sniffer().sniff(CSVFile.read(2048))
+        CSVFile.seek(0)
+        csv_f = csv.reader(CSVFile, dialect)
     except:
         showwarning("WARNING","No such file found or wrong format!", parent=awgwindow)
     RequestRate = askstring("Pick Sample Rate", "Select sample rate from\n75000000\n7500000\n750000\n75000\nEnter Value:\n", initialvalue=750000, parent=awgwindow)
@@ -8478,7 +8516,9 @@ def AWGBReadFile():
     filename = askopenfilename(defaultextension = ".csv", filetypes=[("CSV files", "*.csv")], parent=awgwindow)
     try:
         CSVFile = open(filename)
-        csv_f = csv.reader(CSVFile)
+        dialect = csv.Sniffer().sniff(CSVFile.read(2048))
+        CSVFile.seek(0)
+        csv_f = csv.reader(CSVFile, dialect)
     except:
         showwarning("WARNING","No such file found or wrong format!", parent=awgwindow)
     RequestRate = askstring("Pick Sample Rate", "Select sample rate from\n75000000\n7500000\n750000\n75000\nEnter Value:\n", initialvalue=750000, parent=awgwindow)
@@ -15481,6 +15521,8 @@ Triggermenu.menu.add_radiobutton(label='C1-V', variable=TgInput, value=1)
 Triggermenu.menu.add_radiobutton(label='C2-V', variable=TgInput, value=3)
 Triggermenu.menu.add_checkbutton(label='Auto Level', variable=AutoLevel)
 Triggermenu.menu.add_checkbutton(label='SingleShot', variable=SingleShot)
+Triggermenu.menu.add_radiobutton(label='Software Tg', variable=TriggerMethod, value=0)
+Triggermenu.menu.add_radiobutton(label='Hardware Tg', variable=TriggerMethod, value=1)
 Triggermenu.pack(side=LEFT)
 #
 Edgemenu = Menubutton(frame1, text="Edge", style="W5.TButton")
@@ -15618,6 +15660,7 @@ Filemenu.menu.add_command(label="Load Adj", command=BLoadCal)
 Filemenu.menu.add_command(label="Save Screen", command=BSaveScreen)
 Filemenu.menu.add_command(label="Save To CSV", command=BSaveData)
 Filemenu.menu.add_command(label="Load From CSV", command=BReadData)
+Filemenu.menu.add_command(label="Save PWL Data", command=BSaveChannelData)
 Filemenu.menu.add_command(label="Help", command=BHelp)
 Filemenu.menu.add_command(label="About", command=BAbout)
 Filemenu.pack(side=LEFT, anchor=W)
