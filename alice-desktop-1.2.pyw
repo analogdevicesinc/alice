@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 alice-desktop 1.2.py(w) (3-10-2018)
+# ADALM1000 alice-desktop 1.2.py(w) (6-23-2018)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu.rework >= 1.0 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -33,7 +33,7 @@ try:
 except:
     pysmu_found = False
 #
-RevDate = "(10 March 2018)"
+RevDate = "(23 June 2018)"
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.2.1/alice-desktop-1.2-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
@@ -160,6 +160,9 @@ Vdiv = IntVar(0)
 Vdiv.set(10)            # Number of vertical divisions for spectrum / Bode
 HarmonicMarkers = IntVar(0)
 HarmonicMarkers.set(3)
+AWG_Amp_Mode = IntVar(0)
+AWG_Amp_Mode.set(0) # 0 = Min/Max mode, 1 = Amp/Offset
+#
 ZEROstuffing = IntVar(0) # The zero stuffing value is 2 ** ZERO stuffing, calculated on initialize
 ZEROstuffing.set(1)
 FFTwindow = IntVar(0)   # FFT window function variable
@@ -439,6 +442,8 @@ MaxSamplesSA = 65536
 Vdiv = IntVar(0)
 Vdiv.set(10)                # Number of vertical divisions
 #
+MathScreenStatus = IntVar(0)
+#
 XYScreenStatus = IntVar(0)
 Xsignal = IntVar(0)   # Signal for X axis variable
 Xsignal.set(1)
@@ -585,13 +590,13 @@ def BSaveConfig(filename):
     global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MuxScreenStatus
     global CHB_Asb, CHB_APosEntry, CHB_Bsb, CHB_BPosEntry, muxwindow
     global CHB_Csb, CHB_CPosEntry, CHB_Dsb, CHB_DPosEntry, HozPossentry
-    global SmoothCurvesBP, SingleShotBP, bodewindow
+    global SmoothCurvesBP, SingleShotBP, bodewindow, AWG_Amp_Mode
     global ShowCA_VdB, ShowCA_P, ShowCB_VdB, ShowCB_P, ShowMarkerBP, BodeDisp
     global ShowCA_RdB, ShowCA_RP, ShowCB_RdB, ShowCB_RP, ShowMathBP, ShowRMathBP
     global BPSweepMode, BPSweepCont, BodeScreenStatus, RevDate, SweepStepBodeEntry
     global HScaleBP, StopBodeEntry, StartBodeEntry, ShowBPCur, ShowBdBCur, BPCursor, BdBCursor
     global MathString, MathXString, MathYString, UserAString, UserALabel, UserBString, UserBLabel
-    global MathAxis, MathXAxis, MathYAxis, Show_MathX, Show_MathY
+    global MathAxis, MathXAxis, MathYAxis, Show_MathX, Show_MathY, MathScreenStatus, MathWindow
     global AWGAMathString, AWGBMathString, FFTUserWindowString, DigFilterAString, DigFilterBString
     global GRWF, GRHF, GRWBP, GRHBP, GRWXY, GRHXY, GRWIA, GRHIA, MeasureStatus
     global ChaLableSrring1, ChaLableSrring2, ChaLableSrring3, ChaLableSrring4, ChaLableSrring5, ChaLableSrring6
@@ -607,6 +612,11 @@ def BSaveConfig(filename):
     ConfgFile.write('global GRW; GRW = ' + str(GRW) + '\n')
     ConfgFile.write('global GRH; GRH = ' + str(GRH) + '\n')
     # Windows configuration
+    if MathScreenStatus.get() > 0:
+        ConfgFile.write('NewEnterMathControls()\n')
+        ConfgFile.write("MathWindow.geometry('+" + str(MathWindow.winfo_x()) + '+' + str(MathWindow.winfo_y()) + "')\n")
+    else:
+        ConfgFile.write('DestroyMathScreen()\n')
     if XYScreenStatus.get() > 0:
         ConfgFile.write('global GRWXY; GRWXY = ' + str(GRWXY) + '\n')
         ConfgFile.write('global GRHXY; GRHXY = ' + str(GRHXY) + '\n')
@@ -828,6 +838,7 @@ def BSaveConfig(filename):
     ConfgFile.write('CHBIsb.delete(0,END)\n')
     ConfgFile.write('CHBIsb.insert(0, ' + CHBIsb.get() + ')\n')
     # AWG stuff
+    ConfgFile.write('AWG_Amp_Mode.set('+ str(AWG_Amp_Mode.get()) + ')\n')
     ConfgFile.write('AWGAMode.set('+ str(AWGAMode.get()) + ')\n')
     ConfgFile.write('AWGAIOMode.set('+ str(AWGAIOMode.get()) + ')\n')
     ConfgFile.write('AWGATerm.set('+ str(AWGATerm.get()) + ')\n')
@@ -1003,7 +1014,7 @@ def BLoadConfig(filename):
     global MeasAHW, MeasALW, MeasADCy, MeasAPER, MeasAFREQ
     global MeasBHW, MeasBLW, MeasBDCy, MeasBPER, MeasBFREQ
     global CHAIGainEntry, CHBIGainEntry, CHAIOffsetEntry, CHBIOffsetEntry
-    global ShowC1_VdB, ShowC1_P, ShowC2_VdB, ShowC2_P, CutDC
+    global ShowC1_VdB, ShowC1_P, ShowC2_VdB, ShowC2_P, CutDC, AWG_Amp_Mode
     global FFTwindow, DBdivindex, DBlevel, TRACEmodeTime, TRACEaverage, Vdiv
     global SMPfftpwrTwo, SMPfft, StartFreqEntry, StopFreqEntry, ZEROstuffing
     global TimeDisp, XYDisp, FreqDisp, IADisp, AWGAPhaseDelay, AWGBPhaseDelay
@@ -1368,102 +1379,265 @@ def BUserBMeas():
         return
     MeasUserB.set(1)
 #
-def BEnterMathString():
-    global RUNstatus, MathString, MathUnits
+def NewEnterMathControls():
+    global RUNstatus, MathScreenStatus, MathWindow
+    global MathString, MathUnits, MathXString, MathXUnits, MathYString, MathYUnits
+    global MathAxis, MathXAxis, MathYAxis, MathTrace
+    global formentry, unitsentry, axisentry, xformentry, xunitsentry, xaxisentry, yformentry, yunitsentry, yaxisentry
+    global formlab, xformlab, yformlab
+    
+    if MathScreenStatus.get() == 0:
+        MathScreenStatus.set(1)
+        #
+        MathWindow = Toplevel()
+        MathWindow.title("Math Formula " + RevDate)
+        MathWindow.resizable(FALSE,FALSE)
+        MathWindow.protocol("WM_DELETE_WINDOW", DestroyMathScreen)
+        frame1 = LabelFrame(MathWindow, text="Built-in Exp", style="A10R1.TLabelframe")
+        frame2 = LabelFrame(MathWindow, text="Math Trace", style="A10R1.TLabelframe")
+        frame3 = LabelFrame(MathWindow, text="X Math Trace", style="A10R1.TLabelframe")
+        frame4 = LabelFrame(MathWindow, text="Y Math Trace", style="A10R1.TLabelframe")
+        # frame1.grid(row=0, column=0, sticky=W)
+        #
+        frame1.grid(row = 0, column=0, rowspan=3, sticky=W)
+        frame2.grid(row = 0, column=1, sticky=W)
+        frame3.grid(row = 1, column=1, sticky=W)
+        frame4.grid(row = 2, column=1, sticky=W)
+        #
+        # Built in functions
+        # rb1 = Radiobutton(win2, text="D0-0", variable=D0, value=0x50, command=sel )
+        rb1 = Radiobutton(frame1, text='none', variable=MathTrace, value=0, command=UpdateTimeTrace)
+        rb1.grid(row=0, column=0, sticky=W)
+        rb2 = Radiobutton(frame1, text='CAV+CBV', variable=MathTrace, value=1, command=UpdateTimeTrace)
+        rb2.grid(row=1, column=0, sticky=W)
+        rb3 = Radiobutton(frame1, text='CAV-CBV', variable=MathTrace, value=2, command=UpdateTimeTrace)
+        rb3.grid(row=2, column=0, sticky=W)
+        rb4 = Radiobutton(frame1, text='CBV-CAV', variable=MathTrace, value=3, command=UpdateTimeTrace)
+        rb4.grid(row=3, column=0, sticky=W)
+        rb5 = Radiobutton(frame1, text='CAI-CBI', variable=MathTrace, value=8, command=UpdateTimeTrace)
+        rb5.grid(row=4, column=0, sticky=W)
+        rb6 = Radiobutton(frame1, text='CBI-CAI', variable=MathTrace, value=9, command=UpdateTimeTrace)
+        rb6.grid(row=5, column=0, sticky=W)
+        rb7 = Radiobutton(frame1, text='CAV*CAI', variable=MathTrace, value=4, command=UpdateTimeTrace)
+        rb7.grid(row=6, column=0, sticky=W)
+        rb8 = Radiobutton(frame1, text='CBV*CBI', variable=MathTrace, value=5, command=UpdateTimeTrace)
+        rb8.grid(row=7, column=0, sticky=W)
+        rb9 = Radiobutton(frame1, text='CAV/CAI', variable=MathTrace, value=6, command=UpdateTimeTrace)
+        rb9.grid(row=8, column=0, sticky=W)
+        rb10 = Radiobutton(frame1, text='CBV/CBI', variable=MathTrace, value=7, command=UpdateTimeTrace)
+        rb10.grid(row=9, column=0, sticky=W)
+        rb11 = Radiobutton(frame1, text='CBV/CAV', variable=MathTrace, value=10, command=UpdateTimeTrace)
+        rb11.grid(row=10, column=0, sticky=W)
+        rb12 = Radiobutton(frame1, text='CBI/CAI', variable=MathTrace, value=11, command=UpdateTimeTrace)
+        rb12.grid(row=11, column=0, sticky=W)
+        rb13 = Radiobutton(frame1, text='Formula', variable=MathTrace, value=12, command=UpdateTimeTrace)
+        rb13.grid(row=12, column=0, sticky=W)
+        # 
+        # Math trace formula sub frame2
+        #
+        sframe2a = Frame( frame2 )
+        sframe2a.pack(side=TOP)
+        formlab = Label(sframe2a, text="Formula ", style= "A10B.TLabel")
+        formlab.grid(row=0, column=0, sticky=W)
+        formlab.pack(side=LEFT)
+        formentry = Entry(sframe2a, width=23)
+        formentry.grid(row=0, column=1, sticky=W)
+        formentry.pack(side=LEFT)
+        formentry.delete(0,"end")
+        formentry.insert(0,MathString)
+        sframe2b = Frame( frame2 )
+        sframe2b.pack(side=TOP)
+        unitslab = Label(sframe2b, text="Units ", style= "A10B.TLabel")
+        unitslab.grid(row=0, column=0, sticky=W)
+        unitslab.pack(side=LEFT)
+        unitsentry = Entry(sframe2b, width=6)
+        unitsentry.grid(row=0, column=1, sticky=W)
+        unitsentry.pack(side=LEFT)
+        unitsentry.delete(0,"end")
+        unitsentry.insert(0,MathUnits)
+        checkbt = Button(sframe2b, text="Check", command=CheckMathString )
+        checkbt.grid(row=0, column=2, sticky=W)
+        checkbt.pack(side=LEFT)
+        sframe2c = Frame( frame2 )
+        sframe2c.pack(side=TOP)
+        axislab = Label(sframe2c, text="Axis ", style= "A10B.TLabel")
+        axislab.grid(row=0, column=0, sticky=W)
+        axislab.pack(side=LEFT)
+        axisentry = Entry(sframe2c, width=3)
+        axisentry.grid(row=0, column=1, sticky=W)
+        axisentry.pack(side=LEFT)
+        axisentry.delete(0,"end")
+        axisentry.insert(0,MathAxis)
+        applybt = Button(sframe2c, text="Apply", command=ApplyMathString )
+        applybt.grid(row=0, column=2, sticky=W)
+        applybt.pack(side=LEFT)
+        # 
+        # X Math trace formula sub frame3
+        #
+        sframe3a = Frame( frame3 )
+        sframe3a.pack(side=TOP)
+        xformlab = Label(sframe3a, text=" X Formula ", style= "A10B.TLabel")
+        xformlab.grid(row=0, column=0, sticky=W)
+        xformlab.pack(side=LEFT)
+        xformentry = Entry(sframe3a, width=20)
+        xformentry.grid(row=0, column=1, sticky=W)
+        xformentry.pack(side=LEFT)
+        xformentry.delete(0,"end")
+        xformentry.insert(0, MathXString)
+        sframe3b = Frame( frame3 )
+        sframe3b.pack(side=TOP)
+        xunitslab = Label(sframe3b, text="X Units ", style= "A10B.TLabel")
+        xunitslab.grid(row=0, column=0, sticky=W)
+        xunitslab.pack(side=LEFT)
+        xunitsentry = Entry(sframe3b, width=6)
+        xunitsentry.grid(row=0, column=1, sticky=W)
+        xunitsentry.pack(side=LEFT)
+        xunitsentry.delete(0,"end")
+        xunitsentry.insert(0, MathXUnits)
+        xcheckbt = Button(sframe3b, text="Check", command=CheckMathXString )
+        xcheckbt.grid(row=0, column=2, sticky=W)
+        xcheckbt.pack(side=LEFT)
+        sframe3c = Frame( frame3 )
+        sframe3c.pack(side=TOP)
+        xaxislab = Label(sframe3c, text="X Axis ", style= "A10B.TLabel")
+        xaxislab.grid(row=0, column=0, sticky=W)
+        xaxislab.pack(side=LEFT)
+        xaxisentry = Entry(sframe3c, width=3)
+        xaxisentry.grid(row=0, column=1, sticky=W)
+        xaxisentry.pack(side=LEFT)
+        xaxisentry.delete(0,"end")
+        xaxisentry.insert(0, MathXAxis)
+        xapplybt = Button(sframe3c, text="Apply", command=ApplyMathXString )
+        xapplybt.grid(row=0, column=3, sticky=W)
+        xapplybt.pack(side=LEFT)
+        # 
+        # Math trace formula sub frame4
+        #
+        sframe4a = Frame( frame4 )
+        sframe4a.pack(side=TOP)
+        yformlab = Label(sframe4a, text="Y Formula ", style= "A10B.TLabel")
+        yformlab.grid(row=0, column=0, sticky=W)
+        yformlab.pack(side=LEFT)
+        yformentry = Entry(sframe4a, width=20)
+        yformentry.grid(row=0, column=1, sticky=W)
+        yformentry.pack(side=LEFT)
+        yformentry.delete(0,"end")
+        yformentry.insert(0,MathYString)
+        sframe4b = Frame( frame4 )
+        sframe4b.pack(side=TOP)
+        yunitslab = Label(sframe4b, text="Y Units ", style= "A10B.TLabel")
+        yunitslab.grid(row=0, column=0, sticky=W)
+        yunitslab.pack(side=LEFT)
+        yunitsentry = Entry(sframe4b, width=6)
+        yunitsentry.grid(row=0, column=1, sticky=W)
+        yunitsentry.pack(side=LEFT)
+        yunitsentry.delete(0,"end")
+        yunitsentry.insert(0,MathYUnits)
+        ycheckbt = Button(sframe4b, text="Check", command=CheckMathYString )
+        ycheckbt.grid(row=0, column=2, sticky=W)
+        ycheckbt.pack(side=LEFT)
+        sframe4c = Frame( frame4 )
+        sframe4c.pack(side=TOP)
+        yaxislab = Label(sframe4c, text="Y Axis ", style= "A10B.TLabel")
+        yaxislab.grid(row=0, column=0, sticky=W)
+        yaxislab.pack(side=LEFT)
+        yaxisentry = Entry(sframe4c, width=3)
+        yaxisentry.grid(row=0, column=1, sticky=W)
+        yaxisentry.pack(side=LEFT)
+        yaxisentry.delete(0,"end")
+        yaxisentry.insert(0,MathYAxis)
+        yapplybt = Button(sframe4c, text="Apply", command=ApplyMathYString )
+        yapplybt.grid(row=0, column=3, sticky=W)
+        yapplybt.pack(side=LEFT)
 
-    TempString = MathString
-    MathString = askstring("Math Formula", "Current Formula: " + MathString + "\n\nNew Formula:\n", initialvalue=MathString)
-    if (MathString == None):         # If Cancel pressed, then None
-        MathString = TempString
-    TempString = MathUnits
-    MathUnits = askstring("Math Units", "Current Units: " + MathUnits + "\n\nNew Units:\n", initialvalue=MathUnits)
-    if (MathUnits == None):         # If Cancel pressed, then None
-        MathUnits = TempString
+        dismissbutton = Button(MathWindow, text="Dismiss", command=DestroyMathScreen)
+        dismissbutton.grid(row=3, column=0, sticky=W)
+        
     if RUNstatus.get() > 0:
         UpdateTimeTrace()
-
-def BEnterMathXString():
-    global RUNstatus, XYScreenStatus, MathXString, xywindow, MathXUnits
-
-    TempString = MathXString
-    if XYScreenStatus.get() == 0:
-        MathXString = askstring("X Math Formula", "Current X Formula: " + MathXString + "\n\nNew X Formula:\n", initialvalue=MathXString)
-        if (MathXString == None):         # If Cancel pressed, then None
-            MathXString = TempString
-        TempString = MathXUnits
-        MathXUnits = askstring("X Math Units", "Current X Units: " + MathXUnits + "\n\nNew X Units:\n", initialvalue=MathXUnits)
-        if (MathXUnits == None):         # If Cancel pressed, then None
-            MathXUnits = TempString
-    else:
-        MathXString = askstring("X Math Formula", "Current X Formula: " + MathXString + "\n\nNew X Formula:\n", initialvalue=MathXString, parent=xywindow)
-        if (MathXString == None):         # If Cancel pressed, then None
-            MathXString = TempString
-        TempString = MathXUnits
-        MathXUnits = askstring("X Units", "Current X Units: " + MathXUnits + "\n\nNew X Units:\n", initialvalue=MathXUnits, parent=xywindow)
-        if (MathXUnits == None):         # If Cancel pressed, then None
-            MathXUnits = TempString
-        if RUNstatus.get() > 0:
-            UpdateXYTrace()
+#
+def DestroyMathScreen():
+    global MathScreenStatus, MathWindow
     
-def BEnterMathYString():
-    global RUNstatus, XYScreenStatus, MathYString, xywindow, MathYUnits
+    if MathScreenStatus.get() == 1:
+        MathScreenStatus.set(0)
+        MathWindow.destroy()
 
-    TempString = MathYString
-    if XYScreenStatus.get() == 0:
-        MathYString = askstring("Y Math Formula", "Current Y Formula: " + MathYString + "\n\nNew Y Formula:\n", initialvalue=MathYString)
-        if (MathYString == None):         # If Cancel pressed, then None
-            MathYString = TempString
-        TempString = MathYUnits
-        MathYUnits = askstring("Y Math Units", "Current Y Units: " + MathYUnits + "\n\nNew Y Units:\n", initialvalue=MathYUnits)
-        if (MathYUnits == None):         # If Cancel pressed, then None
-            MathYUnits = TempString
-    else:
-        MathYString = askstring("Y Math Formula", "Current Y Formula: " + MathYString + "\n\nNew Y Formula:\n", initialvalue=MathYString, parent=xywindow)
-        if (MathYString == None):         # If Cancel pressed, then None
-            MathYString = TempString
-        TempString = MathYUnits
-        MathYUnits = askstring("Y Units", "Current Y Units: " + MathYUnits + "\n\nNew Y Units:\n", initialvalue=MathYUnits, parent=xywindow)
-        if (MathYUnits == None):         # If Cancel pressed, then None
-            MathYUnits = TempString
-        if RUNstatus.get() > 0:
-            UpdateXYTrace()
+def CheckMathString():
+    global MathString, formentry, MathUnits, unitsentry, MathAxis, axisentry, formlab
+    global VBuffA, VBuffB, IBuffA, IBuffB
+    global VBuffMA, VBuffMB, VBuffMC, VBuffMD
+    global VmemoryA, VmemoryB, ImemoryA, ImemoryB
+    global FFTBuffA, FFTBuffB, FFTwindowshape
+    global Show_MathX, Show_MathY
+    global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
+    global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2
+
+    t = 0
+    TempString = formentry.get()
+    try:
+        MathResult = eval(TempString)
+        formlab.configure(text="Formula ", style= "A10G.TLabel")
+    except:
+        formlab.configure(text="Formula ", style= "A10R.TLabel")
+
+def CheckMathXString():
+    global MathXString, xformentry, MathXUnits, xunitsentry, MathXAxis, xaxisentry, xformlab
+    global VBuffA, VBuffB, IBuffA, IBuffB
+    global VBuffMA, VBuffMB, VBuffMC, VBuffMD
+    global VmemoryA, VmemoryB, ImemoryA, ImemoryB
+    global FFTBuffA, FFTBuffB, FFTwindowshape
+    global Show_MathX, Show_MathY
+    global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
+    global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2
+
+    t = 0
+    TempString = xformentry.get()
+    try:
+        MathResult = eval(TempString)
+        xformlab.configure(text="X Formula ", style= "A10G.TLabel")
+    except:
+        xformlab.configure(text="X Formula ", style= "A10R.TLabel")
+
+def CheckMathYString():
+    global MathYString, yformentry, MathYUnits, yunitsentry, MathYAxis, yaxisentry, yformlab
+    global VBuffA, VBuffB, IBuffA, IBuffB
+    global VBuffMA, VBuffMB, VBuffMC, VBuffMD
+    global VmemoryA, VmemoryB, ImemoryA, ImemoryB
+    global FFTBuffA, FFTBuffB, FFTwindowshape
+    global Show_MathX, Show_MathY
+    global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
+    global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2
+
+    t = 0
+    TempString = yformentry.get()
+    try:
+        MathResult = eval(TempString)
+        yformlab.configure(text="Y Formula ", style= "A10G.TLabel")
+    except:
+        yformlab.configure(text="Y Formula ", style= "A10R.TLabel")
+
     
-def BEnterMathAxis():
-    global RUNstatus, MathAxis
+def ApplyMathString():
+    global MathString, formentry, MathUnits, unitsentry, MathAxis, axisentry
 
-    TempString = MathAxis
-    MathAxis = askstring("Math Axis", "Current Math Axis: " + MathAxis + "\n\nNew Axis:\n", initialvalue=MathAxis)
-    if (MathAxis == None):         # If Cancel pressed, then None
-        MathAxis = TempString
-    UpdateTimeTrace()
-    
-def BEnterMathXAxis():
-    global RUNstatus, XYScreenStatus, MathXAxis, xywindow
+    MathString = formentry.get()
+    MathUnits = unitsentry.get()
+    MathAxis = axisentry.get()
 
-    TempString = MathXAxis
-    if XYScreenStatus.get() == 0:
-        MathXAxis = askstring("Math X Axis", "Current X Math Axis: " + MathXAxis + "\n\nNew X Axis:\n", initialvalue=MathXAxis)
-        if (MathXAxis == None):         # If Cancel pressed, then None
-            MathXAxis = TempString
-    else:
-        MathXAxis = askstring("Math X Axis", "Current X Math Axis: " + MathXAxis + "\n\nNew X Axis:\n", initialvalue=MathXAxis, parent=xywindow)
-        if (MathXAxis == None):         # If Cancel pressed, then None
-            MathXAxis = TempString
-        UpdateXYTrace()
-    
-def BEnterMathYAxis():
-    global RUNstatus, XYScreenStatus, MathYAxis, xywindow
+def ApplyMathXString():
+    global MathXString, xformentry, MathXUnits, xunitsentry, MathXAxis, xaxisentry
 
-    TempString = MathYAxis
-    if XYScreenStatus.get() == 0:
-        MathYAxis = askstring("Math Y Axis", "Current Math Y Axis: " + MathYAxis + "\n\nNew Y Axis:\n", initialvalue=MathYAxis)
-        if (MathYAxis == None):         # If Cancel pressed, then None
-            MathYAxis = TempString
-    else:
-        MathYAxis = askstring("Math Y Axis", "Current Math Y Axis: " + MathYAxis + "\n\nNew Y Axis:\n", initialvalue=MathYAxis, parent=xywindow)
-        if (MathYAxis == None):         # If Cancel pressed, then None
-            MathYAxis = TempString
-        UpdateXYTrace()
+    MathXString = xformentry.get()
+    MathXUnits = xunitsentry.get()
+    MathXAxis = xaxisentry.get()
+
+def ApplyMathYString():
+    global MathYString, yformentry, MathYUnits, yunitsentry, MathYAxis, yaxisentry
+
+    MathYString = yformentry.get()
+    MathYUnits = yunitsentry.get()
+    MathYAxis = yaxisentry.get()
 #
 def BSetMarkerLocation():
     global MarkerLoc
@@ -3822,7 +3996,6 @@ def MakeTimeTrace():    # Make the traces
                         except:
                             RUNstatus.set(0)
                             x = Xlimit + 1 # exit loop
-                            BEnterMathString()
                         
                     if y1 < Ymin: # clip waveform if going off grid
                         y1 = Ymin
@@ -3845,7 +4018,6 @@ def MakeTimeTrace():    # Make the traces
                     except:
                         RUNstatus.set(0)
                         x = Xlimit + 1 # exit loop
-                        BEnterMathXString()
                         
                     if y1 < Ymin: # clip waveform if going off grid
                         y1 = Ymin
@@ -3868,7 +4040,6 @@ def MakeTimeTrace():    # Make the traces
                     except:
                         RUNstatus.set(0)
                         x = Xlimit + 1 # exit loop
-                        BEnterMathYString()
                         
                     if y1 < Ymin: # clip waveform if going off grid
                         y1 = Ymin
@@ -4201,7 +4372,6 @@ def MakeTimeTrace():    # Make the traces
                         except:
                             RUNstatus.set(0)
                             x = GRW + 1
-                            BEnterMathString()
                         
                     if (y1 < Ymin):
                         y1 = Ymin
@@ -4224,7 +4394,6 @@ def MakeTimeTrace():    # Make the traces
                     except:
                         RUNstatus.set(0)
                         x = GRW + 1
-                        BEnterMathXString()
                         
                     if y1 < Ymin: # clip waveform if going off grid
                         y1 = Ymin
@@ -4247,7 +4416,6 @@ def MakeTimeTrace():    # Make the traces
                     except:
                         RUNstatus.set(0)
                         x = GRW + 1
-                        BEnterMathYString()
                         
                     if y1 < Ymin: # clip waveform if going off grid
                         y1 = Ymin
@@ -4547,14 +4715,12 @@ def MakeXYTrace():    # Make the traces
                 ylo = int(c1 - YconvMxy * MathResult)
             except:
                 RUNstatus.set(0)
-                BEnterMathYString()
             try:
                 MathResult = eval(MathXString)
                 MathResult = MathResult - CHMXOffset
                 xlo = int(c2 + XconvMxy * MathResult)
             except:
                 RUNstatus.set(0)
-                BEnterMathYString()
         if ylo < YminXY: # clip waveform if going off grid
             ylo  = YminXY
         if ylo > YmaxXY:
@@ -6791,10 +6957,15 @@ def Write_WAV(data, repeat, filename):
     
 # =========== Awg functions ==================
 def BAWGAAmpl(temp):
-    global AWGAAmplEntry, AWGAAmplvalue, AWGAMode
+    global AWGAAmplEntry, AWGAAmplvalue, AWGAMode, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
     try:
         AWGAAmplvalue = float(eval(AWGAAmplEntry.get()))
+    except:
+        AWGAAmplEntry.delete(0,"end")
+        AWGAAmplEntry.insert(0, AWGAAmplvalue)
+    #
+    if AWG_Amp_Mode.get() == 0: # 0 = Min/Max mode
         if AWGAMode.get() == 0: # Source Voltage measure current mode
             if AWGAAmplvalue > 5.00:
                 AWGAAmplvalue = 5.00
@@ -6804,48 +6975,53 @@ def BAWGAAmpl(temp):
                 AWGAAmplvalue = 0.00
                 AWGAAmplEntry.delete(0,"end")
                 AWGAAmplEntry.insert(0, AWGAAmplvalue)
-        elif AWGAMode.get() == 1: # Source current measure voltage mode
-            if AWGAAmplvalue > 200.00:
-                AWGAAmplvalue = 200.00
+    elif AWG_Amp_Mode.get() == 1: # 1 = Amp/Offset
+        if AWGAMode.get() == 0: # Source Voltage measure current mode
+            if AWGAAmplvalue > 2.5:
+                AWGAAmplvalue = 2.5
                 AWGAAmplEntry.delete(0,"end")
                 AWGAAmplEntry.insert(0, AWGAAmplvalue)
-            if AWGAAmplvalue < -200.00:
-                AWGAAmplvalue = -200.00
+            if AWGAAmplvalue < -2.50:
+                AWGAAmplvalue = -2.50
                 AWGAAmplEntry.delete(0,"end")
                 AWGAAmplEntry.insert(0, AWGAAmplvalue)
-    except:
-        AWGAAmplEntry.delete(0,"end")
-        AWGAAmplEntry.insert(0, AWGAAmplvalue)
-    #UpdateAWGA()
-    
+    if AWGAMode.get() == 1: # Source current measure voltage mode
+        if AWGAAmplvalue > 200.00:
+            AWGAAmplvalue = 200.00
+            AWGAAmplEntry.delete(0,"end")
+            AWGAAmplEntry.insert(0, AWGAAmplvalue)
+        if AWGAAmplvalue < -200.00:
+            AWGAAmplvalue = -200.00
+            AWGAAmplEntry.delete(0,"end")
+            AWGAAmplEntry.insert(0, AWGAAmplvalue)
+#
 def BAWGAOffset(temp):
-    global AWGAOffsetEntry, AWGAOffsetvalue, AWGAMode
+    global AWGAOffsetEntry, AWGAOffsetvalue, AWGAMode, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
     try:
         AWGAOffsetvalue = float(eval(AWGAOffsetEntry.get()))
-        if AWGAMode.get() == 0: # Source Voltage measure current mode
-            if AWGAOffsetvalue > 5.00:
-                AWGAOffsetvalue = 5.00
-                AWGAOffsetEntry.delete(0,"end")
-                AWGAOffsetEntry.insert(0, AWGAOffsetvalue)
-            if AWGAOffsetvalue < 0.00:
-                AWGAOffsetvalue = 0.00
-                AWGAOffsetEntry.delete(0,"end")
-                AWGAOffsetEntry.insert(0, AWGAOffsetvalue)
-        elif AWGAMode.get() == 1: # Source current measure voltage mode
-            if AWGAOffsetvalue > 200.00:
-                AWGAOffsetvalue = 200.00
-                AWGAOffsetEntry.delete(0,"end")
-                AWGAOffsetEntry.insert(0, AWGAOffsetvalue)
-            if AWGAOffsetvalue < -200.00:
-                AWGAOffsetvalue = -200.00
-                AWGAOffsetEntry.delete(0,"end")
-                AWGAOffsetEntry.insert(0, AWGAOffsetvalue)
     except:
         AWGAOffsetEntry.delete(0,"end")
         AWGAOffsetEntry.insert(0, AWGAOffsetvalue)
-    #UpdateAWGA()
-    
+    if AWGAMode.get() == 0: # Source Voltage measure current mode
+        if AWGAOffsetvalue > 5.00:
+            AWGAOffsetvalue = 5.00
+            AWGAOffsetEntry.delete(0,"end")
+            AWGAOffsetEntry.insert(0, AWGAOffsetvalue)
+        if AWGAOffsetvalue < 0.00:
+            AWGAOffsetvalue = 0.00
+            AWGAOffsetEntry.delete(0,"end")
+            AWGAOffsetEntry.insert(0, AWGAOffsetvalue)
+    if AWGAMode.get() == 1: # Source current measure voltage mode
+        if AWGAOffsetvalue > 200.00:
+            AWGAOffsetvalue = 200.00
+            AWGAOffsetEntry.delete(0,"end")
+            AWGAOffsetEntry.insert(0, AWGAOffsetvalue)
+        if AWGAOffsetvalue < -200.00:
+            AWGAOffsetvalue = -200.00
+            AWGAOffsetEntry.delete(0,"end")
+            AWGAOffsetEntry.insert(0, AWGAOffsetvalue)
+#
 def BAWGAFreq(temp):
     global AWGAFreqEntry, AWGAFreqvalue
 
@@ -7040,7 +7216,7 @@ def AWGAMakeMath():
 #
 def AWGAMakeFourier():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength
-    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab
+    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
     temp = 0
     BAWGAAmpl(temp)
@@ -7057,8 +7233,12 @@ def AWGAMakeFourier():
         Harmonic = (math.sin(k*numpy.pi/2.0)/k)*(numpy.cos(numpy.linspace(0, k*2*numpy.pi, AWGSAMPLErate/AWGAFreqvalue)))
         AWGAwaveform = AWGAwaveform + Harmonic
         k = k + 2 # skip even numbers
-    amplitude = (AWGAOffsetvalue-AWGAAmplvalue)/2.0
-    offset = (AWGAOffsetvalue+AWGAAmplvalue)/2.0
+    if AWG_Amp_Mode.get() == 0:
+        amplitude = (AWGAOffsetvalue-AWGAAmplvalue)/2.0
+        offset = (AWGAOffsetvalue+AWGAAmplvalue)/2.0
+    else:
+        amplitude = AWGAAmplvalue
+        offset = AWGAOffsetvalue
     AWGAwaveform = (AWGAwaveform * amplitude) + offset # scale and offset the waveform
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
     duty1lab.config(text="Harmonics")
@@ -7066,7 +7246,7 @@ def AWGAMakeFourier():
 #
 def AWGAMakeSSQ():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, phasealab, duty1lab
-    global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue
+    global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
     temp = 0
     BAWGAAmpl(temp)
@@ -7079,8 +7259,12 @@ def AWGAMakeSSQ():
         AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
     else:
         AWGAperiodvalue = 0.0
-    MaxV = AWGAOffsetvalue
-    MinV = AWGAAmplvalue
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
+        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+    else:
+        MaxV = AWGAOffsetvalue
+        MinV = AWGAAmplvalue
     AWGAwaveform = []
     SlopeValue = int(AWGAPhasevalue*100)
     if SlopeValue <= 0:
@@ -7107,7 +7291,7 @@ def AWGAMakeSSQ():
 #
 def AWGAMakeTrapazoid():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, phasealab, duty1lab
-    global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue
+    global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
     temp = 0
     BAWGAAmpl(temp)
@@ -7120,8 +7304,12 @@ def AWGAMakeTrapazoid():
         AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
     else:
         AWGAperiodvalue = 0.0
-    MaxV = AWGAOffsetvalue
-    MinV = AWGAAmplvalue
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
+        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+    else:
+        MaxV = AWGAOffsetvalue
+        MinV = AWGAAmplvalue
     AWGAwaveform = []
     SlopeValue = int(AWGAPhasevalue*100) # convert mS to samples
     if SlopeValue <= 0:
@@ -7154,7 +7342,7 @@ def AWGAMakeTrapazoid():
 #
 def AWGAMakeRamp():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, phasealab, duty1lab
-    global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue
+    global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
     temp = 0
     BAWGAAmpl(temp)
@@ -7167,8 +7355,12 @@ def AWGAMakeRamp():
         AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
     else:
         AWGAperiodvalue = 0.0
-    MaxV = AWGAOffsetvalue
-    MinV = AWGAAmplvalue
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
+        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+    else:
+        MaxV = AWGAOffsetvalue
+        MinV = AWGAAmplvalue
     AWGAwaveform = []
     SlopeValue = int(AWGAPhasevalue*100) # convert mS to samples
     if SlopeValue <= 0:
@@ -7198,7 +7390,7 @@ def AWGAMakeRamp():
 #
 def AWGAMakeUpDownRamp():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, duty1lab
-    global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue
+    global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
     temp = 0
     BAWGAAmpl(temp)
@@ -7211,8 +7403,12 @@ def AWGAMakeUpDownRamp():
         AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
     else:
         AWGAperiodvalue = 0.0
-    MaxV = AWGAOffsetvalue
-    MinV = AWGAAmplvalue
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
+        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+    else:
+        MaxV = AWGAOffsetvalue
+        MinV = AWGAAmplvalue
     AWGAwaveform = []
     PulseWidth = int(AWGAperiodvalue * AWGADutyCyclevalue)
     if PulseWidth <=0:
@@ -7236,7 +7432,7 @@ def AWGAMakeUpDownRamp():
     UpdateAwgCont()
 #
 def AWGAMakeImpulse():
-    global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay
+    global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue
 
     temp = 0
@@ -7250,8 +7446,12 @@ def AWGAMakeImpulse():
         AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
     else:
         AWGAperiodvalue = 0.0
-    MaxV = AWGAOffsetvalue
-    MinV = AWGAAmplvalue
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
+        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+    else:
+        MaxV = AWGAOffsetvalue
+        MinV = AWGAAmplvalue
     AWGAwaveform = []
     PulseWidth = int(AWGAperiodvalue * AWGADutyCyclevalue / 2.0)
     if AWGAPhaseDelay.get() == 0:
@@ -7272,7 +7472,7 @@ def AWGAMakeImpulse():
     
 def AWGAMakeUUNoise():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGAFreqvalue
-    global AWGALength, AWGAperiodvalue
+    global AWGALength, AWGAperiodvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
     temp = 0
     BAWGAAmpl(temp)
@@ -7283,13 +7483,16 @@ def AWGAMakeUUNoise():
         AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
     else:
         AWGAperiodvalue = 0.0
-
-    if AWGAAmplvalue > AWGAOffsetvalue:
-        MinV = AWGAOffsetvalue
-        MaxV = AWGAAmplvalue
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
+        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
     else:
-        MaxV = AWGAOffsetvalue
-        MinV = AWGAAmplvalue
+        if AWGAAmplvalue > AWGAOffsetvalue:
+            MinV = AWGAOffsetvalue
+            MaxV = AWGAAmplvalue
+        else:
+            MaxV = AWGAOffsetvalue
+            MinV = AWGAAmplvalue
     AWGAwaveform = []
     AWGAwaveform = numpy.random.uniform(MinV, MaxV, int(AWGAperiodvalue))
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
@@ -7297,7 +7500,7 @@ def AWGAMakeUUNoise():
     
 def AWGAMakeUGNoise():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGAFreqvalue
-    global AWGALength, AWGAperiodvalue
+    global AWGALength, AWGAperiodvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
     temp = 0
     BAWGAAmpl(temp)
@@ -7308,13 +7511,16 @@ def AWGAMakeUGNoise():
         AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
     else:
         AWGAperiodvalue = 0.0
-
-    if AWGAAmplvalue > AWGAOffsetvalue:
-        MinV = AWGAOffsetvalue
-        MaxV = AWGAAmplvalue
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
+        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
     else:
-        MaxV = AWGAOffsetvalue
-        MinV = AWGAAmplvalue
+        if AWGAAmplvalue > AWGAOffsetvalue:
+            MinV = AWGAOffsetvalue
+            MaxV = AWGAAmplvalue
+        else:
+            MaxV = AWGAOffsetvalue
+            MinV = AWGAAmplvalue
     AWGAwaveform = []
     AWGAwaveform = numpy.random.normal((MinV+MaxV)/2, (MaxV-MinV)/3, int(AWGAperiodvalue))
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
@@ -7322,6 +7528,7 @@ def AWGAMakeUGNoise():
     
 def BAWGAModeLabel():
     global AWGAMode, AWGAIOMode, AWGAModeLabel, DevID, session, devx, DevOne, CHA, HWRevOne
+    global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
     if AWGAMode.get() == 0: # Source Voltage measure current mode
         label_txt = "SVMI"
@@ -7346,9 +7553,10 @@ def BAWGAModeLabel():
 def UpdateAWGA():
     global AWGAAmplvalue, AWGAOffsetvalue
     global AWGAFreqvalue, AWGAPhasevalue, AWGAPhaseDelay
-    global AWGADutyCyclevalue, FSweepMode, AWGARepeatFlag
+    global AWGADutyCyclevalue, FSweepMode, AWGARepeatFlag, AWGSync
     global AWGAWave, AWGAMode, AWGATerm, AWGAwaveform, AWGBAIOMode
-    global CHA, AWGSAMPLErate, DevID, devx, HWRevOne
+    global CHA, AWGSAMPLErate, DevID, devx, HWRevOne, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global amp1lab, off1lab
     
     temp = 0
     BAWGAAmpl(temp)
@@ -7357,7 +7565,14 @@ def UpdateAWGA():
     BAWGAPhase(temp)
     BAWGADutyCycle(temp)
     BAWGAShape()
-    
+
+    if AWG_Amp_Mode.get() == 0: # 0 = Min/Max mode, 1 = Amp/Offset
+        amp1lab.config(text = "Min Ch A" ) # change displayed value
+        off1lab.config(text = "Max Ch A" ) # change displayed value
+    else:
+        amp1lab.config(text = "Amp Ch A" )
+        off1lab.config(text = "Off Ch A" )
+        
     if AWGAFreqvalue > 0.0:
         AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
     else:
@@ -7417,18 +7632,26 @@ def UpdateAWGA():
             CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
             # CHA.constant(0.0)
         else:
+            if AWG_Amp_Mode.get() == 1:
+                MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
+                MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+            else:
+                MaxV = AWGAOffsetvalue
+                MinV = AWGAAmplvalue
             try:
                 if AWGAWave == 'sine':
-                    CHA.sine(AWGAOffsetvalue, AWGAAmplvalue, AWGAperiodvalue, AWGAdelayvalue)
+                    CHA.sine(MaxV, MinV, AWGAperiodvalue, AWGAdelayvalue)
                 elif AWGAWave == 'triangle':
-                    CHA.triangle(AWGAOffsetvalue, AWGAAmplvalue, AWGAperiodvalue, AWGAdelayvalue)
+                    CHA.triangle(MaxV, MinV, AWGAperiodvalue, AWGAdelayvalue)
                 elif AWGAWave == 'sawtooth':
-                    CHA.sawtooth(AWGAOffsetvalue, AWGAAmplvalue, AWGAperiodvalue, AWGAdelayvalue)
+                    CHA.sawtooth(MaxV, MinV, AWGAperiodvalue, AWGAdelayvalue)
                 elif AWGAWave == 'square':
-                    CHA.square(AWGAOffsetvalue, AWGAAmplvalue, AWGAperiodvalue, AWGAdelayvalue, AWGADutyCyclevalue)
+                    CHA.square(MaxV, MinV, AWGAperiodvalue, AWGAdelayvalue, AWGADutyCyclevalue)
                 elif AWGAWave == 'stairstep':
-                    CHA.stairstep(AWGAOffsetvalue, AWGAAmplvalue, AWGAperiodvalue, AWGAdelayvalue)
+                    CHA.stairstep(MaxV, MinV, AWGAperiodvalue, AWGAdelayvalue)
                 elif AWGAWave == 'arbitrary':
+                    if AWGSync.get() == 0:
+                        AWGARepeatFlag.set(1)
                     CHA.arbitrary(AWGAwaveform, AWGARepeatFlag.get()) # set repeat flag
             except:
                     donothing()
@@ -7436,24 +7659,34 @@ def UpdateAWGA():
             if HWRevOne == "D":
                 AWGAMode.set(1)
                 CHA.mode = Mode.SIMV # channel must be in source current mode
-            devx.ctrl_transfer( 0x40, 0x51, 34, 0, 0, 0, 100) # open voltage sense loop
+            devx.ctrl_transfer(0x40, 0x51, 34, 0, 0, 0, 100) # open voltage sense loop
         else:
-            devx.ctrl_transfer( 0x40, 0x50, 34, 0, 0, 0, 100) # close voltage sense loop
+            devx.ctrl_transfer(0x40, 0x50, 34, 0, 0, 0, 100) # close voltage sense loop
 # AWG B functions 
 def BAWGBAmpl(temp):
-    global AWGBAmplEntry, AWGBAmplvalue, AWGBMode
+    global AWGBAmplEntry, AWGBAmplvalue, AWGBMode, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
     try:
         AWGBAmplvalue = float(eval(AWGBAmplEntry.get()))
         if AWGBMode.get() == 0: # Source Voltage measure current mode
-            if AWGBAmplvalue > 5.00:
-                AWGBAmplvalue = 5.00
-                AWGBAmplEntry.delete(0,"end")
-                AWGBAmplEntry.insert(0, AWGBAmplvalue)
-            if AWGBAmplvalue < 0.00:
-                AWGBAmplvalue = 0.00
-                AWGBAmplEntry.delete(0,"end")
-                AWGBAmplEntry.insert(0, AWGBAmplvalue)
+            if AWG_Amp_Mode.get() == 0: # 0 = Min/Max
+                if AWGBAmplvalue > 5.00:
+                    AWGBAmplvalue = 5.00
+                    AWGBAmplEntry.delete(0,"end")
+                    AWGBAmplEntry.insert(0, AWGBAmplvalue)
+                if AWGBAmplvalue < 0.00:
+                    AWGBAmplvalue = 0.00
+                    AWGBAmplEntry.delete(0,"end")
+                    AWGBAmplEntry.insert(0, AWGBAmplvalue)
+            elif AWG_Amp_Mode.get() == 1: # 1 = Amp/Offset
+                if AWGBAmplvalue > 2.5:
+                    AWGBAmplvalue = 2.5
+                    AWGBAmplEntry.delete(0,"end")
+                    AWGBAmplEntry.insert(0, AWGBAmplvalue)
+                if AWGBAmplvalue < -2.50:
+                    AWGBAmplvalue = -2.50
+                    AWGBAmplEntry.delete(0,"end")
+                    AWGBAmplEntry.insert(0, AWGBAmplvalue)
         elif AWGBMode.get() == 1: # Source current measure voltage mode
             if AWGBAmplvalue > 200.00:
                 AWGBAmplvalue = 200.00
@@ -7466,9 +7699,9 @@ def BAWGBAmpl(temp):
     except:
         AWGBAmplEntry.delete(0,"end")
         AWGBAmplEntry.insert(0, AWGBAmplvalue)
-    # UpdateAWGB()
+#
 def BAWGBOffset(temp):
-    global AWGBOffsetEntry, AWGBOffsetvalue, AWGBMode
+    global AWGBOffsetEntry, AWGBOffsetvalue, AWGBMode, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
     try:
         AWGBOffsetvalue = float(eval(AWGBOffsetEntry.get()))
@@ -7493,8 +7726,7 @@ def BAWGBOffset(temp):
     except:
         AWGBOffsetEntry.delete(0,"end")
         AWGBOffsetEntry.insert(0, AWGBOffsetvalue)
-    # UpdateAWGB()
-    
+#
 def BAWGBFreq(temp):
     global AWGBFreqEntry, AWGBFreqvalue
 
@@ -7674,7 +7906,8 @@ def AWGBMakeMath():
 #
 def AWGBMakeFourier():
     global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBFreqvalue, awgwindow
-
+    global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    
     Max_termStr = askstring("AWG B Fourier", "\nEnter Max Harmonic:\n", parent=awgwindow)
     if (Max_termStr == None):         # If Cancel pressed, then None
         return
@@ -7683,6 +7916,7 @@ def AWGBMakeFourier():
     BAWGBAmpl(temp)
     BAWGBOffset(temp)
     BAWGBFreq(temp)
+
     AWGBwaveform = []
     AWGBwaveform = numpy.cos(numpy.linspace(0, 2*numpy.pi, AWGSAMPLErate/AWGBFreqvalue)) # the fundamental
     k = 3
@@ -7691,8 +7925,12 @@ def AWGBMakeFourier():
         Harmonic = (math.sin(k*numpy.pi/2)/k)*(numpy.cos(numpy.linspace(0, k*2*numpy.pi, AWGSAMPLErate/AWGBFreqvalue)))
         AWGBwaveform = AWGBwaveform + Harmonic
         k = k + 2 # skip even numbers
-    amplitude = (AWGBOffsetvalue-AWGBAmplvalue)/2
-    offset = (AWGBOffsetvalue+AWGBAmplvalue)/2
+    if AWG_Amp_Mode.get() == 0:
+        amplitude = (AWGBOffsetvalue-AWGBAmplvalue)/2
+        offset = (AWGBOffsetvalue+AWGBAmplvalue)/2
+    else:
+        amplitude = AWGBAmplvalue
+        offset = AWGBOffsetvalue
     AWGBwaveform = (AWGBwaveform * amplitude) + offset # scale and offset the waveform
     AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
     duty2lab.config(text="Harmonics")
@@ -7701,7 +7939,8 @@ def AWGBMakeFourier():
 def AWGBMakeSSQ():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
-
+    global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    
     temp = 0
     BAWGBAmpl(temp)
     BAWGBOffset(temp)
@@ -7713,8 +7952,12 @@ def AWGBMakeSSQ():
         AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
     else:
         AWGBperiodvalue = 0.0
-    MaxV = AWGBOffsetvalue
-    MinV = AWGBAmplvalue
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
+        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+    else:
+        MaxV = AWGBOffsetvalue
+        MinV = AWGBAmplvalue
     AWGBwaveform = []
     SlopeValue = int(AWGBPhasevalue*100)
     if SlopeValue <= 0:
@@ -7742,6 +7985,7 @@ def AWGBMakeSSQ():
 def AWGBMakeTrapazoid():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
+    global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
     temp = 0
     BAWGBAmpl(temp)
@@ -7754,8 +7998,12 @@ def AWGBMakeTrapazoid():
         AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
     else:
         AWGBperiodvalue = 0.0
-    MaxV = AWGBOffsetvalue
-    MinV = AWGBAmplvalue
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
+        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+    else:
+        MaxV = AWGBOffsetvalue
+        MinV = AWGBAmplvalue
     AWGBwaveform = []
     SlopeValue = int(AWGBPhasevalue*100)
     if SlopeValue <= 0:
@@ -7786,10 +8034,10 @@ def AWGBMakeTrapazoid():
     phaseblab.config(text = "Rise Time")
     UpdateAwgCont()
 #
-#    
 def AWGBMakeRamp():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
+    global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
     temp = 0
     BAWGBAmpl(temp)
@@ -7802,8 +8050,12 @@ def AWGBMakeRamp():
         AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
     else:
         AWGBperiodvalue = 0.0
-    MaxV = AWGBOffsetvalue
-    MinV = AWGBAmplvalue
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
+        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+    else:
+        MaxV = AWGBOffsetvalue
+        MinV = AWGBAmplvalue
     AWGBwaveform = []
     SlopeValue = int(AWGBPhasevalue*100)
     if SlopeValue <= 0:
@@ -7834,6 +8086,7 @@ def AWGBMakeRamp():
 def AWGBMakeUpDownRamp():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
+    global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
     temp = 0
     BAWGBAmpl(temp)
@@ -7846,8 +8099,12 @@ def AWGBMakeUpDownRamp():
         AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
     else:
         AWGBperiodvalue = 0.0
-    MaxV = AWGBOffsetvalue
-    MinV = AWGBAmplvalue
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
+        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+    else:
+        MaxV = AWGBOffsetvalue
+        MinV = AWGBAmplvalue
     AWGBwaveform = []
     PulseWidth = int(AWGBperiodvalue * AWGBDutyCyclevalue)
     if PulseWidth <=0:
@@ -7873,6 +8130,7 @@ def AWGBMakeUpDownRamp():
 def AWGBMakeImpulse():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
+    global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
     temp = 0
     BAWGBAmpl(temp)
@@ -7887,6 +8145,12 @@ def AWGBMakeImpulse():
         AWGBperiodvalue = 0.0
     MaxV = AWGBOffsetvalue
     MinV = AWGBAmplvalue
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
+        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+    else:
+        MaxV = AWGBOffsetvalue
+        MinV = AWGBAmplvalue
     AWGBwaveform = []
     PulseWidth = int(AWGBperiodvalue * AWGBDutyCyclevalue / 2)
     if AWGBPhaseDelay.get() == 0:
@@ -7907,7 +8171,7 @@ def AWGBMakeImpulse():
 
 def AWGBMakeUUNoise():
     global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBFreqvalue
-    global AWGBLength, AWGBperiodvalue
+    global AWGBLength, AWGBperiodvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
     temp = 0
     BAWGBAmpl(temp)
@@ -7925,6 +8189,9 @@ def AWGBMakeUUNoise():
     else:
         MaxV = AWGBOffsetvalue
         MinV = AWGBAmplvalue
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
+        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
     AWGBwaveform = []
     AWGBwaveform = numpy.random.uniform(MinV, MaxV, int(AWGBperiodvalue))
     AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
@@ -7932,7 +8199,7 @@ def AWGBMakeUUNoise():
     
 def AWGBMakeUGNoise():
     global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBFreqvalue
-    global AWGBLength, AWGBperiodvalue
+    global AWGBLength, AWGBperiodvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
     temp = 0
     BAWGBAmpl(temp)
@@ -7943,13 +8210,15 @@ def AWGBMakeUGNoise():
         AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
     else:
         AWGBperiodvalue = 0.0
-        
     if AWGBAmplvalue > AWGBOffsetvalue:
         MinV = AWGBOffsetvalue
         MaxV = AWGBAmplvalue
     else:
         MaxV = AWGBOffsetvalue
         MinV = AWGBAmplvalue
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
+        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
     AWGBwaveform = []
     AWGBwaveform = numpy.random.normal((MinV+MaxV)/2, (MaxV-MinV)/3, int(AWGBperiodvalue))
     AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
@@ -7981,10 +8250,18 @@ def BAWGBModeLabel():
 def UpdateAWGB():
     global AWGBAmplvalue, AWGBOffsetvalue
     global AWGBFreqvalue, AWGBPhasevalue, AWGBPhaseDelay
-    global AWGBDutyCyclevalue, FSweepMode, AWGBRepeatFlag
+    global AWGBDutyCyclevalue, FSweepMode, AWGBRepeatFlag, AWGSync
     global AWGBWave, AWGBMode, AWGBTerm, AWGBwaveform, AWGBIOMode
     global CHB, AWGSAMPLErate, DevID, devx, HWRevOne
+    global amp2lab, off2lab, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     
+    if AWG_Amp_Mode.get() == 0: # 0 = Min/Max mode, 1 = Amp/Offset
+        amp2lab.config(text = "Min Ch B" ) # change displayed value
+        off2lab.config(text = "Max Ch B" ) # change displayed value
+    else:
+        amp2lab.config(text = "Amp Ch B" )
+        off2lab.config(text = "Off Ch B" )
+        
     if AWGBFreqvalue > 0.0:
         AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
     else:
@@ -8037,18 +8314,26 @@ def UpdateAWGB():
         if AWGBMode.get() == 2: # Hi impedance mode
             CHB.mode = Mode.HI_Z # Put CHB in Hi Z mode
         else:
+            if AWG_Amp_Mode.get() == 1:
+                MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
+                MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+            else:
+                MaxV = AWGBOffsetvalue
+                MinV = AWGBAmplvalue
             try: # keep going even if low level library returns an error
                 if AWGBWave == 'sine':
-                    CHB.sine(AWGBOffsetvalue, AWGBAmplvalue, AWGBperiodvalue, AWGBdelayvalue)
+                    CHB.sine(MaxV, MinV, AWGBperiodvalue, AWGBdelayvalue)
                 elif AWGBWave == 'triangle':
-                    CHB.triangle(AWGBOffsetvalue, AWGBAmplvalue, AWGBperiodvalue, AWGBdelayvalue)
+                    CHB.triangle(MaxV, MinV, AWGBperiodvalue, AWGBdelayvalue)
                 elif AWGBWave == 'sawtooth':
-                    CHB.sawtooth(AWGBOffsetvalue, AWGBAmplvalue, AWGBperiodvalue, AWGBdelayvalue)
+                    CHB.sawtooth(MaxV, MinV, AWGBperiodvalue, AWGBdelayvalue)
                 elif AWGBWave == 'square':
-                    CHB.square(AWGBOffsetvalue, AWGBAmplvalue, AWGBperiodvalue, AWGBdelayvalue, AWGBDutyCyclevalue)
+                    CHB.square(MaxV, MinV, AWGBperiodvalue, AWGBdelayvalue, AWGBDutyCyclevalue)
                 elif AWGBWave == 'stairstep':
-                    CHB.stairstep(AWGBOffsetvalue, AWGBAmplvalue, AWGBperiodvalue, AWGBdelayvalue)
+                    CHB.stairstep(MaxV, MinV, AWGBperiodvalue, AWGBdelayvalue)
                 elif AWGBWave == 'arbitrary':
+                    if AWGSync.get() == 0:
+                        AWGBRepeatFlag.set(1)
                     CHB.arbitrary(AWGBwaveform, AWGBRepeatFlag.get()) # set repeat flag
             except:
                     donothing()
@@ -11194,7 +11479,8 @@ def MakeAWGWindow():
     global AWGBAmplEntry, AWGBOffsetEntry, AWGBFreqEntry, AWGBPhaseEntry, AWGBDutyCycleEntry
     global AWGALength, AWGBLength, RevDate, phasealab, phaseblab, AWGAModeLabel, AWGBModeLabel
     global AWGAIOMode, AWGBIOMode, duty1lab, duty2lab, awgaph, awgadel, awgbph, awgbdel
-    global AwgLayout
+    global AwgLayout, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global amp1lab, amp2lab, off1lab, off2lab
     
     if AWGScreenStatus.get() == 0:
         AWGScreenStatus.set(1)
@@ -11275,7 +11561,7 @@ def MakeAWGWindow():
         AWGAAmplEntry.pack(side=LEFT, anchor=W)
         AWGAAmplEntry.delete(0,"end")
         AWGAAmplEntry.insert(0,0.0)
-        amp1lab = Label(awg1ampl, text="Min Ch A")
+        amp1lab = Label(awg1ampl) #, text="Min Ch A")
         amp1lab.pack(side=LEFT, anchor=W)
         #
         awg1off = Frame( frame2 )
@@ -11287,8 +11573,14 @@ def MakeAWGWindow():
         AWGAOffsetEntry.pack(side=LEFT, anchor=W)
         AWGAOffsetEntry.delete(0,"end")
         AWGAOffsetEntry.insert(0,0.0)
-        off1lab = Label(awg1off, text="Max Ch A")
+        off1lab = Label(awg1off) #, text="Max Ch A")
         off1lab.pack(side=LEFT, anchor=W)
+        if AWG_Amp_Mode.get() == 0:
+            amp1lab.config(text = "Min Ch A" ) # change displayed value
+            off1lab.config(text = "Max Ch A" ) # change displayed value
+        else:
+            amp1lab.config(text = "Amp Ch A" )
+            off1lab.config(text = "Off Ch A" )
         # AWG Frequency sub frame
         awg1freq = Frame( frame2 )
         awg1freq.pack(side=TOP)
@@ -11402,7 +11694,7 @@ def MakeAWGWindow():
         AWGBAmplEntry.pack(side=LEFT, anchor=W)
         AWGBAmplEntry.delete(0,"end")
         AWGBAmplEntry.insert(0,0.0)
-        amp2lab = Label(awg2ampl, text="Min Ch B")
+        amp2lab = Label(awg2ampl) #, text="Min Ch B")
         amp2lab.pack(side=LEFT, anchor=W)
         #
         awg2off = Frame( frame3 )
@@ -11414,8 +11706,14 @@ def MakeAWGWindow():
         AWGBOffsetEntry.pack(side=LEFT, anchor=W)
         AWGBOffsetEntry.delete(0,"end")
         AWGBOffsetEntry.insert(0,0.0)
-        off2lab = Label(awg2off, text="Max Ch B")
+        off2lab = Label(awg2off) #, text="Max Ch B")
         off2lab.pack(side=LEFT, anchor=W)
+        if AWG_Amp_Mode.get() == 0:
+            amp2lab.config(text = "Min Ch B" ) # change displayed value
+            off2lab.config(text = "Max Ch B" ) # change displayed value
+        else:
+            amp2lab.config(text = "Amp Ch B" )
+            off2lab.config(text = "Off Ch B" )
         # AWG Frequency sub frame
         awg2freq = Frame( frame3 )
         awg2freq.pack(side=TOP)
@@ -12229,9 +12527,12 @@ def MakeXYWindow():
         sbxy.pack(side=LEFT)
         rbxy = Button(RUNframe, text="Run", style="Run.TButton", command=BStart)
         rbxy.pack(side=LEFT)
+        # Open Math trace menu
+        mathbt = Button(frame2xyr, text="Math", style="W4.TButton", command = NewEnterMathControls)
+        mathbt.pack(side=TOP) #, anchor=W)
         # Disply mode menu
         # X - Y mode signal select
-        AxisLabX = Label(frame2xyr, text ="-X Axis-")
+        AxisLabX = Label(frame2xyr, text ="-X Axis-", style="A10R1.TLabelframe.Label")
         AxisLabX.pack(side=TOP)
         chaxmenu = Frame( frame2xyr )
         chaxmenu.pack(side=TOP)
@@ -12251,12 +12552,8 @@ def MakeXYWindow():
         rbx8.pack(side=TOP)
         rbx6 = Radiobutton(frame2xyr, text='Math', variable=Xsignal, value=5, command=UpdateXYTrace)
         rbx6.pack(side=TOP)
-        xb1 = Button(frame2xyr, text="Enter X Formula", style="W16.TButton", command=BEnterMathXString)
-        xb1.pack(side=TOP)
-        xb2 = Button(frame2xyr, text="Math X Axis", style="W16.TButton", command=BEnterMathXAxis)
-        xb2.pack(side=TOP)
         #
-        AxisLabY = Label(frame2xyr, text ="-Y Axis-")
+        AxisLabY = Label(frame2xyr, text ="-Y Axis-", style="A10R2.TLabelframe.Label")
         AxisLabY.pack(side=TOP)
         chaymenu = Frame( frame2xyr )
         chaymenu.pack(side=TOP)
@@ -12272,10 +12569,6 @@ def MakeXYWindow():
         rby5.pack(side=LEFT, anchor=W)
         rby6 = Radiobutton(frame2xyr, text='Math', variable=Ysignal, value=5, command=UpdateXYTrace)
         rby6.pack(side=TOP)
-        yb1 = Button(frame2xyr, text="Enter Y Formula", style="W16.TButton", command=BEnterMathYString)
-        yb1.pack(side=TOP)
-        yb2 = Button(frame2xyr, text="Math Y Axis", style="W16.TButton", command=BEnterMathYAxis)
-        yb2.pack(side=TOP)
         # show cursor menu buttons
         cursormenu = Frame( frame2xyr )
         cursormenu.pack(side=TOP)
@@ -12371,10 +12664,11 @@ def MakeXYWindow():
         CHBIofflabxy.pack(side=LEFT)
         #
         if ShowBallonHelp > 0:
-            xb1_tip = CreateToolTip(xb1, 'Enter formula for X axis Math trace')
-            xb2_tip = CreateToolTip(xb2, 'Enter which axis controls to use for X axis Math trace')
-            yb1_tip = CreateToolTip(yb1, 'Enter formula for Y axis Math trace')
-            yb2_tip = CreateToolTip(yb2, 'Enter which axis controls to use for Y axis Math trace')
+            #xb1_tip = CreateToolTip(xb1, 'Enter formula for X axis Math trace')
+            #xb2_tip = CreateToolTip(xb2, 'Enter which axis controls to use for X axis Math trace')
+            #yb1_tip = CreateToolTip(yb1, 'Enter formula for Y axis Math trace')
+            #yb2_tip = CreateToolTip(yb2, 'Enter which axis controls to use for Y axis Math trace')
+            math_tip = CreateToolTip(mathbt, 'Open Math window')
             bsxy_tip = CreateToolTip(sbxy, 'Stop acquiring data')
             brxy_tip = CreateToolTip(rbxy, 'Start acquiring data')
             snapbutton_tip = CreateToolTip(snapbutton, 'Take snap shot of current trace')
@@ -14016,6 +14310,7 @@ def Settingsscroll(event):
 def MakeSettingsMenu():
     global GridWidth, TRACEwidth, TRACEaverage, Vdiv, HarmonicMarkers, ZEROstuffing, RevDate
     global Settingswindow, SettingsStatus, SettingsDisp, ZSTuff, TAvg, VDivE, TwdthE, GwdthE, HarMon
+    global AWG_Amp_Mode
 
     if SettingsStatus.get() == 0:
         Settingswindow = Toplevel()
@@ -14091,9 +14386,19 @@ def MakeSettingsMenu():
         GwdthE.delete(0,"end")
         GwdthE.insert(0,GridWidth.get())
         #
+        AwgAmplrb1 = Radiobutton(frame1, text="AWG Min/Max", variable=AWG_Amp_Mode, value=0, command=UpdateAWGWin)
+        AwgAmplrb1.grid(row=6, column=0, sticky=W)
+        AwgAmplrb2 = Radiobutton(frame1, text="AWG Amp/Off", variable=AWG_Amp_Mode, value=1, command=UpdateAWGWin)
+        AwgAmplrb2.grid(row=6, column=1, sticky=W)
+        #
         Settingsdismissbutton = Button(frame1, text="Dismiss", style= "W8.TButton", command=DestroySettings)
-        Settingsdismissbutton.grid(row=6, column=0, sticky=W, pady=7)
+        Settingsdismissbutton.grid(row=7, column=0, sticky=W, pady=7)
 #
+def UpdateAWGWin():
+
+    UpdateAWGA()
+    UpdateAWGB()
+    
 def SettingsUpdate():
     global GridWidth, TRACEwidth, TRACEaverage, Vdiv, HarmonicMarkers, ZEROstuffing, RevDate
     global Settingswindow, SettingsStatus, SettingsDisp, ZSTuff, TAvg, VDivE, TwdthE, GwdthE, HarMon
@@ -14350,6 +14655,8 @@ root.style.configure("A10R1.TLabelframe", borderwidth=5, relief=RIDGE)
 root.style.configure("A10R2.TLabelframe.Label", foreground=COLORtraceR2, font=('Arial', 10, 'bold'))
 root.style.configure("A10R2.TLabelframe", borderwidth=5, relief=RIDGE)
 root.style.configure("A10B.TLabel", foreground=COLORcanvas, font="Arial 10 bold") # Black text
+root.style.configure("A10R.TLabel", foreground="red", font="Arial 10 bold") # Red text
+root.style.configure("A10G.TLabel", foreground="green", font="Arial 10 bold") # Red text
 root.style.configure("A12B.TLabel", foreground=COLORcanvas, font="Arial 12 bold") # Black text
 root.style.configure("A16B.TLabel", foreground=COLORcanvas, font="Arial 16 bold") # Black text
 root.style.configure("Stop.TRadiobutton", background="red")
@@ -14537,30 +14844,9 @@ Optionmenu.pack(side=LEFT, anchor=W)
 #
 dropmenu2 = Frame( frame2r )
 dropmenu2.pack(side=TOP)
-# Math trace menu
-MathMenu = Menubutton(dropmenu2, text="Math", style="W4.TButton")
-MathMenu.menu = Menu(MathMenu, tearoff = 0 )
-MathMenu["menu"]  = MathMenu.menu
-MathMenu.menu.add_radiobutton(label='none [0]', variable=MathTrace, value=0, command=UpdateTimeTrace)
-MathMenu.menu.add_radiobutton(label='CAV+CBV [5]', variable=MathTrace, value=1, command=UpdateTimeTrace)
-MathMenu.menu.add_radiobutton(label='CAV-CBV [6]', variable=MathTrace, value=2, command=UpdateTimeTrace)
-MathMenu.menu.add_radiobutton(label='CBV-CAV [7]', variable=MathTrace, value=3, command=UpdateTimeTrace)
-MathMenu.menu.add_radiobutton(label='CAI-CBI', variable=MathTrace, value=8, command=UpdateTimeTrace)
-MathMenu.menu.add_radiobutton(label='CBI-CAI', variable=MathTrace, value=9, command=UpdateTimeTrace)
-MathMenu.menu.add_radiobutton(label='CAV*CAI', variable=MathTrace, value=4, command=UpdateTimeTrace)
-MathMenu.menu.add_radiobutton(label='CBV*CBI', variable=MathTrace, value=5, command=UpdateTimeTrace)
-MathMenu.menu.add_radiobutton(label='CAV/CAI', variable=MathTrace, value=6, command=UpdateTimeTrace)
-MathMenu.menu.add_radiobutton(label='CBV/CBI', variable=MathTrace, value=7, command=UpdateTimeTrace)
-MathMenu.menu.add_radiobutton(label='CBV/CAV [8]', variable=MathTrace, value=10, command=UpdateTimeTrace)
-MathMenu.menu.add_radiobutton(label='CBI/CAI', variable=MathTrace, value=11, command=UpdateTimeTrace)
-MathMenu.menu.add_radiobutton(label='Formula [9]', variable=MathTrace, value=12, command=UpdateTimeTrace)
-MathMenu.menu.add_command(label="Enter Formula", command=BEnterMathString)
-MathMenu.menu.add_command(label="Math Axis", command=BEnterMathAxis)
-MathMenu.menu.add_command(label="Enter X Formula", command=BEnterMathXString)
-MathMenu.menu.add_command(label="Math X Axis", command=BEnterMathXAxis)
-MathMenu.menu.add_command(label="Enter Y Formula", command=BEnterMathYString)
-MathMenu.menu.add_command(label="Math Y Axis", command=BEnterMathYAxis)
-MathMenu.pack(side=RIGHT, anchor=W)
+# Open Math trace menu
+mathbt = Button(dropmenu2, text="Math", style="W4.TButton", command = NewEnterMathControls)
+mathbt.pack(side=RIGHT, anchor=W)
 # Measurments menu
 measlab = Label(dropmenu2, text="Meas")
 measlab.pack(side=LEFT, anchor=W)
@@ -14677,6 +14963,7 @@ ckb6.pack(side=LEFT)
 BuildOhmScreen = Button(dcohmbtn, text="Ohmmeter", style="W11.TButton", command=MakeOhmWindow)
 BuildOhmScreen.pack(side=LEFT)
 if ShowBallonHelp > 0:
+    math_tip = CreateToolTip(mathbt, 'Open Math window')
     BuildAWGScreen_tip = CreateToolTip(BuildAWGScreen, 'Surface AWG Controls window')
     BuildXYScreen_tip = CreateToolTip(BuildXYScreen, 'Open X vs Y plot window')
     BuildSpectrumScreen_tip = CreateToolTip(BuildSpectrumScreen, 'Open spectrum analyzer window')
