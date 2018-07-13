@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 alice-desktop 1.2.py(w) (6-23-2018)
+# ADALM1000 alice-desktop 1.2.py(w) (7-12-2018)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu.rework >= 1.0 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -33,7 +33,7 @@ try:
 except:
     pysmu_found = False
 #
-RevDate = "(23 June 2018)"
+RevDate = "(12 July 2018)"
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.2.1/alice-desktop-1.2-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
@@ -439,8 +439,6 @@ TBPRMline = []              # Bode Frequency reference Math Trace
 #
 MinSamplesSA = 64
 MaxSamplesSA = 65536
-Vdiv = IntVar(0)
-Vdiv.set(10)                # Number of vertical divisions
 #
 MathScreenStatus = IntVar(0)
 #
@@ -1024,7 +1022,7 @@ def BLoadConfig(filename):
     global CHB_Asb, CHB_APosEntry, CHB_Bsb, CHB_BPosEntry, muxwindow
     global CHB_Csb, CHB_CPosEntry, CHB_Dsb, CHB_DPosEntry
     global MathString, MathXString, MathYString, UserAString, UserALabel, UserBString, UserBLabel
-    global MathAxis, MathXAxis, MathYAxis, Show_MathX, Show_MathY
+    global MathAxis, MathXAxis, MathYAxis, Show_MathX, Show_MathY, MathScreenStatus, MathWindow
     global AWGAMathString, AWGBMathString, FFTUserWindowString, DigFilterAString, DigFilterBString
     global GRWF, GRHF, GRWBP, GRHBP, GRWXY, GRHXY, GRWIA, GRHIA, MeasureStatus
     global ChaLableSrring1, ChaLableSrring2, ChaLableSrring3, ChaLableSrring4, ChaLableSrring5, ChaLableSrring6
@@ -1405,7 +1403,7 @@ def NewEnterMathControls():
         frame4.grid(row = 2, column=1, sticky=W)
         #
         # Built in functions
-        # rb1 = Radiobutton(win2, text="D0-0", variable=D0, value=0x50, command=sel )
+        # 
         rb1 = Radiobutton(frame1, text='none', variable=MathTrace, value=0, command=UpdateTimeTrace)
         rb1.grid(row=0, column=0, sticky=W)
         rb2 = Radiobutton(frame1, text='CAV+CBV', variable=MathTrace, value=1, command=UpdateTimeTrace)
@@ -2056,8 +2054,9 @@ def FreqCheckBox():
         ckb3.config(style="Disab.TCheckbutton")
 #
 def BodeCheckBox():
-    global BodeDisp, ckb5
+    global BodeDisp, ckb5, AWGSync
     if BodeDisp.get() == 1:
+        AWGSync.set(1)
         ckb5.config(style="Enab.TCheckbutton")
     else:
         ckb5.config(style="Disab.TCheckbutton")
@@ -2165,7 +2164,7 @@ def Analog_In():
                         elif FStep[LoopNum.get()-1] < 64:
                             SMPfft = 4096
                         else:
-                            SMPfft = 2048
+                            SMPfft = 4096
                 Analog_Freq_In()
         elif OhmRunStatus.get() == 1 and OhmDisp.get() == 1:
             Ohm_Analog_In()
@@ -4776,12 +4775,12 @@ def MakeTimeScreen():     # Update the screen with traces and text
     global ScreenTrefresh, SmoothCurves, Is_Triggered
     global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2, CHAHW, CHALW, CHADCy, CHAperiod, CHAfreq
     global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2, CHBHW, CHBLW, CHBDCy, CHBperiod, CHBfreq
-    global SV1, SI1, SV2, SI2, CHABphase
+    global SV1, SI1, SV2, SI2, CHABphase, SVA_B
     global MeasDCV1, MeasMinV1, MeasMaxV1, MeasMidV1, MeasPPV1
     global MeasDCI1, MeasMinI1, MeasMaxI1, MeasMidI1, MeasPPI1
     global MeasDCV2, MeasMinV2, MeasMaxV2, MeasMidV2, MeasPPV2
     global MeasDCI2, MeasMinI2, MeasMaxI2, MeasMidI2, MeasPPI2
-    global MeasRMSV1, MeasRMSI1, MeasRMSV2, MeasRMSI2, MeasPhase
+    global MeasRMSV1, MeasRMSI1, MeasRMSV2, MeasRMSI2, MeasPhase, MeasRMSVA_B
     global MeasAHW, MeasALW, MeasADCy, MeasAPER, MeasAFREQ
     global MeasBHW, MeasBLW, MeasBDCy, MeasBPER, MeasBFREQ
     global AWGAShape, AWGBShape, MeasDiffAB, MeasDiffBA 
@@ -4957,6 +4956,16 @@ def MakeTimeScreen():     # Update the screen with traces and text
         MathFlag2 = (MathAxis == "V-B" and MathTrace.get() == 12) or (MathXAxis == "V-B" and Show_MathX.get() == 1) or (MathYAxis == "V-B" and Show_MathY.get() == 1)
         MathFlag3 = (MathAxis == "I-A" and MathTrace.get() == 12) or (MathXAxis == "I-A" and Show_MathX.get() == 1) or (MathYAxis == "I-A" and Show_MathY.get() == 1)
         MathFlag4 = (MathAxis == "I-B" and MathTrace.get() == 12) or (MathXAxis == "I-B" and Show_MathX.get() == 1) or (MathYAxis == "I-B" and Show_MathY.get() == 1)
+        # vertical scale text labels
+        if (ShowC1_V.get() == 1 or MathTrace.get() == 1 or MathTrace.get() == 2 or MathFlag1):
+            ca.create_text(x1-2, 12, text="CA-V", fill=COLORtrace1, anchor="e", font=("arial", 7 ))
+        if (ShowC1_I.get() == 1 or MathTrace.get() == 4 or MathTrace.get() == 6 or MathTrace.get() == 8 or MathFlag3):
+            ca.create_text(x2+2, 12, text="CA-I", fill=COLORtrace3, anchor="w", font=("arial", 7 ))
+        if (ShowC2_V.get() == 1 or MathTrace.get() == 3 or MathTrace.get() == 10 or MathFlag2):
+            ca.create_text(x1-26, 12, text="CB-V", fill=COLORtrace2, anchor="e", font=("arial", 7 ))
+        if (ShowC2_I.get() == 1 or MathTrace.get() == 5 or MathTrace.get() == 7 or MathTrace.get() == 9 or MathTrace.get() == 11 or MathFlag4):
+            ca.create_text(x2+28, 12, text="CB-I", fill=COLORtrace4, anchor="w", font=("arial", 7 ))
+        #
         while (i < 11):
             y = Y0T + i * GRH/10.0
             Dline = [x1,y,x2,y]
@@ -5203,7 +5212,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
         for n in de: 
             ca.delete(n)
     txt = "Device ID " + DevID[17:31] + " Sample rate: " + str(SAMPLErate) + " " + sttxt
-    x = X0L
+    x = X0L+2
     y = 12
     ca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
     # digital I/O indicators
@@ -5355,6 +5364,9 @@ def MakeTimeScreen():     # Update the screen with traces and text
         if MeasRMSV1.get() == 1:
             V1String = ' {0:.4f} '.format(SV1)
             txt = txt +  " RMS = " + V1String
+        if MeasRMSVA_B.get() == 1:
+            V1String = ' {0:.4f} '.format(SVA_B)
+            txt = txt +  " A-B RMS = " + V1String
         if MeasDiffAB.get() == 1:
             V1String = ' {0:.4f} '.format(DCV1-DCV2)
             txt = txt +  " CA-CB = " + V1String
@@ -8847,7 +8859,7 @@ def BDBdiv2():
 #Bode Plot controls
 def BStartBP():
     global RUNstatus, LoopNum, PowerStatus, devx, PwrBt, bodewindow, session, AWGSync
-    global ShowCA_VdB, ShowCB_P, ShowCB_VdB, ShowCB_P, ShowMathBP
+    global ShowCA_VdB, ShowCB_P, ShowCB_VdB, ShowCB_P, ShowMathBP, contloop, discontloop
     global FStep, NSteps, FSweepMode, HScaleBP, CutDC, AWGAMode, AWGAShape, AWGBMode, AWGBShape
     global StartBodeEntry, StopBodeEntry, SweepStepBodeEntry, DevID, FWRevOne
 
@@ -14863,6 +14875,7 @@ MeasmenuA.menu.add_checkbutton(label='Mid', variable=MeasMidV1)
 MeasmenuA.menu.add_checkbutton(label='P-P', variable=MeasPPV1)
 MeasmenuA.menu.add_checkbutton(label='RMS', variable=MeasRMSV1)
 MeasmenuA.menu.add_checkbutton(label='CA-CB', variable=MeasDiffAB)
+MeasmenuA.menu.add_checkbutton(label='CA-CB RMS', variable=MeasRMSVA_B)
 MeasmenuA.menu.add_checkbutton(label='User', variable=MeasUserA, command=BUserAMeas)
 MeasmenuA.menu.add_separator()
 #
