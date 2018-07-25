@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 alice-desktop 1.2.py(w) (7-12-2018)
+# ADALM1000 alice-desktop 1.2.py(w) (7-24-2018)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu.rework >= 1.0 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -33,7 +33,7 @@ try:
 except:
     pysmu_found = False
 #
-RevDate = "(12 July 2018)"
+RevDate = "(24 July 2018)"
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.2.1/alice-desktop-1.2-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
@@ -187,6 +187,22 @@ discontloop = 0
 AwgLayout = "Horz"
 Style_String = 'alt'
 MarkerLoc = 'UL' # can be UL, UR, LL or LR
+CHA_TC1 = DoubleVar(0)
+CHA_TC1.set(1)
+CHA_TC2 = DoubleVar(0)
+CHA_TC2.set(1)
+CHB_TC1 = DoubleVar(0)
+CHB_TC1.set(1)
+CHB_TC2 = DoubleVar(0)
+CHB_TC2.set(1)
+CHA_A1 = DoubleVar(0)
+CHA_A1.set(1)
+CHA_A2 = DoubleVar(0)
+CHA_A2.set(1)
+CHB_A1 = DoubleVar(0)
+CHB_A1.set(1)
+CHB_A2 = DoubleVar(0)
+CHB_A2.set(1)
 # Check if there is an alice_init.ini file to read in
 try:
     InitFile = open("alice_init.ini")
@@ -271,6 +287,7 @@ DigBuffA.set(0)
 DigBuffB.set(0)
 VFilterA = {}
 VFilterB = {}
+
 ETSStatus = IntVar(0)
 ETSDisp = IntVar(0)
 ETSDir = IntVar(0)
@@ -601,7 +618,11 @@ def BSaveConfig(filename):
     global ChbLableSrring1, ChbLableSrring2, ChbLableSrring3, ChbLableSrring4, ChbLableSrring5, ChbLableSrring6
     global ChaMeasString1, ChaMeasString2, ChaMeasString3, ChaMeasString4, ChaMeasString5, ChaMeasString6
     global ChbMeasString1, ChbMeasString2, ChbMeasString3, ChbMeasString4, ChbMeasString5, ChbMeasString6
-
+    global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
+    global CHA_A1, CHA_A2, CHB_A1, CHB_A2
+    global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
+    global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
+    
     # open Config file for Write
     ConfgFile = open(filename, "w")
     # Save Window placements
@@ -954,6 +975,45 @@ def BSaveConfig(filename):
     ConfgFile.write('global FFTUserWindowString; FFTUserWindowString= "' +  FFTUserWindowString + '"\n')
     ConfgFile.write('global DigFilterAString; DigFilterAString = "' + DigFilterAString + '"\n')
     ConfgFile.write('global DigFilterBString; DigFilterBString = "' + DigFilterBString + '"\n')
+    # save channel AC frequency compensation settings
+    try:
+        CHA_TC1.set(float(cha_TC1Entry.get()))
+        CHA_TC2.set(float(cha_TC2Entry.get()))
+        CHB_TC1.set(float(chb_TC1Entry.get()))
+        CHB_TC2.set(float(chb_TC2Entry.get()))
+        CHA_A1.set(float(cha_A1Entry.get()))
+        CHA_A2.set(float(cha_A2Entry.get()))
+        CHB_A1.set(float(chb_A1Entry.get()))
+        CHB_A2.set(float(chb_A2Entry.get()))
+    except:
+        donothing()   
+    ConfgFile.write('CHA_RC_HP.set(' + str(CHA_RC_HP.get()) + ')\n')
+    ConfgFile.write('CHB_RC_HP.set(' + str(CHB_RC_HP.get()) + ')\n')
+    ConfgFile.write('CHA_TC1.set(' + str(CHA_TC1.get()) + ')\n')
+    ConfgFile.write('CHA_TC2.set(' + str(CHA_TC2.get()) + ')\n')
+    ConfgFile.write('CHB_TC1.set(' + str(CHB_TC1.get()) + ')\n')
+    ConfgFile.write('CHB_TC2.set(' + str(CHB_TC2.get()) + ')\n')
+    ConfgFile.write('CHA_A1.set(' + str(CHA_A1.get()) + ')\n')
+    ConfgFile.write('CHA_A2.set(' + str(CHA_A2.get()) + ')\n')
+    ConfgFile.write('CHB_A1.set(' + str(CHB_A1.get()) + ')\n')
+    ConfgFile.write('CHB_A2.set(' + str(CHB_A2.get()) + ')\n')
+    ConfgFile.write('cha_TC1Entry.delete(0,END)\n')
+    ConfgFile.write('cha_TC1Entry.insert(4, ' + str(CHA_TC1.get()) + ')\n')
+    ConfgFile.write('cha_TC2Entry.delete(0,END)\n')
+    ConfgFile.write('cha_TC2Entry.insert(4, ' + str(CHA_TC2.get()) + ')\n')
+    ConfgFile.write('chb_TC1Entry.delete(0,END)\n')
+    ConfgFile.write('chb_TC1Entry.insert(4, ' + str(CHB_TC1.get()) + ')\n')
+    ConfgFile.write('chb_TC2Entry.delete(0,END)\n')
+    ConfgFile.write('chb_TC2Entry.insert(4, ' + str(CHB_TC2.get()) + ')\n')
+    ConfgFile.write('cha_A1Entry.delete(0,END)\n')
+    ConfgFile.write('cha_A1Entry.insert(4, ' + str(CHA_A1.get()) + ')\n')
+    ConfgFile.write('cha_A2Entry.delete(0,END)\n')
+    ConfgFile.write('cha_A2Entry.insert(4, ' + str(CHA_A2.get()) + ')\n')
+    ConfgFile.write('chb_A1Entry.delete(0,END)\n')
+    ConfgFile.write('chb_A1Entry.insert(4, ' + str(CHB_A1.get()) + ')\n')
+    ConfgFile.write('chb_A2Entry.delete(0,END)\n')
+    ConfgFile.write('chb_A2Entry.insert(4, ' + str(CHB_A2.get()) + ')\n')
+
     # extra Spectrum stuff
     if SpectrumScreenStatus.get() > 0 or IAScreenStatus.get() > 0 or BodeScreenStatus.get() > 0:
         ConfgFile.write('SMPfftpwrTwo.set(' + str(SMPfftpwrTwo.get()) + ')\n')
@@ -1029,6 +1089,10 @@ def BLoadConfig(filename):
     global ChbLableSrring1, ChbLableSrring2, ChbLableSrring3, ChbLableSrring4, ChbLableSrring5, ChbLableSrring6
     global ChaMeasString1, ChaMeasString2, ChaMeasString3, ChaMeasString4, ChaMeasString5, ChaMeasString6
     global ChbMeasString1, ChbMeasString2, ChbMeasString3, ChbMeasString4, ChbMeasString5, ChbMeasString6
+    global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
+    global CHA_A1, CHA_A2, CHB_A1, CHB_A2
+    global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
+    global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
     
     # Read configuration values from file
     try:
@@ -1302,6 +1366,10 @@ def BSaveCal():
     global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry
     global CHAIGainEntry, CHBIGainEntry, CHAIOffsetEntry, CHBIOffsetEntry
     global DevID
+    global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
+    global CHA_A1, CHA_A2, CHB_A1, CHB_A2
+    global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
+    global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
 
     devidstr = DevID[17:31]
     filename = devidstr + "_O.cal"
@@ -1325,12 +1393,55 @@ def BSaveCal():
     CalFile.write('CHBIOffsetEntry.delete(0,END)\n')
     CalFile.write('CHBIOffsetEntry.insert(4, ' + CHBIOffsetEntry.get() + ')\n')
     #
+    # save channel AC frequency compensation settings
+    try:
+        CHA_TC1.set(float(cha_TC1Entry.get()))
+        CHA_TC2.set(float(cha_TC2Entry.get()))
+        CHB_TC1.set(float(chb_TC1Entry.get()))
+        CHB_TC2.set(float(chb_TC2Entry.get()))
+        CHA_A1.set(float(cha_A1Entry.get()))
+        CHA_A2.set(float(cha_A2Entry.get()))
+        CHB_A1.set(float(chb_A1Entry.get()))
+        CHB_A2.set(float(chb_A2Entry.get()))
+    except:
+        donothing()   
+    CalFile.write('CHA_RC_HP.set(' + str(CHA_RC_HP.get()) + ')\n')
+    CalFile.write('CHB_RC_HP.set(' + str(CHB_RC_HP.get()) + ')\n')
+    CalFile.write('CHA_TC1.set(' + str(CHA_TC1.get()) + ')\n')
+    CalFile.write('CHA_TC2.set(' + str(CHA_TC2.get()) + ')\n')
+    CalFile.write('CHB_TC1.set(' + str(CHB_TC1.get()) + ')\n')
+    CalFile.write('CHB_TC2.set(' + str(CHB_TC2.get()) + ')\n')
+    CalFile.write('CHA_A1.set(' + str(CHA_A1.get()) + ')\n')
+    CalFile.write('CHA_A2.set(' + str(CHA_A2.get()) + ')\n')
+    CalFile.write('CHB_A1.set(' + str(CHB_A1.get()) + ')\n')
+    CalFile.write('CHB_A2.set(' + str(CHB_A2.get()) + ')\n')
+    CalFile.write('cha_TC1Entry.delete(0,END)\n')
+    CalFile.write('cha_TC1Entry.insert(4, ' + str(CHA_TC1.get()) + ')\n')
+    CalFile.write('cha_TC2Entry.delete(0,END)\n')
+    CalFile.write('cha_TC2Entry.insert(4, ' + str(CHA_TC2.get()) + ')\n')
+    CalFile.write('chb_TC1Entry.delete(0,END)\n')
+    CalFile.write('chb_TC1Entry.insert(4, ' + str(CHB_TC1.get()) + ')\n')
+    CalFile.write('chb_TC2Entry.delete(0,END)\n')
+    CalFile.write('chb_TC2Entry.insert(4, ' + str(CHB_TC2.get()) + ')\n')
+    CalFile.write('cha_A1Entry.delete(0,END)\n')
+    CalFile.write('cha_A1Entry.insert(4, ' + str(CHA_A1.get()) + ')\n')
+    CalFile.write('cha_A2Entry.delete(0,END)\n')
+    CalFile.write('cha_A2Entry.insert(4, ' + str(CHA_A2.get()) + ')\n')
+    CalFile.write('chb_A1Entry.delete(0,END)\n')
+    CalFile.write('chb_A1Entry.insert(4, ' + str(CHB_A1.get()) + ')\n')
+    CalFile.write('chb_A2Entry.delete(0,END)\n')
+    CalFile.write('chb_A2Entry.insert(4, ' + str(CHB_A2.get()) + ')\n')
+
     CalFile.close()
 
 def BLoadCal():
     global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry
     global CHAIGainEntry, CHBIGainEntry, CHAIOffsetEntry, CHBIOffsetEntry
     global DevID
+    global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
+    global CHA_A1, CHA_A2, CHB_A1, CHB_A2
+    global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
+    global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
 
     devidstr = DevID[17:31]
     filename = devidstr + "_O.cal"
@@ -1341,7 +1452,6 @@ def BLoadCal():
         CalFile.close()
     except:
         print "Cal file for this device not found"
-#
 #
 def BUserAMeas():
     global UserAString, UserALabel, MeasUserA
@@ -2289,6 +2399,10 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
     global CHAIGainEntry, CHBIGainEntry, CHAIOffsetEntry, CHBIOffsetEntry
     global InOffA, InGainA, InOffB, InGainB
     global DigFiltA, DigFiltB, DFiltACoef, DFiltBCoef, DigBuffA, DigBuffB
+    global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
+    global CHA_A1, CHA_A2, CHB_A1, CHB_A2
+    global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
+    global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
     global VAets, VBets, Samples_Cycle, MulX, ETSDisp, ETSDir, ETSts, Fmin, FminE, eqivsamplerate
     global DivXEntry, FOffEntry, FminDisp, FOff, DivX, FminEntry, FBase, MaxETSrecord
  
@@ -2572,6 +2686,99 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
             VBuffB = numpy.roll(VBuffB, TimeCorrection)
             IBuffB = numpy.roll(IBuffB, TimeCorrection)
         SHOWsamples = twoscreens + hldn + hozpos
+# Check if Input channel RC high pass compensation checked cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
+    if CHA_RC_HP.get() == 1:
+        try:
+            TC1A = float(cha_TC1Entry.get())
+            if TC1A < 0:
+                TC1A = 0
+                cha_TC1Entry.delete(0,END)
+                cha_TC1Entry.insert(0, TC1A)
+        except:
+            TC1A = CHA_TC1.get()
+            #cha_TC1Entry.delete(0,END)
+            #cha_TC1Entry.insert(0, CHA_TC1.get())
+        try:
+            TC2A = float(cha_TC2Entry.get())
+            if TC2A < 0:
+                TC2A = 0
+                cha_TC2Entry.delete(0,END)
+                cha_TC2Entry.insert(0, TC2A)
+        except:
+            TC2A = CHA_TC2.get()
+            #cha_TC2Entry.delete(0,END)
+            #cha_TC2Entry.insert(0, CHA_TC2.get())
+        #
+        try:
+            Gain1A = float(cha_A1Entry.get())
+            #CHA_A1.set(Gain1A)
+            if Gain1A < 0:
+                Gain1A = 1
+                cha_A1Entry.delete(0,END)
+                cha_A1Entry.insert(0, Gain1A)
+        except:
+            Gain1A = CHA_A1.get()
+            #cha_A1Entry.delete(0,END)
+            #cha_A1Entry.insert(0, CHA_A1.get())
+        try:
+            Gain2A = float(cha_A2Entry.get())
+            #CHA_A2.set(int(Gain2A))
+            if Gain2A < 0:
+                Gain2A = 0
+                cha_A2Entry.delete(0,END)
+                cha_A2Entry.insert(0, Gain2A)
+        except:
+            Gain2A = CHA_A2.get()
+            #cha_A2Entry.delete(0,END)
+            #cha_A2Entry.insert(0, CHA_A2.get())
+        #
+        VBuffA = Digital_RC_High_Pass( VBuffA, TC1A, Gain1A )
+        VBuffA = Digital_RC_High_Pass( VBuffA, TC2A, Gain2A )
+    if CHB_RC_HP.get() == 1:
+        try:
+            TC1B = float(chb_TC1Entry.get())
+            if TC1B < 0:
+                TC1B = 0
+                chb_TC1Entry.delete(0, END)
+                chb_TC1Entry.insert(0, TC1B)
+        except:
+            TC1B = CHB_TC1.get()
+            #chb_TC1Entry.delete(0,END)
+            #chb_TC1Entry.insert(0, CHB_TC1.get())
+        try:
+            TC2B = float(chb_TC2Entry.get())
+            if TC2B < 0:
+                TC2B = 0
+                chb_TC2Entry.delete(0, END)
+                chb_TC2Entry.insert(0, TC2B)
+        except:
+            TC2B = CHB_TC2.get()
+            #chb_TC2Entry.delete(0,END)
+            #chb_TC2Entry.insert(0, CHB_TC2.get())
+        #
+        try:
+            Gain1B = float(chb_A1Entry.get())
+            if Gain1B < 0:
+                Gain1B = 1
+                chb_A1Entry.delete(0,END)
+                chb_A1Entry.insert(0, Gain1B)
+        except:
+            Gain1B = CHB_A1.get()
+            #chb_A1Entry.delete(0,END)
+            #chb_A1Entry.insert(0, CHB_A1.get())
+        try:
+            Gain2B = float(chb_A2Entry.get())
+            if Gain2B < 0:
+                Gain2B = 0
+                chb_A2Entry.delete(0,END)
+                chb_A2Entry.insert(0, Gain2B)
+        except:
+            Gain2B = CHB_A2.get()
+            #chb_A2Entry.delete(0,END)
+            #chb_A2Entry.insert(0, CHB_A2.get())
+        #
+        VBuffB = Digital_RC_High_Pass( VBuffB, TC1B, Gain1B )
+        VBuffB = Digital_RC_High_Pass( VBuffB, TC2B, Gain2B )
 # check if digital filter box checked
     if DigFiltA.get() == 1:
         if len(DFiltACoef) > 1:
@@ -2579,7 +2786,8 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
     if DigFiltB.get() == 1:
         if len(DFiltBCoef) > 1:
             VBuffB = numpy.convolve(VBuffB, DFiltBCoef)
-    # Find trigger sample point if necessary
+# Find trigger sample point if necessary
+    LShift = 0
     if TgInput.get() == 1:
         FindTriggerSample(VBuffA)
     if TgInput.get() == 2:
@@ -2609,7 +2817,7 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
             ImemoryA = IBuffA
             ImemoryB = IBuffB
 # DC value = average of the data record
-    Endsample = SHOWsamples - 1
+    Endsample = SHOWsamples - 10
     DCV1 = numpy.mean(VBuffA[hldn:Endsample])
     DCV2 = numpy.mean(VBuffB[hldn:Endsample])
     # convert current values to mA
@@ -2653,6 +2861,23 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
         # Update tasks and screens by TKinter
         # update screens
 #
+def Digital_RC_High_Pass( InBuff, TC1, Gain ): # TC1 is in micro seconds
+    global SAMPLErate
+
+    OutBuff = []
+    n = len(InBuff)
+    Delta = 1.0/SAMPLErate
+    TC = TC1 * 1.0E-6
+    Alpha = TC / (TC + Delta)
+    i = 1
+    OutBuff.append(InBuff[0])
+    while i < n:
+        OutBuff.append( Alpha * (OutBuff[i-1] + InBuff[i] - InBuff[i-1]) )
+        i += 1
+    OutBuff = numpy.array(OutBuff)
+    OutBuff = InBuff + (OutBuff * Gain)
+    return OutBuff
+
 def Analog_Freq_In():   # Read the audio from the stream and store the data into the arrays
     global ADsignal1, FFTBuffA, FFTBuffB, SMPfft
     global AWGSync, AWGAMode, AWGBMode, AWGAShape, AWGAIOMode, AWGBIOMode
@@ -2668,6 +2893,10 @@ def Analog_Freq_In():   # Read the audio from the stream and store the data into
     global DigFiltA, DFiltACoef, DigFiltB, DFiltBCoef
     global BDSweepFile, FileSweepFreq, FileSweepAmpl
     global PIO_0, PIO_1, PIO_2, PIO_3
+    global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
+    global CHA_A1, CHA_A2, CHB_A1, CHB_A2
+    global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
+    global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
     
     # Do input probe Calibration CH1VGain, CH2VGain, CH1VOffset, CH2VOffset
     try:
@@ -2838,6 +3067,99 @@ def Analog_Freq_In():   # Read the audio from the stream and store the data into
     if CutDC.get() == 1:
         FFTBuffA = FFTBuffA - DCA
         FFTBuffB = FFTBuffB - DCB
+# Check if Input channel RC high pass compensation checked cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
+    if CHA_RC_HP.get() == 1:
+        try:
+            TC1A = float(cha_TC1Entry.get())
+            if TC1A < 0:
+                TC1A = 0
+                cha_TC1Entry.delete(0,END)
+                cha_TC1Entry.insert(0, TC1A)
+        except:
+            TC1A = CHA_TC1.get()
+            #cha_TC1Entry.delete(0,END)
+            #cha_TC1Entry.insert(0, CHA_TC1.get())
+        try:
+            TC2A = float(cha_TC2Entry.get())
+            if TC2A < 0:
+                TC2A = 0
+                cha_TC2Entry.delete(0,END)
+                cha_TC2Entry.insert(0, TC2A)
+        except:
+            TC2A = CHA_TC2.get()
+            #cha_TC2Entry.delete(0,END)
+            #cha_TC2Entry.insert(0, CHA_TC2.get())
+        #
+        try:
+            Gain1A = float(cha_A1Entry.get())
+            #CHA_A1.set(Gain1A)
+            if Gain1A < 0:
+                Gain1A = 1
+                cha_A1Entry.delete(0,END)
+                cha_A1Entry.insert(0, Gain1A)
+        except:
+            Gain1A = CHA_A1.get()
+            #cha_A1Entry.delete(0,END)
+            #cha_A1Entry.insert(0, CHA_A1.get())
+        try:
+            Gain2A = float(cha_A2Entry.get())
+            #CHA_A2.set(int(Gain2A))
+            if Gain2A < 0:
+                Gain2A = 0
+                cha_A2Entry.delete(0,END)
+                cha_A2Entry.insert(0, Gain2A)
+        except:
+            Gain2A = CHA_A2.get()
+            #cha_A2Entry.delete(0,END)
+            #cha_A2Entry.insert(0, CHA_A2.get())
+        #
+        FFTBuffA = Digital_RC_High_Pass( FFTBuffA, TC1A, Gain1A )
+        FFTBuffA = Digital_RC_High_Pass( FFTBuffA, TC2A, Gain2A )
+    if CHB_RC_HP.get() == 1:
+        try:
+            TC1B = float(chb_TC1Entry.get())
+            if TC1B < 0:
+                TC1B = 0
+                chb_TC1Entry.delete(0, END)
+                chb_TC1Entry.insert(0, TC1B)
+        except:
+            TC1B = CHB_TC1.get()
+            #chb_TC1Entry.delete(0,END)
+            #chb_TC1Entry.insert(0, CHB_TC1.get())
+        try:
+            TC2B = float(chb_TC2Entry.get())
+            if TC2B < 0:
+                TC2B = 0
+                chb_TC2Entry.delete(0, END)
+                chb_TC2Entry.insert(0, TC2B)
+        except:
+            TC2B = CHB_TC2.get()
+            #chb_TC2Entry.delete(0,END)
+            #chb_TC2Entry.insert(0, CHB_TC2.get())
+        #
+        try:
+            Gain1B = float(chb_A1Entry.get())
+            if Gain1B < 0:
+                Gain1B = 1
+                chb_A1Entry.delete(0,END)
+                chb_A1Entry.insert(0, Gain1B)
+        except:
+            Gain1B = CHB_A1.get()
+            #chb_A1Entry.delete(0,END)
+            #chb_A1Entry.insert(0, CHB_A1.get())
+        try:
+            Gain2B = float(chb_A2Entry.get())
+            if Gain2B < 0:
+                Gain2B = 0
+                chb_A2Entry.delete(0,END)
+                chb_A2Entry.insert(0, Gain2B)
+        except:
+            Gain2B = CHB_A2.get()
+            #chb_A2Entry.delete(0,END)
+            #chb_A2Entry.insert(0, CHB_A2.get())
+        #
+        FFTBuffB = Digital_RC_High_Pass( FFTBuffB, TC1B, Gain1B )
+        FFTBuffB = Digital_RC_High_Pass( FFTBuffB, TC2B, Gain2B )
 # check if digital filter box checked
     if DigFiltA.get() == 1:
         FFTBuffA = numpy.convolve(FFTBuffA, DFiltACoef)
@@ -7140,24 +7462,33 @@ def AWGAReadFile():
     filename = askopenfilename(defaultextension = ".csv", filetypes=[("CSV files", "*.csv")], parent=awgwindow)
     try:
         CSVFile = open(filename)
-        dialect = csv.Sniffer().sniff(CSVFile.read(2048))
+        # dialect = csv.Sniffer().sniff(CSVFile.read(128))
         CSVFile.seek(0)
-        csv_f = csv.reader(CSVFile, dialect)
+        #csv_f = csv.reader(CSVFile, dialect)
+        csv_f = csv.reader(CSVFile, csv.excel)
     except:
         showwarning("WARNING","No such file found or wrong format!", parent=awgwindow)
     # print csv_f.dialect
     AWGAwaveform = []
     ColumnNum = 0
     ColumnSel = 0
+    RowNum = 0
     for row in csv_f:
+        # print 'found row = ', row
         if len(row) > 1 and ColumnSel == 0:
             RequestColumn = askstring("Which Column?", "File contains 1 to " + str(len(row)) + " columns\n\nEnter column number to import:\n", initialvalue=1, parent=awgwindow)
             ColumnNum = int(RequestColumn) - 1
+            ColumnLen = str(len(row))
             ColumnSel = 1
         try:
-            AWGAwaveform.append(float(row[ColumnNum]))
+            colnum = 0
+            for col in row:
+                if colnum == ColumnNum:
+                    AWGAwaveform.append(float(col))
+                colnum += 1
         except:
-            print 'skipping non-numeric row'
+            print 'skipping non-numeric row', RowNum
+        RowNum += 1
     AWGAwaveform = numpy.array(AWGAwaveform)
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
     CSVFile.close()
@@ -7845,9 +8176,10 @@ def AWGBReadFile():
     filename = askopenfilename(defaultextension = ".csv", filetypes=[("CSV files", "*.csv")], parent=awgwindow)
     try:
         CSVFile = open(filename)
-        dialect = csv.Sniffer().sniff(CSVFile.read(2048))
+        # dialect = csv.Sniffer().sniff(CSVFile.read(128), delimiters=None)
         CSVFile.seek(0)
-        csv_f = csv.reader(CSVFile, dialect)
+        #csv_f = csv.reader(CSVFile, dialect)
+        csv_f = csv.reader(CSVFile, csv.excel)
     except:
         showwarning("WARNING","No such file found or wrong format!", parent=awgwindow)
     AWGBwaveform = []
@@ -14323,6 +14655,10 @@ def MakeSettingsMenu():
     global GridWidth, TRACEwidth, TRACEaverage, Vdiv, HarmonicMarkers, ZEROstuffing, RevDate
     global Settingswindow, SettingsStatus, SettingsDisp, ZSTuff, TAvg, VDivE, TwdthE, GwdthE, HarMon
     global AWG_Amp_Mode
+    global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
+    global CHA_A1, CHA_A2, CHB_A1, CHB_A2
+    global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
+    global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
 
     if SettingsStatus.get() == 0:
         Settingswindow = Toplevel()
@@ -14403,8 +14739,76 @@ def MakeSettingsMenu():
         AwgAmplrb2 = Radiobutton(frame1, text="AWG Amp/Off", variable=AWG_Amp_Mode, value=1, command=UpdateAWGWin)
         AwgAmplrb2.grid(row=6, column=1, sticky=W)
         #
+        cha_Rcomplab = Label(frame1, text="CHA Comp, TC1 in uSec, A1", style= "A10B.TLabel") # in micro seconds
+        cha_Rcomplab.grid(row=7, column=0, sticky=W)
+        cha_RcomplabMode = Frame( frame1 )
+        cha_RcomplabMode.grid(row=7, column=1, sticky=W)
+        cha_TC1Entry = Entry(cha_RcomplabMode, width=4)
+        cha_TC1Entry.bind('<MouseWheel>', Settingsscroll)
+        cha_TC1Entry.bind('<Key>', onTextKey)
+        cha_TC1Entry.pack(side=LEFT)
+        cha_TC1Entry.delete(0,"end")
+        cha_TC1Entry.insert(0,CHA_TC1.get())
+        cha_A1Entry = Entry(cha_RcomplabMode, width=4)
+        cha_A1Entry.bind('<MouseWheel>', Settingsscroll)
+        cha_A1Entry.bind('<Key>', onTextKey)
+        cha_A1Entry.pack(side=LEFT)
+        cha_A1Entry.delete(0,"end")
+        cha_A1Entry.insert(0,CHA_A1.get())
+        #
+        cha_Ccomplab = Label(frame1, text="CHA Comp, TC2 in uSec, A2", style= "A10B.TLabel") # in micro seconds
+        cha_Ccomplab.grid(row=8, column=0, sticky=W)
+        cha_CcomplabMode = Frame( frame1 )
+        cha_CcomplabMode.grid(row=8, column=1, sticky=W)
+        cha_TC2Entry = Entry(cha_CcomplabMode, width=4)
+        cha_TC2Entry.bind('<MouseWheel>', Settingsscroll)
+        cha_TC2Entry.bind('<Key>', onTextKey)
+        cha_TC2Entry.pack(side=LEFT)
+        cha_TC2Entry.delete(0,"end")
+        cha_TC2Entry.insert(0,CHA_TC2.get())
+        cha_A2Entry = Entry(cha_CcomplabMode, width=4)
+        cha_A2Entry.bind('<MouseWheel>', Settingsscroll)
+        cha_A2Entry.bind('<Key>', onTextKey)
+        cha_A2Entry.pack(side=LEFT)
+        cha_A2Entry.delete(0,"end")
+        cha_A2Entry.insert(0,CHA_A2.get())
+        #
+        chb_Rcomplab = Label(frame1, text="CHB Comp, TC1 in uSec, A1", style= "A10B.TLabel") # in micro seconds
+        chb_Rcomplab.grid(row=9, column=0, sticky=W)
+        chb_RcomplabMode = Frame( frame1 )
+        chb_RcomplabMode.grid(row=9, column=1, sticky=W)
+        chb_TC1Entry = Entry(chb_RcomplabMode, width=4)
+        chb_TC1Entry.bind('<MouseWheel>', Settingsscroll)
+        chb_TC1Entry.bind('<Key>', onTextKey)
+        chb_TC1Entry.pack(side=LEFT)
+        chb_TC1Entry.delete(0,"end")
+        chb_TC1Entry.insert(0,CHB_TC1.get())
+        chb_A1Entry = Entry(chb_RcomplabMode, width=4)
+        chb_A1Entry.bind('<MouseWheel>', Settingsscroll)
+        chb_A1Entry.bind('<Key>', onTextKey)
+        chb_A1Entry.pack(side=LEFT)
+        chb_A1Entry.delete(0,"end")
+        chb_A1Entry.insert(0,CHB_A1.get())
+        #
+        chb_Ccomplab = Label(frame1, text="CHB Comp, TC2 in uSec, A2", style= "A10B.TLabel") # in micro seconds
+        chb_Ccomplab.grid(row=10, column=0, sticky=W)
+        chb_CcomplabMode = Frame( frame1 )
+        chb_CcomplabMode.grid(row=10, column=1, sticky=W)
+        chb_TC2Entry = Entry(chb_CcomplabMode, width=4)
+        chb_TC2Entry.bind('<MouseWheel>', Settingsscroll)
+        chb_TC2Entry.bind('<Key>', onTextKey)
+        chb_TC2Entry.pack(side=LEFT)
+        chb_TC2Entry.delete(0,"end")
+        chb_TC2Entry.insert(0,CHB_TC2.get())
+        chb_A2Entry = Entry(chb_CcomplabMode, width=4)
+        chb_A2Entry.bind('<MouseWheel>', Settingsscroll)
+        chb_A2Entry.bind('<Key>', onTextKey)
+        chb_A2Entry.pack(side=LEFT)
+        chb_A2Entry.delete(0,"end")
+        chb_A2Entry.insert(0,CHB_A2.get())
+        #
         Settingsdismissbutton = Button(frame1, text="Dismiss", style= "W8.TButton", command=DestroySettings)
-        Settingsdismissbutton.grid(row=7, column=0, sticky=W, pady=7)
+        Settingsdismissbutton.grid(row=11, column=0, sticky=W, pady=7)
 #
 def UpdateAWGWin():
 
@@ -14624,6 +15028,8 @@ MeasureStatus.set(0)
 MarkerScale = IntVar(0)
 MarkerScale.set(1)
 SettingsStatus = IntVar(0)
+CHA_RC_HP = IntVar(0)
+CHB_RC_HP = IntVar(0)
 #
 frame2r = Frame(root, borderwidth=5, relief=RIDGE)
 frame2r.pack(side=RIGHT, fill=BOTH, expand=NO)
@@ -14755,6 +15161,9 @@ Showmenu.menu.add_checkbutton(label='Math-Y', variable=Show_MathY, command=Updat
 Showmenu.menu.add_command(label="-Auto Vert Center-", foreground="blue", command=donothing)
 Showmenu.menu.add_checkbutton(label='CA-V', variable=AutoCenterA)
 Showmenu.menu.add_checkbutton(label='CB-V', variable=AutoCenterB)
+Showmenu.menu.add_command(label="-Input HP Comp-", foreground="blue", command=donothing)
+Showmenu.menu.add_checkbutton(label='CA-V', variable=CHA_RC_HP)
+Showmenu.menu.add_checkbutton(label='CB-V', variable=CHB_RC_HP)
 Showmenu.menu.add_separator()  
 Showmenu.menu.add_checkbutton(label='RA-V', variable=ShowRA_V, command=UpdateTimeTrace)
 Showmenu.menu.add_checkbutton(label='RA-I', variable=ShowRA_I, command=UpdateTimeTrace)
