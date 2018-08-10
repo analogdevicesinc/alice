@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 alice-desktop 1.2.py(w) (7-24-2018)
+# ADALM1000 alice-desktop 1.2.py(w) (8-9-2018)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu.rework >= 1.0 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -33,7 +33,7 @@ try:
 except:
     pysmu_found = False
 #
-RevDate = "(24 July 2018)"
+RevDate = "(9 Aug 2018)"
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.2.1/alice-desktop-1.2-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
@@ -1114,6 +1114,48 @@ def BLoadConfig(filename):
         BodeCheckBox()
         IACheckBox()
         OhmCheckBox()
+#
+        time.sleep(0.05)
+        if AWGAShape.get()==9:
+            AWGAMakeImpulse()
+        elif AWGAShape.get()==11:
+            AWGAMakeTrapazoid()
+        elif AWGAShape.get()==15:
+            AWGAMakeSSQ()
+        elif AWGAShape.get()==16:
+            AWGAMakeRamp()
+        elif AWGAShape.get()==17:
+            AWGAMakePWMSine()
+        elif AWGAShape.get()==12:
+            AWGAMakeUpDownRamp()
+        elif AWGAShape.get()==14:
+            AWGAMakeFourier()
+        elif AWGAShape.get()==7:
+            AWGAMakeUUNoise()
+        elif AWGAShape.get()==8:
+            AWGAMakeUGNoise()
+#
+        if AWGBShape.get()==9:
+            AWGBMakeImpulse()
+        elif AWGBShape.get()==11:
+            AWGBMakeTrapazoid()
+        elif AWGBShape.get()==15:
+            AWGBMakeSSQ()
+        elif AWGBShape.get()==16:
+            AWGBMakeRamp()
+        elif AWGBShape.get()==17:
+            AWGBMakePWMSine()
+        elif AWGBShape.get()==12:
+            AWGBMakeUpDownRamp()
+        elif AWGBShape.get()==14:
+            AWGBMakeFourier()
+        elif AWGBShape.get()==7:
+            AWGBMakeUUNoise()
+        elif AWGBShape.get()==8:
+            AWGBMakeUGNoise()
+        else:
+            UpdateAwgCont()
+        time.sleep(0.05)
     except:
         print "Config File Not Found."
 
@@ -1966,7 +2008,7 @@ def BStart():
     else:
         if PowerStatus == 0:
             PowerStatus = 1
-            PwrBt.config(bg="green",text="PWR-On")
+            PwrBt.config(style="Pwr.TButton",text="PWR-On")
             devx.ctrl_transfer( 0x40, 0x51, 49, 0, 0, 0, 100) # turn on analog power
         if (RUNstatus.get() == 0):
             RUNstatus.set(1)
@@ -2036,11 +2078,11 @@ def BPower():
         BStop()
     if PowerStatus == 1:
         PowerStatus = 0
-        PwrBt.config(bg="red",text="PWR-Off")
+        PwrBt.config(style="PwrOff.TButton",text="PWR-Off")
         devx.ctrl_transfer( 0x40, 0x50, 49, 0, 0, 0, 100) # turn off analog power
     else:
         PowerStatus = 1
-        PwrBt.config(bg="green",text="PWR-On")
+        PwrBt.config(style="Pwr.TButton",text="PWR-On")
         devx.ctrl_transfer( 0x40, 0x51, 49, 0, 0, 0, 100) # turn on analog power
     
 def BTime():
@@ -2427,7 +2469,7 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
         ImemoryA = IBuffA
         ImemoryB = IBuffB
 
-# Do input probe Calibration CH1VGain, CH2VGain, CH1VOffset, CH2VOffset
+# Do input divider Calibration CH1VGain, CH2VGain, CH1VOffset, CH2VOffset
     try:
         InOffA = float(eval(CHAVOffsetEntry.get()))
     except:
@@ -2486,6 +2528,7 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
     if hozpos < 0:
         hozpos = 0
     twoscreens = int(AWGSAMPLErate * 20.0 * TIMEdiv / 1000.0) # number of samples to acquire, 2 screen widths
+    onescreen = int(twoscreens/2)
     if hldn+hozpos > MaxSamples-twoscreens:
         hldn = MaxSamples-twoscreens-hozpos
         HoldOffentry.delete(0,END)
@@ -2686,7 +2729,7 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
             VBuffB = numpy.roll(VBuffB, TimeCorrection)
             IBuffB = numpy.roll(IBuffB, TimeCorrection)
         SHOWsamples = twoscreens + hldn + hozpos
-# Check if Input channel RC high pass compensation checked cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
+# Check if Input channel RC high pass compensation checked
     if CHA_RC_HP.get() == 1:
         try:
             TC1A = float(cha_TC1Entry.get())
@@ -2817,7 +2860,10 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
             ImemoryA = IBuffA
             ImemoryB = IBuffB
 # DC value = average of the data record
-    Endsample = SHOWsamples - 10
+    if CHA_RC_HP.get() == 1 or CHB_RC_HP.get() == 1:
+        Endsample = hldn+onescreen # average over only one screen's worth of samples
+    else:
+        Endsample = SHOWsamples - 10 # average over all samples
     DCV1 = numpy.mean(VBuffA[hldn:Endsample])
     DCV2 = numpy.mean(VBuffB[hldn:Endsample])
     # convert current values to mA
@@ -2861,9 +2907,13 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
         # Update tasks and screens by TKinter
         # update screens
 #
+# High Pass y[n] = alpha * (y[n-1] + x[n] - x[n-1])
+#  Low Pass y[n] = y[n-1] + (alpha * ((x[n] - x[n-1]))
+#  All Pass y[n] = alpha * y[n-1] - alpha * (x[n] + x[n-1])
+#  All Pass y[n] = alpha * (y[n-1] - x[n] - x[n-1])
 def Digital_RC_High_Pass( InBuff, TC1, Gain ): # TC1 is in micro seconds
     global SAMPLErate
-
+    
     OutBuff = []
     n = len(InBuff)
     Delta = 1.0/SAMPLErate
@@ -2877,8 +2927,25 @@ def Digital_RC_High_Pass( InBuff, TC1, Gain ): # TC1 is in micro seconds
     OutBuff = numpy.array(OutBuff)
     OutBuff = InBuff + (OutBuff * Gain)
     return OutBuff
-
-def Analog_Freq_In():   # Read the audio from the stream and store the data into the arrays
+#
+def Digital_RC_Low_Pass( InBuff, TC1, Gain ): # TC1 is in micro seconds
+    global SAMPLErate
+    
+    OutBuff = []
+    n = len(InBuff)
+    Delta = 1.0/SAMPLErate
+    TC = TC1 * 1.0E-6
+    Alpha = Delta / (TC + Delta)
+    i = 1
+    OutBuff.append(Alpha*InBuff[0])
+    while i < n:
+        OutBuff.append( OutBuff[i-1] + (Alpha * (InBuff[i] - InBuff[i-1])) )
+        i += 1
+    OutBuff = numpy.array(OutBuff)
+    OutBuff = (OutBuff * Gain)
+    return OutBuff
+#
+def Analog_Freq_In():   # Read from the stream and store the data into the arrays
     global ADsignal1, FFTBuffA, FFTBuffB, SMPfft
     global AWGSync, AWGAMode, AWGBMode, AWGAShape, AWGAIOMode, AWGBIOMode
     global AWGAFreqvalue, AWGBFreqvalue, FStepSync, FSweepSync
@@ -2898,7 +2965,7 @@ def Analog_Freq_In():   # Read the audio from the stream and store the data into
     global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
     global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
     
-    # Do input probe Calibration CH1VGain, CH2VGain, CH1VOffset, CH2VOffset
+    # Do input divider Calibration CH1VGain, CH2VGain, CH1VOffset, CH2VOffset
     try:
         InOffA = float(eval(CHAVOffsetEntry.get()))
     except:
@@ -5442,7 +5509,10 @@ def MakeTimeScreen():     # Update the screen with traces and text
         DISsamples = (10.0 * TIMEdiv) # grid width in time 
         Tstep = DISsamples / GRW # time in mS per pixel
         Tpoint = ((TCursor-X0L) * Tstep) + vt
-        TString = ' {0:.2f} '.format(Tpoint)
+        if TIMEdiv < 0.1:
+            TString = ' {0:.3f} '.format(Tpoint)
+        else:
+            TString = ' {0:.2f} '.format(Tpoint)
         V_label = TString + " mS"
         ca.create_text(TCursor+1, VCursor-5, text=V_label, fill=COLORtext, anchor="w", font=("arial", 8 ))
     if ShowVCur.get() > 0:
@@ -5460,7 +5530,10 @@ def MakeTimeScreen():     # Update the screen with traces and text
             DISsamples = (10.0 * TIMEdiv) # grid width in time 
             Tstep = DISsamples / GRW # time in mS per pixel
             Tpoint = ((MouseX-X0L) * Tstep) + vt
-            TString = ' {0:.2f} '.format(Tpoint)
+            if TIMEdiv < 0.1:
+                TString = ' {0:.3f} '.format(Tpoint)
+            else:
+                TString = ' {0:.2f} '.format(Tpoint)
             V_label = TString + " mS"
             ca.create_text(MouseX+1, MouseY-5, text=V_label, fill=COLORtext, anchor="w", font=("arial", 8 ))
             Dline = [X0L, MouseY, X0L+GRW, MouseY]
@@ -6914,6 +6987,7 @@ def onCanvasClickLeft(event):
             HoldOffentry.delete(0,END)
             HoldOffentry.insert(0, HoldOff)
     #
+        Yoffset1 = CHAOffset
         if MarkerScale.get() == 1:
             Yconv1 = float(GRH/10.0) / CH1pdvRange
             Yoffset1 = CHAOffset
@@ -6934,7 +7008,7 @@ def onCanvasClickLeft(event):
             Yoffset1 = CHBIOffset
             COLORmarker = COLORtrace4
             Units = " mA"
-        Yoffset1 = CHAOffset
+        #
         c1 = GRH / 2.0 + Y0T    # fixed correction channel A
         xc1 = GRW / 2.0 + X0L
         c2 = GRH / 2.0 + Y0T    # fixed correction channel B
@@ -7554,6 +7628,42 @@ def AWGAMakeMath():
         return
     AWGAwaveform = eval(AWGAMathString)
     AWGAwaveform = numpy.array(AWGAwaveform)
+    AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
+    UpdateAwgCont()
+#
+def AWGAMakePWMSine():
+    global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength
+    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+
+    temp = 0
+    BAWGAAmpl(temp)
+    BAWGAOffset(temp)
+    BAWGAFreq(temp)
+    BAWGAPhase(temp)
+    BAWGADutyCycle(temp)
+
+    if AWGAFreqvalue > 0.0:
+        AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
+    else:
+        AWGAperiodvalue = 0.0
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
+        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+    else:
+        MaxV = AWGAOffsetvalue
+        MinV = AWGAAmplvalue
+    
+    PulseWidth = int(AWGADutyCyclevalue*100)
+    PulseSamples = int(AWGAperiodvalue/PulseWidth)
+    AWGAwaveform = []
+    for i in range(PulseSamples): #(i = 0; i < cPulse; i++)
+        v = round(PulseWidth/2*(1+numpy.sin(i*2*numpy.pi/PulseSamples)))
+    # print(v)
+        for j in range(PulseWidth): #(j = 0; j < cLength; j++)
+            if j >= v:
+                AWGAwaveform.append(MaxV) # j>=v?1:0
+            else:
+                AWGAwaveform.append(MinV) # j>=v?1:0
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
     UpdateAwgCont()
 #
@@ -8280,6 +8390,42 @@ def AWGBMakeFourier():
     duty2lab.config(text="Harmonics")
     UpdateAwgCont()
 #
+def AWGBMakePWMSine():
+    global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength
+    global AWGBDutyCyclevalue, AWGBFreqvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+
+    temp = 0
+    BAWGBAmpl(temp)
+    BAWGBOffset(temp)
+    BAWGBFreq(temp)
+    BAWGBPhase(temp)
+    BAWGBDutyCycle(temp)
+
+    if AWGBFreqvalue > 0.0:
+        AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
+    else:
+        AWGBperiodvalue = 0.0
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
+        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+    else:
+        MaxV = AWGBOffsetvalue
+        MinV = AWGBAmplvalue
+    
+    PulseWidth = int(AWGBDutyCyclevalue*100)
+    PulseSamples = int(AWGBperiodvalue/PulseWidth)
+    AWGBwaveform = []
+    for i in range(PulseSamples): #(i = 0; i < cPulse; i++)
+        v = round(PulseWidth/2*(1+numpy.sin(i*2*numpy.pi/PulseSamples)))
+    # print(v)
+        for j in range(PulseWidth): #(j = 0; j < cLength; j++)
+            if j >= v:
+                AWGBwaveform.append(MaxV) # j>=v?1:0
+            else:
+                AWGBwaveform.append(MinV) # j>=v?1:0
+    AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
+    UpdateAwgCont()
+#
 def AWGBMakeSSQ():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
@@ -9001,7 +9147,7 @@ def BStartSA():
     else:
         if PowerStatus == 0:
             PowerStatus = 1
-            PwrBt.config(bg="green",text="PWR-On")
+            PwrBt.config(style="Pwr.TButton",text="PWR-On")
             devx.ctrl_transfer( 0x40, 0x51, 49, 0, 0, 0, 100) # turn on analog power
 
         if ShowC1_VdB.get() == 0 and ShowC2_VdB.get() == 0 and ShowMathSA.get() == 0 and ShowC1_P.get() == 0 and ShowC2_P.get() == 0:
@@ -9202,7 +9348,7 @@ def BStartBP():
     else:
         if PowerStatus == 0:
             PowerStatus = 1
-            PwrBt.config(bg="green",text="PWR-On")
+            PwrBt.config(style="Pwr.TButton",text="PWR-On")
             devx.ctrl_transfer( 0x40, 0x51, 49, 0, 0, 0, 100) # turn on analog power
 
         if ShowCA_VdB.get() == 0 and ShowCB_VdB.get() == 0 and ShowMathBP.get() == 0:
@@ -11643,6 +11789,8 @@ def onAWGAscroll(event):
         AWGAMakeSSQ()
     elif AWGAShape.get()==16:
         AWGAMakeRamp()
+    elif AWGAShape.get()==17:
+        AWGAMakePWMSine()
     elif AWGAShape.get()==12:
         AWGAMakeUpDownRamp()
     elif AWGAShape.get()==14:
@@ -11668,6 +11816,8 @@ def onAWGBscroll(event):
         AWGBMakeSSQ()
     elif AWGBShape.get()==16:
         AWGBMakeRamp()
+    elif AWGBShape.get()==17:
+        AWGBMakePWMSine()
     elif AWGBShape.get()==12:
         AWGBMakeUpDownRamp()
     elif AWGBShape.get()==14:
@@ -11884,6 +12034,7 @@ def MakeAWGWindow():
         ShapeAMenu.menu.add_radiobutton(label="SSQ Pulse", variable=AWGAShape, value=15, command=AWGAMakeSSQ)
         ShapeAMenu.menu.add_radiobutton(label="U-D Ramp", variable=AWGAShape, value=12, command=AWGAMakeUpDownRamp)
         ShapeAMenu.menu.add_radiobutton(label="Fourier Series", variable=AWGAShape, value=14, command=AWGAMakeFourier)
+        ShapeAMenu.menu.add_radiobutton(label="PWM Sine", variable=AWGAShape, value=17, command=AWGAMakePWMSine)
         ShapeAMenu.menu.add_radiobutton(label="UU Noise", variable=AWGAShape, value=7, command=AWGAMakeUUNoise)
         ShapeAMenu.menu.add_radiobutton(label="UG Noise", variable=AWGAShape, value=8, command=AWGAMakeUGNoise)
         ShapeAMenu.menu.add_radiobutton(label="Math", variable=AWGAShape, value=10, command=AWGAMakeMath)
@@ -12017,6 +12168,7 @@ def MakeAWGWindow():
         ShapeBMenu.menu.add_radiobutton(label="SSQ Pulse", variable=AWGBShape, value=15, command=AWGBMakeSSQ)
         ShapeBMenu.menu.add_radiobutton(label="U-D Ramp", variable=AWGBShape, value=12, command=AWGBMakeUpDownRamp)
         ShapeBMenu.menu.add_radiobutton(label="Fourier Series", variable=AWGBShape, value=14, command=AWGBMakeFourier)
+        ShapeBMenu.menu.add_radiobutton(label="PWM Sine", variable=AWGBShape, value=17, command=AWGBMakePWMSine)
         ShapeBMenu.menu.add_radiobutton(label="UU Noise", variable=AWGBShape, value=7, command=AWGBMakeUUNoise)
         ShapeBMenu.menu.add_radiobutton(label="UG Noise", variable=AWGBShape, value=8, command=AWGBMakeUGNoise)
         ShapeBMenu.menu.add_radiobutton(label="Math", variable=AWGBShape, value=10, command=AWGBMakeMath)
@@ -14348,18 +14500,21 @@ def DestroyBoardScreen():
     boardwindow.destroy()
 #
 def ConnectDevice():
-    global devx, dev0, dev1, dev2, session, BrdSel, CHA, CHB, DevID, MaxSamples
-    global bcon, FWRevOne, HWRevOne, FWRevTwo, HWRevTwo, WRevThree, HWRevThree
+    global devx, dev0, dev1, dev2, session, BrdSel, CHA, CHB, DevID, MaxSamples, AWGSAMPLErate
+    global bcon, FWRevOne, HWRevOne, FWRevTwo, HWRevTwo, WRevThree, HWRevThree, SAMPLErate
 
     if DevID == "No Device" or DevID == "m1k":
-        session = Session(ignore_dataflow=True, queue_size=MaxSamples)
+        SAMPLErate = AWGSAMPLErate # Scope sample rate
+        #print("Request sample rate: " + str(SAMPLErate))
+        session = Session(ignore_dataflow=True, sample_rate=SAMPLErate, queue_size=MaxSamples)
         # session.add_all()
         if not session.devices:
             print 'No Device plugged IN!'
             DevID = "No Device"
-            bcon.configure(text="Recon", style="RConn.TButton") #, bg="red")
+            bcon.configure(text="Recon", style="RConn.TButton")
             return
-        session.configure()
+        session.configure(sample_rate=SAMPLErate)
+        #print("Session sample rate: " + str(session.sample_rate))
         MakeBoardScreen()
         SelectBoard()
         bcon.configure(text="Conn", style="GConn.TButton")
@@ -14393,7 +14548,7 @@ def SelectBoard():
     DevID = devx.serial
     print DevID
     print devx.fwver, devx.hwver
-    print devx.default_rate
+    print("Session sample rate: " + str(session.sample_rate))
     CHA = devx.channels['A']    # Open CHA
     CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
     CHB = devx.channels['B']    # Open CHB
@@ -14408,6 +14563,29 @@ def SelectBoard():
         PIO_1 = 1
         PIO_2 = 2
         PIO_3 = 3
+#
+def SetSampleRate():
+    global SAMPLErate, AWGSAMPLErate, session, ETSStatus, etssrlab
+
+    # ask user for channel to save
+    BStop() # Force Stop loop if running
+    TempRate = askstring("Set Sample Rate", "Current Sample Rate:\n", initialvalue=SAMPLErate)
+    if (TempRate == None):         # If Cancel pressed, then None
+        return
+    try:
+        NewRate = int(TempRate)
+        if NewRate <= 100000: # rate has to be less than or equal to 100,000
+            AWGSAMPLErate = NewRate
+        else:
+            AWGSAMPLErate = 100000
+        SAMPLErate = AWGSAMPLErate # Scope sample rate
+    except:
+        donothing()
+    session.configure(sample_rate=SAMPLErate)
+    if ETSStatus.get() > 0:
+        SRstring = "RT Sample Rate = " + str(SAMPLErate)
+        etssrlab.config(text=SRstring)
+        ETSUpdate()
 #
 def UpdateFirmware():
     global devx, dev0, dev1, dev2, session, BrdSel, CHA, CHB, DevID, MaxSamples
@@ -14495,7 +14673,7 @@ def DestroyOhmScreen():
 #
 def MakeETSWindow():
     global FminEntry, MulXEntry, etswindow, ETSStatus, ETSDisp, ETSDir, ETSts, eqivsamplerate
-    global SAMPLErate, DivXEntry, FOffEntry, FminDisp, enb1
+    global SAMPLErate, DivXEntry, FOffEntry, FminDisp, enb1, etssrlab
 
     #
     if ETSStatus.get() == 0:
@@ -14510,13 +14688,15 @@ def MakeETSWindow():
         frame1.grid(row=0, column=0, sticky=W)
         # Sampling controls Widgets
         SRstring = "RT Sample Rate = " + str(SAMPLErate)
-        srlab = Label(frame1, text=SRstring, style= "A10B.TLabel")
-        srlab.grid(row=1, column=0, sticky=W)
+        etssrlab = Label(frame1, text=SRstring, style= "A10B.TLabel")
+        etssrlab.grid(row=1, column=0, sticky=W)
+        etssrbutton = Button(frame1, text="Set RT Sample Rate", command=SetSampleRate) #, style= "W8.TButton"
+        etssrbutton.grid(row=2, column=0, sticky=W, pady=7)
         enb1 = Checkbutton(frame1,text="Enable ETS", variable=ETSDisp, command=ETSCheckBox)
-        enb1.grid(row=2, column=0, sticky=W)
+        enb1.grid(row=3, column=0, sticky=W)
         #
         Divx = Frame( frame1 )
-        Divx.grid(row=3, column=0, sticky=W)
+        Divx.grid(row=4, column=0, sticky=W)
         DivXEntry = Entry(Divx, width=6)
         DivXEntry.bind('<MouseWheel>', ETSscroll)
         DivXEntry.pack(side=RIGHT)
@@ -14526,15 +14706,15 @@ def MakeETSWindow():
         divxlab.pack(side=RIGHT)
         #
         FOffEntry = Label(frame1, text="Samples")
-        FOffEntry.grid(row=4, column=0, sticky=W)
+        FOffEntry.grid(row=5, column=0, sticky=W)
         MulXEntry = Label( frame1, text = "Rec Len Mul")
-        MulXEntry.grid(row=5, column=0, sticky=W)
+        MulXEntry.grid(row=6, column=0, sticky=W)
         #
         eqivsamplerate = Label(frame1, text="MHz", style= "A10B.TLabel")
-        eqivsamplerate.grid(row=6, column=0, sticky=W)
+        eqivsamplerate.grid(row=7, column=0, sticky=W)
         #
         FConv = Frame( frame1 )
-        FConv.grid(row=7, column=0, sticky=W)
+        FConv.grid(row=8, column=0, sticky=W)
         FminEntry = Entry(FConv, width=3)
         FminEntry.bind('<MouseWheel>', ETSscroll)
         FminEntry.pack(side=RIGHT)
@@ -14544,23 +14724,23 @@ def MakeETSWindow():
         fminlab.pack(side=RIGHT)
         #
         FminDisp = Label(frame1, text="32768 Hz", style= "A10B.TLabel")
-        FminDisp.grid(row=8, column=0, sticky=W)
+        FminDisp.grid(row=9, column=0, sticky=W)
         #
         mgloadbutton = Button(frame1, text="Load to MinGen", command=MGLoad)
-        mgloadbutton.grid(row=9, column=0, sticky=W)
+        mgloadbutton.grid(row=10, column=0, sticky=W)
         #
         dirlab = Label(frame1, text="Sample Data Order", style= "A10B.TLabel")
-        dirlab.grid(row=10, column=0, sticky=W)
+        dirlab.grid(row=11, column=0, sticky=W)
         DataMode = Frame( frame1 )
-        DataMode.grid(row=11, column=0, sticky=W)
+        DataMode.grid(row=12, column=0, sticky=W)
         dm3 = Radiobutton(DataMode, text="Forward", variable=ETSDir, value=0)
         dm3.pack(side=LEFT)
         dm4 = Radiobutton(DataMode, text="Reverse", variable=ETSDir, value=1)
         dm4.pack(side=LEFT)
         tclab = Label(frame1, text="CH B Time Shift", style= "A10B.TLabel")
-        tclab.grid(row=12, column=0, sticky=W)
+        tclab.grid(row=13, column=0, sticky=W)
         TSMode = Frame( frame1 )
-        TSMode.grid(row=13, column=0, sticky=W)
+        TSMode.grid(row=14, column=0, sticky=W)
         ETSts = Entry(TSMode, width=6)
         ETSts.bind('<MouseWheel>', ETSscroll)
         ETSts.pack(side=RIGHT)
@@ -14570,7 +14750,7 @@ def MakeETSWindow():
         ETStslab.pack(side=RIGHT)
         #
         etsdismissclbutton = Button(frame1, text="Dismiss", style= "W8.TButton", command=DestroyETSScreen)
-        etsdismissclbutton.grid(row=14, column=0, sticky=W, pady=7)
+        etsdismissclbutton.grid(row=15, column=0, sticky=W, pady=7)
         ETSDisp.set(0)
         ETSCheckBox()
 #
@@ -14818,7 +14998,11 @@ def UpdateAWGWin():
 def SettingsUpdate():
     global GridWidth, TRACEwidth, TRACEaverage, Vdiv, HarmonicMarkers, ZEROstuffing, RevDate
     global Settingswindow, SettingsStatus, SettingsDisp, ZSTuff, TAvg, VDivE, TwdthE, GwdthE, HarMon
-
+    global CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
+    global CHA_A1, CHA_A2, CHB_A1, CHB_A2
+    global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
+    global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
+    
     try:
         GW = int(eval(GwdthE.get()))
         if GW < 1:
@@ -14908,10 +15092,95 @@ def SettingsUpdate():
         ZSTuff.insert(0, ZEROstuffing.get())
     ZEROstuffing.set(ZST)
 #
+    try:
+        TC1A = float(cha_TC1Entry.get())
+        CHA_TC1.set(TC1A)
+        if TC1A < 0:
+            TC1A = 0
+            cha_TC1Entry.delete(0,END)
+            cha_TC1Entry.insert(0, TC1A)
+    except:
+        cha_TC1Entry.delete(0,END)
+        cha_TC1Entry.insert(0, CHA_TC1.get())
+    try:
+        TC2A = float(cha_TC2Entry.get())
+        CHA_TC2.set(TC2A)
+        if TC2A < 0:
+            TC2A = 0
+            cha_TC2Entry.delete(0,END)
+            cha_TC2Entry.insert(0, TC2A)
+    except:
+        cha_TC2Entry.delete(0,END)
+        cha_TC2Entry.insert(0, CHA_TC2.get())
+    #
+    try:
+        Gain1A = float(cha_A1Entry.get())
+        CHA_A1.set(Gain1A)
+        if Gain1A < 0:
+            Gain1A = 1
+            cha_A1Entry.delete(0,END)
+            cha_A1Entry.insert(0, Gain1A)
+    except:
+        cha_A1Entry.delete(0,END)
+        cha_A1Entry.insert(0, CHA_A1.get())
+    try:
+        Gain2A = float(cha_A2Entry.get())
+        CHA_A2.set(Gain2A)
+        if Gain2A < 0:
+            Gain2A = 0
+            cha_A2Entry.delete(0,END)
+            cha_A2Entry.insert(0, Gain2A)
+    except:
+        cha_A2Entry.delete(0,END)
+        cha_A2Entry.insert(0, CHA_A2.get())
+    #
+    try:
+        TC1B = float(chb_TC1Entry.get())
+        CHB_TC1.set(TC1B)
+        if TC1B < 0:
+            TC1B = 0
+            chb_TC1Entry.delete(0, END)
+            chb_TC1Entry.insert(0, TC1B)
+    except:
+        chb_TC1Entry.delete(0,END)
+        chb_TC1Entry.insert(0, CHB_TC1.get())
+    try:
+        TC2B = float(chb_TC2Entry.get())
+        CHB_TC2.set(TC2B)
+        if TC2B < 0:
+            TC2B = 0
+            chb_TC2Entry.delete(0, END)
+            chb_TC2Entry.insert(0, TC2B)
+    except:
+        chb_TC2Entry.delete(0,END)
+        chb_TC2Entry.insert(0, CHB_TC2.get())
+    #
+    try:
+        Gain1B = float(chb_A1Entry.get())
+        CHB_A1.set(Gain1B)
+        if Gain1B < 0:
+            Gain1B = 1
+            chb_A1Entry.delete(0,END)
+            chb_A1Entry.insert(0, Gain1B)
+    except:
+        chb_A1Entry.delete(0,END)
+        chb_A1Entry.insert(0, CHB_A1.get())
+    try:
+        Gain2B = float(chb_A2Entry.get())
+        CHB_A2.set(Gain2B)
+        if Gain2B < 0:
+            Gain2B = 0
+            chb_A2Entry.delete(0,END)
+            chb_A2Entry.insert(0, Gain2B)
+    except:
+        chb_A2Entry.delete(0,END)
+        chb_A2Entry.insert(0, CHB_A2.get())
+    #
 def DestroySettings():
     global Settingswindow, SettingsStatus, SettingsDisp
     
     SettingsStatus.set(0)
+    SettingsUpdate()
     # SettingsDisp.set(0)
     Settingswindow.destroy()
 #
@@ -15054,6 +15323,7 @@ root.style.configure("W17.TButton", width=17, relief=RAISED)
 root.style.configure("Stop.TButton", background="red", width=4, relief=RAISED)
 root.style.configure("Run.TButton", background="green", width=4, relief=RAISED)
 root.style.configure("Pwr.TButton", background="green", width=7, relief=RAISED)
+root.style.configure("PwrOff.TButton", background="red", width=7, relief=RAISED)
 root.style.configure("RConn.TButton", background="red", width=5, relief=RAISED)
 root.style.configure("GConn.TButton", background="green", width=5, relief=RAISED)
 root.style.configure("Rtrace1.TButton", background=COLORtrace1, width=7, relief=RAISED)
@@ -15249,6 +15519,7 @@ Optionmenu = Menubutton(dropmenu, text="Options", style="W7.TButton")
 Optionmenu.menu = Menu(Optionmenu, tearoff = 0 )
 Optionmenu["menu"]  = Optionmenu.menu
 Optionmenu.menu.add_command(label='Change Settings', command=MakeSettingsMenu)
+Optionmenu.menu.add_command(label='Set Sample Rate', command=SetSampleRate)
 Optionmenu.menu.add_checkbutton(label='Smooth', variable=SmoothCurves, command=UpdateTimeTrace)
 Optionmenu.menu.add_checkbutton(label='Z-O-Hold', variable=ZOHold, command=UpdateTimeTrace)
 Optionmenu.menu.add_checkbutton(label='Decimate', variable=DecimateOption)
