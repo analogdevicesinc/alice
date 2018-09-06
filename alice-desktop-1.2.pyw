@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 alice-desktop 1.2.py(w) (8-9-2018)
+# ADALM1000 alice-desktop 1.2.py(w) (9-6-2018)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu.rework >= 1.0 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -33,7 +33,7 @@ try:
 except:
     pysmu_found = False
 #
-RevDate = "(9 Aug 2018)"
+RevDate = "(6 Sept 2018)"
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.2.1/alice-desktop-1.2-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
@@ -246,6 +246,7 @@ AWGBPhasevalue = 0
 AWGBdelayvalue = 0
 AWGBDutyCyclevalue = 50
 AWGBWave = 'dc'
+Reset_Freq = 300
 #
 DCV1 = DCV2 = MinV1 = MaxV1 = MinV2 = MaxV2 = MidV1 = PPV1 = MidV2 = PPV2 = SV1 = SI1 = 0
 DCI1 = DCI2 = MinI1 = MaxI1 = MinI2 = MaxI2 = MidI1 = PPI1 = MidI2 = PPI2 = SV2 = SI2 = 0
@@ -1126,6 +1127,8 @@ def BLoadConfig(filename):
             AWGAMakeRamp()
         elif AWGAShape.get()==17:
             AWGAMakePWMSine()
+        elif AWGAShape.get()==18:
+            AWGAMakeBodeSine()
         elif AWGAShape.get()==12:
             AWGAMakeUpDownRamp()
         elif AWGAShape.get()==14:
@@ -1145,6 +1148,8 @@ def BLoadConfig(filename):
             AWGBMakeRamp()
         elif AWGBShape.get()==17:
             AWGBMakePWMSine()
+        elif AWGBShape.get()==18:
+            AWGBMakeBodeSine()
         elif AWGBShape.get()==12:
             AWGBMakeUpDownRamp()
         elif AWGBShape.get()==14:
@@ -2580,11 +2585,11 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
         if AWGBIOMode.get() > 0: # Split Input / Output mode
             devx.ctrl_transfer( 0x40, 0x51, 39, 0, 0, 0, 100) # open voltage sense loop
         if AWGSync.get() > 0: # awg syn flag set so run in discontinuous mode
-            time.sleep(0.01)
             if discontloop > 0:
                 session.flush()
             else:
                 discontloop = 1
+            time.sleep(0.01)
             # print "just before awg enable"
             BAWGEnab()
             if AWGAIOMode.get() > 0: # Split Input / Output mode
@@ -2919,8 +2924,8 @@ def Digital_RC_High_Pass( InBuff, TC1, Gain ): # TC1 is in micro seconds
     Delta = 1.0/SAMPLErate
     TC = TC1 * 1.0E-6
     Alpha = TC / (TC + Delta)
+    OutBuff.append(InBuff[1]-InBuff[0]) # set inital sample to derivative (difference of first two samples)
     i = 1
-    OutBuff.append(InBuff[0])
     while i < n:
         OutBuff.append( Alpha * (OutBuff[i-1] + InBuff[i] - InBuff[i-1]) )
         i += 1
@@ -2964,6 +2969,7 @@ def Analog_Freq_In():   # Read from the stream and store the data into the array
     global CHA_A1, CHA_A2, CHB_A1, CHB_A2
     global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
     global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
+    global Reset_Freq, AWGAFreqEntry, AWGBFreqEntry
     
     # Do input divider Calibration CH1VGain, CH2VGain, CH1VOffset, CH2VOffset
     try:
@@ -3037,9 +3043,11 @@ def Analog_Freq_In():   # Read from the stream and store the data into the array
         if FSweepMode.get() == 1: # set new CH-A frequency
             AWGAFreqEntry.delete(0,END)
             AWGAFreqEntry.insert(4, FregPoint)
+            AWGAMakeBodeSine()
         if FSweepMode.get() == 2: # set new CH-B frequency
             AWGBFreqEntry.delete(0,END)
-            AWGBFreqEntry.insert(4, FregPoint)   
+            AWGBFreqEntry.insert(4, FregPoint)
+            AWGBMakeBodeSine()
     if AWGSync.get() > 0:
         if IAScreenStatus.get() > 0:
             AWGBMode.set(2)
@@ -3255,6 +3263,13 @@ def Analog_Freq_In():   # Read from the stream and store the data into the array
     if FSweepMode.get() > 0 and BodeDisp.get() > 0: # Increment loop counter only if sleceted and Bode display is active
         LoopNum.set(LoopNum.get() + 1)
         if LoopNum.get() > NSteps.get():
+            if FSweepMode.get() == 1:
+                AWGAFreqEntry.delete(0,"end")
+                AWGAFreqEntry.insert(0, Reset_Freq)
+            if FSweepMode.get() == 2:
+                AWGBFreqEntry.delete(0,"end")
+                AWGBFreqEntry.insert(0, Reset_Freq)
+#
             LoopNum.set(1)
             if FSweepCont.get() == 0:
                 RUNstatus.set(0)
@@ -6902,6 +6917,47 @@ def onCanvasRightArrow(event):
     except:
         donothing()
 #
+def onCanvasSpaceBar(event):
+    global RUNstatus, ca, XYca, Freqca, Bodeca, IAca
+
+    if event.widget == ca:
+        if RUNstatus.get() == 0:
+            BStart()
+        elif RUNstatus.get() > 0:
+            BStop()
+    try:
+        if event.widget == XYca:
+            if RUNstatus.get() == 0:
+                BStart()
+            elif RUNstatus.get() > 0:
+                BStop()
+    except:
+        donothing()
+    try:
+        if event.widget == IAca:
+            if RUNstatus.get() == 0:
+                BStart()
+            elif RUNstatus.get() > 0:
+                BStop()
+    except:
+        donothing()
+    try:
+        if event.widget == Freqca:
+            if RUNstatus.get() == 0:
+                BStartSA()
+            elif RUNstatus.get() > 0:
+                BStopSA()
+    except:
+        donothing()
+    try:
+        if event.widget == Bodeca:
+            if RUNstatus.get() == 0:
+                BStartBP()
+            elif RUNstatus.get() > 0:
+                BStopBP()
+    except:
+        donothing()
+#
 def onCanvasClickLeft(event):
     global X0L          # Left top X value
     global Y0T          # Left top Y value
@@ -7629,6 +7685,54 @@ def AWGAMakeMath():
     AWGAwaveform = eval(AWGAMathString)
     AWGAwaveform = numpy.array(AWGAwaveform)
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
+    UpdateAwgCont()
+#
+def AWGAMakeBodeSine():
+    global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
+    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay, AWGAMode
+    
+    temp = 0
+    BAWGAAmpl(temp)
+    BAWGAOffset(temp)
+    BAWGAFreq(temp)
+    BAWGAPhase(temp)
+    BAWGADutyCycle(temp)
+
+    if AWGAFreqvalue < 10.0: # if frequency is less than 10 Hz use libsmu sine function
+        AWGAShape.set(1)
+        BAWGAShape()
+        UpdateAwgCont()
+        return
+
+    if AWGAFreqvalue > 0.0:
+        AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
+    else:
+        AWGAperiodvalue = 10.0
+
+    if AWGAPhaseDelay.get() == 0:
+        if AWGAPhasevalue > 0:
+            AWGAdelayvalue = AWGAperiodvalue * AWGAPhasevalue / 360.0
+        else:
+            AWGAdelayvalue = 0.0
+    elif AWGAPhaseDelay.get() == 1:
+        AWGAdelayvalue = AWGAPhasevalue * AWGSAMPLErate / 1000
+    Cycles = int(32768/AWGAperiodvalue)
+    if Cycles < 1:
+        Cycles = 1
+    RecLength = Cycles * AWGAperiodvalue
+    AWGAwaveform = []
+    AWGAwaveform = numpy.cos(numpy.linspace(0, 2*Cycles*numpy.pi, RecLength))
+    if AWGAMode.get() == 1: # convert to mA
+        amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2000.0
+        offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2000.0
+    else:
+        amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2.0
+        offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2.0
+    AWGAwaveform = (AWGAwaveform * amplitude) + offset # scale and offset the waveform
+    AWGAwaveform = numpy.roll(AWGAwaveform, int(AWGAdelayvalue))
+    AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
+    BAWGAPhaseDelay()
+    duty1lab.config(text="%")
     UpdateAwgCont()
 #
 def AWGAMakePWMSine():
@@ -8390,6 +8494,54 @@ def AWGBMakeFourier():
     duty2lab.config(text="Harmonics")
     UpdateAwgCont()
 #
+def AWGBMakeBodeSine():
+    global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBperiodvalue
+    global AWGBDutyCyclevalue, AWGBFreqvalue, duty2lab, AWGBgain, AWGBoffset, AWGBPhaseDelay, AWGBMode
+    
+    temp = 0
+    BAWGBAmpl(temp)
+    BAWGBOffset(temp)
+    BAWGBFreq(temp)
+    BAWGBPhase(temp)
+    BAWGBDutyCycle(temp)
+
+    if AWGBFreqvalue < 10.0: # if frequency is less than 10 Hz use libsmu sine function
+        AWGBShape.set(1)
+        BAWGBShape()
+        UpdateAwgCont()
+        return
+
+    if AWGBFreqvalue > 0.0:
+        AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
+    else:
+        AWGBperiodvalue = 10.0
+
+    if AWGBPhaseDelay.get() == 0:
+        if AWGBPhasevalue > 0:
+            AWGBdelayvalue = AWGBperiodvalue * AWGBPhasevalue / 360.0
+        else:
+            AWGBdelayvalue = 0.0
+    elif AWGBPhaseDelay.get() == 1:
+        AWGBdelayvalue = AWGBPhasevalue * AWGSAMPLErate / 1000
+    Cycles = int(32768/AWGBperiodvalue)
+    if Cycles < 1:
+        Cycles = 1
+    RecLength = Cycles * AWGBperiodvalue
+    AWGBwaveform = []
+    AWGBwaveform = numpy.cos(numpy.linspace(0, 2*Cycles*numpy.pi, RecLength))
+    if AWGBMode.get() == 1: # convert to mA
+        amplitude = (AWGBOffsetvalue-AWGBAmplvalue) / -2000.0
+        offset = (AWGBOffsetvalue+AWGBAmplvalue) / 2000.0
+    else:
+        amplitude = (AWGBOffsetvalue-AWGBAmplvalue) / -2.0
+        offset = (AWGBOffsetvalue+AWGBAmplvalue) / 2.0
+    AWGBwaveform = (AWGBwaveform * amplitude) + offset # scale and offset the waveform
+    AWGBwaveform = numpy.roll(AWGBwaveform, int(AWGBdelayvalue))
+    AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
+    BAWGBPhaseDelay()
+    duty2lab.config(text="%")
+    UpdateAwgCont()
+#
 def AWGBMakePWMSine():
     global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength
     global AWGBDutyCyclevalue, AWGBFreqvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
@@ -8756,16 +8908,19 @@ def UpdateAWGB():
         AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
     else:
         AWGBperiodvalue = 0.0
-    
-    if AWGBPhasevalue > 0:
-        if AWGBPhaseDelay.get() == 0:
-            AWGBdelayvalue = AWGBperiodvalue * AWGBPhasevalue / 360
-        elif AWGBPhaseDelay.get() == 1:
-            AWGBdelayvalue = AWGBPhasevalue * 100
-        
-    else:
-        AWGBdelayvalue = 0
-        
+#
+    if AWGBPhaseDelay.get() == 0:
+        if AWGBWave == 'square':
+            AWGBPhasevalue = AWGBPhasevalue + 270.0
+            if AWGBPhasevalue > 359:
+                AWGBPhasevalue = AWGBPhasevalue - 360
+        if AWGBPhasevalue > 0:
+            AWGBdelayvalue = AWGBperiodvalue * AWGBPhasevalue / 360.0
+        else:
+            AWGBdelayvalue = 0.0
+    elif AWGBPhaseDelay.get() == 1:
+        AWGBdelayvalue = AWGBPhasevalue * 100
+#        
     if AWGBTerm.get() == 0: # Open termination
         devx.ctrl_transfer( 0x40, 0x51, 37, 0, 0, 0, 100) # set 2.5 V switch to open
         devx.ctrl_transfer( 0x40, 0x51, 38, 0, 0, 0, 100) # set GND switch to open
@@ -9340,6 +9495,7 @@ def BStartBP():
     global ShowCA_VdB, ShowCB_P, ShowCB_VdB, ShowCB_P, ShowMathBP, contloop, discontloop
     global FStep, NSteps, FSweepMode, HScaleBP, CutDC, AWGAMode, AWGAShape, AWGBMode, AWGBShape
     global StartBodeEntry, StopBodeEntry, SweepStepBodeEntry, DevID, FWRevOne
+    global AWGAFreqEntry, AWGBFreqEntry, Reset_Freq
 
     if DevID == "No Device":
         showwarning("WARNING","No Device Plugged In!")
@@ -9357,12 +9513,14 @@ def BStartBP():
         CutDC.set(1) # set to remove DC
         if FSweepMode.get() == 1:    
             AWGAMode.set(0) # Set AWG A to SVMI
-            AWGAShape.set(1) # Set Shape to Sine
+            AWGAShape.set(18) # Set Shape to Sine
             AWGBMode.set(2) # Set AWG B to Hi-Z
+            Reset_Freq = AWGAFreqEntry.get()
         if FSweepMode.get() == 2:    
             AWGBMode.set(0) # Set AWG B to SVMI
-            AWGBShape.set(1) # Set Shape to Sine
+            AWGBShape.set(18) # Set Shape to Sine
             AWGAMode.set(2) # Set AWG A to Hi-Z
+            Reset_Freq = AWGBFreqEntry.get()
         try:
             NSteps.set(float(SweepStepBodeEntry.get()))
         except:
@@ -9412,8 +9570,15 @@ def BStartBP():
         # UpdateBodeAll()          # Always Update
 #
 def BStopBP():
-    global RUNstatus, session, AWGSync
+    global RUNstatus, session, AWGSync, FSweepMode, AWGAFreqEntry, AWGBFreqEntry, Reset_Freq
     
+    if FSweepMode.get() == 1:
+        AWGAFreqEntry.delete(0,"end")
+        AWGAFreqEntry.insert(0, Reset_Freq)
+    if FSweepMode.get() == 2:
+        AWGBFreqEntry.delete(0,"end")
+        AWGBFreqEntry.insert(0, Reset_Freq)
+#
     if (RUNstatus.get() == 1):
         RUNstatus.set(0)
         if AWGSync.get() == 0: # running in continuous mode
@@ -10787,6 +10952,7 @@ def MakeIAWindow():
         IAca = Canvas(frame2ia, width=CANVASwidthIA, height=CANVASheightIA, background=COLORcanvas, cursor='cross')
         IAca.bind("<Configure>", IACaresize)
         IAca.bind("<Return>", DoNothing)
+        IAca.bind("<space>", onCanvasSpaceBar)
         IAca.pack(side=TOP, expand=YES, fill=BOTH)
 
         # menu buttons
@@ -11791,6 +11957,8 @@ def onAWGAscroll(event):
         AWGAMakeRamp()
     elif AWGAShape.get()==17:
         AWGAMakePWMSine()
+    elif AWGAShape.get()==18:
+        AWGAMakeBodeSine()
     elif AWGAShape.get()==12:
         AWGAMakeUpDownRamp()
     elif AWGAShape.get()==14:
@@ -11818,6 +11986,8 @@ def onAWGBscroll(event):
         AWGBMakeRamp()
     elif AWGBShape.get()==17:
         AWGBMakePWMSine()
+    elif AWGBShape.get()==18:
+        AWGBMakeBodeSine()
     elif AWGBShape.get()==12:
         AWGBMakeUpDownRamp()
     elif AWGBShape.get()==14:
@@ -11974,7 +12144,7 @@ def MakeAWGWindow():
     global AWGALength, AWGBLength, RevDate, phasealab, phaseblab, AWGAModeLabel, AWGBModeLabel
     global AWGAIOMode, AWGBIOMode, duty1lab, duty2lab, awgaph, awgadel, awgbph, awgbdel
     global AwgLayout, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
-    global amp1lab, amp2lab, off1lab, off2lab
+    global amp1lab, amp2lab, off1lab, off2lab, Reset_Freq
     
     if AWGScreenStatus.get() == 0:
         AWGScreenStatus.set(1)
@@ -12022,7 +12192,7 @@ def MakeAWGWindow():
         ShapeAMenu.menu = Menu(ShapeAMenu, tearoff = 0 )
         ShapeAMenu["menu"] = ShapeAMenu.menu
         ShapeAMenu.menu.add_radiobutton(label="DC", variable=AWGAShape, value=0, command=UpdateAwgCont)
-        ShapeAMenu.menu.add_radiobutton(label="Sine", variable=AWGAShape, value=1, command=UpdateAwgCont)
+        ShapeAMenu.menu.add_radiobutton(label="Sine", variable=AWGAShape, value=18, command=AWGAMakeBodeSine)# command=UpdateAwgCont)
         ShapeAMenu.menu.add_radiobutton(label="Triangle", variable=AWGAShape, value=2, command=UpdateAwgCont)
         ShapeAMenu.menu.add_radiobutton(label="Sawtooth", variable=AWGAShape, value=3, command=UpdateAwgCont)
         ShapeAMenu.menu.add_radiobutton(label="Square", variable=AWGAShape, value=4, command=UpdateAwgCont)
@@ -12035,6 +12205,7 @@ def MakeAWGWindow():
         ShapeAMenu.menu.add_radiobutton(label="U-D Ramp", variable=AWGAShape, value=12, command=AWGAMakeUpDownRamp)
         ShapeAMenu.menu.add_radiobutton(label="Fourier Series", variable=AWGAShape, value=14, command=AWGAMakeFourier)
         ShapeAMenu.menu.add_radiobutton(label="PWM Sine", variable=AWGAShape, value=17, command=AWGAMakePWMSine)
+        # ShapeAMenu.menu.add_radiobutton(label="Bode Sine", variable=AWGAShape, value=18, command=AWGAMakeBodeSine)
         ShapeAMenu.menu.add_radiobutton(label="UU Noise", variable=AWGAShape, value=7, command=AWGAMakeUUNoise)
         ShapeAMenu.menu.add_radiobutton(label="UG Noise", variable=AWGAShape, value=8, command=AWGAMakeUGNoise)
         ShapeAMenu.menu.add_radiobutton(label="Math", variable=AWGAShape, value=10, command=AWGAMakeMath)
@@ -12085,7 +12256,7 @@ def MakeAWGWindow():
         AWGAFreqEntry.bind('<Key>', onTextKeyAWG)
         AWGAFreqEntry.pack(side=LEFT, anchor=W)
         AWGAFreqEntry.delete(0,"end")
-        AWGAFreqEntry.insert(0,0.0)
+        AWGAFreqEntry.insert(0,100.0)
         freq1lab = Label(awg1freq, text="Freq Ch A")
         freq1lab.pack(side=LEFT, anchor=W)
         # AWG Phase or delay select sub frame
@@ -12156,7 +12327,7 @@ def MakeAWGWindow():
         ShapeBMenu.menu = Menu(ShapeBMenu, tearoff = 0 )
         ShapeBMenu["menu"] = ShapeBMenu.menu
         ShapeBMenu.menu.add_radiobutton(label="DC", variable=AWGBShape, value=0, command=UpdateAwgCont)
-        ShapeBMenu.menu.add_radiobutton(label="Sine", variable=AWGBShape, value=1, command=UpdateAwgCont)
+        ShapeBMenu.menu.add_radiobutton(label="Sine", variable=AWGBShape, value=18, command=AWGBMakeBodeSine)# command=UpdateAwgCont)
         ShapeBMenu.menu.add_radiobutton(label="Triangle", variable=AWGBShape, value=2, command=UpdateAwgCont)
         ShapeBMenu.menu.add_radiobutton(label="Sawtooth", variable=AWGBShape, value=3, command=UpdateAwgCont)
         ShapeBMenu.menu.add_radiobutton(label="Square", variable=AWGBShape, value=4, command=UpdateAwgCont)
@@ -12219,7 +12390,7 @@ def MakeAWGWindow():
         AWGBFreqEntry.bind('<Key>', onTextKeyAWG)
         AWGBFreqEntry.pack(side=LEFT, anchor=W)
         AWGBFreqEntry.delete(0,"end")
-        AWGBFreqEntry.insert(0,0.0)
+        AWGBFreqEntry.insert(0,100.0)
         freq2lab = Label(awg2freq, text="Freq Ch B")
         freq2lab.pack(side=LEFT, anchor=W)
         # AWG Phase or delay select sub frame
@@ -12502,6 +12673,7 @@ def MakeBodeWindow():
         Bodeca.bind("<Down>", onCanvasDownArrow)
         Bodeca.bind("<Left>", onCanvasLeftArrow)
         Bodeca.bind("<Right>", onCanvasRightArrow)
+        Bodeca.bind("<space>", onCanvasSpaceBar)
         Bodeca.bind("1", onCanvasBdOne)
         Bodeca.bind("2", onCanvasBdTwo)
         Bodeca.bind("3", onCanvasBdThree)
@@ -12752,6 +12924,7 @@ def MakeSpectrumWindow():
         Freqca.bind("<Down>", onCanvasDownArrow)
         Freqca.bind("<Left>", onCanvasLeftArrow)
         Freqca.bind("<Right>", onCanvasRightArrow)
+        Freqca.bind("<space>", onCanvasSpaceBar)
         Freqca.bind("1", onCanvasSAOne)
         Freqca.bind("2", onCanvasSATwo)
         Freqca.bind("3", onCanvasSAThree)
@@ -13014,6 +13187,7 @@ def MakeXYWindow():
         XYca.bind("<Down>", onCanvasDownArrow)
         XYca.bind("<Left>", onCanvasLeftArrow)
         XYca.bind("<Right>", onCanvasRightArrow)
+        XYca.bind("<space>", onCanvasSpaceBar)
         XYca.bind("a", onCanvasAverage)
         XYca.pack(side=TOP, fill=BOTH, expand=YES)
         #
@@ -14518,6 +14692,7 @@ def ConnectDevice():
         MakeBoardScreen()
         SelectBoard()
         bcon.configure(text="Conn", style="GConn.TButton")
+        session.start(0)
 #
 def SelectBoard():
     global devx, dev0, dev1, dev2, session, BrdSel, CHA, CHB, DevID
@@ -15475,6 +15650,7 @@ ca.bind("<Up>", onCanvasUpArrow) # DoNothing)
 ca.bind("<Down>", onCanvasDownArrow)
 ca.bind("<Left>", onCanvasLeftArrow)
 ca.bind("<Right>", onCanvasRightArrow)
+ca.bind("<space>", onCanvasSpaceBar)
 ca.bind("1", onCanvasOne)
 ca.bind("2", onCanvasTwo)
 ca.bind("3", onCanvasThree)
