@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 alice-desktop 1.2.py(w) (9-6-2018)
+# ADALM1000 alice-desktop 1.2.py(w) (9-12-2018)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu.rework >= 1.0 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -33,7 +33,7 @@ try:
 except:
     pysmu_found = False
 #
-RevDate = "(6 Sept 2018)"
+RevDate = "(12 Sept 2018)"
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.2.1/alice-desktop-1.2-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
@@ -14663,8 +14663,12 @@ def MakeBoardScreen():
         devx = session.devices[0]
         # devx.ignore_dataflow = True
         #devx.set_led(0b010) # LED.green
-        FWRevOne = float(devx.fwver)
-        HWRevOne = devx.hwver
+        try:
+            FWRevOne = float(devx.fwver)
+            HWRevOne = devx.hwver
+        except:
+            FWRevOne = "Before 2.06"
+            HWRevOne = "?"
         dev0 = session.devices[0]
 #
 def DestroyBoardScreen():
