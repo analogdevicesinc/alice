@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 alice-desktop 1.2.py(w) (9-12-2018)
+# ADALM1000 alice-desktop 1.2.py(w) (10-11-2018)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu.rework >= 1.0 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -33,7 +33,7 @@ try:
 except:
     pysmu_found = False
 #
-RevDate = "(12 Sept 2018)"
+RevDate = "(11 Oct 2018)"
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.2.1/alice-desktop-1.2-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
@@ -72,7 +72,7 @@ GRHIA = 400                  # Height of the grid 400 default
 X0LIA = 37                    # Left top X value of grid
 Y0TIA = 25                    # Left top Y value of grid
 MouseX = MouseY = -10
-MouseCAV = MouseCAI = MouseCBV = MouseCBI = -10
+MouseCAV = MouseCAI = MouseCBV = MouseCBI = MouseMuxA = MouseMuxB = MouseMuxC = MouseMuxD = -10
 # Colors that can be modified
 COLORframes = "#000080"   # Color = "#rrggbb" rr=red gg=green bb=blue, Hexadecimal values 00 - ff
 COLORcanvas = "#000000"   # 100% black
@@ -249,6 +249,11 @@ AWGBWave = 'dc'
 Reset_Freq = 300
 #
 DCV1 = DCV2 = MinV1 = MaxV1 = MinV2 = MaxV2 = MidV1 = PPV1 = MidV2 = PPV2 = SV1 = SI1 = 0
+# Analog Mux channel measurement variables
+DCVMuxA = MinVMuxA = MaxVMuxA = MidVMuxA = PPVMuxA = SVMuxA = 0
+DCVMuxB = MinVMuxB = MaxVMuxB = MidVMuxB = PPVMuxB = SVMuxB = 0
+DCVMuxC = MinVMuxC = MaxVMuxC = MidVMuxC = PPVMuxC = SVMuxC = 0
+DCVMuxD = MinVMuxD = MaxVMuxD = MidVMuxD = PPVMuxD = SVMuxD = 0
 DCI1 = DCI2 = MinI1 = MaxI1 = MinI2 = MaxI2 = MidI1 = PPI1 = MidI2 = PPI2 = SV2 = SI2 = 0
 CHAperiod = CHAfreq = CHBperiod = CHBfreq = 0
 # Calibration coefficients
@@ -275,6 +280,10 @@ VBuffMA = []
 VBuffMB = []
 VBuffMC = []
 VBuffMD = []
+VmemoryMuxA = []
+VmemoryMuxB = []
+VmemoryMuxC = []
+VmemoryMuxD = []
 #
 DFiltACoef = [1]
 DFiltBCoef = [1]
@@ -603,7 +612,7 @@ def BSaveConfig(filename):
     global TimeDisp, XYDisp, FreqDisp, IADisp, XYScreenStatus, IAScreenStatus, SpectrumScreenStatus
     global RsystemEntry, ResScale, GainCorEntry, PhaseCorEntry, AWGAPhaseDelay, AWGBPhaseDelay
     global MeasTopV1, MeasBaseV1, MeasTopV2, MeasBaseV2, MeasDelay
-    global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MuxScreenStatus
+    global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MuxScreenStatus, MuxEnb
     global CHB_Asb, CHB_APosEntry, CHB_Bsb, CHB_BPosEntry, muxwindow
     global CHB_Csb, CHB_CPosEntry, CHB_Dsb, CHB_DPosEntry, HozPossentry
     global SmoothCurvesBP, SingleShotBP, bodewindow, AWG_Amp_Mode
@@ -709,6 +718,7 @@ def BSaveConfig(filename):
         ConfgFile.write('Show_CBB.set(' + str(Show_CBB.get()) + ')\n')
         ConfgFile.write('Show_CBC.set(' + str(Show_CBC.get()) + ')\n')
         ConfgFile.write('Show_CBD.set(' + str(Show_CBD.get()) + ')\n')
+        ConfgFile.write('MuxEnb.set(' + str(MuxEnb.get()) + ')\n')
         ConfgFile.write('CHB_Asb.delete(0,END)\n')
         ConfgFile.write('CHB_Asb.insert(0, ' + CHB_Asb.get() + ')\n')
         ConfgFile.write('CHB_Bsb.delete(0,END)\n')
@@ -1079,7 +1089,7 @@ def BLoadConfig(filename):
     global TimeDisp, XYDisp, FreqDisp, IADisp, AWGAPhaseDelay, AWGBPhaseDelay
     global RsystemEntry, ResScale, GainCorEntry, PhaseCorEntry
     global MeasTopV1, MeasBaseV1, MeasTopV2, MeasBaseV2
-    global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MuxScreenStatus
+    global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MuxScreenStatus, MuxEnb
     global CHB_Asb, CHB_APosEntry, CHB_Bsb, CHB_BPosEntry, muxwindow
     global CHB_Csb, CHB_CPosEntry, CHB_Dsb, CHB_DPosEntry
     global MathString, MathXString, MathYString, UserAString, UserALabel, UserBString, UserBLabel
@@ -1935,7 +1945,79 @@ def IncHoldOff():
         HoldOff = HoldOff + TIMEdiv
         HoldOffentry.delete(0,END)
         HoldOffentry.insert(0, HoldOff)
-        
+# Analog Mux buttons
+def SetMuxAPoss():
+    global CHB_APosEntry, DCVMuxA
+    
+    CHB_APosEntry.delete(0,"end")
+    CHB_APosEntry.insert(0, ' {0:.2f} '.format(DCVMuxA))
+#
+def SetMuxBPoss():
+    global CHB_BPosEntry, DCVMuxB
+    
+    CHB_BPosEntry.delete(0,"end")
+    CHB_BPosEntry.insert(0, ' {0:.2f} '.format(DCVMuxB))
+#
+def SetMuxCPoss():
+    global CHB_CPosEntry, DCVMuxC
+    
+    CHB_CPosEntry.delete(0,"end")
+    CHB_CPosEntry.insert(0, ' {0:.2f} '.format(DCVMuxC))
+#
+def SetMuxDPoss():
+    global CHD_BPosEntry, DCVMuxD
+    
+    CHB_DPosEntry.delete(0,"end")
+    CHB_DPosEntry.insert(0, ' {0:.2f} '.format(DCVMuxD))
+#
+def SetScaleMuxA():
+    global MarkerScale, CHB_Alab, CHB_Blab, CHB_Clab, CHB_Dlab
+
+    if MarkerScale.get() != 1:
+        MarkerScale.set(5)
+        CHB_Alab.config(style="Rtrace2.TButton")
+        CHB_Blab.config(style="Strace6.TButton")
+        CHB_Clab.config(style="Strace7.TButton")
+        CHB_Dlab.config(style="Strace4.TButton")
+    else:
+        MarkerScale.set(0)
+#
+def SetScaleMuxB():
+    global MarkerScale, CHB_Alab, CHB_Blab, CHB_Clab, CHB_Dlab
+
+    if MarkerScale.get() != 1:
+        MarkerScale.set(6)
+        CHB_Alab.config(style="Strace2.TButton")
+        CHB_Blab.config(style="Rtrace6.TButton")
+        CHB_Clab.config(style="Strace7.TButton")
+        CHB_Dlab.config(style="Strace4.TButton")
+    else:
+        MarkerScale.set(0)
+#
+def SetScaleMuxC():
+    global MarkerScale, CHB_Alab, CHB_Blab, CHB_Clab, CHB_Dlab
+
+    if MarkerScale.get() != 1:
+        MarkerScale.set(7)
+        CHB_Alab.config(style="Strace2.TButton")
+        CHB_Blab.config(style="Strace6.TButton")
+        CHB_Clab.config(style="Rtrace7.TButton")
+        CHB_Dlab.config(style="Strace4.TButton")
+    else:
+        MarkerScale.set(0)
+#
+def SetScaleMuxD():
+    global MarkerScale, CHB_Alab, CHB_Blab, CHB_Clab, CHB_Dlab
+
+    if MarkerScale.get() != 1:
+        MarkerScale.set(8)
+        CHB_Alab.config(style="Strace2.TButton")
+        CHB_Blab.config(style="Strace6.TButton")
+        CHB_Clab.config(style="Strace7.TButton")
+        CHB_Dlab.config(style="Rtrace4.TButton")
+    else:
+        MarkerScale.set(0)
+#
 def SetVAPoss():
     global CHAVPosEntry, DCV1
     
@@ -1991,8 +2073,8 @@ def Bcloseexit():
     BSaveConfig("alice-last-config.cfg")
     # Put channels in Hi-Z and exit
     try:
-        CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
-        CHB.mode = Mode.HI_Z # Put CHB in Hi Z mode
+        CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z split mode
+        CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z split mode
         CHA.constant(0.0)
         CHB.constant(0.0)
         if session.continuous:
@@ -2045,8 +2127,8 @@ def BStop():
     
     if (RUNstatus.get() == 1):
         RUNstatus.set(0)
-        CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
-        CHB.mode = Mode.HI_Z # Put CHB in Hi Z mode
+        CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z split mode
+        CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z split mode
         if AWGSync.get() == 0: # running in continuous mode
             CHA.constant(0.0)
             CHB.constant(0.0)
@@ -2246,22 +2328,37 @@ def Analog_In():
     global RUNstatus, SingleShot, TimeDisp, XYDisp, FreqDisp, SpectrumScreenStatus, HWRevOne
     global IADisp, IAScreenStatus, CutDC, DevOne, AWGBMode, MuxEnb, BodeScreenStatus, BodeDisp
     global MuxScreenStatus, VBuffA, VBuffB, VBuffMA, VBuffMB, VBuffMC, VBuffMD, MuxSync, AWGBIOMode
+    global VmemoryMuxA, VmemoryMuxB, VmemoryMuxC, VmemoryMuxD
     global Show_CBA, Show_CBB, Show_CBC, Show_CBD, ShowC1_V, ShowC2_V, ShowC2_I, SMPfft
     global PIO_0, PIO_1, PIO_2, PIO_3
+    global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
+    global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2
+    global SV1, SI1, SV2, SI2, SVA_B
+    # Analog Mux channel measurement variables
+    global TRACEresetTime, TRACEmodeTime, DualMuxMode
+    global DCVMuxA, MinVMuxA, MaxVMuxA, MidVMuxA, PPVMuxA, SVMuxA
+    global DCVMuxB, MinVMuxB, MaxVMuxB, MidVMuxB, PPVMuxB, SVMuxB
+    global DCVMuxC, MinVMuxC, MaxVMuxC, MidVMuxC, PPVMuxC, SVMuxC
+    global DCVMuxD, MinVMuxD, MaxVMuxD, MidVMuxD, PPVMuxD, SVMuxD
     
     while (True):       # Main loop
         # RUNstatus = 1 : Open Acquisition
-        # RUNstatus = 2
         if (RUNstatus.get() == 1) or (RUNstatus.get() == 2):
             if TimeDisp.get() > 0 or XYDisp.get() > 0:
                 if MuxScreenStatus.get() == 0:
                     Analog_Time_In()
                 else:
+                    AWGSync.set(1) # force discontinuous mode
+                    if DualMuxMode.get() == 1: # force split I/O mode if dual mux mode set
+                        AWGAIOMode.set(1)
+                        AWGBIOMode.set(1)
+                        ShowC1_V.set(0) # force A voltage trace off
                     ShowC2_V.set(0) # force B voltage trace off
-                    if HWRevOne == "D" or AWGBIOMode.get() == 0:
+                    if HWRevOne == "D" :
                         # force channel B to always be in High-Z mode for Rev D hardware or if not in split I/O mode
                         AWGBMode.set(2)
-                        ShowC2_I.set(0) # no need to show CH-B current
+                        if AWGBIOMode.get() == 0: # if not in split I/O mode
+                            ShowC2_I.set(0) # no need to show CH-B current
                     if MuxEnb.get() == 1:
                         PIO2 = 0x51
                     else:
@@ -2272,24 +2369,92 @@ def Analog_In():
                     else:
                         PIO3 = 0x50
                         PIO3x = 0x51
+                    if TRACEmodeTime.get() == 0 and TRACEresetTime == False:
+                        TRACEresetTime = True               # Clear the memory for averaging
+                    elif TRACEmodeTime.get() == 1:
+                        if TRACEresetTime == True:
+                            TRACEresetTime = False
+                    # Save previous trace in memory for average trace
+                        VmemoryMuxA = VBuffMA
+                        VmemoryMuxB = VBuffMB
+                        VmemoryMuxC = VBuffMC
+                        ImemoryMuxD = VBuffMD
                     if Show_CBD.get() == 1:
-                        devx.ctrl_transfer(0x40, 0x51, PIO_0, 0, 0, 0, 100) # set PIO 0 to 1
-                        devx.ctrl_transfer(0x40, 0x51, PIO_1, 0, 0, 0, 100) # set PIO 1 to 1
+                        if DualMuxMode.get() == 1:
+                            devx.ctrl_transfer(0x40, 0x50, PIO_0, 0, 0, 0, 100) # set PIO 0 to 0
+                            devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
+                        else:
+                            devx.ctrl_transfer(0x40, 0x51, PIO_0, 0, 0, 0, 100) # set PIO 0 to 1
+                            devx.ctrl_transfer(0x40, 0x51, PIO_1, 0, 0, 0, 100) # set PIO 1 to 1
                         devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO 2 to 0
                         devx.ctrl_transfer(0x40, PIO3, PIO_3, 0, 0, 0, 100) # set PIO 3 to sync pulse for sweep start
                         time.sleep(0.002)
                         devx.ctrl_transfer(0x40, PIO3x, PIO_3, 0, 0, 0, 100) # set PIO 3 to return value
                         Analog_Time_In()
-                        VBuffMD = VBuffB
+                        if DualMuxMode.get() == 1:
+                            DCVMuxD = DCV1
+                            MinVMuxD = MinV1
+                            MaxVMuxD = MaxV1
+                            MidVMuxD = (MaxV1+MinV1)/2.0
+                            PPVMuxD = MaxV1-MinV1
+                            SVMuxD = SV1
+                            VBuffMD = VBuffA
+                        else:
+                            VBuffMD = VBuffB
+                            DCVMuxD = DCV2
+                            MinVMuxD = MinV2
+                            MaxVMuxD = MaxV2
+                            MidVMuxD = (MaxV2+MinV2)/2.0
+                            PPVMuxD = MaxV2-MinV2
+                            SVMuxD = SV2
+                        # Average mode 1, add difference / TRACEaverage to arrayif :
+                        if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
+                            try:
+                                VBuffMD = VmemoryMuxD + (VBuffMD - VmemoryMuxD) / TRACEaverage.get()
+                            except:
+                            # buffer size mismatch so reset memory buffers
+                                VmemoryMuxD = VBuffMD
                     if Show_CBC.get() == 1:
-                        devx.ctrl_transfer(0x40, 0x50, PIO_0, 0, 0, 0, 100) # set PIO 0 to 0
-                        devx.ctrl_transfer(0x40, 0x51, PIO_1, 0, 0, 0, 100) # set PIO 1 to 1
+                        if DualMuxMode.get() == 1:
+                            devx.ctrl_transfer(0x40, 0x51, PIO_0, 0, 0, 0, 100) # set PIO 0 to 1
+                            devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
+                        else:
+                            devx.ctrl_transfer(0x40, 0x50, PIO_0, 0, 0, 0, 100) # set PIO 0 to 0
+                            devx.ctrl_transfer(0x40, 0x51, PIO_1, 0, 0, 0, 100) # set PIO 1 to 1
                         devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO 2 to 0
                         devx.ctrl_transfer(0x40, PIO3, PIO_3, 0, 0, 0, 100) # set PIO 3 to sync pulse for sweep start
                         time.sleep(0.002)
                         devx.ctrl_transfer(0x40, PIO3x, PIO_3, 0, 0, 0, 100) # set PIO 3 to return value
                         Analog_Time_In()
-                        VBuffMC = VBuffB
+                        DCVMuxC = DCV2
+                        MinVMuxC = MinV2
+                        MaxVMuxC = MaxV2
+                        MidVMuxC = (MaxV2+MinV2)/2.0
+                        PPVMuxC = MaxV2-MinV2
+                        SVMuxC = SV2
+                        if DualMuxMode.get() == 1:
+                            DCVMuxC = DCV1
+                            MinVMuxC = MinV1
+                            MaxVMuxC = MaxV1
+                            MidVMuxC = (MaxV1+MinV1)/2.0
+                            PPVMuxC = MaxV1-MinV1
+                            SVMuxC = SV1
+                            VBuffMC = VBuffA
+                        else:
+                            VBuffMC = VBuffB
+                            DCVMuxC = DCV2
+                            MinVMuxC = MinV2
+                            MaxVMuxC = MaxV2
+                            MidVMuxC = (MaxV2+MinV2)/2.0
+                            PPVMuxC = MaxV2-MinV2
+                            SVMuxC = SV2
+                        # Average mode 1, add difference / TRACEaverage to arrayif :
+                        if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
+                            try:
+                                VBuffMC = VmemoryMuxC + (VBuffMC - VmemoryMuxC) / TRACEaverage.get()
+                            except:
+                            # buffer size mismatch so reset memory buffers
+                                VmemoryMuxC = VBuffMC
                     if Show_CBB.get() == 1:
                         devx.ctrl_transfer(0x40, 0x51, PIO_0, 0, 0, 0, 100) # set PIO 0 to 1
                         devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
@@ -2298,7 +2463,20 @@ def Analog_In():
                         time.sleep(0.002)
                         devx.ctrl_transfer(0x40, PIO3x, 3, 0, 0, 0, 100) # set PIO 3 to return value
                         Analog_Time_In()
+                        DCVMuxB = DCV2
+                        MinVMuxB = MinV2
+                        MaxVMuxB = MaxV2
+                        MidVMuxB = (MaxV2+MinV2)/2.0
+                        PPVMuxB = MaxV2-MinV2
+                        SVMuxB = SV2
                         VBuffMB = VBuffB
+                        # Average mode 1, add difference / TRACEaverage to arrayif :
+                        if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
+                            try:
+                                VBuffMB = VmemoryMuxB + (VBuffMB - VmemoryMuxB) / TRACEaverage.get()
+                            except:
+                            # buffer size mismatch so reset memory buffers
+                                VmemoryMuxB = VBuffMB
                     if Show_CBA.get() == 1 or ShowC1_V.get() == 1:
                         devx.ctrl_transfer(0x40, 0x50, PIO_0, 0, 0, 0, 100) # set PIO 0 to 0
                         devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
@@ -2307,7 +2485,20 @@ def Analog_In():
                         time.sleep(0.002)
                         devx.ctrl_transfer(0x40, PIO3x, PIO_3, 0, 0, 0, 100) # set PIO 3 to return value
                         Analog_Time_In()
+                        DCVMuxA = DCV2
+                        MinVMuxA = MinV2
+                        MaxVMuxA = MaxV2
+                        MidVMuxA = (MaxV2+MinV2)/2.0
+                        PPVMuxA = MaxV2-MinV2
+                        SVMuxA = SV2
                         VBuffMA = VBuffB
+                        # Average mode 1, add difference / TRACEaverage to arrayif :
+                        if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
+                            try:
+                                VBuffMA = VmemoryMuxA + (VBuffMA - VmemoryMuxA) / TRACEaverage.get()
+                            except:
+                            # buffer size mismatch so reset memory buffers
+                                VmemoryMuxA = VBuffMA
             if (FreqDisp.get() > 0 and SpectrumScreenStatus.get() == 1) or (IADisp.get() > 0 and IAScreenStatus.get() == 1) or (BodeDisp.get() > 0 and BodeScreenStatus.get() == 1):
                 if IADisp.get() > 0 or BodeDisp.get() > 0:
                     CutDC.set(1) # remove DC portion of waveform
@@ -2427,9 +2618,9 @@ def Ohm_Analog_In():
 #        
 def Analog_Time_In():   # Read the analog data and store the data into the arrays
     global ADsignal1, VBuffA, VBuffB, IBuffA, IBuffB, VFilterA, VFilterB
-    global VmemoryA, VmemoryB, ImemoryA, ImemoryB
+    global VmemoryA, VmemoryB, ImemoryA, ImemoryB, VmemoryMuxA, VmemoryMuxB, VmemoryMuxC, VmemoryMuxD
     global AWGSync, AWGAMode, AWGBMode, TMsb, HoldOff, HoldOffentry, HozPoss, HozPossentry
-    global AWGAIOMode, AWGBIOMode, DecimateOption
+    global AWGAIOMode, AWGBIOMode, DecimateOption, DualMuxMode
     global TRACEresetTime, TRACEmodeTime, TRACEaverage, TRIGGERsample, TgInput
     global CHA, CHB, session, devx, discontloop, contloop
     global TRACES, TRACESread, TRACEsize
@@ -2580,10 +2771,6 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
     TRIGGERsample = TRIGGERsample + hozpos #
 # Starting acquisition
     if AWGScreenStatus.get() == 1: # don't try to start AWG is AWG screen is closed
-        if AWGAIOMode.get() > 0: # Split Input / Output mode
-            devx.ctrl_transfer( 0x40, 0x51, 34, 0, 0, 0, 100) # open voltage sense loop
-        if AWGBIOMode.get() > 0: # Split Input / Output mode
-            devx.ctrl_transfer( 0x40, 0x51, 39, 0, 0, 0, 100) # open voltage sense loop
         if AWGSync.get() > 0: # awg syn flag set so run in discontinuous mode
             if discontloop > 0:
                 session.flush()
@@ -2592,10 +2779,6 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
             time.sleep(0.01)
             # print "just before awg enable"
             BAWGEnab()
-            if AWGAIOMode.get() > 0: # Split Input / Output mode
-                devx.ctrl_transfer( 0x40, 0x51, 34, 0, 0, 0, 100) # open voltage sense loop
-            if AWGBIOMode.get() > 0: # Split Input / Output mode
-                devx.ctrl_transfer( 0x40, 0x51, 39, 0, 0, 0, 100) # open voltage sense loop
             # print "just before get samples"
             ADsignal1 = devx.get_samples(SHOWsamples) # get samples for both channel A and B
             # waite to finish then return to open termination
@@ -2603,10 +2786,6 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
             devx.ctrl_transfer( 0x40, 0x51, 33, 0, 0, 0, 100) # set CHA GND switch to open
             devx.ctrl_transfer( 0x40, 0x51, 37, 0, 0, 0, 100) # set CHB 2.5 V switch to open
             devx.ctrl_transfer( 0x40, 0x51, 38, 0, 0, 0, 100) # set CHB GND switch to open
-            if AWGAIOMode.get() > 0: # Split Input / Output mode
-                devx.ctrl_transfer( 0x40, 0x51, 34, 0, 0, 0, 100) # open voltage sense loop
-            if AWGBIOMode.get() > 0: # Split Input / Output mode
-                devx.ctrl_transfer( 0x40, 0x51, 39, 0, 0, 0, 100) # open voltage sense loop
             # time.sleep(1000.0/SHOWsamples)
         else: # running in continuous mode
             if session.continuous:
@@ -2621,10 +2800,6 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
         devx.ctrl_transfer( 0x40, 0x51, 33, 0, 0, 0, 100) # set CHA GND switch to open
         devx.ctrl_transfer( 0x40, 0x51, 37, 0, 0, 0, 100) # set CHB 2.5 V switch to open
         devx.ctrl_transfer( 0x40, 0x51, 38, 0, 0, 0, 100) # set CHB GND switch to open
-        if AWGAIOMode.get() > 0: # Split Input / Output mode
-            devx.ctrl_transfer( 0x40, 0x51, 34, 0, 0, 0, 100) # open voltage sense loop
-        if AWGBIOMode.get() > 0: # Split Input / Output mode
-            devx.ctrl_transfer( 0x40, 0x51, 39, 0, 0, 0, 100) # open voltage sense loop
     VBuffA = [] # Clear the V Buff array for trace A
     IBuffA = [] # Clear the I Buff array for trace A
     VBuffB = [] # Clear the V Buff array for trace B
@@ -2744,8 +2919,6 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
                 cha_TC1Entry.insert(0, TC1A)
         except:
             TC1A = CHA_TC1.get()
-            #cha_TC1Entry.delete(0,END)
-            #cha_TC1Entry.insert(0, CHA_TC1.get())
         try:
             TC2A = float(cha_TC2Entry.get())
             if TC2A < 0:
@@ -2754,31 +2927,23 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
                 cha_TC2Entry.insert(0, TC2A)
         except:
             TC2A = CHA_TC2.get()
-            #cha_TC2Entry.delete(0,END)
-            #cha_TC2Entry.insert(0, CHA_TC2.get())
         #
         try:
             Gain1A = float(cha_A1Entry.get())
-            #CHA_A1.set(Gain1A)
             if Gain1A < 0:
                 Gain1A = 1
                 cha_A1Entry.delete(0,END)
                 cha_A1Entry.insert(0, Gain1A)
         except:
             Gain1A = CHA_A1.get()
-            #cha_A1Entry.delete(0,END)
-            #cha_A1Entry.insert(0, CHA_A1.get())
         try:
             Gain2A = float(cha_A2Entry.get())
-            #CHA_A2.set(int(Gain2A))
             if Gain2A < 0:
                 Gain2A = 0
                 cha_A2Entry.delete(0,END)
                 cha_A2Entry.insert(0, Gain2A)
         except:
             Gain2A = CHA_A2.get()
-            #cha_A2Entry.delete(0,END)
-            #cha_A2Entry.insert(0, CHA_A2.get())
         #
         VBuffA = Digital_RC_High_Pass( VBuffA, TC1A, Gain1A )
         VBuffA = Digital_RC_High_Pass( VBuffA, TC2A, Gain2A )
@@ -2791,8 +2956,6 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
                 chb_TC1Entry.insert(0, TC1B)
         except:
             TC1B = CHB_TC1.get()
-            #chb_TC1Entry.delete(0,END)
-            #chb_TC1Entry.insert(0, CHB_TC1.get())
         try:
             TC2B = float(chb_TC2Entry.get())
             if TC2B < 0:
@@ -2801,8 +2964,6 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
                 chb_TC2Entry.insert(0, TC2B)
         except:
             TC2B = CHB_TC2.get()
-            #chb_TC2Entry.delete(0,END)
-            #chb_TC2Entry.insert(0, CHB_TC2.get())
         #
         try:
             Gain1B = float(chb_A1Entry.get())
@@ -2812,8 +2973,6 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
                 chb_A1Entry.insert(0, Gain1B)
         except:
             Gain1B = CHB_A1.get()
-            #chb_A1Entry.delete(0,END)
-            #chb_A1Entry.insert(0, CHB_A1.get())
         try:
             Gain2B = float(chb_A2Entry.get())
             if Gain2B < 0:
@@ -2822,8 +2981,6 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
                 chb_A2Entry.insert(0, Gain2B)
         except:
             Gain2B = CHB_A2.get()
-            #chb_A2Entry.delete(0,END)
-            #chb_A2Entry.insert(0, CHB_A2.get())
         #
         VBuffB = Digital_RC_High_Pass( VBuffB, TC1B, Gain1B )
         VBuffB = Digital_RC_High_Pass( VBuffB, TC2B, Gain2B )
@@ -2854,14 +3011,17 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
             IBuffB = numpy.roll(IBuffB, LShift)
             TRIGGERsample = hozpos # set trigger sample to index 0 offset by horizontal position
         try:
-            VBuffA = VmemoryA + (VBuffA - VmemoryA) / TRACEaverage.get()
+            if DualMuxMode.get() == 0 and MuxScreenStatus.get() == 0: # average A voltage data only if not in dual split I/O Mux Mode
+                VBuffA = VmemoryA + (VBuffA - VmemoryA) / TRACEaverage.get()
             IBuffA = ImemoryA + (IBuffA - ImemoryA) / TRACEaverage.get()
-            VBuffB = VmemoryB + (VBuffB - VmemoryB) / TRACEaverage.get()
+            if MuxScreenStatus.get() == 0: # average B voltage data only if not in Mux Mode
+                VBuffB = VmemoryB + (VBuffB - VmemoryB) / TRACEaverage.get()
             IBuffB = ImemoryB + (IBuffB - ImemoryB) / TRACEaverage.get()
         except:
             # buffer size mismatch so reset memory buffers
             VmemoryA = VBuffA
-            VmemoryB = VBuffB
+            if MuxScreenStatus.get() == 0: # average B voltage data only if not in Mux Mode
+                VmemoryB = VBuffB
             ImemoryA = IBuffA
             ImemoryB = IBuffB
 # DC value = average of the data record
@@ -3096,10 +3256,6 @@ def Analog_Freq_In():   # Read from the stream and store the data into the array
             devx.ctrl_transfer( 0x40, 0x51, 33, 0, 0, 0, 100) # set CHA GND switch to open
             devx.ctrl_transfer( 0x40, 0x51, 37, 0, 0, 0, 100) # set CHB 2.5 V switch to open
             devx.ctrl_transfer( 0x40, 0x51, 38, 0, 0, 0, 100) # set CHB GND switch to open
-            if AWGAIOMode.get() > 0: # Split Input / Output mode
-                devx.ctrl_transfer( 0x40, 0x51, 34, 0, 0, 0, 100) # open voltage sense loop
-            if AWGBIOMode.get() > 0: # Split Input / Output mode
-                devx.ctrl_transfer( 0x40, 0x51, 39, 0, 0, 0, 100) # open voltage sense loop
         else: # running in continuous mode
             ADsignal1 = devx.read(SHOWsamples, -1, True) # get samples for both channel A and B
     #
@@ -3111,10 +3267,6 @@ def Analog_Freq_In():   # Read from the stream and store the data into the array
         devx.ctrl_transfer( 0x40, 0x51, 33, 0, 0, 0, 100) # set CHA GND switch to open
         devx.ctrl_transfer( 0x40, 0x51, 37, 0, 0, 0, 100) # set CHB 2.5 V switch to open
         devx.ctrl_transfer( 0x40, 0x51, 38, 0, 0, 0, 100) # set CHB GND switch to open
-        if AWGAIOMode.get() > 0: # Split Input / Output mode
-            devx.ctrl_transfer( 0x40, 0x51, 34, 0, 0, 0, 100) # open voltage sense loop
-        if AWGBIOMode.get() > 0: # Split Input / Output mode
-            devx.ctrl_transfer( 0x40, 0x51, 39, 0, 0, 0, 100) # open voltage sense loop
     FFTBuffA = [] # Clear the FFTBuff array for trace A
     FFTBuffB = [] # Clear the FFTBuff array for trace B
     OverRangeFlagA = OverRangeFlagB = 0 # Clear over range flags
@@ -3851,6 +4003,7 @@ def MakeTimeTrace():    # Make the traces
     global VBuffA, VBuffB, IBuffA, IBuffB
     global VBuffMA, VBuffMB, VBuffMC, VBuffMD, MuxScreenStatus
     global VmemoryA, VmemoryB, ImemoryA, ImemoryB
+    global VmemoryMuxA, VmemoryMuxB, VmemoryMuxC, VmemoryMuxD
     global FFTBuffA, FFTBuffB, FFTwindowshape
     global T1Vline, T2Vline, T1Iline, T2Iline
     global TMAVline, TMBVline, TMCVline, TMDVline
@@ -3858,6 +4011,7 @@ def MakeTimeTrace():    # Make the traces
     global MathString, MathAxis, MathXString, MathYString, MathXAxis, MathYAxis
     global Triggerline, Triggersymbol, TgInput, TgEdge, HoldOff, HoldOffentry
     global X0L, Y0T, GRW, GRH, MouseX, MouseY, MouseCAV, MouseCAI, MouseCBV, MouseCBI
+    global MouseMuxA, MouseMuxB, MouseMuxC, MouseMuxD
     global Ymin, Ymax, Xmin, Xmax
     global SHOWsamples, ZOHold, AWGBMode
     global ShowC1_V, ShowC1_I, ShowC2_V, ShowC2_I
@@ -4274,6 +4428,8 @@ def MakeTimeTrace():    # Make the traces
                         TMAVline.append(int(x1))
                         TMAVline.append(int(y1))
                     ypvma = y1
+                    if (MouseX - X0L) > (x - Xstep) and (MouseX - X0L) < (x + Xstep):
+                        MouseMuxA = ypvma
                 if Show_CBB.get() == 1 and MuxScreenStatus.get() == 1 and len(VBuffMB)>4:
                     y1 = int(c2 - YconvMB * (VBuffMB[t] - CHBBOffset))
                     if y1 < Ymin: # clip waveform if going off grid
@@ -4289,6 +4445,8 @@ def MakeTimeTrace():    # Make the traces
                         TMBVline.append(int(x1))
                         TMBVline.append(int(y1))
                     ypvmb = y1
+                    if (MouseX - X0L) > (x - Xstep) and (MouseX - X0L) < (x + Xstep):
+                        MouseMuxB = ypvmb
                 if Show_CBC.get() == 1 and MuxScreenStatus.get() == 1 and len(VBuffMC)>4:
                     y1 = int(c2 - YconvMC * (VBuffMC[t] - CHBCOffset))
                     if y1 < Ymin: # clip waveform if going off grid
@@ -4304,6 +4462,8 @@ def MakeTimeTrace():    # Make the traces
                         TMCVline.append(int(x1))
                         TMCVline.append(int(y1))
                     ypvmc = y1
+                    if (MouseX - X0L) > (x - Xstep) and (MouseX - X0L) < (x + Xstep):
+                        MouseMuxC = ypvmc
                 if Show_CBD.get() == 1 and MuxScreenStatus.get() == 1 and len(VBuffMD)>4:
                     y1 = int(c2 - YconvMD * (VBuffMD[t] - CHBDOffset))
                     if y1 < Ymin: # clip waveform if going off grid
@@ -4319,6 +4479,8 @@ def MakeTimeTrace():    # Make the traces
                         TMDVline.append(int(x1))
                         TMDVline.append(int(y1))
                     ypvmd = y1
+                    if (MouseX - X0L) > (x - Xstep) and (MouseX - X0L) < (x + Xstep):
+                        MouseMuxD = ypvmd
                 if ShowC2_I.get() == 1:
                     
                     ytemp = IBuffB[t]
@@ -4613,6 +4775,8 @@ def MakeTimeTrace():    # Make the traces
                         TMAVline.append(int(ylo))        
                         TMAVline.append(int(x1))
                         TMAVline.append(int(yhi))
+                        if (MouseX - X0L) > (x - Xstep) and (MouseX - X0L) < (x + Xstep):
+                            MouseMuxA = ylo
                     if Show_CBB.get() == 1 and len(VBuffMB)>4:
                         if t < len(VBuffMB):
                             ylo = VBuffMB[t] - CHBBOffset
@@ -4639,6 +4803,8 @@ def MakeTimeTrace():    # Make the traces
                         TMBVline.append(int(ylo))        
                         TMBVline.append(int(x1))
                         TMBVline.append(int(yhi))
+                        if (MouseX - X0L) > (x - Xstep) and (MouseX - X0L) < (x + Xstep):
+                            MouseMuxB = ylo
                     if Show_CBC.get() == 1 and len(VBuffMC)>4:
                         if t < len(VBuffMC):
                             ylo = VBuffMC[t] - CHBCOffset
@@ -4665,6 +4831,8 @@ def MakeTimeTrace():    # Make the traces
                         TMCVline.append(int(ylo))        
                         TMCVline.append(int(x1))
                         TMCVline.append(int(yhi))
+                        if (MouseX - X0L) > (x - Xstep) and (MouseX - X0L) < (x + Xstep):
+                            MouseMuxC = ylo
                     if Show_CBD.get() == 1 and len(VBuffMD)>4:
                         if t < len(VBuffMD):
                             ylo = VBuffMD[t] - CHBDOffset
@@ -4691,6 +4859,8 @@ def MakeTimeTrace():    # Make the traces
                         TMDVline.append(int(ylo))        
                         TMDVline.append(int(x1))
                         TMDVline.append(int(yhi))
+                        if (MouseX - X0L) > (x - Xstep) and (MouseX - X0L) < (x + Xstep):
+                            MouseMuxD = ylo
                     if ( ShowC2_I.get() == 1 ):
                         while n < (t + Tstep) and n < TRACEsize:
                             i = IBuffB[t] - CHBIOffset
@@ -5150,6 +5320,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
     global GRW          # Screenwidth
     global GRH          # Screenheight
     global MouseX, MouseY, MouseWidget, MouseCAV, MouseCAI, MouseCBV, MouseCBI
+    global MouseMuxA, MouseMuxB, MouseMuxC, MouseMuxD
     global Ymin, Ymax
     global ShowXCur, ShowYCur, TCursor, VCursor
     global SHOWsamples  # Number of samples in data record
@@ -5179,6 +5350,11 @@ def MakeTimeScreen():     # Update the screen with traces and text
     global ScreenTrefresh, SmoothCurves, Is_Triggered
     global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2, CHAHW, CHALW, CHADCy, CHAperiod, CHAfreq
     global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2, CHBHW, CHBLW, CHBDCy, CHBperiod, CHBfreq
+        # Analog Mux channel measurement variables
+    global DCVMuxA, MinVMuxA, MaxVMuxA, MidVMuxA, PPVMuxA, SVMuxA
+    global DCVMuxB, MinVMuxB, MaxVMuxB, MidVMuxB, PPVMuxB, SVMuxB
+    global DCVMuxC, MinVMuxC, MaxVMuxC, MidVMuxC, PPVMuxC, SVMuxC
+    global DCVMuxD, MinVMuxD, MaxVMuxD, MidVMuxD, PPVMuxD, SVMuxD
     global SV1, SI1, SV2, SI2, CHABphase, SVA_B
     global MeasDCV1, MeasMinV1, MeasMaxV1, MeasMidV1, MeasPPV1
     global MeasDCI1, MeasMinI1, MeasMaxI1, MeasMidI1, MeasPPI1
@@ -5415,7 +5591,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
                     Iaxis_value = 1.0 * (((5-i) * CHMBpdvRange ) + CHBBOffset)
                     Iaxis_label = str(Iaxis_value)
                     ca.create_text(x2+2, y, text=Iaxis_label, fill=COLORtrace6, anchor="w", font=("arial", 8 ))
-                if Show_CBC.get() == 1: # , , , Show_CBD:
+                if Show_CBC.get() == 1:
                     Iaxis_value = 1.0 * (((5-i) * CHMCpdvRange ) + CHBCOffset)
                     Iaxis_label = str(Iaxis_value)
                     ca.create_text(x2+21, y, text=Iaxis_label, fill=COLORtrace7, anchor="w", font=("arial", 8 ))
@@ -5517,7 +5693,32 @@ def MakeTimeScreen():     # Update the screen with traces and text
         Yoffset1 = CHBIOffset
         COLORmarker = COLORtrace4
         Units = " mA"
-    #
+    # Aanalog Mux settings
+    if MarkerScale.get() == 5:
+        MouseY = MouseMuxA
+        Yconv1 = float(GRH/10.0) / CHMApdvRange
+        Yoffset1 = CHBAOffset
+        COLORmarker = COLORtrace2
+        Units = " V"
+    if MarkerScale.get() == 6:
+        MouseY = MouseMuxB
+        Yconv1 = float(GRH/10.0) / CHMBpdvRange
+        Yoffset1 = CHBBOffset
+        COLORmarker = COLORtrace6
+        Units = " V"
+    if MarkerScale.get() == 7:
+        MouseY = MouseMuxC
+        Yconv1 = float(GRH/10.0) / CHMCpdvRange
+        Yoffset1 = CHBCOffset
+        COLORmarker = COLORtrace7
+        Units = " V"
+    if MarkerScale.get() == 8:
+        MouseY = MouseMuxD
+        Yconv1 = float(GRH/10.0) / CHMDpdvRange
+        Yoffset1 = CHBDOffset
+        COLORmarker = COLORtrace4
+        Units = " V"
+#
     if ShowTCur.get() > 0:
         Dline = [TCursor, Y0T, TCursor, Y0T+GRH]
         ca.create_line(Dline, dash=(4,3), fill=COLORgrid, width=GridWidth.get())
@@ -5764,7 +5965,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
             V1String = ' {0:.4f} '.format(VABase)
             txt = txt +  " Base = " + V1String
         if MeasMidV1.get() == 1:
-            MidV1 = (MaxV1+MinV1)/2
+            MidV1 = (MaxV1+MinV1)/2.0
             V1String = ' {0:.4f} '.format(MidV1)
             txt = txt +  " MidV = " + V1String
         if MeasPPV1.get() == 1:
@@ -5811,7 +6012,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
             V1String = ' {0:.2f} '.format(MinI1)
             txt = txt +  " MinI = " + V1String
         if MeasMidI1.get() == 1:
-            MidI1 = (MaxI1+MinI1)/2
+            MidI1 = (MaxI1+MinI1)/2.0
             V1String = ' {0:.2f} '.format(MidI1)
             txt = txt +  " MidV = " + V1String
         if MeasPPI1.get() == 1:
@@ -5855,7 +6056,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
             V1String = ' {0:.4f} '.format(VBBase)
             txt = txt +  " Base = " + V1String
         if MeasMidV2.get() == 1:
-            MidV2 = (MaxV2+MinV2)/2
+            MidV2 = (MaxV2+MinV2)/2.0
             V1String = ' {0:.4f} '.format(MidV2)
             txt = txt +  " MidV = " + V1String
         if MeasPPV2.get() == 1:
@@ -5899,7 +6100,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
             V1String = ' {0:.2f} '.format(MinI2)
             txt = txt +  " MinI = " + V1String
         if MeasMidI2.get() == 1:
-            MidI2 = (MaxI2+MinI2)/2
+            MidI2 = (MaxI2+MinI2)/2.0
             V1String = ' {0:.2f} '.format(MidI2)
             txt = txt +  " MidV = " + V1String
         if MeasPPI2.get() == 1:
@@ -6676,7 +6877,7 @@ def SetScaleA():
         CHBIlab.config(style="Strace4.TButton")
     else:
         MarkerScale.set(0)
-    
+#
 def SetScaleIA():
     global MarkerScale, CHAlab, CHBlab, CHAIlab, CHBIlab
 
@@ -6756,18 +6957,19 @@ def onCanvasClickScroll(event):
 def onCanvasUpArrow(event):
     global ShowVCur, VCursor, YCursor, dBCursor, BdBCursor, RUNstatus, ca, XYca, Freqca, Bodeca
 
+    shift_key = event.state & 1
     if event.widget == ca:
-        if ShowVCur.get() > 0 and event.state == 262144:
+        if ShowVCur.get() > 0 and shift_key == 0:
             VCursor = VCursor - 1
-        elif ShowVCur.get() > 0 and event.state == 262145:
+        elif ShowVCur.get() > 0 and shift_key == 1:
             VCursor = VCursor - 5
         if RUNstatus.get() == 0:
             UpdateTimeScreen()
     try:
         if event.widget == XYca:
-            if ShowYCur.get() > 0 and event.state == 262144:
+            if ShowYCur.get() > 0 and shift_key == 0:
                 YCursor = YCursor - 1
-            elif ShowYCur.get() > 0 and event.state == 262145:
+            elif ShowYCur.get() > 0 and shift_key == 1:
                 YCursor = YCursor - 5
             if RUNstatus.get() == 0:
                 UpdateXYScreen()
@@ -6775,9 +6977,9 @@ def onCanvasUpArrow(event):
         donothing()
     try:
         if event.widget == Freqca:
-            if ShowdBCur.get() > 0 and event.state == 262144:
+            if ShowdBCur.get() > 0 and shift_key == 0:
                 dBCursor = dBCursor - 1
-            elif ShowdBCur.get() > 0 and event.state == 262145:
+            elif ShowdBCur.get() > 0 and shift_key == 1:
                 dBCursor = dBCursor - 5
             if RUNstatus.get() == 0:
                 UpdateFreqScreen()
@@ -6785,9 +6987,9 @@ def onCanvasUpArrow(event):
         donothing()
     try:
         if event.widget == Bodeca:
-            if ShowBdBCur.get() > 0 and event.state == 262144:
+            if ShowBdBCur.get() > 0 and shift_key == 0:
                 BdBCursor = BdBCursor - 1
-            elif ShowBdBCur.get() > 0 and event.state == 262145:
+            elif ShowBdBCur.get() > 0 and shift_key == 1:
                 BdBCursor = BdBCursor - 5
             if RUNstatus.get() == 0:
                 UpdateBodeScreen()
@@ -6797,18 +6999,19 @@ def onCanvasUpArrow(event):
 def onCanvasDownArrow(event):
     global ShowVCur, VCursor, YCursor, dBCursor, BdBCursor, RUNstatus, ca, XYca, Freqca
 
+    shift_key = event.state & 1
     if event.widget == ca:
-        if ShowVCur.get() > 0 and event.state == 262144:
+        if ShowVCur.get() > 0 and shift_key == 0:
             VCursor = VCursor + 1
-        elif ShowVCur.get() > 0 and event.state == 262145:
+        elif ShowVCur.get() > 0 and shift_key == 1:
             VCursor = VCursor + 5
         if RUNstatus.get() == 0:
             UpdateTimeScreen()
     try:
         if event.widget == XYca:
-            if ShowYCur.get() > 0 and event.state == 262144:
+            if ShowYCur.get() > 0 and shift_key == 0:
                 YCursor = YCursor + 1
-            elif ShowYCur.get() > 0 and event.state == 262145:
+            elif ShowYCur.get() > 0 and shift_key == 1:
                 YCursor = YCursor + 5
             if RUNstatus.get() == 0:
                 UpdateXYScreen()
@@ -6816,9 +7019,9 @@ def onCanvasDownArrow(event):
         donothing()
     try:
         if event.widget == Freqca:
-            if ShowdBCur.get() > 0 and event.state == 262144:
+            if ShowdBCur.get() > 0 and shift_key == 0:
                 dBCursor = dBCursor + 1
-            elif ShowdBCur.get() > 0 and event.state == 262145:
+            elif ShowdBCur.get() > 0 and shift_key == 1:
                 dBCursor = dBCursor + 5
             if RUNstatus.get() == 0:
                 UpdateFreqScreen()
@@ -6826,9 +7029,9 @@ def onCanvasDownArrow(event):
         donothing()
     try:
         if event.widget == Bodeca:
-            if ShowBdBCur.get() > 0 and event.state == 262144:
+            if ShowBdBCur.get() > 0 and shift_key == 0:
                 BdBCursor = BdBCursor + 1
-            elif ShowBdBCur.get() > 0 and event.state == 262145:
+            elif ShowBdBCur.get() > 0 and shift_key == 1:
                 BdBCursor = BdBCursor + 5
             if RUNstatus.get() == 0:
                 UpdateBodeScreen()
@@ -6838,18 +7041,19 @@ def onCanvasDownArrow(event):
 def onCanvasLeftArrow(event):
     global ShowTCur, TCursor, XCursor, FCursor, BPCursor, RUNstatus, ca, XYca, Freqca
 
+    shift_key = event.state & 1
     if event.widget == ca:
-        if ShowTCur.get() > 0 and event.state == 262144:
+        if ShowTCur.get() > 0 and shift_key == 0:
             TCursor = TCursor - 1
-        elif ShowTCur.get() > 0 and event.state == 262145:
+        elif ShowTCur.get() > 0 and shift_key == 1:
             TCursor = TCursor - 5
         if RUNstatus.get() == 0:
             UpdateTimeScreen()
     try:
         if event.widget == XYca:
-            if ShowXCur.get() > 0 and event.state == 262144:
+            if ShowXCur.get() > 0 and shift_key == 0:
                 XCursor = XCursor - 1
-            elif ShowXCur.get() > 0 and event.state == 262145:
+            elif ShowXCur.get() > 0 and shift_key == 1:
                 XCursor = XCursor - 5
             if RUNstatus.get() == 0:
                 UpdateXYScreen()
@@ -6857,9 +7061,9 @@ def onCanvasLeftArrow(event):
         donothing()
     try:
         if event.widget == Freqca:
-            if ShowFCur.get() > 0 and event.state == 262144:
+            if ShowFCur.get() > 0 and shift_key == 0:
                 FCursor = FCursor - 1
-            elif ShowFCur.get() > 0 and event.state == 262145:
+            elif ShowFCur.get() > 0 and shift_key == 1:
                 FCursor = FCursor - 5
             if RUNstatus.get() == 0:
                 UpdateFreqScreen()
@@ -6867,9 +7071,9 @@ def onCanvasLeftArrow(event):
         donothing()
     try:
         if event.widget == Bodeca:
-            if ShowBPCur.get() > 0 and event.state == 262144:
+            if ShowBPCur.get() > 0 and shift_key == 0:
                 BPCursor = BPCursor - 1
-            elif ShowBPCur.get() > 0 and event.state == 262145:
+            elif ShowBPCur.get() > 0 and shift_key == 1:
                 BPCursor = BPCursor - 5
             if RUNstatus.get() == 0:
                 UpdateBodeScreen()
@@ -6879,18 +7083,19 @@ def onCanvasLeftArrow(event):
 def onCanvasRightArrow(event):
     global ShowTCur, TCursor, XCursor, FCursor, BPCursor, RUNstatus, ca, XYca, Freqca
 
+    shift_key = event.state & 1
     if event.widget == ca:
-        if ShowTCur.get() > 0 and event.state == 262144:
+        if ShowTCur.get() > 0 and shift_key == 0:
             TCursor = TCursor + 1
-        elif ShowTCur.get() > 0 and event.state == 262145:
+        elif ShowTCur.get() > 0 and shift_key == 1:
             TCursor = TCursor + 5
         if RUNstatus.get() == 0:
             UpdateTimeScreen()
     try:
         if event.widget == XYca:
-            if ShowXCur.get() > 0 and event.state == 262144:
+            if ShowXCur.get() > 0 and shift_key == 0:
                 XCursor = XCursor + 1
-            elif ShowXCur.get() > 0 and event.state == 262145:
+            elif ShowXCur.get() > 0 and shift_key == 1:
                 XCursor = XCursor + 5
             if RUNstatus.get() == 0:
                 UpdateXYScreen()
@@ -6898,9 +7103,9 @@ def onCanvasRightArrow(event):
         donothing()
     try:
         if event.widget == Freqca:
-            if ShowFCur.get() > 0 and event.state == 262144:
+            if ShowFCur.get() > 0 and shift_key == 0:
                 FCursor = FCursor + 1
-            elif ShowFCur.get() > 0 and event.state == 262145:
+            elif ShowFCur.get() > 0 and shift_key == 1:
                 FCursor = FCursor + 5
             if RUNstatus.get() == 0:
                 UpdateFreqScreen()
@@ -6908,9 +7113,9 @@ def onCanvasRightArrow(event):
         donothing()
     try:
         if event.widget == Bodeca:
-            if ShowBPCur.get() > 0 and event.state == 262144:
+            if ShowBPCur.get() > 0 and shift_key == 0:
                 BPCursor = BPCursor + 1
-            elif ShowBPCur.get() > 0 and event.state == 262145:
+            elif ShowBPCur.get() > 0 and shift_key == 1:
                 BPCursor = BPCursor + 5
             if RUNstatus.get() == 0:
                 UpdateBodeScreen()
@@ -6971,6 +7176,8 @@ def onCanvasClickLeft(event):
     global COLORtrace1, COLORtrace2, MathUnits, MathXUnits, MathYUnits
     global CH1pdvRange, CH2pdvRange, CH1IpdvRange, CH2IpdvRange
     global CHAOffset, CHAIOffset, CHBOffset, CHBIOffset
+    global CHB_Asb, CHB_APosEntry, CHB_Bsb, CHB_BPosEntry
+    global CHB_Csb, CHB_CPosEntry, CHB_Dsb, CHB_DPosEntry
     # add markers only if stopped
     if (RUNstatus.get() == 0):
         MarkerNum = MarkerNum + 1
@@ -7042,7 +7249,52 @@ def onCanvasClickLeft(event):
         except:
             HoldOffentry.delete(0,END)
             HoldOffentry.insert(0, HoldOff)
-    #
+#
+        if MuxScreenStatus.get() == 1: # if using analog Mux set up axis controls
+            try:
+                CHMApdvRange = float(eval(CHB_Asb.get()))
+            except:
+                CHB_Asb.delete(0,END)
+                CHB_Asb.insert(0, CHMApdvRange)
+            try:
+                CHMBpdvRange = float(eval(CHB_Bsb.get()))
+            except:
+                CHB_Bsb.delete(0,END)
+                CHB_Bsb.insert(0, CHMBpdvRange)
+            try:
+                CHMCpdvRange = float(eval(CHB_Csb.get()))
+            except:
+                CHB_Csb.delete(0,END)
+                CHB_Csb.insert(0, CHMCpdvRange)
+            try:
+                CHMDpdvRange = float(eval(CHB_Dsb.get()))
+            except:
+                CHB_Dsb.delete(0,END)
+                CHB_Dsb.insert(0, CHMDpdvRange)
+            YconvMA = float(GRH/10.0) / CHMApdvRange
+            YconvMB = float(GRH/10.0) / CHMBpdvRange
+            YconvMC = float(GRH/10.0) / CHMCpdvRange
+            YconvMD = float(GRH/10.0) / CHMDpdvRange
+            try:
+                CHBAOffset = float(eval(CHB_APosEntry.get()))
+            except:
+                CHB_APosEntry.delete(0,END)
+                CHB_APosEntry.insert(0, CHBAOffset)
+            try:
+                CHBBOffset = float(eval(CHB_BPosEntry.get()))
+            except:
+                CHB_BPosEntry.delete(0,END)
+                CHB_BPosEntry.insert(0, CHBBOffset)
+            try:
+                CHBCOffset = float(eval(CHB_CPosEntry.get()))
+            except:
+                CHB_CPosEntry.delete(0,END)
+                CHB_CPosEntry.insert(0, CHBCOffset)
+            try:
+                CHBDOffset = float(eval(CHB_DPosEntry.get()))
+            except:
+                CHB_DPosEntry.delete(0,END)
+                CHB_DPosEntry.insert(0, CHBDOffset)
         Yoffset1 = CHAOffset
         if MarkerScale.get() == 1:
             Yconv1 = float(GRH/10.0) / CH1pdvRange
@@ -7064,7 +7316,28 @@ def onCanvasClickLeft(event):
             Yoffset1 = CHBIOffset
             COLORmarker = COLORtrace4
             Units = " mA"
-        #
+        # Aanalog Mux settings
+        if MarkerScale.get() == 5:
+            Yconv1 = float(GRH/10.0) / CHMApdvRange
+            Yoffset1 = CHBAOffset
+            COLORmarker = COLORtrace2
+            Units = " V"
+        if MarkerScale.get() == 6:
+            Yconv1 = float(GRH/10.0) / CHMBpdvRange
+            Yoffset1 = CHBBOffset
+            COLORmarker = COLORtrace6
+            Units = " V"
+        if MarkerScale.get() == 7:
+            Yconv1 = float(GRH/10.0) / CHMCpdvRange
+            Yoffset1 = CHBCOffset
+            COLORmarker = COLORtrace7
+            Units = " V"
+        if MarkerScale.get() == 8:
+            Yconv1 = float(GRH/10.0) / CHMDpdvRange
+            Yoffset1 = CHBDOffset
+            COLORmarker = COLORtrace4
+            Units = " V"
+    #
         c1 = GRH / 2.0 + Y0T    # fixed correction channel A
         xc1 = GRW / 2.0 + X0L
         c2 = GRH / 2.0 + Y0T    # fixed correction channel B
@@ -8099,10 +8372,7 @@ def BAWGAModeLabel():
                 AWGAMode.set(1)
                 CHA.set_mode('i') # channel must be in source current mode for rev D boards
                 label_txt = "SIMV"
-        devx.ctrl_transfer( 0x40, 0x51, 34, 0, 0, 0, 100) # open voltage sense loop
         label_txt = label_txt + " Split I/O"
-    else:
-        devx.ctrl_transfer( 0x40, 0x50, 34, 0, 0, 0, 100) # close voltage sense loop
     label_txt = label_txt + " Mode"
     AWGAModeLabel.config(text = label_txt ) # change displayed value
     UpdateAwgCont()
@@ -8111,7 +8381,7 @@ def UpdateAWGA():
     global AWGAAmplvalue, AWGAOffsetvalue
     global AWGAFreqvalue, AWGAPhasevalue, AWGAPhaseDelay
     global AWGADutyCyclevalue, FSweepMode, AWGARepeatFlag, AWGSync
-    global AWGAWave, AWGAMode, AWGATerm, AWGAwaveform, AWGBAIOMode
+    global AWGAWave, AWGAMode, AWGATerm, AWGAwaveform, AWGAIOMode
     global CHA, AWGSAMPLErate, DevID, devx, HWRevOne, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global amp1lab, off1lab
     
@@ -8159,34 +8429,48 @@ def UpdateAWGA():
         
     if AWGAWave == 'dc':
         if AWGAMode.get() == 0: # Source Voltage measure current mode
-            CHA.mode = Mode.SVMI # Put CHA in SVMI mode
+            if AWGAIOMode.get() == 0:
+                CHA.mode = Mode.SVMI # Put CHA in SVMI mode
+            else:
+                CHA.mode = Mode.SVMI_SPLIT # Put CHA in SVMI split mode
             CHA.constant(AWGAOffsetvalue)
             # 
         if AWGAMode.get() == 1: # Source current measure voltage mode
-            CHA.mode = Mode.SIMV # Put CHA in SIMV mode
+            if AWGAIOMode.get() == 0:
+                CHA.mode = Mode.SIMV # Put CHA in SIMV mode
+            else:
+                CHA.mode = Mode.SIMV_SPLIT # Put CHA in SIMV split mode
             CHA.constant(AWGAOffsetvalue/1000)
             #
         if AWGAMode.get() == 2: # High impedance mode
-            CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
-            # CHA.constant(0.0)
+            if AWGAIOMode.get() == 0:
+                CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
+            else:
+                CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z split mode
 #
         if AWGAIOMode.get() > 0: # Split Input / Output mode
             if HWRevOne == "D":
                 AWGAMode.set(1)
-                CHA.mode = Mode.SIMV # channel must be in source current mode
-            devx.ctrl_transfer( 0x40, 0x51, 34, 0, 0, 0, 100) # open voltage sense loop
-        else:
-            devx.ctrl_transfer( 0x40, 0x50, 34, 0, 0, 0, 100) # close voltage sense loop
+                CHA.mode = Mode.SIMV_SPLIT # channel must be in source current mode
 #
     else:
         if AWGAMode.get() == 0: # Source Voltage measure current mode
-            CHA.mode = Mode.SVMI # Put CHA in SVMI mode
+            if AWGAIOMode.get() == 0:
+                CHA.mode = Mode.SVMI # Put CHA in SVMI mode
+            else:
+                CHA.mode = Mode.SVMI_SPLIT # Put CHA in SVMI split mode
         if AWGAMode.get() == 1: # Source current measure voltage mode
-            CHA.mode = Mode.SIMV # Put CHA in SIMV mode
+            if AWGAIOMode.get() == 0:
+                CHA.mode = Mode.SIMV # Put CHA in SIMV mode
+            else:
+                CHA.mode = Mode.SIMV_SPLIT # Put CHA in SIMV split mode
             AWGAOffsetvalue = AWGAOffsetvalue/1000
             AWGAAmplvalue = AWGAAmplvalue/1000
         if AWGAMode.get() == 2: # High impedance mode
-            CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
+            if AWGAIOMode.get() == 0:
+                CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
+            else:
+                CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z split mode
             # CHA.constant(0.0)
         else:
             if AWG_Amp_Mode.get() == 1:
@@ -8215,10 +8499,7 @@ def UpdateAWGA():
         if AWGAIOMode.get() > 0: # Split Input / Output mode
             if HWRevOne == "D":
                 AWGAMode.set(1)
-                CHA.mode = Mode.SIMV # channel must be in source current mode
-            devx.ctrl_transfer(0x40, 0x51, 34, 0, 0, 0, 100) # open voltage sense loop
-        else:
-            devx.ctrl_transfer(0x40, 0x50, 34, 0, 0, 0, 100) # close voltage sense loop
+                CHA.mode = Mode.SIMV_SPLIT # channel must be in source current mode
 # AWG B functions 
 def BAWGBAmpl(temp):
     global AWGBAmplEntry, AWGBAmplvalue, AWGBMode, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
@@ -8881,10 +9162,7 @@ def BAWGBModeLabel():
                 AWGBMode.set(1)
                 CHB.set_mode('i') # channel must be in source current mode for rev D boards
                 label_txt = "SIMV"
-        devx.ctrl_transfer( 0x40, 0x51, 39, 0, 0, 0, 100) # open voltage sense loop
         label_txt = label_txt + " Split I/O"
-    else:
-        devx.ctrl_transfer( 0x40, 0x50, 39, 0, 0, 0, 100) # close voltage sense loop
     label_txt = label_txt + " Mode"
     AWGBModeLabel.config(text = label_txt ) # change displayed value
     UpdateAwgCont()
@@ -8933,31 +9211,46 @@ def UpdateAWGB():
         
     if AWGBWave == 'dc':
         if AWGBMode.get() == 0: # Source Voltage measure current mode
-            CHB.mode = Mode.SVMI # Put CHB in SVMI mode
+            if AWGBIOMode.get() == 0:
+                CHB.mode = Mode.SVMI # Put CHB in SVMI mode
+            else:
+                CHB.mode = Mode.SVMI_SPLIT # Put CHB in SVMI split mode
             CHB.constant(AWGBOffsetvalue)
         if AWGBMode.get() == 1: # Source current measure Voltage mode
-            CHB.mode = Mode.SIMV # Put CHB in SIMV mode
+            if AWGBIOMode.get() == 0:
+                CHB.mode = Mode.SIMV # Put CHB in SIMV mode
+            else:
+                CHB.mode = Mode.SIMV_SPLIT # Put CHB in SIMV split mode
             CHB.constant(AWGBOffsetvalue/1000)
         if AWGBMode.get() == 2: # Hi impedance mode
-            CHB.mode = Mode.HI_Z # Put CHB in Hi Z mode
+            if AWGBIOMode.get() == 0:
+                CHB.mode = Mode.HI_Z # Put CHB in Hi Z mode
+            else:
+                CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z split mode
 #
         if AWGBIOMode.get() > 0: # Split Input / Output mode
             if HWRevOne == "D":
                 AWGBMode.set(1)
-                CHB.mode = Mode.SIMV # channel must be in source current mode
-            devx.ctrl_transfer( 0x40, 0x51, 39, 0, 0, 0, 100) # open voltage sense loop
-        else:
-            devx.ctrl_transfer( 0x40, 0x50, 39, 0, 0, 0, 100) # close voltage sense loop
+                CHB.mode = Mode.SIMV_SPLIT # channel must be in source current mode
 #
     else:
         if AWGBMode.get() == 0: # Source Voltage measure current mode
-            CHB.mode = Mode.SVMI # Put CHB in SVMI mode
+            if AWGBIOMode.get() == 0:
+                CHB.mode = Mode.SVMI # Put CHB in SVMI mode
+            else:
+                CHB.mode = Mode.SVMI_SPLIT # Put CHB in SVMI split mode
         if AWGBMode.get() == 1: # Source current measure Voltage mode
-            CHB.mode = Mode.SIMV # Put CHB in SIMV mode
+            if AWGBIOMode.get() == 0:
+                CHB.mode = Mode.SIMV # Put CHB in SIMV mode
+            else:
+                CHB.mode = Mode.SIMV_SPLIT # Put CHB in SIMV split mode
             AWGBOffsetvalue = AWGBOffsetvalue/1000
             AWGBAmplvalue = AWGBAmplvalue/1000
         if AWGBMode.get() == 2: # Hi impedance mode
-            CHB.mode = Mode.HI_Z # Put CHB in Hi Z mode
+            if AWGBIOMode.get() == 0:
+                CHB.mode = Mode.HI_Z # Put CHB in Hi Z mode
+            else:
+                CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z split mode
         else:
             if AWG_Amp_Mode.get() == 1:
                 MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
@@ -8985,10 +9278,7 @@ def UpdateAWGB():
         if AWGBIOMode.get() > 0: # Split Input / Output mode
             if HWRevOne == "D":
                 AWGBMode.set(1)
-                CHB.mode = Mode.SIMV # channel must be in source current mode
-            devx.ctrl_transfer( 0x40, 0x51, 39, 0, 0, 0, 100) # open voltage sense loop
-        else:
-            devx.ctrl_transfer( 0x40, 0x50, 39, 0, 0, 0, 100) # close voltage sense loop
+                CHB.mode = Mode.SIMV_SPLIT # channel must be in source current mode
 #
 def UpdateAwgCont():
     global session, CHA, CHB, AWGSync
@@ -9003,7 +9293,6 @@ def UpdateAwgCont():
             #session.flush()
             session.start(0)
             #time.sleep(0.01) # wait awhile here for some reason
-            
 #
 def UpdateAwgContRet(temp):
     UpdateAwgCont()
@@ -9037,16 +9326,16 @@ def BAWGSync():
         if AWGSync.get() == 0:
             #UpdateAwgCont()
             session.flush()
-            CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
-            CHB.mode = Mode.HI_Z # Put CHB in Hi Z mode
+            CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z mode
+            CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z mode
             BAWGEnab()
             session.start(0)
             time.sleep(0.02) # wait awhile here for some reason
         elif session.continuous:
             session.end()
             session.flush()
-            CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
-            CHB.mode = Mode.HI_Z # Put CHB in Hi Z mode
+            CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z mode
+            CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z mode
 
 # ======= Spectrum Analyzer functions ===========
 #
@@ -9330,8 +9619,8 @@ def BStopSA():
 
     if (RUNstatus.get() == 1):
         RUNstatus.set(0)
-        CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
-        CHB.mode = Mode.HI_Z # Put CHB in Hi Z mode
+        CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z split mode
+        CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z split mode
         if AWGSync.get() == 0: # running in continuous mode
             CHA.constant(0.0)
             CHB.constant(0.0)
@@ -10426,12 +10715,20 @@ def MakeBodeScreen():       # Update the screen with traces and text
     if ShowBdBCur.get() > 0:
         Dline = [X0LBP, BdBCursor, X0LBP+GRWBP, BdBCursor]
         Bodeca.create_line(Dline, dash=(3,4), fill=COLORtrigger, width=GridWidth.get())
-        # Vertical conversion factors (level dBs) and border limits
-        Yconv = float(GRHBP) / (Vdiv.get() * DBdivlist[DBdivindexBP.get()]) # Conversion factors, Yconv is the number of screenpoints per dB
-        Yc = float(Y0TBP) + Yconv * (DBlevelBP.get()) # Yc is the 0 dBm position, can be outside the screen!
-        yvdB = ((Yc-BdBCursor)/Yconv)
-        VdBString = ' {0:.1f} '.format(yvdB)
-        V_label = VdBString + " dBV"
+        if ShowBdBCur.get() == 1:
+            # Vertical conversion factors (level dBs) and border limits
+            Yconv = float(GRHBP) / (Vdiv.get() * DBdivlist[DBdivindexBP.get()]) # Conversion factors, Yconv is the number of screenpoints per dB
+            Yc = float(Y0TBP) + Yconv * (DBlevelBP.get()) # Yc is the 0 dBm position, can be outside the screen!
+            yvdB = ((Yc-BdBCursor)/Yconv)
+            VdBString = ' {0:.1f} '.format(yvdB)
+            V_label = VdBString + " dBV"
+        else:
+            # Vertical conversion factors (level degrees) and border limits
+            Yconv = float(GRHBP) / 360.0 # Conversion factors, Yconv is the number of screenpoints per degree
+            Yc = float(Y0TBP)  # Yc is the 180 degree position
+            yvdB = 180 + ((Yc-BdBCursor)/Yconv)
+            VdBString = ' {0:.1f} '.format(yvdB)
+            V_label = VdBString + " Deg"
         Bodeca.create_text(BPCursor+1, BdBCursor+5, text=V_label, fill=COLORtext, anchor="w", font=("arial", 8 ))
     #
     SmoothBool = SmoothCurvesBP.get()
@@ -11772,9 +12069,11 @@ def onCanvasBodeRightClick(event):
 def onCanvasBodeClickScroll(event):
     global ShowBPCur, ShowBdBCur, BPCursor, BdBCursor, RUNstatus
 
-    if ShowBPCur.get() > 0 and event.state == 0:
+    # print event.state
+    shift_key = event.state & 1
+    if ShowBPCur.get() > 0 and shift_key == 0:
         BPCursor = BPCursor + event.delta/100
-    elif ShowBdBCur.get() > 0 or event.state == 1:
+    elif ShowBdBCur.get() > 0 or shift_key == 1:
         BdBCursor = BdBCursor - event.delta/100
     if RUNstatus.get() == 0:
         UpdateBodeScreen()
@@ -12444,11 +12743,16 @@ def MakeMuxModeWindow():
     global MuxScreenStatus, muxwindow, RevDate, DacScreenStatus, DigScreenStatus
     global CHB_Asb, CHB_APosEntry, CHB_Bsb, CHB_BPosEntry
     global CHB_Csb, CHB_CPosEntry, CHB_Dsb, CHB_DPosEntry, SyncButton
-    global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MuxEnb, MuxSync, hipulseimg, lowpulseimg
+    global CHB_Alab, CHB_Blab, CHB_Clab, CHB_Dlab, CHBlab, CHBofflab
+    global CHB_Cofflab, CHB_Dofflab
+    global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MuxEnb, MuxSync, hipulseimg, lowpulseimg, DualMuxMode
     
     if MuxScreenStatus.get() == 0 and DacScreenStatus.get() == 0 and DigScreenStatus.get() == 0:
         MuxScreenStatus.set(1)
-        
+        #
+        AWGSync.set(1) # force discontinuous mode
+        BAWGEnab() # update AWG settings
+        #
         muxwindow = Toplevel()
         muxwindow.title("CH-B Mux 1.2 " + RevDate)
         muxwindow.resizable(FALSE,FALSE)
@@ -12468,7 +12772,7 @@ def MakeMuxModeWindow():
         CHB_Asb.delete(0,"end")
         CHB_Asb.insert(0,0.5)
         #
-        CHB_Alab = Label(frameA, text="CB-A V/Div", style="Rtrace2.TButton")
+        CHB_Alab = Button(frameA, text="CB-A V/Div", style="Rtrace2.TButton", command=SetScaleMuxA)
         CHB_Alab.pack(side=LEFT)
         CHB_APosEntry = Entry(frameA, width=5)
         CHB_APosEntry.bind('<MouseWheel>', onTextScroll)
@@ -12476,7 +12780,7 @@ def MakeMuxModeWindow():
         CHB_APosEntry.pack(side=LEFT)
         CHB_APosEntry.delete(0,"end")
         CHB_APosEntry.insert(0,2.5)
-        CHB_Aofflab = Label(frameA, text="CB-A Pos", style="Rtrace2.TButton")
+        CHB_Aofflab = Button(frameA, text="CB-A Pos", style="Rtrace2.TButton", command=SetMuxAPoss)
         CHB_Aofflab.pack(side=LEFT)
         # Voltage channel CHB-B
         frameB = Frame(frameM)
@@ -12488,7 +12792,7 @@ def MakeMuxModeWindow():
         CHB_Bsb.pack(side=LEFT)
         CHB_Bsb.delete(0,"end")
         CHB_Bsb.insert(0,0.5)
-        CHB_Blab = Label(frameB, text="CB-B V/Div", style="Rtrace6.TButton")
+        CHB_Blab = Button(frameB, text="CB-B V/Div", style="Rtrace6.TButton", command=SetScaleMuxB)
         CHB_Blab.pack(side=LEFT)
         CHB_BPosEntry = Entry(frameB, width=5)
         CHB_BPosEntry.bind('<MouseWheel>', onTextScroll)
@@ -12496,7 +12800,7 @@ def MakeMuxModeWindow():
         CHB_BPosEntry.pack(side=LEFT)
         CHB_BPosEntry.delete(0,"end")
         CHB_BPosEntry.insert(0,2.5)
-        CHB_Bofflab = Label(frameB, text="CB-B Pos", style="Rtrace6.TButton")
+        CHB_Bofflab = Button(frameB, text="CB-B Pos", style="Rtrace6.TButton", command=SetMuxBPoss)
         CHB_Bofflab.pack(side=LEFT)
         # Voltage channel B-C
         frameC = Frame(frameM)
@@ -12509,7 +12813,7 @@ def MakeMuxModeWindow():
         CHB_Csb.delete(0,"end")
         CHB_Csb.insert(0,0.5)
         # 
-        CHB_Clab = Label(frameC, text="CB-C V/Div", style="Rtrace7.TButton")
+        CHB_Clab = Button(frameC, text="CB-C V/Div", style="Rtrace7.TButton", command=SetScaleMuxC)
         CHB_Clab.pack(side=LEFT)
         CHB_CPosEntry = Entry(frameC, width=5)
         CHB_CPosEntry.bind('<MouseWheel>', onTextScroll)
@@ -12517,7 +12821,7 @@ def MakeMuxModeWindow():
         CHB_CPosEntry.pack(side=LEFT)
         CHB_CPosEntry.delete(0,"end")
         CHB_CPosEntry.insert(0,2.5)
-        CHB_Cofflab = Label(frameC, text="CB V Pos", style="Rtrace7.TButton")
+        CHB_Cofflab = Button(frameC, text="CB-C Pos", style="Rtrace7.TButton", command=SetMuxCPoss)
         CHB_Cofflab.pack(side=LEFT)
         # Voltage channel B-D
         frameD = Frame(frameM)
@@ -12529,7 +12833,7 @@ def MakeMuxModeWindow():
         CHB_Dsb.pack(side=LEFT)
         CHB_Dsb.delete(0,"end")
         CHB_Dsb.insert(0,0.5)
-        CHB_Dlab = Label(frameD, text="CB-D V/Div", style="Rtrace4.TButton")
+        CHB_Dlab = Button(frameD, text="CB-D V/Div", style="Rtrace4.TButton", command=SetScaleMuxD)
         CHB_Dlab.pack(side=LEFT)
         CHB_DPosEntry = Entry(frameD, width=5)
         CHB_DPosEntry.bind('<MouseWheel>', onTextScroll)
@@ -12537,7 +12841,7 @@ def MakeMuxModeWindow():
         CHB_DPosEntry.pack(side=LEFT)
         CHB_DPosEntry.delete(0,"end")
         CHB_DPosEntry.insert(0,2.5)
-        CHB_Dofflab = Label(frameD, text="CB-D Pos", style="Rtrace4.TButton")
+        CHB_Dofflab = Button(frameD, text="CB-D Pos", style="Rtrace4.TButton", command=SetMuxDPoss)
         CHB_Dofflab.pack(side=LEFT)
         frameE = Frame(frameM)
         frameE.pack(side=TOP)
@@ -12549,6 +12853,40 @@ def MakeMuxModeWindow():
         SyncButton.pack(side=LEFT)
         dismissbutton = Button(frameE, text="Dismiss", style="W8.TButton", command=DestroyMuxScreen)
         dismissbutton.pack(side=LEFT)
+        frameF = Frame(frameM)
+        frameF.pack(side=TOP)
+        DualMuxMode = IntVar(0)
+        dmx = Checkbutton(frameF, text='Dual Mux Split I/O mode', variable=DualMuxMode, command=SetDualMuxMode)
+        dmx.pack(side=LEFT)
+        # Gray out main Channel B controls
+        CHBlab.config(style="SGray.TButton")
+        CHBofflab.config(style="SGray.TButton")
+#
+def SetDualMuxMode():
+    global AWGAIOMode, AWGBIOMode, ShowC1_V, DualMuxMode, CHAlab, CHAofflab
+    global CHB_Clab, CHB_Dlab, CHB_Cofflab, CHB_Dofflab
+
+    if DualMuxMode.get() == 1:
+        AWGAIOMode.set(1) # force awg A split I/O mode
+        AWGBIOMode.set(1) # force awg A split I/O mode
+        ShowC1_V.set(0) # force A voltage trace off
+        CHB_Clab.config(text="CA-C V/Div")
+        CHB_Dlab.config(text="CA-D V/Div")
+        CHB_Cofflab.config(text="CA-C Pos")
+        CHB_Dofflab.config(text="CA-D Pos")
+        BAWGEnab() # update AWG settings
+        # Gray out main Channel A controls
+        CHAlab.config(style="SGray.TButton")
+        CHAofflab.config(style="SGray.TButton")
+    else:
+        ShowC1_V.set(1) # force A voltage trace on
+        CHB_Clab.config(text="CB-C V/Div")
+        CHB_Dlab.config(text="CB-D V/Div")
+        CHB_Cofflab.config(text="CB-C Pos")
+        CHB_Dofflab.config(text="CB-D Pos")
+        # Reset main Channel A control colors
+        CHAlab.config(style="Rtrace1.TButton")
+        CHAofflab.config(style="Rtrace1.TButton")
 #
 def SyncImage():
     global MuxSync, hipulseimg, lowpulseimg, SyncButton
@@ -12559,9 +12897,14 @@ def SyncImage():
         SyncButton.config(image=lowpulseimg)
         
 def DestroyMuxScreen():
-    global muxwindow, MuxScreenStatus
+    global muxwindow, MuxScreenStatus, CHAlab, CHAofflab, CHBlab, CHBofflab
     
     MuxScreenStatus.set(0)
+    # Reset main Channel B control colors
+    CHBlab.config(style="Rtrace2.TButton")
+    CHBofflab.config(style="Rtrace2.TButton")
+    CHAlab.config(style="Rtrace1.TButton")
+    CHAofflab.config(style="Rtrace1.TButton")
     muxwindow.destroy()
 #
 def BodeCaresize(event):
@@ -13810,8 +14153,8 @@ def SelfCalibration():
         #print "wrote new " , filename
     #
     # session.end()
-    CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
-    CHB.mode = Mode.HI_Z # Put CHB in Hi Z mode
+    CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z split mode
+    CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z split mode
     contloop = 0
     discontloop = 1
     # session.cancel()
@@ -14729,9 +15072,9 @@ def SelectBoard():
     print devx.fwver, devx.hwver
     print("Session sample rate: " + str(session.sample_rate))
     CHA = devx.channels['A']    # Open CHA
-    CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
+    CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z split mode
     CHB = devx.channels['B']    # Open CHB
-    CHB.mode = Mode.HI_Z # Put CHB in Hi Z mode
+    CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z split mode
     if devx.hwver == "F":
         PIO_0 = 28
         PIO_1 = 29
@@ -14770,14 +15113,39 @@ def UpdateFirmware():
     global devx, dev0, dev1, dev2, session, BrdSel, CHA, CHB, DevID, MaxSamples
     global bcon, FWRevOne, HWRevOne, FWRevTwo, HWRevTwo, WRevThree, HWRevThree
 
+    RUNstatus.set(0)
     if askyesno("Update current firmware","Flash new firmware to current device:\n(Yes) or (No)?"):
         filename = askopenfilename(defaultextension = ".bin", filetypes=[("Binary", "*.bin")])
         print filename
         #print DevID
         #print FWRevOne, HWRevOne # devx.fwver, devx.hwver
-        session.flash_firmware(filename)
+        try:
+            print "Cancel current session."
+            session.cancel()
+            print session.cancelled
+            session.end()
+            print "Waiting 5..."
+            time.sleep(5)
+            print "Put board in Samba mode and flash firmware."
+            session.flash_firmware(filename)
+        except:
+            if askyesno("Flash Failed", "Failed to update firmware.\n Try again?"):
+                try:
+                    session.flash_firmware(filename)
+                except:
+                    showwarning("Flash Failed","Failed to update firmware.")
+            else:
+                return
         showwarning("Complete","Flash Firmware Complete: \n Un-plug board to cycle power.")
-    
+        print "doing session add all..."
+        session = Session(ignore_dataflow=True, sample_rate=SAMPLErate, queue_size=MaxSamples)
+        #session.scan()
+        session.add_all()
+        print session.devices
+        time.sleep(5)
+        print "trying to reconnect device..."
+        ConnectDevice()
+#
 def MakeOhmWindow():
     global OhmDisp, OhmStatus, ohmwindow, RevDate, RMode, OhmA0, OhmA1, OhmRunStatus
     global CHATestVEntry, CHATestREntry
@@ -15517,6 +15885,8 @@ root.style.configure("Rtrace6.TButton", background=COLORtrace6, width=7, relief=
 root.style.configure("Strace6.TButton", background=COLORtrace6, width=7, relief=SUNKEN)
 root.style.configure("Rtrace7.TButton", background=COLORtrace7, width=7, relief=RAISED)
 root.style.configure("Strace7.TButton", background=COLORtrace7, width=7, relief=SUNKEN)
+root.style.configure("RGray.TButton", background="#808080", width=7, relief=RAISED)
+root.style.configure("SGray.TButton", background="#808080", width=7, relief=SUNKEN)
 root.style.configure("A10R1.TLabelframe.Label", foreground=COLORtraceR1, font=('Arial', 10, 'bold'))
 root.style.configure("A10R1.TLabelframe", borderwidth=5, relief=RIDGE)
 root.style.configure("A10R2.TLabelframe.Label", foreground=COLORtraceR2, font=('Arial', 10, 'bold'))
@@ -16039,7 +16409,7 @@ CHBsb.bind('<MouseWheel>', onSpinBoxScroll)
 CHBsb.pack(side=LEFT)
 CHBsb.delete(0,"end")
 CHBsb.insert(0,0.5)
-# 
+#
 CHBlab = Button(frame3, text="CB V/Div", style="Strace2.TButton", command=SetScaleB)
 CHBlab.pack(side=LEFT)
 
