@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 alice-desktop 1.2.py(w) (10-11-2018)
+# ADALM1000 alice-desktop 1.2.py(w) (10-26-2018)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu.rework >= 1.0 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -33,7 +33,7 @@ try:
 except:
     pysmu_found = False
 #
-RevDate = "(11 Oct 2018)"
+RevDate = "(26 Oct 2018)"
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.2.1/alice-desktop-1.2-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
@@ -175,6 +175,7 @@ EnableMinigenMode = 0
 EnablePmodDA1Mode = 0
 EnableDigPotMode = 0
 EnableGenericSerialMode = 0
+EnableAD5626SerialMode = 0
 EnableDigitalFilter = 0
 EnableMeasureScreen = 0
 EnableETSScreen = 0
@@ -488,10 +489,14 @@ D4 = IntVar(0)
 D5 = IntVar(0)
 D6 = IntVar(0)
 D7 = IntVar(0)
-PIO_0 = 0
-PIO_1 = 1
-PIO_2 = 2
+PIO_0 = 28
+PIO_1 = 29
+PIO_2 = 47
 PIO_3 = 3
+#PIO_0 = 0
+#PIO_1 = 1
+#PIO_2 = 2
+#PIO_3 = 3
 # 25x25 bit map of high going pulse in .gif
 hipulse = """
 R0lGODlhGQAYAPcAAAAAAIAAAACAAICAAAAAgIAAgACAgICAgMDAwP8AAAD/AP//AAAA//8A/wD/
@@ -12855,7 +12860,6 @@ def MakeMuxModeWindow():
         dismissbutton.pack(side=LEFT)
         frameF = Frame(frameM)
         frameF.pack(side=TOP)
-        DualMuxMode = IntVar(0)
         dmx = Checkbutton(frameF, text='Dual Mux Split I/O mode', variable=DualMuxMode, command=SetDualMuxMode)
         dmx.pack(side=LEFT)
         # Gray out main Channel B controls
@@ -14550,21 +14554,39 @@ def DestroyDigPotScreen():
     digpotwindow.destroy()
 
 def BSendGS():
-    global serialwindow, GenericSerialStatus, SCLKPort, SDATAPort, SLATCHPort, SLatchPhase
-    global NumBitsEntry, DataBitsEntry, devx, SerDirection
+    global serialwindow, GenericSerialStatus, SCLKPort, SDATAPort, SLATCHPort, SLatchPhase, SClockPhase
+    global NumBitsEntry, DataBitsEntry, devx, SerDirection, DValue, NumBits, AD5626SerialStatus, AD5626Entry
 
-    try:
-        DValue = int(eval(DataBitsEntry.get()))
-        if DValue < 0:
+    if AD5626SerialStatus.get() == 0:
+        try:
+            DValue = int(eval(DataBitsEntry.get()))
+            if DValue < 0:
+                DValue = 0
+        except:
             DValue = 0
-    except:
-        DValue = 0
-    try:
-        NumBits = int(NumBitsEntry.get())
-        if NumBits < 1:
-            NumBits = 1
-    except:
-        NumBits = 8
+        try:
+            NumBits = int(NumBitsEntry.get())
+            if NumBits < 1:
+                NumBits = 1
+        except:
+            NumBits = 8
+    else:
+        try:
+            DValue = int(eval(AD5626Entry.get())*1000)
+            if DValue < 0:
+                DValue = 0
+                AD5626Entry.delete(0,"end")
+                AD5626Entry.insert(0,0.0)
+            if DValue > 4095:
+                DValue = 4095
+                AD5626Entry.delete(0,"end")
+                AD5626Entry.insert(0,DValue/1000.0)
+        except:
+            DValue = 0
+            AD5626Entry.delete(0,"end")
+            AD5626Entry.insert(0,0.0)
+        NumBits = 12
+    # print DValue
     binstr = bin(DValue)
     binlen = len(binstr)
     datastr = binstr[2:binlen]
@@ -14578,8 +14600,14 @@ def BSendGS():
     else:
         LatchInt = 0x51
         LatchEnd = 0x50
-    devx.ctrl_transfer(0x40, 0x50, SCLKPort.get(), 0, 0, 0, 100) # clock to 0
-    devx.ctrl_transfer(0x40, LatchInt, SLATCHPort.get(), 0, 0, 0, 100) # CS to 0
+    if SClockPhase.get() == 0:
+        ClockInt = 0x50
+        ClockEnd = 0x51
+    else:
+        ClockInt = 0x51
+        ClockEnd = 0x50
+    devx.ctrl_transfer(0x40, ClockInt, SCLKPort.get(), 0, 0, 0, 100) # clock to start value
+    devx.ctrl_transfer(0x40, LatchInt, SLATCHPort.get(), 0, 0, 0, 100) # CS to start value
     i = 1
     while i < datalen+1:
         if SerDirection.get() == 1: # for MSB first
@@ -14587,13 +14615,101 @@ def BSendGS():
         else:
             D1code = 0x50 + int(datastr[i-1]) # for LSB first
         devx.ctrl_transfer(0x40, D1code, SDATAPort.get(), 0, 0, 0, 100) # data bit
-        devx.ctrl_transfer(0x40, 0x51, SCLKPort.get(), 0, 0, 0, 100) # clock to 1
-        devx.ctrl_transfer(0x40, 0x50, SCLKPort.get(), 0, 0, 0, 100) # clock to 0
+        devx.ctrl_transfer(0x40, ClockEnd, SCLKPort.get(), 0, 0, 0, 100) # clock to end value
+        devx.ctrl_transfer(0x40, ClockInt, SCLKPort.get(), 0, 0, 0, 100) # clock to start value
         i = i + 1
-    devx.ctrl_transfer(0x40, LatchEnd, SLATCHPort.get(), 0, 0, 0, 100) # CS to 1
+    devx.ctrl_transfer(0x40, ClockEnd, SCLKPort.get(), 0, 0, 0, 100) # clock to end value
+    devx.ctrl_transfer(0x40, LatchEnd, SLATCHPort.get(), 0, 0, 0, 100) # CS to end value
+    devx.ctrl_transfer(0x40, LatchInt, SLATCHPort.get(), 0, 0, 0, 100) # CS to start value
+    devx.ctrl_transfer(0x40, LatchEnd, SLATCHPort.get(), 0, 0, 0, 100) # CS to end value
+#
+def MakeAD5626Window():
+    global ad5626window, AD5626SerialStatus, SCLKPort, SDATAPort, SLATCHPort, SLatchPhase, SClockPhase
+    global GenericSerialStatus
+    global AD5626Entry, SerDirection
+    global PIO_0, PIO_1, PIO_2, PIO_3
+
+    if GenericSerialStatus.get() == 1:
+        GenericSerialStatus.set(0)
+        DestroyGenericSerialScreen()
+    if AD5626SerialStatus.get() == 0:
+        AD5626SerialStatus.set(1)
+        ad5626window = Toplevel()
+        ad5626window.title("AD5626 Output 1.2" + RevDate)
+        ad5626window.resizable(FALSE,FALSE)
+        ad5626window.protocol("WM_DELETE_WINDOW", DestroyAD5626Screen)
+        #
+        SCLKPort = IntVar(0)
+        SCLKPort.set(PIO_2)
+        SDATAPort = IntVar(0)
+        SDATAPort.set(PIO_1)
+        SLATCHPort = IntVar(0)
+        SLATCHPort.set(PIO_0)
+        SLatchPhase = IntVar(0)
+        SLatchPhase.set(0)
+        SClockPhase = IntVar(0)
+        SClockPhase.set(1)
+        SerDirection = IntVar(0)
+        SerDirection.set(0)
+        #
+        label2 = Label(ad5626window,text="Enter Output Volts")
+        label2.grid(row=1, column=0, columnspan=1, sticky=W)
+        AD5626Entry = Entry(ad5626window, width=10)
+        AD5626Entry.bind('<MouseWheel>', onAD5626Scroll)
+        AD5626Entry.grid(row=1, column=1, columnspan=3, sticky=W)
+        AD5626Entry.delete(0,"end")
+        AD5626Entry.insert(0,0)
+        #
+        label3 = Label(ad5626window,text="SCLK PI/O Port ")
+        label3.grid(row=2, column=0, columnspan=1, sticky=W)
+        sclk1 = Radiobutton(ad5626window, text="0", variable=SCLKPort, value=PIO_0)
+        sclk1.grid(row=2, column=1, sticky=W)
+        sclk2 = Radiobutton(ad5626window, text="1", variable=SCLKPort, value=PIO_1)
+        sclk2.grid(row=2, column=2, sticky=W)
+        sclk3 = Radiobutton(ad5626window, text="2", variable=SCLKPort, value=PIO_2)
+        sclk3.grid(row=2, column=3, sticky=W)
+        sclk4 = Radiobutton(ad5626window, text="3", variable=SCLKPort, value=PIO_3)
+        sclk4.grid(row=2, column=4, sticky=W)
+        #
+        label4 = Label(ad5626window,text="SData PI/O Port ")
+        label4.grid(row=3, column=0, columnspan=1, sticky=W)
+        sdat1 = Radiobutton(ad5626window, text="0", variable=SDATAPort, value=PIO_0)
+        sdat1.grid(row=3, column=1, sticky=W)
+        sdat2 = Radiobutton(ad5626window, text="1", variable=SDATAPort, value=PIO_1)
+        sdat2.grid(row=3, column=2, sticky=W)
+        sdat3 = Radiobutton(ad5626window, text="2", variable=SDATAPort, value=PIO_2)
+        sdat3.grid(row=3, column=3, sticky=W)
+        sdat4 = Radiobutton(ad5626window, text="3", variable=SDATAPort, value=PIO_3)
+        sdat4.grid(row=3, column=4, sticky=W)
+        #
+        label5 = Label(ad5626window,text="Latch PI/O Port ")
+        label5.grid(row=4, column=0, columnspan=1, sticky=W)
+        slth1 = Radiobutton(ad5626window, text="0", variable=SLATCHPort, value=PIO_0)
+        slth1.grid(row=4, column=1, sticky=W)
+        slth2 = Radiobutton(ad5626window, text="1", variable=SLATCHPort, value=PIO_1)
+        slth2.grid(row=4, column=2, sticky=W)
+        slth3 = Radiobutton(ad5626window, text="2", variable=SLATCHPort, value=PIO_2)
+        slth3.grid(row=4, column=3, sticky=W)
+        slth4 = Radiobutton(ad5626window, text="3", variable=SLATCHPort, value=PIO_3)
+        slth4.grid(row=4, column=4, sticky=W)
+        #
+        bsn1 = Button(ad5626window, text='Send', style="W5.TButton", command=BSendGS)
+        bsn1.grid(row=5, column=0, sticky=W)
+        dismissgsbutton = Button(ad5626window, text="Dismiss", style="W8.TButton", command=DestroyAD5626Screen)
+        dismissgsbutton.grid(row=5, column=1, columnspan=2, sticky=W, pady=4)
+#
+def onAD5626Scroll(event):
+    onTextScroll(event)
+    BSendGS()
     
+def DestroyAD5626Screen():
+    global ad5626window, AD5626SerialStatus
+    
+    AD5626SerialStatus.set(0)
+    ad5626window.destroy()
+        
 def MakeGenericSerialWindow():
-    global serialwindow, GenericSerialStatus, SCLKPort, SDATAPort, SLATCHPort, SLatchPhase
+    global serialwindow, GenericSerialStatus, SCLKPort, SDATAPort, SLATCHPort, SLatchPhase, SClockPhase
     global NumBitsEntry, DataBitsEntry, SerDirection
     global PIO_0, PIO_1, PIO_2, PIO_3
 
@@ -14605,11 +14721,13 @@ def MakeGenericSerialWindow():
         serialwindow.protocol("WM_DELETE_WINDOW", DestroyGenericSerialScreen)
         #
         SCLKPort = IntVar(0)
-        SCLKPort.set(PIO_3)
+        SCLKPort.set(PIO_2)
         SDATAPort = IntVar(0)
         SDATAPort.set(PIO_1)
         SLATCHPort = IntVar(0)
+        SLATCHPort.set(PIO_0)
         SLatchPhase = IntVar(0)
+        SClockPhase = IntVar(0)
         SerDirection = IntVar(0)
         label = Label(serialwindow,text="Enter number of Bits")
         label.grid(row=1, column=0, columnspan=2, sticky=W)
@@ -14665,15 +14783,22 @@ def MakeGenericSerialWindow():
         sph2 = Radiobutton(serialwindow, text="1", variable=SLatchPhase, value=1)
         sph2.grid(row=6, column=2, sticky=W)
         #
+        label7 = Label(serialwindow,text="Clock Phase ")
+        label7.grid(row=7, column=0, columnspan=1, sticky=W)
+        sph7 = Radiobutton(serialwindow, text="0", variable=SClockPhase, value=0)
+        sph7.grid(row=7, column=1, sticky=W)
+        sph8 = Radiobutton(serialwindow, text="1", variable=SClockPhase, value=1)
+        sph8.grid(row=7, column=2, sticky=W)
+        #
         sdir1 = Radiobutton(serialwindow, text="LSB First", variable=SerDirection, value=0 )
-        sdir1.grid(row=7, column=0, sticky=W)
+        sdir1.grid(row=8, column=0, sticky=W)
         sdir2 = Radiobutton(serialwindow, text="MSB First", variable=SerDirection, value=1 )
-        sdir2.grid(row=7, column=1, columnspan=2, sticky=W)
+        sdir2.grid(row=8, column=1, columnspan=2, sticky=W)
 
         bsn1 = Button(serialwindow, text='Send', style="W5.TButton", command=BSendGS)
-        bsn1.grid(row=8, column=0, sticky=W)
+        bsn1.grid(row=9, column=0, sticky=W)
         dismissgsbutton = Button(serialwindow, text="Dismiss", style="W8.TButton", command=DestroyGenericSerialScreen)
-        dismissgsbutton.grid(row=8, column=1, columnspan=2, sticky=W, pady=4)
+        dismissgsbutton.grid(row=9, column=1, columnspan=2, sticky=W, pady=4)
         
 def DestroyGenericSerialScreen():
     global serialwindow, GenericSerialStatus
@@ -15076,6 +15201,7 @@ def SelectBoard():
     CHB = devx.channels['B']    # Open CHB
     CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z split mode
     if devx.hwver == "F":
+        print "Rev F Board I/O ports set"
         PIO_0 = 28
         PIO_1 = 29
         PIO_2 = 47
@@ -15827,6 +15953,7 @@ DacScreenStatus = IntVar(0)
 DacScreenStatus.set(0)
 MuxScreenStatus = IntVar(0)
 MuxScreenStatus.set(0)
+DualMuxMode = IntVar(0)
 MinigenScreenStatus = IntVar(0)
 MinigenScreenStatus.set(0)
 DA1ScreenStatus = IntVar(0)
@@ -15835,6 +15962,8 @@ DigPotScreenStatus = IntVar(0)
 DigPotScreenStatus.set(0)
 GenericSerialStatus = IntVar(0)
 GenericSerialStatus.set(0)
+AD5626SerialStatus = IntVar(0)
+AD5626SerialStatus.set(0)
 DigFiltStatus = IntVar(0)
 DigFiltStatus.set(0)
 CommandStatus = IntVar(0)
@@ -16237,6 +16366,9 @@ if EnableDigPotMode >0:
 if EnableGenericSerialMode >0:
     GenericSerialScreen = Button(frame2r, text="Generic Serial Output", style="W17.TButton", command=MakeGenericSerialWindow)
     GenericSerialScreen.pack(side=TOP)
+if EnableAD5626SerialMode >0:
+    AD5626SerialScreen = Button(frame2r, text="AD5626 Output", style="W17.TButton", command=MakeAD5626Window)
+    AD5626SerialScreen.pack(side=TOP)
 if EnableDigitalFilter >0:
     DigFiltScreen = Button(frame2r, text="Digital Filter", style="W17.TButton", command=MakeDigFiltWindow)
     DigFiltScreen.pack(side=TOP)

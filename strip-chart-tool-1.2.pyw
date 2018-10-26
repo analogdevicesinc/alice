@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 Strip chart recorder tool (1-13-2018)
+# ADALM1000 Strip chart recorder tool (10-25-2018)
 # For Python version > = 2.7.8
 # With external module pysmu (libsmu > = 1.0 ADALM1000 )
 # Created by D Mercer ()
@@ -14,19 +14,36 @@ from time import gmtime, strftime
 InOffA = InOffB = 0.0
 InGainA = InGainB = 1.0
 CANVASwidth = 1000
-CANVASheight = 200
+CANVASheight = 400
+COLORcanvas = "#000000"   # 100% black
+COLORgrid = "#808080"     # 50% Gray
+COLORzeroline = "#0000ff" # 100% blue
+COLORtrace2 = "#00ff00"   # 100% green
+COLORtrace1 = "#ff8000"   # 100% orange
 CHAMaxV = 0.0
 CHAMinV = 5.0
 CHBMaxV = 0.0
 CHBMinV = 5.0
 BaseSampleRate = 100000
-SampleRate = 45
+SampleRate = 50
 SampRates = (50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500)
 RunStatus = 0
+# Check if there is an alice_init.ini file to read in
+try:
+    InitFile = open("stripchart_init.ini")
+    for line in InitFile:
+        try:
+            exec( line.rstrip() )
+        except:
+            print "Skiping " + line.rstrip()
+    InitFile.close()
+except:
+    print "No Init File Read"
 #
 class StripChart:
     global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry
     global InOffA, InOffB, InGainA, InGainB, chalab, chblab
+    global COLORcanvas, COLORgrid, COLORzeroline, COLORtrace1, COLORtrace2
     global CHAMaxV, CHAMinV, CHBMaxV, CHBMinV, SampleDelayEntry
     global DCVA0, DCVB0, dlog, Dlog_open, Ztime
     
@@ -39,13 +56,13 @@ class StripChart:
         self.Reset()
 
     def makeGraph(self, frame):
-        global CANVASwidth, CANVASheight
+        global CANVASwidth, CANVASheight, COLORcanvas
         global gf
         self.sw = CANVASwidth # default 1000
         self.h = CANVASheight # default 200
         self.top = 2
         gf = Canvas(frame, width=self.sw, height=self.h+10,
-                    bg="#000", bd=0, highlightthickness=0)
+                    bg=COLORcanvas, bd=0, highlightthickness=0)
         gf.p = PhotoImage(width=2*self.sw, height=self.h)
         self.item = gf.create_image(0, self.top, image=gf.p, anchor=NW)
         return(gf)
@@ -53,7 +70,7 @@ class StripChart:
     def makeControls(self, frame):
         global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry, SRateScale
         global NumGrid, SelCHA, SelCHB, dlog, Dlog_open, chalab, chblab, SampleDelayEntry
-        global SampRates
+        global SampRates, InOffA, InOffB, InGainA, InGainB
         
         cf = Frame(frame, borderwidth=1, relief="raised")
         br = Button(cf, text="Run", command=self.Run)
@@ -95,12 +112,12 @@ class StripChart:
         CHAVGainEntry.bind('<MouseWheel>', onTextScroll)
         CHAVGainEntry.pack(side=LEFT)
         CHAVGainEntry.delete(0,"end")
-        CHAVGainEntry.insert(0,1.0)
+        CHAVGainEntry.insert(0,InGainA)
         CHAVOffsetEntry = Entry(ProbeA, width=6) #
         CHAVOffsetEntry.bind('<MouseWheel>', onTextScroll)
         CHAVOffsetEntry.pack(side=LEFT)
         CHAVOffsetEntry.delete(0,"end")
-        CHAVOffsetEntry.insert(0,0.0)
+        CHAVOffsetEntry.insert(0,InOffA)
         #
         gain2lab = Label(ProbeA, text="CB")
         gain2lab.pack(side=LEFT)
@@ -108,12 +125,12 @@ class StripChart:
         CHBVGainEntry.bind('<MouseWheel>', onTextScroll)
         CHBVGainEntry.pack(side=LEFT)
         CHBVGainEntry.delete(0,"end")
-        CHBVGainEntry.insert(0,1.0)
+        CHBVGainEntry.insert(0,InGainB)
         CHBVOffsetEntry = Entry(ProbeA, width=6) #
         CHBVOffsetEntry.bind('<MouseWheel>', onTextScroll)
         CHBVOffsetEntry.pack(side=LEFT)
         CHBVOffsetEntry.delete(0,"end")
-        CHBVOffsetEntry.insert(0,0.0)
+        CHBVOffsetEntry.insert(0,InOffB)
         b1 = Button(ProbeA, text='Save', command=BSaveCal)
         b1.pack(side=LEFT)
         b2 = Button(ProbeA, text='Load', command=BLoadCal)
@@ -169,9 +186,10 @@ class StripChart:
     def Reset(self):
         global CHAMaxV, CHAMinV, CHBMaxV, CHBMinV
         global InOffA, InGainA, InOffB, InGainB
+        global COLORcanvas
         
         self.Stop()
-        self.clearstrip(self.gf.p, '#000')
+        self.clearstrip(self.gf.p, COLORcanvas)
         CHAMaxV = (0.0 - InOffA) * InGainA
         CHAMinV = (5.0 - InOffA) * InGainA
         CHBMaxV = (0.0 - InOffB) * InGainB
@@ -186,6 +204,7 @@ class StripChart:
     def do_start(self):
         global DCVA0, DCVB0
         global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry
+        global COLORcanvas, COLORgrid, COLORzeroline, COLORtrace1, COLORtrace2
         global NumGrid, SelCHA, SelCHB, SampleRate
         
         t = 0
@@ -208,17 +227,17 @@ class StripChart:
                 if SelCHA.get() and SelCHB.get():
                     self.scrollstrip(self.gf.p,
                        (0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.5+y1,0.5+y2),
-                       ('#808080','#808080','#808080','#808080','#0000D0','#808080','#808080','#808000','#808080','#00ff00','#ff8000'),
+                       (COLORgrid, COLORgrid, COLORgrid, COLORgrid, COLORzeroline, COLORgrid, COLORgrid, COLORgrid, COLORgrid, COLORtrace1, COLORtrace2),
                          "" if t % SampleRate else "#088")
                 elif SelCHA.get():
                     self.scrollstrip(self.gf.p,
                        (0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.5+y2),
-                       ('#808080','#808080','#808080','#808080','#0000D0','#808080','#808080','#808000','#808080','#ff8000'),
+                       (COLORgrid, COLORgrid, COLORgrid, COLORgrid, COLORzeroline, COLORgrid, COLORgrid, COLORgrid, COLORgrid, COLORtrace2),
                          "" if t % SampleRate else "#088")
                 elif SelCHB.get():
                     self.scrollstrip(self.gf.p,
                        (0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.5+y1),
-                       ('#808080','#808080','#808080','#808080','#0000D0','#808080','#808080','#808000','#808080','#00ff00'),
+                       (COLORgrid, COLORgrid, COLORgrid, COLORgrid, COLORzeroline, COLORgrid, COLORgrid, COLORgrid, COLORgrid, COLORtrace1),
                          "" if t % SampleRate else "#088")
             else: # two grids
                 y1 = (DCVB0/12.5)-0.2 # scale / 0ffset 0 to 5 V to +/- 0.2
@@ -226,17 +245,17 @@ class StripChart:
                 if SelCHA.get() and SelCHB.get():
                     self.scrollstrip(self.gf.p,
                        (0.05,0.15,0.25,0.35,0.45,0.25+y1,0.55,0.65,0.75,0.85,0.95,0.75+y2),
-                       ('#008000','#008000','#008000','#008000','#008000','#00ff00','#804000','#804000','#804000','#804000','#804000','#ff8000'),
+                       (COLORgrid,COLORgrid,COLORzeroline,COLORgrid,COLORgrid,COLORtrace1,COLORgrid,COLORgrid,COLORzeroline,COLORgrid,COLORgrid,COLORtrace2),
                          "" if t % SampleRate else "#088")
                 elif SelCHA.get():
                     self.scrollstrip(self.gf.p,
                        (0.05,0.15,0.25,0.35,0.45,0.55,0.65,0.75,0.85,0.95,0.75+y2),
-                       ('#008000','#008000','#008000','#008000','#008000','#804000','#804000','#804000','#804000','#804000','#ff8000'),
+                       (COLORgrid,COLORgrid,COLORgrid,COLORgrid,COLORgrid,COLORgrid,COLORgrid,COLORzeroline,COLORgrid,COLORgrid,COLORtrace2),
                          "" if t % SampleRate else "#088")
                 elif SelCHB.get():
                     self.scrollstrip(self.gf.p,
                        (0.05,0.15,0.25,0.35,0.45,0.25+y1,0.55,0.65,0.75,0.85,0.95),
-                       ('#008000','#008000','#008000','#008000','#008000','#00ff00','#804000','#804000','#804000','#804000','#804000'),
+                       (COLORgrid,COLORgrid,COLORzeroline,COLORgrid,COLORgrid,COLORtrace1,COLORgrid,COLORgrid,COLORgrid,COLORgrid,COLORgrid),
                          "" if t % SampleRate else "#088")
             t += 1
             try:
@@ -473,7 +492,7 @@ def main():
     """
     #
     root = Tk()
-    root.title("ALICE 1.2 (1-13-2018): ALM1000 StripChart")
+    root.title("ALICE 1.2 (10-25-2018): ALM1000 StripChart")
     img = PhotoImage(data=TBicon)
     root.call('wm', 'iconphoto', root._w, img)
     #
