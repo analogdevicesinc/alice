@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 alice-desktop 1.2.py(w) (10-26-2018)
+# ADALM1000 alice-desktop 1.2.py(w) (11-19-2018)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu.rework >= 1.0 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -33,7 +33,7 @@ try:
 except:
     pysmu_found = False
 #
-RevDate = "(26 Oct 2018)"
+RevDate = "(19 Nov 2018)"
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.2.1/alice-desktop-1.2-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
@@ -169,6 +169,8 @@ FFTwindow = IntVar(0)   # FFT window function variable
 FFTwindow.set(5)        # FFTwindow 0=None (rectangular B=1), 1=Cosine (B=1.24), 2=Triangular non-zero endpoints (B=1.33),
                         # 3=Hann (B=1.5), 4=Blackman (B=1.73), 5=Nuttall (B=2.02), 6=Flat top (B=3.77)
 RelPhaseCorrection = 15 # Relative Phase error seems to be a random number each time board is powered up
+RelPhaseCenter = IntVar(0)
+RelPhaseCenter.set(0) # Center line value for phase plots
 EnableCommandInterface = 0
 EnableMuxMode = 1
 EnableMinigenMode = 0
@@ -634,7 +636,7 @@ def BSaveConfig(filename):
     global ChaMeasString1, ChaMeasString2, ChaMeasString3, ChaMeasString4, ChaMeasString5, ChaMeasString6
     global ChbMeasString1, ChbMeasString2, ChbMeasString3, ChbMeasString4, ChbMeasString5, ChbMeasString6
     global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
-    global CHA_A1, CHA_A2, CHB_A1, CHB_A2
+    global CHA_A1, CHA_A2, CHB_A1, CHB_A2, RelPhaseCenter
     global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
     global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
     
@@ -692,6 +694,7 @@ def BSaveConfig(filename):
     if SpectrumScreenStatus.get() > 0:
         ConfgFile.write('global GRWF; GRWF = ' + str(GRWF) + '\n')
         ConfgFile.write('global GRHF; GRHF = ' + str(GRHF) + '\n')
+        ConfgFile.write('RelPhaseCenter.set(' + str(RelPhaseCenter.get()) + ')\n')
         ConfgFile.write('MakeSpectrumWindow()\n')
         ConfgFile.write("freqwindow.geometry('+" + str(freqwindow.winfo_x()) + '+' + str(freqwindow.winfo_y()) + "')\n")
         ConfgFile.write('ShowC1_VdB.set(' + str(ShowC1_VdB.get()) + ')\n')
@@ -745,6 +748,7 @@ def BSaveConfig(filename):
     if BodeScreenStatus.get() == 1:
         ConfgFile.write('global GRWBP; GRWBP = ' + str(GRWBP) + '\n')
         ConfgFile.write('global GRHBP; GRHBP = ' + str(GRHBP) + '\n')
+        ConfgFile.write('RelPhaseCenter.set(' + str(RelPhaseCenter.get()) + ')\n')
         ConfgFile.write('MakeBodeWindow()\n')
         ConfgFile.write("bodewindow.geometry('+" + str(bodewindow.winfo_x()) + '+' + str(bodewindow.winfo_y()) + "')\n")
         ConfgFile.write('ShowCA_VdB.set(' + str(ShowCA_VdB.get()) + ')\n')
@@ -1106,7 +1110,7 @@ def BLoadConfig(filename):
     global ChaMeasString1, ChaMeasString2, ChaMeasString3, ChaMeasString4, ChaMeasString5, ChaMeasString6
     global ChbMeasString1, ChbMeasString2, ChbMeasString3, ChbMeasString4, ChbMeasString5, ChbMeasString6
     global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
-    global CHA_A1, CHA_A2, CHB_A1, CHB_A2
+    global CHA_A1, CHA_A2, CHB_A1, CHB_A2, RelPhaseCenter
     global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
     global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
     
@@ -1306,14 +1310,15 @@ def BSaveScreenBP():
         UpdateBodeScreen()
 #
 def BSaveData():
-    global VBuffA, VBuffB, IBuffA, IBuffB
+    global VBuffA, VBuffB, IBuffA, IBuffB, SAMPLErate
 
     # open file to save data
     filename = asksaveasfilename(defaultextension = ".csv", filetypes=[("Comma Separated Values", "*.csv")])
     DataFile = open(filename, 'w')
     DataFile.write( 'Sample-#, CA-V, CA-I, CB-V, CB-I \n' )
     for index in range(len(VBuffA)):
-        DataFile.write( str(index) + ', ' + str(VBuffA[index]) + ', ' + str(IBuffA[index]) + ', '
+        TimePnt = float((index+0.0)/SAMPLErate)
+        DataFile.write( str(TimePnt) + ', ' + str(VBuffA[index]) + ', ' + str(IBuffA[index]) + ', '
                         + str(VBuffB[index]) + ', ' + str(IBuffB[index]) + '\n')
     DataFile.close()
 #
@@ -9529,16 +9534,14 @@ def BCSVfile(): # Store the trace as CSV file [frequency, magnitude or dB value]
         F = FBins[FStep[n]] # look up frequency bin in list of bins
         txt = str(F)
         if ShowCA_VdB.get() == 1:
-            if dB == 1:
-                V = 10 * math.log10(float(FSweepAdB[n])) + 17  # Add 17 dB for max value of +10 dB
-            else:
-                V = 50.12 * float(FFSweepAdB[n])# scale to Vrms
+            V = 10 * math.log10(float(FSweepAdB[n])) + 17  # Add 17 dB for max value of +10 dB
+            if dB == 0:
+                V = 10.0**(V/20.0)
             txt = txt + "," + str(V) 
         if ShowCB_VdB.get() == 1:
-            if dB == 1:
-                V = 10 * math.log10(float(FSweepBdB[n])) + 17  # Add 17 dB for max value of +10 dB
-            else:
-                V = 50.12 * float(FSweepBdB[n]) # scale to Vrms
+            V = 10 * math.log10(float(FSweepBdB[n])) + 17  # Add 17 dB for max value of +10 dB
+            if dB == 0:
+                V = 10.0**(V/20.0)
             txt = txt  + "," + str(V)
         if ShowCA_P.get() == 1:
             RelPhase = FSweepAPh[n]#-FSweepBPh[n]
@@ -10245,7 +10248,7 @@ def MakeFreqTrace():        # Update the grid and trace
     global GRHF          # Screenheight
     global GRWF          # Screenwidth
     global AWGSAMPLErate, HScale, Fsample
-    global StartFreqEntry, StopFreqEntry
+    global StartFreqEntry, StopFreqEntry, PhCenFreqEntry, RelPhaseCenter
     global STARTsample, STOPsample, LoopNum, FSweepMode
     global FreqTraceMode
     global T1Fline, T2Fline, TFMline, T1Pline, T2Pline
@@ -10275,6 +10278,14 @@ def MakeFreqTrace():        # Update the grid and trace
         StopFreqEntry.delete(0,"end")
         StopFreqEntry.insert(0,50000)
         StopFrequency = 50000
+    try:
+        Phasecenter = int(PhCenFreqEntry.get())
+        RelPhaseCenter.set(Phasecenter)
+    except:
+        PhCenFreqEntry.delete(0,"end")
+        PhCenFreqEntry.insert(0,0)
+        RelPhaseCenter.set(0)
+        Phasecenter = 0
     if ShowC1_VdB.get() == 1 or ShowMathSA.get() > 0:
         TRACEsize = len(FFTresultA)     # Set the trace length
     elif ShowC2_VdB.get() == 1 or ShowMathSA.get() > 0:
@@ -10373,6 +10384,7 @@ def MakeFreqTrace():        # Update the grid and trace
                 RelPhase = PhaseMemoryA[n]-PhaseMemoryB[n]
             else:
                 RelPhase = PhaseA[n]-PhaseB[n]
+            RelPhase = RelPhase - Phasecenter
             if RelPhase > 180:
                 RelPhase = RelPhase - 360
             elif RelPhase < -180:
@@ -10387,6 +10399,7 @@ def MakeFreqTrace():        # Update the grid and trace
                 RelPhase = PhaseMemoryB[n]-PhaseMemoryA[n]
             else:
                 RelPhase = PhaseB[n]-PhaseA[n]
+            RelPhase = RelPhase - Phasecenter
             if RelPhase > 180:
                 RelPhase = RelPhase - 360
             elif RelPhase < -180:
@@ -10430,7 +10443,7 @@ def MakeBodeTrace():        # Update the grid and trace
     global AWGSAMPLErate, HScaleBP, RUNstatus
     global StartBodeEntry, StopBodeEntry
     global STARTsample, STOPsample, LoopNum, FSweepMode
-    global FreqTraceMode
+    global FreqTraceMode, RelPhaseCenter, PhCenBodeEntry
     global TAFline, TBFline, TBPMline, TAPline, TBPline
     global Vdiv         # Number of vertical divisions
     global X0LBP        # Left top X value
@@ -10457,6 +10470,14 @@ def MakeBodeTrace():        # Update the grid and trace
         StartBodeEntry.delete(0,"end")
         StartBodeEntry.insert(0,100)
         BeginFreq = 100
+    try:
+        Phasecenter = int(PhCenBodeEntry.get())
+        RelPhaseCenter.set(Phasecenter)
+    except:
+        PhCenBodeEntry.delete(0,"end")
+        PhCenBodeEntry.insert(0,0)
+        RelPhaseCenter.set(0)
+        Phasecenter = 0
     BeginIndex = int((BeginFreq/50000)*16384)
     EndIndex = int((EndFreq/50000)*16384)
     if FSweepMode.get() > 0 and len(FSweepAdB) > 4:
@@ -10535,22 +10556,24 @@ def MakeBodeTrace():        # Update the grid and trace
                 if ShowCA_P.get() == 1:
                     TAPline.append(int(x + 0.5))
                     RelPhase = FSweepAPh[n] - FSweepBPh[n]
+                    RelPhase = RelPhase - Phasecenter
                     if RelPhase > 180:
                         RelPhase = RelPhase - 360
                     elif RelPhase < -180:
                         RelPhase = RelPhase + 360
-                    PhErr = 0.0018 * F # calculate pahse error due half sample period offset
+                    PhErr = 0.0018 * F # calculate phase error due half sample period offset
                     RelPhase = RelPhase + PhErr - 12
                     ya = Yp - Yphconv * RelPhase
                     TAPline.append(int(ya + 0.5))
                 if ShowCB_P.get() == 1:
                     TBPline.append(int(x + 0.5))
                     RelPhase = FSweepBPh[n] - FSweepAPh[n]
+                    RelPhase = RelPhase - Phasecenter
                     if RelPhase > 180:
                         RelPhase = RelPhase - 360
                     elif RelPhase < -180:
                         RelPhase = RelPhase + 360
-                    PhErr = 0.0018 * F # calculate pahse error due half sample period offset
+                    PhErr = 0.0018 * F # calculate phase error due half sample period offset
                     RelPhase = RelPhase - PhErr - 12
                     ya = Yp - Yphconv * RelPhase
                     TBPline.append(int(ya + 0.5))
@@ -10599,7 +10622,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
     global StartBodeEntry, StopBodeEntry
     global ShowCA_P, ShowCB_P, ShowRA_VdB, ShowRB_VdB, ShowMarkerBP
     global ShowCA_RdB, ShowCA_RP, ShowCB_RdB, ShowCB_RP
-    global ShowMathBP, BodeDisp
+    global ShowMathBP, BodeDisp, RelPhaseCenter, PhCenBodeEntry
     global ShowBPCur, ShowBdBCur, BPCursor, BdBCursor
     global TAFline, TBFline, TAPline, TAFRline, TBFRline, TBPMline, TBPRMline
     global TAPRline, TBPRline
@@ -10625,6 +10648,14 @@ def MakeBodeScreen():       # Update the screen with traces and text
         StartBodeEntry.delete(0,"end")
         StartBodeEntry.insert(0,100)
         BeginFreq = 100
+    try:
+        Phasecenter = int(PhCenBodeEntry.get())
+        RelPhaseCenter.set(Phasecenter)
+    except:
+        PhCenBodeEntry.delete(0,"end")
+        PhCenBodeEntry.insert(0,0)
+        RelPhaseCenter.set(0)
+        Phasecenter = 0
     # Draw horizontal grid lines
     i = 0
     x1 = X0LBP
@@ -10641,6 +10672,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
         Bodeca.create_text(x1-3, y, text=Vaxis_label, fill=COLORtrace1, anchor="e", font=("arial", 8 ))
         if ShowCA_P.get() == 1 or ShowCB_P.get() == 1:
             Vaxis_value = ( 180 - ( i * (360 / Vdiv.get())))
+            Vaxis_value = Vaxis_value + Phasecenter
             Vaxis_label = str(Vaxis_value)
             Bodeca.create_text(x2+3, y, text=Vaxis_label, fill=COLORtrace3, anchor="w", font=("arial", 8 ))
         i = i + 1
@@ -10731,7 +10763,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
             # Vertical conversion factors (level degrees) and border limits
             Yconv = float(GRHBP) / 360.0 # Conversion factors, Yconv is the number of screenpoints per degree
             Yc = float(Y0TBP)  # Yc is the 180 degree position
-            yvdB = 180 + ((Yc-BdBCursor)/Yconv)
+            yvdB = 180 + ((Yc-BdBCursor)/Yconv) + Phasecenter
             VdBString = ' {0:.1f} '.format(yvdB)
             V_label = VdBString + " Deg"
         Bodeca.create_text(BPCursor+1, BdBCursor+5, text=V_label, fill=COLORtext, anchor="w", font=("arial", 8 ))
@@ -11412,16 +11444,14 @@ def STOREcsvfile():     # Store the trace as CSV file [frequency, magnitude or d
         F = n * Fsample
         txt = str(F)
         if ShowC1_VdB.get() == 1:
-            if dB == 1:
-                V = 10 * math.log10(float(FFTresultA[n])) + 17  # Add 17 dB for max value of +10 dB
-            else:
-                V = 7.079458 * float(FFTresultA[n])# scale to Vrms
+            V = 10 * math.log10(float(FFTresultA[n])) + 17  # Add 17 dB for max value of +10 dB
+            if dB == 0:
+                V = 10.0**(V/20.0)
             txt = txt + "," + str(V) 
         if ShowC2_VdB.get() == 1:
-            if dB == 1:
-                V = 10 * math.log10(float(FFTresultB[n])) + 17  # Add 17 dB for max value of +10 dB
-            else:
-                V = 7.079458 * float(FFTresultB[n]) # scale to Vrms
+            V = 10 * math.log10(float(FFTresultB[n])) + 17  # Add 17 dB for max value of +10 dB
+            if dB == 0:
+                V = 10.0**(V/20.0)
             txt = txt  + "," + str(V)
         if ShowC1_P.get() == 1:
             RelPhase = PhaseA[n]-PhaseB[n]
@@ -11465,7 +11495,7 @@ def MakeFreqScreen():       # Update the screen with traces and text
     global RUNstatus    # 0 stopped, 1 start, 2 running, 3 stop now, 4 stop and restart
     global AWGSAMPLErate, SingleShot, HScale, HarmonicMarkers
     global SMPfft       # number of FFT samples
-    global StartFreqEntry, StopFreqEntry
+    global StartFreqEntry, StopFreqEntry, PhCenFreqEntry, RelPhaseCenter
     global ShowC1_P, ShowC2_P, ShowRA_VdB, ShowRB_VdB, ShowMarker
     global ShowRA_P, ShowRB_P, ShowMathSA, FreqDisp
     global ShowFCur, ShowdBCur, FCursor, dBCursor
@@ -11492,6 +11522,14 @@ def MakeFreqScreen():       # Update the screen with traces and text
         StopFreqEntry.delete(0,"end")
         StopFreqEntry.insert(0,100)
         StopFrequency = 100
+    try:
+        Phasecenter = int(PhCenFreqEntry.get())
+        RelPhaseCenter.set(Phasecenter)
+    except:
+        PhCenFreqEntry.delete(0,"end")
+        PhCenFreqEntry.insert(0,0)
+        RelPhaseCenter.set(0)
+        Phasecenter = 0
     # Draw horizontal grid lines
     i = 0
     x1 = X0LF
@@ -11508,6 +11546,7 @@ def MakeFreqScreen():       # Update the screen with traces and text
         Freqca.create_text(x1-3, y, text=Vaxis_label, fill=COLORtrace1, anchor="e", font=("arial", 8 ))
         if ShowC1_P.get() == 1 or ShowC2_P.get() == 1:
             Vaxis_value = ( 180 - ( i * (360 / Vdiv.get())))
+            Vaxis_value = Vaxis_value + Phasecenter
             Vaxis_label = str(Vaxis_value)
             Freqca.create_text(x2+3, y, text=Vaxis_label, fill=COLORtrace3, anchor="w", font=("arial", 8 ))
         i = i + 1
@@ -12987,8 +13026,8 @@ def BDSweepFromFile():
 def MakeBodeWindow():
     global logo, SmoothCurvesBP, CutDC, SingleShotBP, bodewindow
     global CANVASwidthBP, CANVASheightBP, FFTwindow, CutDC, AWGAMode, AWGAShape, AWGBMode 
-    global ShowCA_VdB, ShowCA_P, ShowCB_VdB, ShowCB_P, ShowMarkerBP, BodeDisp
-    global ShowCA_RdB, ShowCA_RP, ShowCB_RdB, ShowCB_RP, ShowMathBP, ShowRMathBP
+    global ShowCA_VdB, ShowCA_P, ShowCB_VdB, ShowCB_P, ShowMarkerBP, BodeDisp, RelPhaseCenter
+    global ShowCA_RdB, ShowCA_RP, ShowCB_RdB, ShowCB_RP, ShowMathBP, ShowRMathBP, PhCenBodeEntry
     global BPSweepMode, BPSweepCont, Bodeca, BodeScreenStatus, RevDate, SweepStepBodeEntry
     global HScaleBP, StopBodeEntry, StartBodeEntry, ShowBPCur, ShowBdBCur, BPCursor, BdBCursor
     global GRWBP, GRHBP, X0LBP, FStepSync, FSweepSync, BDSweepFile, MinigenScreenStatus
@@ -13122,6 +13161,7 @@ def MakeBodeWindow():
         Showmenu.pack(side=TOP)
         # Horz Scale        
         HScaleBP = IntVar(0)
+        HScaleBP.set(1)
         HzScale = Frame( frame2bp )
         HzScale.pack(side=TOP)
         rb1 = Radiobutton(HzScale, text="Lin F", variable=HScaleBP, value=0, command=UpdateBodeTrace )
@@ -13149,6 +13189,17 @@ def MakeBodeWindow():
         bd7.pack(side=LEFT)
         bd8 = Button(LVSrange, text="LVL-1", style="W8.TButton", command=Blevel1BP)
         bd8.pack(side=LEFT)
+
+        PhaseCenter = Frame( frame2bp )
+        PhaseCenter.pack(side=TOP)
+        PhCenlab = Label(PhaseCenter, text="Center Phase on")
+        PhCenlab.pack(side=LEFT)
+        PhCenBodeEntry = Entry(PhaseCenter, width=5)
+        PhCenBodeEntry.bind('<MouseWheel>', onTextScroll)
+        PhCenBodeEntry.bind('<Key>', onTextKey)
+        PhCenBodeEntry.pack(side=LEFT)
+        PhCenBodeEntry.delete(0,"end")
+        PhCenBodeEntry.insert(0,RelPhaseCenter.get())
         # sweep generator mode menu buttons
         FSweepmenu = Label(frame2bp, text="-Sweep Gen-", style="A10B.TLabel")
         FSweepmenu.pack(side=TOP)
@@ -13246,7 +13297,7 @@ def MakeSpectrumWindow():
     global ShowRA_VdB, ShowRA_P, ShowRB_VdB, ShowRB_P, ShowMathSA
     global ShowRMath, FSweepMode, FSweepCont, Freqca, SpectrumScreenStatus, RevDate
     global HScale, StopFreqEntry, StartFreqEntry, ShowFCur, ShowdBCur, FCursor, dBCursor
-    global CANVASwidthF, GRWF, X0LF, CANVASheightF, GRHF
+    global CANVASwidthF, GRWF, X0LF, CANVASheightF, GRHF, PhCenFreqEntry, RelPhaseCenter
     
     if SpectrumScreenStatus.get() == 0:
         SpectrumScreenStatus.set(1)
@@ -13429,7 +13480,18 @@ def MakeSpectrumWindow():
         rb1.pack(side=LEFT)
         rb2 = Radiobutton(HzScale, text="Log F", variable=HScale, value=1, command=UpdateFreqTrace )
         rb2.pack(side=LEFT)
-        
+        #
+        PhaseCenter = Frame( frame2fr )
+        PhaseCenter.pack(side=TOP)
+        PhCenlab = Label(PhaseCenter, text="Center Phase on")
+        PhCenlab.pack(side=LEFT)
+        PhCenFreqEntry = Entry(PhaseCenter, width=5)
+        PhCenFreqEntry.bind('<MouseWheel>', onTextScroll)
+        PhCenFreqEntry.bind('<Key>', onTextKey)
+        PhCenFreqEntry.pack(side=LEFT)
+        PhCenFreqEntry.delete(0,"end")
+        PhCenFreqEntry.insert(0,RelPhaseCenter.get())
+        #
         DBrange = Frame( frame2fr )
         DBrange.pack(side=TOP)
         b3 = Button(DBrange, text="+dB/div", style="W8.TButton", command=BDBdiv2)
@@ -14576,7 +14638,7 @@ def BSendGS():
             if DValue < 0:
                 DValue = 0
                 AD5626Entry.delete(0,"end")
-                AD5626Entry.insert(0,0.0)
+                AD5626Entry.insert(0,'0.000')
             if DValue > 4095:
                 DValue = 4095
                 AD5626Entry.delete(0,"end")
@@ -14584,7 +14646,7 @@ def BSendGS():
         except:
             DValue = 0
             AD5626Entry.delete(0,"end")
-            AD5626Entry.insert(0,0.0)
+            AD5626Entry.insert(0,'0.000')
         NumBits = 12
     # print DValue
     binstr = bin(DValue)
@@ -14598,6 +14660,9 @@ def BSendGS():
         LatchInt = 0x50
         LatchEnd = 0x51
     else:
+        LatchInt = 0x51
+        LatchEnd = 0x50
+    if AD5626SerialStatus.get() > 0:
         LatchInt = 0x51
         LatchEnd = 0x50
     if SClockPhase.get() == 0:
@@ -14658,7 +14723,7 @@ def MakeAD5626Window():
         AD5626Entry.bind('<MouseWheel>', onAD5626Scroll)
         AD5626Entry.grid(row=1, column=1, columnspan=3, sticky=W)
         AD5626Entry.delete(0,"end")
-        AD5626Entry.insert(0,0)
+        AD5626Entry.insert(0,'0.000')
         #
         label3 = Label(ad5626window,text="SCLK PI/O Port ")
         label3.grid(row=2, column=0, columnspan=1, sticky=W)

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 Strip chart recorder tool (10-25-2018)
+# ADALM1000 Strip chart recorder tool (11-7-2018)
 # For Python version > = 2.7.8
 # With external module pysmu (libsmu > = 1.0 ADALM1000 )
 # Created by D Mercer ()
@@ -45,10 +45,11 @@ class StripChart:
     global InOffA, InOffB, InGainA, InGainB, chalab, chblab
     global COLORcanvas, COLORgrid, COLORzeroline, COLORtrace1, COLORtrace2
     global CHAMaxV, CHAMinV, CHBMaxV, CHBMinV, SampleDelayEntry
-    global DCVA0, DCVB0, dlog, Dlog_open, Ztime
+    global DCVA0, DCVB0, dlog, Dlog_open, Ztime, Run_For, RunForEntry
     
     def __init__(self, root):
         global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry, SampleDelayEntry
+        global Run_For, RunForEntry
         self.gf = self.makeGraph(root)
         self.cf = self.makeControls(root)
         self.gf.pack()
@@ -70,31 +71,39 @@ class StripChart:
     def makeControls(self, frame):
         global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry, SRateScale
         global NumGrid, SelCHA, SelCHB, dlog, Dlog_open, chalab, chblab, SampleDelayEntry
+        global Run_For, RunForEntry
         global SampRates, InOffA, InOffB, InGainA, InGainB
         
         cf = Frame(frame, borderwidth=1, relief="raised")
-        br = Button(cf, text="Run", command=self.Run)
+        br = Button(cf, text="Run", bg='green', command=self.Run)
         br.grid(column=2, row=2)
-        bs = Button(cf, text="Stop", command=self.Stop)
-        bs.grid(column=4, row=2)
-        bt = Button(cf, text="Reset", command=self.Reset)
-        bt.grid(column=6, row=2)
-        bss = Button(cf, text="Save Screen", command=BSaveScreen)
-        bss.grid(column=8, row=2, columnspan=2)
-        dlog = IntVar()
-        dlog.set(0)
-        Dlog_open = IntVar()
-        Dlog_open.set(0)
-        dlog1 = Checkbutton(cf, text="Start Data Log", variable=dlog)
-        dlog1.grid(column=10, row=2, columnspan=2)
-        sampdeylab = Label(cf, text="Sample delay")
-        sampdeylab.grid(column=12,row=2)
+        bs = Button(cf, text="Stop", bg='red',command=self.Stop)
+        bs.grid(column=3, row=2)
+        bt = Button(cf, text="Reset", bg='yellow', command=self.Reset)
+        bt.grid(column=4, row=2)
+        bexit = Button(cf, text="Exit", command=close_out)
+        bexit.grid(column=5,row=2)
+        bss = Button(cf, text="Save Screen", bg='cyan', command=BSaveScreen)
+        bss.grid(column=6, row=2, columnspan=1)
+        brf = Label(cf, text="Run For")
+        brf.grid(column=7, row=2)
+        Run_For = IntVar()
+        Run_For.set(0)
+        runfor = Checkbutton(cf, text="Samples", variable=Run_For)
+        runfor.grid(column=8, row=2, columnspan=1)
+        RunForEntry = Entry(cf, width=4)
+        RunForEntry.bind('<MouseWheel>', onTextScroll)
+        RunForEntry.grid(column=9,row=2)
+        RunForEntry.delete(0,"end")
+        RunForEntry.insert(0,0)
+        
+        sampdeylab = Label(cf, text="Delay")
+        sampdeylab.grid(column=10,row=2)
         SampleDelayEntry = Entry(cf, width=4)
-        SampleDelayEntry.grid(column=13,row=2)
+        SampleDelayEntry.bind('<MouseWheel>', onTextScroll)
+        SampleDelayEntry.grid(column=11,row=2)
         SampleDelayEntry.delete(0,"end")
         SampleDelayEntry.insert(0,0.0)
-        bexit = Button(cf, text="Exit", command=close_out)
-        bexit.grid(column=14,row=2)
         # Channel data displays
         chalab = Label(cf, text="CHA 0.000 V CHA Max 0.000 V CHA Min 0.000 V", font = "Arial 12 bold")
         chalab.grid(row=2, column=0, sticky=W)
@@ -138,28 +147,36 @@ class StripChart:
         #
         SelCHA = IntVar(0)
         selcha = Checkbutton(cf, text="CH A", variable=SelCHA, command = self.ChangeGrid)
-        selcha.grid(row=3, column=9, sticky=W)
+        selcha.grid(row=3, column=5, sticky=W)
         SelCHB = IntVar(0)
         selchb = Checkbutton(cf, text="CH B", variable=SelCHB, command = self.ChangeGrid)
-        selchb.grid(row=3, column=10, sticky=W)
+        selchb.grid(row=3, column=6, sticky=W)
         NumGrid = IntVar(0)
         rb1 = Radiobutton(cf, text="1 Grid", variable=NumGrid, value=0, command = self.ChangeGrid )
-        rb1.grid(row=3, column=11, sticky=W)
+        rb1.grid(row=3, column=7, sticky=W)
         rb2 = Radiobutton(cf, text="2 Grid", variable=NumGrid, value=1, command = self.ChangeGrid )
-        rb2.grid(row=3, column=12, sticky=W)
+        rb2.grid(row=3, column=8, sticky=W)
         #
         SRateScale = Spinbox(cf, width=5, values=SampRates)
         SRateScale.bind('<MouseWheel>', onSpinBoxScroll)
-        SRateScale.grid(row=3, column=13, sticky=W)
+        SRateScale.grid(row=3, column=9, sticky=W)
         #
         self.fps = Label(cf, text="0 Sps")
-        self.fps.grid(row=3, column=14, columnspan=1)
+        self.fps.grid(row=3, column=10, columnspan=1)
+        dlog = IntVar()
+        dlog.set(0)
+        Dlog_open = IntVar()
+        Dlog_open.set(0)
+        dlog1 = Checkbutton(cf, text="Data Log", variable=dlog)
+        dlog1.grid(column=11, row=3, columnspan=1)
+        #
         SelCHA.set(1)
         SelCHB.set(1)
         return(cf)
 
     def Run(self):
         global Ztime, Dlog_open, dlog, session
+        global Run_For, RunForEntry
         
         self.go = 1
         for t in threading.enumerate():
@@ -176,6 +193,8 @@ class StripChart:
             Dlog_open.set(0)
 
     def Stop(self):
+        global Run_For, RunForEntry
+        
         self.go = 0
         for t in threading.enumerate():
             if t.name == "_gen_":
@@ -206,11 +225,15 @@ class StripChart:
         global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry
         global COLORcanvas, COLORgrid, COLORzeroline, COLORtrace1, COLORtrace2
         global NumGrid, SelCHA, SelCHB, SampleRate
+        global Run_For, RunForEntry
         
         t = 0
         y2 = 0
         tx = time.time()
-        while self.go:
+        # add sample counter start here
+        loop_end = int(eval(RunForEntry.get()))
+        loop_count = 0
+        while self.go and (loop_count < loop_end): # loop forever or till sample count reached
             Analog_in()
             #
             if DCVB0 > 5.0:
@@ -268,6 +291,10 @@ class StripChart:
                 self.fps.config(text='%d Sps' % SampleRate)
                 tx = tx2
                 SampleRate = RateScale
+            if Run_For.get() == 1:
+                loop_count = loop_count + 1
+            else:
+                loop_count = 0
             #time.sleep(0.075)
 
     def clearstrip(self, p, color):  # Fill strip with background color
@@ -492,7 +519,7 @@ def main():
     """
     #
     root = Tk()
-    root.title("ALICE 1.2 (10-25-2018): ALM1000 StripChart")
+    root.title("ALICE 1.2 (11-7-2018): ALM1000 StripChart")
     img = PhotoImage(data=TBicon)
     root.call('wm', 'iconphoto', root._w, img)
     #
