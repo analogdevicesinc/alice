@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 DC volt meter / source tool 1-29-2018
+# ADALM1000 DC volt meter / source tool 12-3-2018
 # For use with pysmu / libsmu.rework >= 1.0
 # For Python version > = 2.7.8
 from Tkinter import *
@@ -7,10 +7,15 @@ import time
 from pysmu import *
 # define button actions
 loopnum = 0
-
+RevDate = "(3 Dec 2018)"
+PIO_0 = 28
+PIO_1 = 29
+PIO_2 = 47
+PIO_3 = 3
+#
 def EnabAwg():
     global InOffA, InGainA, InOffB, InGainB, CHAmode, CHBmode
-    global chatestv, chbtestv, chatesti, chbtesti
+    global chatestv, chbtestv, chatesti, chbtesti, AWGAIOMode, AWGBIOMode
     global session, DevID, devx, loopnum, CHAstatus, CHBstatus
     
     try:
@@ -70,19 +75,35 @@ def EnabAwg():
         CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
     else:
         if CHAmode.get() == 0:
-            CHA.mode = Mode.SVMI # Put CHA in SVMI mode
+            # Put CHA in SVMI mode
+            if AWGAIOMode.get() == 0:
+                CHA.mode = Mode.SVMI # Put CHA in SVMI mode
+            else:
+                CHA.mode = Mode.SVMI_SPLIT # Put CHA in SVMI split mode
             CHA.constant(chatestv)
         else:
-            CHA.mode = Mode.SIMV # Put CHA in SIMV mode
+            # Put CHA in SIMV mode
+            if AWGAIOMode.get() == 0:
+                CHA.mode = Mode.SIMV # Put CHA in SIMV mode
+            else:
+                CHA.mode = Mode.SIMV_SPLIT # Put CHA in SIMV split mode
             CHA.constant(chatesti/1000.0)
     if CHBstatus.get() == 0:
         CHB.mode = Mode.HI_Z # Put CHB in Hi Z mode
     else:
         if CHBmode.get() == 0:
-            CHB.mode = Mode.SVMI # Put CHB in SVMI mode
+            # Put CHB in SVMI mode
+            if AWGBIOMode.get() == 0:
+                CHB.mode = Mode.SVMI # Put CHB in SVMI mode
+            else:
+                CHB.mode = Mode.SVMI_SPLIT # Put CHB in SVMI split mode
             CHB.constant(chbtestv)
         else:
-            CHB.mode = Mode.SIMV # Put CHB in SIMV mode
+            # Put CHB in SIMV mode
+            if AWGBIOMode.get() == 0:
+                CHB.mode = Mode.SIMV # Put CHB in SIMV mode
+            else:
+                CHB.mode = Mode.SIMV_SPLIT # Put CHB in SIMV split mode
             CHB.constant(chbtesti/1000.0)
 #
 def UpdateAwgCont():
@@ -182,8 +203,8 @@ def BStop():
     
 def Analog_in():
     # global CHAMaxV, CHAMinV, CHBMaxV, CHBMinV
-    global InOffA, InGainA, InOffB, InGainB
-    global session, DevID, devx, loopnum
+    global InOffA, InGainA, InOffB, InGainB, labelAI, labelBI, labelAV, labelBV
+    global session, DevID, devx, loopnum, labelAPW, labelBPW
     while (True):       # Main loop
         if RUNstatus.get() == 1:
             #
@@ -264,15 +285,21 @@ def Analog_in():
             
             if CHAstatus.get() == 0:
                 IAString = "CA mA ----"
+                PAString = "CA mW ----"
             else:
                 IAString = "CA mA " + ' {0:.2f} '.format(DCIA0)
+                PAString = "CA mW " + ' {0:.2f} '.format(DCVA0*DCIA0)
             if CHBstatus.get() == 0:
                 IBString = "CB mA ----"
+                PBString = "CB mW ----"
             else:
                 IBString = "CB mA " + ' {0:.2f} '.format(DCIB0)
+                PBString = "CB mW " + ' {0:.2f} '.format(DCVB0*DCIB0)
             
             labelAI.config(text = IAString) # change displayed value
+            labelAPW.config(text = PAString) # change displayed value
             labelBI.config(text = IBString) # change displayed value
+            labelBPW.config(text = PBString) # change displayed value
 #
             if idx == 0:
                 time.sleep(0.1)
@@ -459,6 +486,164 @@ def MakeDigScreen():
         dismissbutton = Button(win1, text="Dismiss", command=DestroyDigScreen)
         dismissbutton.grid(row=10, column=0, sticky=W)
 #
+def BSendGS():
+    global serialwindow, GenericSerialStatus, SCLKPort, SDATAPort, SLATCHPort, SLatchPhase, SClockPhase
+    global NumBitsEntry, DataBitsEntry, devx, SerDirection, DValue, NumBits, AD5626SerialStatus, AD5626Entry
+
+    if AD5626SerialStatus.get() == 0:
+        try:
+            DValue = int(eval(DataBitsEntry.get()))
+            if DValue < 0:
+                DValue = 0
+        except:
+            DValue = 0
+        try:
+            NumBits = int(NumBitsEntry.get())
+            if NumBits < 1:
+                NumBits = 1
+        except:
+            NumBits = 8
+    else:
+        try:
+            DValue = int(eval(AD5626Entry.get())*1000)
+            if DValue < 0:
+                DValue = 0
+                AD5626Entry.delete(0,"end")
+                AD5626Entry.insert(0,'0.000')
+            if DValue > 4095:
+                DValue = 4095
+                AD5626Entry.delete(0,"end")
+                AD5626Entry.insert(0,DValue/1000.0)
+        except:
+            DValue = 0
+            AD5626Entry.delete(0,"end")
+            AD5626Entry.insert(0,'0.000')
+        NumBits = 12
+    # print DValue
+    binstr = bin(DValue)
+    binlen = len(binstr)
+    datastr = binstr[2:binlen]
+    datalen = len(datastr)
+    if datalen < NumBits:
+       datastr = str.rjust(datastr , NumBits , '0')
+       datalen = len(datastr)
+    if SLatchPhase.get() == 0:
+        LatchInt = 0x50
+        LatchEnd = 0x51
+    else:
+        LatchInt = 0x51
+        LatchEnd = 0x50
+    if AD5626SerialStatus.get() > 0:
+        LatchInt = 0x51
+        LatchEnd = 0x50
+    if SClockPhase.get() == 0:
+        ClockInt = 0x50
+        ClockEnd = 0x51
+    else:
+        ClockInt = 0x51
+        ClockEnd = 0x50
+    devx.ctrl_transfer(0x40, ClockInt, SCLKPort.get(), 0, 0, 0, 100) # clock to start value
+    devx.ctrl_transfer(0x40, LatchInt, SLATCHPort.get(), 0, 0, 0, 100) # CS to start value
+    i = 1
+    while i < datalen+1:
+        if SerDirection.get() == 1: # for MSB first
+            D1code = 0x50 + int(datastr[datalen-i]) # 0x50 = set to 0, 0x51 = set to 1
+        else:
+            D1code = 0x50 + int(datastr[i-1]) # for LSB first
+        devx.ctrl_transfer(0x40, D1code, SDATAPort.get(), 0, 0, 0, 100) # data bit
+        devx.ctrl_transfer(0x40, ClockEnd, SCLKPort.get(), 0, 0, 0, 100) # clock to end value
+        devx.ctrl_transfer(0x40, ClockInt, SCLKPort.get(), 0, 0, 0, 100) # clock to start value
+        i = i + 1
+    devx.ctrl_transfer(0x40, ClockEnd, SCLKPort.get(), 0, 0, 0, 100) # clock to end value
+    devx.ctrl_transfer(0x40, LatchEnd, SLATCHPort.get(), 0, 0, 0, 100) # CS to end value
+    devx.ctrl_transfer(0x40, LatchInt, SLATCHPort.get(), 0, 0, 0, 100) # CS to start value
+    devx.ctrl_transfer(0x40, LatchEnd, SLATCHPort.get(), 0, 0, 0, 100) # CS to end value
+#
+def MakeAD5626Window():
+    global ad5626window, AD5626SerialStatus, SCLKPort, SDATAPort, SLATCHPort, SLatchPhase, SClockPhase
+    global DigScreenStatus
+    global AD5626Entry, SerDirection
+    global PIO_0, PIO_1, PIO_2, PIO_3
+
+    if DigScreenStatus.get() == 1:
+        DigScreenStatus.set(0)
+        DestroyDigScreen()
+    if AD5626SerialStatus.get() == 0:
+        AD5626SerialStatus.set(1)
+        ad5626window = Toplevel()
+        ad5626window.title("AD5626 Output 1.2" + RevDate)
+        ad5626window.resizable(FALSE,FALSE)
+        ad5626window.protocol("WM_DELETE_WINDOW", DestroyAD5626Screen)
+        #
+        SCLKPort = IntVar(0)
+        SCLKPort.set(PIO_2)
+        SDATAPort = IntVar(0)
+        SDATAPort.set(PIO_1)
+        SLATCHPort = IntVar(0)
+        SLATCHPort.set(PIO_0)
+        SLatchPhase = IntVar(0)
+        SLatchPhase.set(0)
+        SClockPhase = IntVar(0)
+        SClockPhase.set(1)
+        SerDirection = IntVar(0)
+        SerDirection.set(0)
+        #
+        label2 = Label(ad5626window,text="Enter Output Volts")
+        label2.grid(row=1, column=0, columnspan=1, sticky=W)
+        AD5626Entry = Entry(ad5626window, width=10)
+        AD5626Entry.bind('<MouseWheel>', onAD5626Scroll)
+        AD5626Entry.grid(row=1, column=1, columnspan=3, sticky=W)
+        AD5626Entry.delete(0,"end")
+        AD5626Entry.insert(0,'0.000')
+        #
+        label3 = Label(ad5626window,text="SCLK PI/O Port ")
+        label3.grid(row=2, column=0, columnspan=1, sticky=W)
+        sclk1 = Radiobutton(ad5626window, text="0", variable=SCLKPort, value=PIO_0)
+        sclk1.grid(row=2, column=1, sticky=W)
+        sclk2 = Radiobutton(ad5626window, text="1", variable=SCLKPort, value=PIO_1)
+        sclk2.grid(row=2, column=2, sticky=W)
+        sclk3 = Radiobutton(ad5626window, text="2", variable=SCLKPort, value=PIO_2)
+        sclk3.grid(row=2, column=3, sticky=W)
+        sclk4 = Radiobutton(ad5626window, text="3", variable=SCLKPort, value=PIO_3)
+        sclk4.grid(row=2, column=4, sticky=W)
+        #
+        label4 = Label(ad5626window,text="SData PI/O Port ")
+        label4.grid(row=3, column=0, columnspan=1, sticky=W)
+        sdat1 = Radiobutton(ad5626window, text="0", variable=SDATAPort, value=PIO_0)
+        sdat1.grid(row=3, column=1, sticky=W)
+        sdat2 = Radiobutton(ad5626window, text="1", variable=SDATAPort, value=PIO_1)
+        sdat2.grid(row=3, column=2, sticky=W)
+        sdat3 = Radiobutton(ad5626window, text="2", variable=SDATAPort, value=PIO_2)
+        sdat3.grid(row=3, column=3, sticky=W)
+        sdat4 = Radiobutton(ad5626window, text="3", variable=SDATAPort, value=PIO_3)
+        sdat4.grid(row=3, column=4, sticky=W)
+        #
+        label5 = Label(ad5626window,text="Latch PI/O Port ")
+        label5.grid(row=4, column=0, columnspan=1, sticky=W)
+        slth1 = Radiobutton(ad5626window, text="0", variable=SLATCHPort, value=PIO_0)
+        slth1.grid(row=4, column=1, sticky=W)
+        slth2 = Radiobutton(ad5626window, text="1", variable=SLATCHPort, value=PIO_1)
+        slth2.grid(row=4, column=2, sticky=W)
+        slth3 = Radiobutton(ad5626window, text="2", variable=SLATCHPort, value=PIO_2)
+        slth3.grid(row=4, column=3, sticky=W)
+        slth4 = Radiobutton(ad5626window, text="3", variable=SLATCHPort, value=PIO_3)
+        slth4.grid(row=4, column=4, sticky=W)
+        #
+        bsn1 = Button(ad5626window, text='Send', command=BSendGS)
+        bsn1.grid(row=5, column=0, sticky=W)
+        dismissgsbutton = Button(ad5626window, text="Dismiss", command=DestroyAD5626Screen)
+        dismissgsbutton.grid(row=5, column=1, columnspan=2, sticky=W, pady=4)
+#
+def onAD5626Scroll(event):
+    onTextScroll(event)
+    BSendGS()
+    
+def DestroyAD5626Screen():
+    global ad5626window, AD5626SerialStatus
+    
+    AD5626SerialStatus.set(0)
+    ad5626window.destroy()
+#
 def SelectBoard():
     global devx, session, BrdSel, CHA, CHB
     
@@ -483,7 +668,7 @@ i8fUAgA7
 """
 
 root = Tk()
-root.title("ALM1000 Meter-Source 1.2 (1-31-2018)")
+root.title("ALM1000 Meter-Source 1.2 " + RevDate)
 img = PhotoImage(data=TBicon)
 root.call('wm', 'iconphoto', root._w, img)
 #
@@ -493,9 +678,11 @@ CHAstatus = IntVar(0)
 CHBstatus = IntVar(0)
 CHAmode = IntVar(0)
 CHBmode = IntVar(0)
+AWGAIOMode = IntVar(0)
+AWGBIOMode = IntVar(0)
 #
 buttons = Frame( root )
-buttons.grid(row=0, column=0, columnspan=2, sticky=W)
+buttons.grid(row=0, column=0, columnspan=4, sticky=W)
 rb1 = Radiobutton(buttons, text="Stop", bg = "RED", variable=RUNstatus, value=0, command=BStop )
 rb1.pack(side=LEFT)
 rb2 = Radiobutton(buttons, text="Run", bg = "GREEN", variable=RUNstatus, value=1, command=BStart )
@@ -505,14 +692,21 @@ b1.pack(side=LEFT)
 b2 = Button(buttons, text='Load', command=BLoadCal)
 b2.pack(side=LEFT)
 #
+DigScreenStatus = IntVar(0)
+AD5626SerialStatus = IntVar(0)
+BuildDigScreen = Button(buttons, text="Dig Out Screen", width=13, command=MakeDigScreen)
+BuildDigScreen.pack(side=LEFT)
+AD5626SerialScreen = Button(buttons, text="AD5626 Output", width=13, command=MakeAD5626Window)
+AD5626SerialScreen.pack(side=LEFT)
+#
 frame1 = Frame(root, borderwidth=5, relief=RIDGE)
 frame1.grid(row=1, column=0, rowspan=2, sticky=W) # 
 frame2 = Frame(root, borderwidth=5, relief=RIDGE)
 frame2.grid(row=1, column=1, rowspan=2, sticky=W) # 
 frame3 = Frame(root, borderwidth=5, relief=RIDGE)
-frame3.grid(row=1, column=2, sticky=W) # 
+frame3.grid(row=1, column=2, sticky=NW) # 
 frame4 = Frame(root, borderwidth=5, relief=RIDGE)
-frame4.grid(row=1, column=3, sticky=W) # 
+frame4.grid(row=1, column=3, sticky=NW) # 
 #
 labelCA = Label(frame1, font = "Arial 16 bold")
 labelCA.grid(row=0, column=0, columnspan=2, sticky=W)
@@ -616,22 +810,29 @@ labelAS = Label(frame3, font = "Arial 16 bold")
 labelAS.grid(row=0, column=0, columnspan=2, sticky=W)
 labelAS.config(text = "CA Source")
 
+labelAPW = Label(frame3, font = "Arial 16 bold")
+labelAPW.grid(row=1, column=0, columnspan=2, sticky=W)
+labelAPW.config(text = "CA Power")
+
 chaonbutton = Frame( frame3 )
-chaonbutton.grid(row=1, column=0, columnspan=2, sticky=W)
+chaonbutton.grid(row=2, column=0, columnspan=2, sticky=W)
 rbaoff = Radiobutton(chaonbutton, text="CHA off", variable=CHAstatus, value=0, command=UpdateAwgCont )
 rbaoff.pack(side=LEFT)
 rbaon = Radiobutton(chaonbutton, text="CHA on", variable=CHAstatus, value=1, command=UpdateAwgCont )
 rbaon.pack(side=LEFT)
 
 chaivbutton = Frame( frame3 )
-chaivbutton.grid(row=2, column=0, columnspan=2, sticky=W)
+chaivbutton.grid(row=3, column=0, columnspan=2, sticky=W)
 rbav = Radiobutton(chaivbutton, text="CHA V", variable=CHAmode, value=0, command=UpdateAwgCont )
 rbav.pack(side=LEFT)
 rbai = Radiobutton(chaivbutton, text="CHA I", variable=CHAmode, value=1, command=UpdateAwgCont )
 rbai.pack(side=LEFT)
 
+chaiomode = Checkbutton(frame3, text="Split I/O", variable=AWGAIOMode, command=EnabAwg)
+chaiomode.grid(row=4, column=0, columnspan=2, sticky=W)
+
 TestVA = Frame( frame3 )
-TestVA.grid(row=3, column=0, sticky=W)
+TestVA.grid(row=5, column=0, sticky=W)
 chatestvlab = Label(TestVA, text="CA-V")
 chatestvlab.pack(side=LEFT)
 CHATestVEntry = Entry(TestVA, width=6) #
@@ -643,7 +844,7 @@ chaunitsvlab = Label(TestVA, text="Volts")
 chaunitsvlab.pack(side=LEFT)
 
 TestIA = Frame( frame3 )
-TestIA.grid(row=4, column=0, sticky=W)
+TestIA.grid(row=6, column=0, sticky=W)
 chatestilab = Label(TestIA, text="CA-I")
 chatestilab.pack(side=LEFT)
 CHATestIEntry = Entry(TestIA, width=6) #
@@ -658,22 +859,29 @@ labelBS = Label(frame4, font = "Arial 16 bold")
 labelBS.grid(row=0, column=0, columnspan=2, sticky=W)
 labelBS.config(text = "CB Source")
 
+labelBPW = Label(frame4, font = "Arial 16 bold")
+labelBPW.grid(row=1, column=0, columnspan=2, sticky=W)
+labelBPW.config(text = "CB Power")
+
 chbonbutton = Frame( frame4 )
-chbonbutton.grid(row=1, column=0, columnspan=2, sticky=W)
+chbonbutton.grid(row=2, column=0, columnspan=2, sticky=W)
 rbboff = Radiobutton(chbonbutton, text="CHB off", variable=CHBstatus, value=0, command=UpdateAwgCont )
 rbboff.pack(side=LEFT)
 rbbon = Radiobutton(chbonbutton, text="CHB on", variable=CHBstatus, value=1, command=UpdateAwgCont )
 rbbon.pack(side=LEFT)
 
 chbivbutton = Frame( frame4 )
-chbivbutton.grid(row=2, column=0, columnspan=2, sticky=W)
+chbivbutton.grid(row=3, column=0, columnspan=2, sticky=W)
 rbbv = Radiobutton(chbivbutton, text="CHB V", variable=CHBmode, value=0, command=UpdateAwgCont )
 rbbv.pack(side=LEFT)
 rbbi = Radiobutton(chbivbutton, text="CHB I", variable=CHBmode, value=1, command=UpdateAwgCont )
 rbbi.pack(side=LEFT)
 
+chbiomode = Checkbutton(frame4, text="Split I/O", variable=AWGBIOMode, command=EnabAwg)
+chbiomode.grid(row=4, column=0, columnspan=2, sticky=W)
+
 TestVB = Frame( frame4 )
-TestVB.grid(row=3, column=0, sticky=W)
+TestVB.grid(row=5, column=0, sticky=W)
 chbtestvlab = Label(TestVB, text="CB-V")
 chbtestvlab.pack(side=LEFT)
 CHBTestVEntry = Entry(TestVB, width=6) #
@@ -685,7 +893,7 @@ chbunitsvlab = Label(TestVB, text="Volts")
 chbunitsvlab.pack(side=LEFT)
 
 TestIB = Frame( frame4 )
-TestIB.grid(row=4, column=0, sticky=W)
+TestIB.grid(row=6, column=0, sticky=W)
 chbtestilab = Label(TestIB, text="CB-I")
 chbtestilab.pack(side=LEFT)
 CHBTestIEntry = Entry(TestIB, width=6) #
@@ -695,11 +903,6 @@ CHBTestIEntry.delete(0,"end")
 CHBTestIEntry.insert(0,0.0)
 chbunitsilab = Label(TestIB, text="mAmps")
 chbunitsilab.pack(side=LEFT)
-#
-DigScreenStatus = IntVar(0)
-BuildDigScreen = Button(root, text="Dig Out Screen", width=13, command=MakeDigScreen)
-BuildDigScreen.grid(row=2, column=2, columnspan=2, sticky=W)
-#
 # Setup ADAML1000
 session = Session(ignore_dataflow=True, queue_size=10000)
 # session.add_all()

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 alice-desktop 1.2.py(w) (11-19-2018)
+# ADALM1000 alice-desktop 1.2.py(w) (12-19-2018)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu.rework >= 1.0 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -33,7 +33,7 @@ try:
 except:
     pysmu_found = False
 #
-RevDate = "(19 Nov 2018)"
+RevDate = "(19 Dec 2018)"
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.2.1/alice-desktop-1.2-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
@@ -1136,53 +1136,58 @@ def BLoadConfig(filename):
         OhmCheckBox()
 #
         time.sleep(0.05)
-        if AWGAShape.get()==9:
-            AWGAMakeImpulse()
-        elif AWGAShape.get()==11:
-            AWGAMakeTrapazoid()
-        elif AWGAShape.get()==15:
-            AWGAMakeSSQ()
-        elif AWGAShape.get()==16:
-            AWGAMakeRamp()
-        elif AWGAShape.get()==17:
-            AWGAMakePWMSine()
-        elif AWGAShape.get()==18:
-            AWGAMakeBodeSine()
-        elif AWGAShape.get()==12:
-            AWGAMakeUpDownRamp()
-        elif AWGAShape.get()==14:
-            AWGAMakeFourier()
-        elif AWGAShape.get()==7:
-            AWGAMakeUUNoise()
-        elif AWGAShape.get()==8:
-            AWGAMakeUGNoise()
-#
-        if AWGBShape.get()==9:
-            AWGBMakeImpulse()
-        elif AWGBShape.get()==11:
-            AWGBMakeTrapazoid()
-        elif AWGBShape.get()==15:
-            AWGBMakeSSQ()
-        elif AWGBShape.get()==16:
-            AWGBMakeRamp()
-        elif AWGBShape.get()==17:
-            AWGBMakePWMSine()
-        elif AWGBShape.get()==18:
-            AWGBMakeBodeSine()
-        elif AWGBShape.get()==12:
-            AWGBMakeUpDownRamp()
-        elif AWGBShape.get()==14:
-            AWGBMakeFourier()
-        elif AWGBShape.get()==7:
-            AWGBMakeUUNoise()
-        elif AWGBShape.get()==8:
-            AWGBMakeUGNoise()
-        else:
-            UpdateAwgCont()
-        time.sleep(0.05)
+        ReMakeAWGwaves()
     except:
         print "Config File Not Found."
+#
+def ReMakeAWGwaves(): # re make awg waveforms ib case something changed
+    global AWGAShape, AWGBShape
 
+    if AWGAShape.get()==9:
+        AWGAMakeImpulse()
+    elif AWGAShape.get()==11:
+        AWGAMakeTrapazoid()
+    elif AWGAShape.get()==15:
+        AWGAMakeSSQ()
+    elif AWGAShape.get()==16:
+        AWGAMakeRamp()
+    elif AWGAShape.get()==17:
+        AWGAMakePWMSine()
+    elif AWGAShape.get()==18:
+        AWGAMakeBodeSine()
+    elif AWGAShape.get()==12:
+        AWGAMakeUpDownRamp()
+    elif AWGAShape.get()==14:
+        AWGAMakeFourier()
+    elif AWGAShape.get()==7:
+        AWGAMakeUUNoise()
+    elif AWGAShape.get()==8:
+        AWGAMakeUGNoise()
+#
+    if AWGBShape.get()==9:
+        AWGBMakeImpulse()
+    elif AWGBShape.get()==11:
+        AWGBMakeTrapazoid()
+    elif AWGBShape.get()==15:
+        AWGBMakeSSQ()
+    elif AWGBShape.get()==16:
+        AWGBMakeRamp()
+    elif AWGBShape.get()==17:
+        AWGBMakePWMSine()
+    elif AWGBShape.get()==18:
+        AWGBMakeBodeSine()
+    elif AWGBShape.get()==12:
+        AWGBMakeUpDownRamp()
+    elif AWGBShape.get()==14:
+        AWGBMakeFourier()
+    elif AWGBShape.get()==7:
+        AWGBMakeUUNoise()
+    elif AWGBShape.get()==8:
+        AWGBMakeUGNoise()
+    else:
+        UpdateAwgCont()
+    time.sleep(0.05)
+#
 def BLoadConfigIA():
     global iawindow
 
@@ -12527,9 +12532,9 @@ def MakeAWGWindow():
         ModeAMenu.menu.add_checkbutton(label="Split I/O", variable=AWGAIOMode, command=BAWGAModeLabel)
         ModeAMenu.menu.add_separator()
         ModeAMenu.menu.add_command(label="-Term-", command=donothing)
-        ModeAMenu.menu.add_radiobutton(label="Open", variable=AWGATerm, value=0)
-        ModeAMenu.menu.add_radiobutton(label="To GND", variable=AWGATerm, value=1)
-        ModeAMenu.menu.add_radiobutton(label="To 2.5V", variable=AWGATerm, value=2)
+        ModeAMenu.menu.add_radiobutton(label="Open", variable=AWGATerm, value=0, command=UpdateAwgCont)
+        ModeAMenu.menu.add_radiobutton(label="To GND", variable=AWGATerm, value=1, command=UpdateAwgCont)
+        ModeAMenu.menu.add_radiobutton(label="To 2.5V", variable=AWGATerm, value=2, command=UpdateAwgCont)
         ModeAMenu.pack(side=LEFT, anchor=W)
         ShapeAMenu = Menubutton(awg1eb, text="Shape", style="W5.TButton")
         ShapeAMenu.menu = Menu(ShapeAMenu, tearoff = 0 )
@@ -12662,9 +12667,9 @@ def MakeAWGWindow():
         ModeBMenu.menu.add_checkbutton(label="Split I/O", variable=AWGBIOMode, command=BAWGBModeLabel)
         ModeBMenu.menu.add_separator()
         ModeBMenu.menu.add_command(label="-Term-", command=donothing)
-        ModeBMenu.menu.add_radiobutton(label="Open", variable=AWGBTerm, value=0)
-        ModeBMenu.menu.add_radiobutton(label="To GND", variable=AWGBTerm, value=1)
-        ModeBMenu.menu.add_radiobutton(label="To 2.5V", variable=AWGBTerm, value=2)
+        ModeBMenu.menu.add_radiobutton(label="Open", variable=AWGBTerm, value=0, command=UpdateAwgCont)
+        ModeBMenu.menu.add_radiobutton(label="To GND", variable=AWGBTerm, value=1, command=UpdateAwgCont)
+        ModeBMenu.menu.add_radiobutton(label="To 2.5V", variable=AWGBTerm, value=2, command=UpdateAwgCont)
         ModeBMenu.pack(side=LEFT, anchor=W)
         ShapeBMenu = Menubutton(awg2eb, text="Shape", style="W5.TButton")
         ShapeBMenu.menu = Menu(ShapeBMenu, tearoff = 0 )
@@ -13773,7 +13778,7 @@ def DestroyXYScreen():
 #
 def SelfCalibration():
     global DevID, devx, CHA, CHB, RevDate, OnBoardRes, AD584act, FWRevOne
-    global discontloop, contloop, session
+    global discontloop, contloop, session, AWGSync
     # global OnBoardResAgnd, OnBoardResA25, OnBoardResBgnd, OnBoardResB25
     # setup cal results window
     if FWRevOne < 2.06: # Check firmware revision level > 2.06
@@ -13826,9 +13831,12 @@ def SelfCalibration():
     labelSIBN = Label(calwindow, style="A12B.TLabel")
     labelSIBN.grid(row=14, column=0, columnspan=2, sticky=W)
     labelSIBN.config(text = "CB 50 Src -45")
+    AWGSync.set(1)
+    BAWGSync()
     if session.continuous:
+        print "ending session"
         session.end()
-    # Setup ADAML1000
+    # Setup ADALM1000
     if askyesno("Reset Calibration", "Do You Need To Reset Default Calibration?", parent=calwindow):
         #print(devx.calibration)
         try:
@@ -13847,6 +13855,12 @@ def SelfCalibration():
             #print "wrote old ", filename
             calwindow.destroy()
             return
+        else:
+            if askyesno("Continue?", "Continure with self calibration?", parent=calwindow):
+                donothing()
+            else:
+                calwindow.destroy()
+                return
     #
     CalFile = open(filename, "w")
     #
@@ -15295,10 +15309,28 @@ def SetSampleRate():
     except:
         donothing()
     session.configure(sample_rate=SAMPLErate)
+    # calculate actual sample rate
+    # minimum clock cycles per sample (100ksps)
+    m_min_per = 240
+    # maximum clock cycles per sample (~1024 samples/s)
+    m_max_per = 24000
+    sample_time = 1.0 / SAMPLErate
+    M1K_timer_clock = 48e6
+    m_sam_per = round(sample_time * M1K_timer_clock) / 2
+    if (m_sam_per < m_min_per):
+        m_sam_per = m_min_per
+    elif (m_sam_per > m_max_per):
+        m_sam_per = m_max_per;
+    # convert back to the actual sample time
+    sample_time = m_sam_per / M1K_timer_clock
+    # convert back to the actual sample rate
+    SAMPLErate = int(round((1.0 / sample_time) / 2.0))
+    AWGSAMPLErate = SAMPLErate
     if ETSStatus.get() > 0:
         SRstring = "RT Sample Rate = " + str(SAMPLErate)
         etssrlab.config(text=SRstring)
         ETSUpdate()
+    ReMakeAWGwaves() # remake AWG waveforms for new rate
 #
 def UpdateFirmware():
     global devx, dev0, dev1, dev2, session, BrdSel, CHA, CHB, DevID, MaxSamples
