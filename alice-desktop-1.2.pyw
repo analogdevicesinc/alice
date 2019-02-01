@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 alice-desktop 1.2.py(w) (12-19-2018)
+# ADALM1000 alice-desktop 1.2.py(w) (2-1-2019)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu.rework >= 1.0 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -33,7 +33,10 @@ try:
 except:
     pysmu_found = False
 #
-RevDate = "(19 Dec 2018)"
+# check which operating system
+import platform
+#
+RevDate = "(1 Feb 2019)"
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.2.1/alice-desktop-1.2-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
@@ -8254,6 +8257,15 @@ def AWGAMakeUpDownRamp():
     else:
         MaxV = AWGAOffsetvalue
         MinV = AWGAAmplvalue
+    #
+    if AWGAPhaseDelay.get() == 0:
+        if AWGAPhasevalue > 0:
+            AWGAdelayvalue = AWGAperiodvalue * AWGAPhasevalue / 360.0
+        else:
+            AWGAdelayvalue = 0.0
+    elif AWGAPhaseDelay.get() == 1:
+        AWGAdelayvalue = AWGAPhasevalue * AWGSAMPLErate / 1000
+    #
     AWGAwaveform = []
     PulseWidth = int(AWGAperiodvalue * AWGADutyCyclevalue)
     if PulseWidth <=0:
@@ -8270,7 +8282,7 @@ def AWGAMakeUpDownRamp():
     for i in range(Remainder):
         AWGAwaveform.append(SampleValue)
         SampleValue = SampleValue - DownStepValue
-    AWGAwaveform = numpy.roll(AWGAwaveform, int(AWGAPhasevalue*100))
+    AWGAwaveform = numpy.roll(AWGAwaveform, int(AWGAdelayvalue))
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
     BAWGAPhaseDelay()
     duty1lab.config(text = "Symmetry")
@@ -8390,7 +8402,8 @@ def BAWGAModeLabel():
         label_txt = label_txt + " Split I/O"
     label_txt = label_txt + " Mode"
     AWGAModeLabel.config(text = label_txt ) # change displayed value
-    UpdateAwgCont()
+    ReMakeAWGwaves()
+    #UpdateAwgCont()
 
 def UpdateAWGA():
     global AWGAAmplvalue, AWGAOffsetvalue
@@ -9043,6 +9056,15 @@ def AWGBMakeUpDownRamp():
     else:
         MaxV = AWGBOffsetvalue
         MinV = AWGBAmplvalue
+    #
+    if AWGBPhaseDelay.get() == 0:
+        if AWGBPhasevalue > 0:
+            AWGBdelayvalue = AWGBperiodvalue * AWGBPhasevalue / 360.0
+        else:
+            AWGBdelayvalue = 0.0
+    elif AWGBPhaseDelay.get() == 1:
+        AWGBdelayvalue = AWGBPhasevalue * AWGSAMPLErate / 1000
+    #
     AWGBwaveform = []
     PulseWidth = int(AWGBperiodvalue * AWGBDutyCyclevalue)
     if PulseWidth <=0:
@@ -9059,7 +9081,7 @@ def AWGBMakeUpDownRamp():
     for i in range(Remainder):
         AWGBwaveform.append(SampleValue)
         SampleValue = SampleValue - DownStepValue
-    AWGBwaveform = numpy.roll(AWGBwaveform, int(AWGBPhasevalue*100))
+    AWGBwaveform = numpy.roll(AWGBwaveform, int(AWGBdelayvalue))
     AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
     BAWGBPhaseDelay()
     duty2lab.config(text = "Symmetry")
@@ -9180,7 +9202,8 @@ def BAWGBModeLabel():
         label_txt = label_txt + " Split I/O"
     label_txt = label_txt + " Mode"
     AWGBModeLabel.config(text = label_txt ) # change displayed value
-    UpdateAwgCont()
+    ReMakeAWGwaves()
+    #UpdateAwgCont()
     
 def UpdateAWGB():
     global AWGBAmplvalue, AWGBOffsetvalue
@@ -9813,13 +9836,15 @@ def BStartBP():
             showwarning("WARNING","Select at least one trace first",  parent=bodewindow)
             return()    
         CutDC.set(1) # set to remove DC
-        if FSweepMode.get() == 1:    
-            AWGAMode.set(0) # Set AWG A to SVMI
+        if FSweepMode.get() == 1:
+            if AWGAMode.get() == 2:
+                AWGAMode.set(0) # Set AWG A to SVMI
             AWGAShape.set(18) # Set Shape to Sine
             AWGBMode.set(2) # Set AWG B to Hi-Z
             Reset_Freq = AWGAFreqEntry.get()
-        if FSweepMode.get() == 2:    
-            AWGBMode.set(0) # Set AWG B to SVMI
+        if FSweepMode.get() == 2:
+            if AWGBMode.get() == 2:
+                AWGBMode.set(0) # Set AWG B to SVMI
             AWGBShape.set(18) # Set Shape to Sine
             AWGAMode.set(2) # Set AWG A to Hi-Z
             Reset_Freq = AWGBFreqEntry.get()
@@ -12379,51 +12404,9 @@ def onTextScroll(event):   # august 7
     button.insert(0, NewStr) # insert new entry
     button.icursor(NewPos) # resets the insertion cursor
 #
-def onAWGAkey(event):
-    global AWGAShape
-    
-    onTextKey(event)
-    if AWGAShape.get()==9:
-        AWGAMakeImpulse()
-    elif AWGAShape.get()==11:
-        AWGAMakeTrapazoid()
-    elif AWGAShape.get()==15:
-        AWGAMakeSSQ()
-    elif AWGAShape.get()==16:
-        AWGAMakeRamp()
-    elif AWGAShape.get()==12:
-        AWGAMakeUpDownRamp()
-    elif AWGAShape.get()==14:
-        AWGAMakeFourier()
-    elif AWGAShape.get()==7:
-        AWGAMakeUUNoise()
-    elif AWGAShape.get()==8:
-        AWGAMakeUGNoise()
-#
-def onAWGBkey(event):
-    global AWGBShape
-    
-    onTextKey(event)
-    if AWGBShape.get()==9:
-        AWGBMakeImpulse()
-    elif AWGBShape.get()==11:
-        AWGBMakeTrapazoid()
-    elif AWGBShape.get()==15:
-        AWGBMakeSSQ()
-    elif AWGBShape.get()==16:
-        AWGBMakeRamp()
-    elif AWGBShape.get()==12:
-        AWGBMakeUpDownRamp()
-    elif AWGBShape.get()==14:
-        AWGBMakeFourier()
-    elif AWGBShape.get()==7:
-        AWGBMakeUUNoise()
-    elif AWGBShape.get()==8:
-        AWGBMakeUGNoise()
-#
 def onTextKeyAWG(event):
     onTextKey(event)
-    UpdateAwgCont()
+    ReMakeAWGwaves()
     
 def onTextKey(event):
     
@@ -12432,12 +12415,20 @@ def onTextKey(event):
     NewPos = cursor_position -1
     OldVal = button.get() # get current entry string
     OldDigit = OldVal[NewPos]
-    if event.keycode == 38: # increment digit for up arrow key
-        NewDigit = int(OldDigit) + 1
-    elif event.keycode == 40: # decrement digit for down arrow
-        NewDigit = int(OldDigit) - 1
-    else:
-        return
+    if platform.system() == "Windows":
+        if event.keycode == 38: # increment digit for up arrow key
+            NewDigit = int(OldDigit) + 1
+        elif event.keycode == 40: # decrement digit for down arrow
+            NewDigit = int(OldDigit) - 1
+        else:
+            return
+    elif platform.system() == "Linux":
+        if event.keycode == 111: # increment digit for up arrow key
+            NewDigit = int(OldDigit) + 1
+        elif event.keycode == 116: # decrement digit for down arrow
+            NewDigit = int(OldDigit) - 1
+        else:
+            return
     if OldDigit == ".": # if cursor next to decimal point nop
         return
     if NewDigit > 9:

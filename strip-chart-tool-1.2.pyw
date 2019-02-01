@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 Strip chart recorder tool (11-7-2018)
+# ADALM1000 Strip chart recorder tool (2-1-2019)
 # For Python version > = 2.7.8
 # With external module pysmu (libsmu > = 1.0 ADALM1000 )
 # Created by D Mercer ()
@@ -95,7 +95,7 @@ class StripChart:
         RunForEntry.bind('<MouseWheel>', onTextScroll)
         RunForEntry.grid(column=9,row=2)
         RunForEntry.delete(0,"end")
-        RunForEntry.insert(0,0)
+        RunForEntry.insert(0,100)
         
         sampdeylab = Label(cf, text="Delay")
         sampdeylab.grid(column=10,row=2)
@@ -233,6 +233,8 @@ class StripChart:
         # add sample counter start here
         loop_end = int(eval(RunForEntry.get()))
         loop_count = 0
+        if Run_For.get() == 0 and (loop_end <= loop_count):
+            loop_end = loop_count + 1
         while self.go and (loop_count < loop_end): # loop forever or till sample count reached
             Analog_in()
             #
@@ -519,7 +521,7 @@ def main():
     """
     #
     root = Tk()
-    root.title("ALICE 1.2 (11-7-2018): ALM1000 StripChart")
+    root.title("ALICE 1.2 (2-1-2019): ALM1000 StripChart")
     img = PhotoImage(data=TBicon)
     root.call('wm', 'iconphoto', root._w, img)
     #
