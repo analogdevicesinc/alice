@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 alice-desktop 1.2.py(w) (2-1-2019)
+# ADALM1000 alice-desktop 1.2.py(w) (2-26-2019)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu.rework >= 1.0 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -36,7 +36,7 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(1 Feb 2019)"
+RevDate = "(26 Feb 2019)"
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.2.1/alice-desktop-1.2-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
@@ -420,6 +420,8 @@ ImpedanceMagnitude  = 0.0 # in ohms
 ImpedanceAngle = 12.0 # in degrees 
 ImpedanceRseries = 0.0 # in ohms 
 ImpedanceXseries = 0.0 # in ohms
+IASource = IntVar(0)
+DisplaySeries = IntVar(0) # in IA display series or parallel values
 OverRangeFlagA = 0
 OverRangeFlagB = 0
 PeakdbA = 10
@@ -613,7 +615,7 @@ def BSaveConfig(filename):
     global MeasMaxI1, MeasMidI1, MeasPPI1, MeasDCV2, MeasMinV2, MeasMaxV2, MeasMidV2
     global MeasPPV2, MeasDCI2, MeasMinI2, MeasMaxI2, MeasMidI2, MeasPPI2, MeasDiffAB, MeasDiffBA
     global MeasRMSV1, MeasRMSV2, MeasRMSI1, MeasRMSI2, MeasPhase
-    global MeasAHW, MeasALW, MeasADCy, MeasAPER, MeasAFREQ
+    global MeasAHW, MeasALW, MeasADCy, MeasAPER, MeasAFREQ, IASource, DisplaySeries
     global MeasBHW, MeasBLW, MeasBDCy, MeasBPER, MeasBFREQ
     global CHAIGainEntry, CHBIGainEntry, CHAIOffsetEntry, CHBIOffsetEntry
     global ShowC1_VdB, ShowC1_P, ShowC2_VdB, ShowC2_P, CutDC, DacScreenStatus, DigScreenStatus
@@ -684,6 +686,8 @@ def BSaveConfig(filename):
         ConfgFile.write('global GRHIA; GRHIA = ' + str(GRHIA) + '\n')
         ConfgFile.write('MakeIAWindow()\n')
         ConfgFile.write("iawindow.geometry('+" + str(iawindow.winfo_x()) + '+' + str(iawindow.winfo_y()) + "')\n")
+        ConfgFile.write('IASource.set(' + str(IASource.get()) + ')\n')
+        ConfgFile.write('DisplaySeries.set(' + str(DisplaySeries.get()) + ')\n')
         ConfgFile.write('RsystemEntry.delete(0,END)\n')
         ConfgFile.write('RsystemEntry.insert(5, ' + RsystemEntry.get() + ')\n')
         ConfgFile.write('ResScale.delete(0,END)\n')
@@ -722,6 +726,16 @@ def BSaveConfig(filename):
         ConfgFile.write("win2.geometry('+" + str(win2.winfo_x()) + '+' + str(win2.winfo_y()) + "')\n")
     else:
         ConfgFile.write('DestroyDigScreen()\n')
+    if MinigenScreenStatus.get() == 1:
+        ConfgFile.write('MakeMinigenWindow()\n')
+        ConfgFile.write("minigenwindow.geometry('+" + str(minigenwindow.winfo_x()) + '+' + str(minigenwindow.winfo_y()) + "')\n")
+        ConfgFile.write('MinigenMode.set(' + str(MinigenMode.get()) + ')\n')
+        ConfgFile.write('MinigenFout.delete(0,END)\n')
+        ConfgFile.write('MinigenFout.insert(4, ' + MinigenFout.get() + ')\n')
+        ConfgFile.write('MinigenFclk.delete(0,END)\n')
+        ConfgFile.write('MinigenFclk.insert(4, ' + MinigenFclk.get() + ')\n')
+    else:
+        ConfgFile.write('DestroyMinigenScreen()\n')
     if MuxScreenStatus.get() == 1:
         ConfgFile.write('MakeMuxModeWindow()\n')
         ConfgFile.write("muxwindow.geometry('+" + str(muxwindow.winfo_x()) + '+' + str(muxwindow.winfo_y()) + "')\n")
@@ -809,16 +823,6 @@ def BSaveConfig(filename):
         ConfgFile.write("measurewindow.geometry('+" + str(measurewindow.winfo_x()) + '+' + str(measurewindow.winfo_y()) + "')\n")
     else:
         ConfgFile.write('DestroyMeasuewScreen()\n')
-    if MinigenScreenStatus.get() == 1:
-        ConfgFile.write('MakeMinigenWindow()\n')
-        ConfgFile.write("minigenwindow.geometry('+" + str(minigenwindow.winfo_x()) + '+' + str(minigenwindow.winfo_y()) + "')\n")
-        ConfgFile.write('MinigenMode.set(' + str(MinigenMode.get()) + ')\n')
-        ConfgFile.write('MinigenFout.delete(0,END)\n')
-        ConfgFile.write('MinigenFout.insert(4, ' + MinigenFout.get() + ')\n')
-        ConfgFile.write('MinigenFclk.delete(0,END)\n')
-        ConfgFile.write('MinigenFclk.insert(4, ' + MinigenFclk.get() + ')\n')
-    else:
-        ConfgFile.write('DestroyMinigenScreen()\n')
     if ETSStatus.get() == 1: #
         ConfgFile.write('MakeETSWindow()\n')
         ConfgFile.write("etswindow.geometry('+" + str(etswindow.winfo_x()) + '+' + str(etswindow.winfo_y()) + "')\n")
@@ -1092,7 +1096,7 @@ def BLoadConfig(filename):
     global MeasMaxI1, MeasMidI1, MeasPPI1, MeasDCV2, MeasMinV2, MeasMaxV2, MeasMidV2
     global MeasPPV2, MeasDCI2, MeasMinI2, MeasMaxI2, MeasMidI2, MeasPPI2, MeasDiffAB, MeasDiffBA
     global MeasRMSV1, MeasRMSV2, MeasRMSI1, MeasRMSI2, MeasPhase, MeasDelay
-    global MeasAHW, MeasALW, MeasADCy, MeasAPER, MeasAFREQ
+    global MeasAHW, MeasALW, MeasADCy, MeasAPER, MeasAFREQ, IASource, DisplaySeries
     global MeasBHW, MeasBLW, MeasBDCy, MeasBPER, MeasBFREQ
     global CHAIGainEntry, CHBIGainEntry, CHAIOffsetEntry, CHBIOffsetEntry
     global ShowC1_VdB, ShowC1_P, ShowC2_VdB, ShowC2_P, CutDC, AWG_Amp_Mode
@@ -2138,7 +2142,21 @@ def BStart():
                     session.end() # end continuous session mode
                     
     # UpdateTimeScreen()          # Always Update
+def BStartIA():
+    global  IASource, CHA, CHB, AWGAMode, AWGBMode
 
+    if IASource.get() == 1:
+        CHA.mode = Mode.HI_Z # Put CHA in Hi Z split mode
+        CHB.mode = Mode.HI_Z # Put CHB in Hi Z split mode
+        AWGAMode.set(2) # Set AWG A to Hi-Z
+        AWGBMode.set(2) # Set AWG B to Hi-Z
+    else:
+        CHA.mode = Mode.SVMI # Put CHA in Hi Z split mode
+        CHB.mode = Mode.HI_Z # Put CHB in Hi Z split mode
+        AWGAMode.set(0) # Set AWG A to Hi-Z
+        AWGBMode.set(2) # Set AWG B to Hi-Z
+    BStart()
+        
 def BStop():
     global RUNstatus, TimeDisp, XYDisp, FreqDisp, IADisp, session, AWGSync
     global CHA, CHB, contloop, discontloop
@@ -3147,7 +3165,7 @@ def Analog_Freq_In():   # Read from the stream and store the data into the array
     global CHA_A1, CHA_A2, CHB_A1, CHB_A2
     global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
     global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
-    global Reset_Freq, AWGAFreqEntry, AWGBFreqEntry
+    global Reset_Freq, AWGAFreqEntry, AWGBFreqEntry, MinigenFout, IASource
     
     # Do input divider Calibration CH1VGain, CH2VGain, CH1VOffset, CH2VOffset
     try:
@@ -3226,8 +3244,12 @@ def Analog_Freq_In():   # Read from the stream and store the data into the array
             AWGBFreqEntry.delete(0,END)
             AWGBFreqEntry.insert(4, FregPoint)
             AWGBMakeBodeSine()
+        if FSweepMode.get() == 3: # set new MiniGen frequency
+            MinigenFout.delete(0,END)
+            MinigenFout.insert(4, FregPoint)
+            BSendMG()
     if AWGSync.get() > 0:
-        if IAScreenStatus.get() > 0:
+        if IAScreenStatus.get() > 0 and IASource.get() == 0:
             AWGBMode.set(2)
         # BAWGEnab()
 #
@@ -3257,7 +3279,7 @@ def Analog_Freq_In():   # Read from the stream and store the data into the array
             devx.ctrl_transfer( 0x40, 0x50, PIO_1, 0, 0, 0, 100)
             devx.ctrl_transfer( 0x40, 0x51, PIO_1, 0, 0, 0, 100)
     if AWGScreenStatus.get() == 1: # don't try to start AWG is AWG screen is closed
-        if IAScreenStatus.get() > 0:
+        if IAScreenStatus.get() > 0 and IASource.get() == 0:
             AWGBMode.set(2)
         if AWGSync.get() > 0: # awg syn flag set so run in discontinuous mode
             if discontloop > 0:
@@ -3288,7 +3310,7 @@ def Analog_Freq_In():   # Read from the stream and store the data into the array
     FFTBuffA = [] # Clear the FFTBuff array for trace A
     FFTBuffB = [] # Clear the FFTBuff array for trace B
     OverRangeFlagA = OverRangeFlagB = 0 # Clear over range flags
-    index = hldn-1 # skip first hldn samples
+    index = hldn # skip first hldn samples
     if SHOWsamples != len(ADsignal1):
         SHOWsamples = len(ADsignal1)
     while index < SHOWsamples:
@@ -7853,6 +7875,7 @@ def BAWGAShape():
         duty1lab.config(text="%")
         BAWGAPhaseDelay()
     if AWGAShape.get() == 1:
+        AWGAShape.set(1)
         AWGAWave = 'sine'
         duty1lab.config(text="%")
         BAWGAPhaseDelay()
@@ -7981,20 +8004,20 @@ def AWGAMakeMath():
 def AWGAMakeBodeSine():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
     global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay, AWGAMode
-    
-    temp = 0
-    BAWGAAmpl(temp)
-    BAWGAOffset(temp)
-    BAWGAFreq(temp)
-    BAWGAPhase(temp)
-    BAWGADutyCycle(temp)
 
-    if AWGAFreqvalue < 10.0: # if frequency is less than 10 Hz use libsmu sine function
+    BAWGAAmpl(0)
+    BAWGAOffset(0)
+    BAWGAFreq(0)
+    BAWGAPhase(0)
+    BAWGADutyCycle(0)
+
+    if AWGAFreqvalue < 1.0: # if frequency is less than 10 Hz use libsmu sine function
         AWGAShape.set(1)
         BAWGAShape()
         UpdateAwgCont()
         return
-
+    AWGAShape.set(18)
+    BAWGAShape()
     if AWGAFreqvalue > 0.0:
         AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
     else:
@@ -8007,7 +8030,7 @@ def AWGAMakeBodeSine():
             AWGAdelayvalue = 0.0
     elif AWGAPhaseDelay.get() == 1:
         AWGAdelayvalue = AWGAPhasevalue * AWGSAMPLErate / 1000
-    Cycles = int(32768/AWGAperiodvalue)
+    Cycles = int(131072/AWGAperiodvalue) # 131072
     if Cycles < 1:
         Cycles = 1
     RecLength = Cycles * AWGAperiodvalue
@@ -8021,6 +8044,7 @@ def AWGAMakeBodeSine():
         offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2.0
     AWGAwaveform = (AWGAwaveform * amplitude) + offset # scale and offset the waveform
     AWGAwaveform = numpy.roll(AWGAwaveform, int(AWGAdelayvalue))
+    #print AWGAwaveform[0], AWGAwaveform[len(AWGAwaveform)-1], AWGAwaveform[0] - AWGAwaveform[len(AWGAwaveform)-1]
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
     BAWGAPhaseDelay()
     duty1lab.config(text="%")
@@ -8030,12 +8054,11 @@ def AWGAMakePWMSine():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength
     global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
-    temp = 0
-    BAWGAAmpl(temp)
-    BAWGAOffset(temp)
-    BAWGAFreq(temp)
-    BAWGAPhase(temp)
-    BAWGADutyCycle(temp)
+    BAWGAAmpl(0)
+    BAWGAOffset(0)
+    BAWGAFreq(0)
+    BAWGAPhase(0)
+    BAWGADutyCycle(0)
 
     if AWGAFreqvalue > 0.0:
         AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
@@ -8066,11 +8089,10 @@ def AWGAMakeFourier():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength
     global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
-    temp = 0
-    BAWGAAmpl(temp)
-    BAWGAOffset(temp)
-    BAWGAFreq(temp)
-    BAWGADutyCycle(temp)
+    BAWGAAmpl(0)
+    BAWGAOffset(0)
+    BAWGAFreq(0)
+    BAWGADutyCycle(0)
     
     Max_term = int(AWGADutyCyclevalue*100)
     AWGAwaveform = []
@@ -8096,12 +8118,11 @@ def AWGAMakeSSQ():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, phasealab, duty1lab
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
-    temp = 0
-    BAWGAAmpl(temp)
-    BAWGAOffset(temp)
-    BAWGAFreq(temp)
-    BAWGAPhase(temp)
-    BAWGADutyCycle(temp)
+    BAWGAAmpl(0)
+    BAWGAOffset(0)
+    BAWGAFreq(0)
+    BAWGAPhase(0)
+    BAWGADutyCycle(0)
     
     if AWGAFreqvalue > 0.0:
         AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
@@ -8141,12 +8162,11 @@ def AWGAMakeTrapazoid():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, phasealab, duty1lab
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
-    temp = 0
-    BAWGAAmpl(temp)
-    BAWGAOffset(temp)
-    BAWGAFreq(temp)
-    BAWGAPhase(temp)
-    BAWGADutyCycle(temp)
+    BAWGAAmpl(0)
+    BAWGAOffset(0)
+    BAWGAFreq(0)
+    BAWGAPhase(0)
+    BAWGADutyCycle(0)
     
     if AWGAFreqvalue > 0.0:
         AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
@@ -8192,12 +8212,11 @@ def AWGAMakeRamp():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, phasealab, duty1lab
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
-    temp = 0
-    BAWGAAmpl(temp)
-    BAWGAOffset(temp)
-    BAWGAFreq(temp)
-    BAWGAPhase(temp)
-    BAWGADutyCycle(temp)
+    BAWGAAmpl(0)
+    BAWGAOffset(0)
+    BAWGAFreq(0)
+    BAWGAPhase(0)
+    BAWGADutyCycle(0)
     
     if AWGAFreqvalue > 0.0:
         AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
@@ -8240,12 +8259,11 @@ def AWGAMakeUpDownRamp():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, duty1lab
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
-    temp = 0
-    BAWGAAmpl(temp)
-    BAWGAOffset(temp)
-    BAWGAFreq(temp)
-    BAWGAPhase(temp)
-    BAWGADutyCycle(temp)
+    BAWGAAmpl(0)
+    BAWGAOffset(0)
+    BAWGAFreq(0)
+    BAWGAPhase(0)
+    BAWGADutyCycle(0)
     
     if AWGAFreqvalue > 0.0:
         AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
@@ -8292,12 +8310,11 @@ def AWGAMakeImpulse():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue
 
-    temp = 0
-    BAWGAAmpl(temp)
-    BAWGAOffset(temp)
-    BAWGAFreq(temp)
-    BAWGAPhase(temp)
-    BAWGADutyCycle(temp)
+    BAWGAAmpl(0)
+    BAWGAOffset(0)
+    BAWGAFreq(0)
+    BAWGAPhase(0)
+    BAWGADutyCycle(0)
     
     if AWGAFreqvalue > 0.0:
         AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
@@ -8331,10 +8348,9 @@ def AWGAMakeUUNoise():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGAFreqvalue
     global AWGALength, AWGAperiodvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
-    temp = 0
-    BAWGAAmpl(temp)
-    BAWGAOffset(temp)
-    BAWGAFreq(temp)
+    BAWGAAmpl(0)
+    BAWGAOffset(0)
+    BAWGAFreq(0)
     
     if AWGAFreqvalue > 0.0:
         AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
@@ -8359,10 +8375,9 @@ def AWGAMakeUGNoise():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGAFreqvalue
     global AWGALength, AWGAperiodvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
-    temp = 0
-    BAWGAAmpl(temp)
-    BAWGAOffset(temp)
-    BAWGAFreq(temp)
+    BAWGAAmpl(0)
+    BAWGAOffset(0)
+    BAWGAFreq(0)
     
     if AWGAFreqvalue > 0.0:
         AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
@@ -8413,12 +8428,11 @@ def UpdateAWGA():
     global CHA, AWGSAMPLErate, DevID, devx, HWRevOne, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global amp1lab, off1lab
     
-    temp = 0
-    BAWGAAmpl(temp)
-    BAWGAOffset(temp)
-    BAWGAFreq(temp)
-    BAWGAPhase(temp)
-    BAWGADutyCycle(temp)
+    BAWGAAmpl(0)
+    BAWGAOffset(0)
+    BAWGAFreq(0)
+    BAWGAPhase(0)
+    BAWGADutyCycle(0)
     BAWGAShape()
 
     if AWG_Amp_Mode.get() == 0: # 0 = Min/Max mode, 1 = Amp/Offset
@@ -8779,10 +8793,10 @@ def AWGBMakeFourier():
     if (Max_termStr == None):         # If Cancel pressed, then None
         return
     Max_term = int(Max_termStr)
-    temp = 0
-    BAWGBAmpl(temp)
-    BAWGBOffset(temp)
-    BAWGBFreq(temp)
+
+    BAWGBAmpl(0)
+    BAWGBOffset(0)
+    BAWGBFreq(0)
 
     AWGBwaveform = []
     AWGBwaveform = numpy.cos(numpy.linspace(0, 2*numpy.pi, AWGSAMPLErate/AWGBFreqvalue)) # the fundamental
@@ -8807,12 +8821,11 @@ def AWGBMakeBodeSine():
     global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBperiodvalue
     global AWGBDutyCyclevalue, AWGBFreqvalue, duty2lab, AWGBgain, AWGBoffset, AWGBPhaseDelay, AWGBMode
     
-    temp = 0
-    BAWGBAmpl(temp)
-    BAWGBOffset(temp)
-    BAWGBFreq(temp)
-    BAWGBPhase(temp)
-    BAWGBDutyCycle(temp)
+    BAWGBAmpl(0)
+    BAWGBOffset(0)
+    BAWGBFreq(0)
+    BAWGBPhase(0)
+    BAWGBDutyCycle(0)
 
     if AWGBFreqvalue < 10.0: # if frequency is less than 10 Hz use libsmu sine function
         AWGBShape.set(1)
@@ -8832,7 +8845,7 @@ def AWGBMakeBodeSine():
             AWGBdelayvalue = 0.0
     elif AWGBPhaseDelay.get() == 1:
         AWGBdelayvalue = AWGBPhasevalue * AWGSAMPLErate / 1000
-    Cycles = int(32768/AWGBperiodvalue)
+    Cycles = int(131072/AWGBperiodvalue)
     if Cycles < 1:
         Cycles = 1
     RecLength = Cycles * AWGBperiodvalue
@@ -8855,12 +8868,11 @@ def AWGBMakePWMSine():
     global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength
     global AWGBDutyCyclevalue, AWGBFreqvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
-    temp = 0
-    BAWGBAmpl(temp)
-    BAWGBOffset(temp)
-    BAWGBFreq(temp)
-    BAWGBPhase(temp)
-    BAWGBDutyCycle(temp)
+    BAWGBAmpl(0)
+    BAWGBOffset(0)
+    BAWGBFreq(0)
+    BAWGBPhase(0)
+    BAWGBDutyCycle(0)
 
     if AWGBFreqvalue > 0.0:
         AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
@@ -8892,12 +8904,11 @@ def AWGBMakeSSQ():
     global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     
-    temp = 0
-    BAWGBAmpl(temp)
-    BAWGBOffset(temp)
-    BAWGBFreq(temp)
-    BAWGBPhase(temp)
-    BAWGBDutyCycle(temp)
+    BAWGBAmpl(0)
+    BAWGBOffset(0)
+    BAWGBFreq(0)
+    BAWGBPhase(0)
+    BAWGBDutyCycle(0)
     
     if AWGBFreqvalue > 0.0:
         AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
@@ -8938,12 +8949,11 @@ def AWGBMakeTrapazoid():
     global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
-    temp = 0
-    BAWGBAmpl(temp)
-    BAWGBOffset(temp)
-    BAWGBFreq(temp)
-    BAWGBPhase(temp)
-    BAWGBDutyCycle(temp)
+    BAWGBAmpl(0)
+    BAWGBOffset(0)
+    BAWGBFreq(0)
+    BAWGBPhase(0)
+    BAWGBDutyCycle(0)
     
     if AWGBFreqvalue > 0.0:
         AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
@@ -8990,12 +9000,11 @@ def AWGBMakeRamp():
     global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
-    temp = 0
-    BAWGBAmpl(temp)
-    BAWGBOffset(temp)
-    BAWGBFreq(temp)
-    BAWGBPhase(temp)
-    BAWGBDutyCycle(temp)
+    BAWGBAmpl(0)
+    BAWGBOffset(0)
+    BAWGBFreq(0)
+    BAWGBPhase(0)
+    BAWGBDutyCycle(0)
     
     if AWGBFreqvalue > 0.0:
         AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
@@ -9039,12 +9048,11 @@ def AWGBMakeUpDownRamp():
     global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
-    temp = 0
-    BAWGBAmpl(temp)
-    BAWGBOffset(temp)
-    BAWGBFreq(temp)
-    BAWGBPhase(temp)
-    BAWGBDutyCycle(temp)
+    BAWGBAmpl(0)
+    BAWGBOffset(0)
+    BAWGBFreq(0)
+    BAWGBPhase(0)
+    BAWGBDutyCycle(0)
     
     if AWGBFreqvalue > 0.0:
         AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
@@ -9092,12 +9100,11 @@ def AWGBMakeImpulse():
     global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
-    temp = 0
-    BAWGBAmpl(temp)
-    BAWGBOffset(temp)
-    BAWGBFreq(temp)
-    BAWGBPhase(temp)
-    BAWGBDutyCycle(temp)
+    BAWGBAmpl(0)
+    BAWGBOffset(0)
+    BAWGBFreq(0)
+    BAWGBPhase(0)
+    BAWGBDutyCycle(0)
     
     if AWGBFreqvalue > 0.0:
         AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
@@ -9133,10 +9140,9 @@ def AWGBMakeUUNoise():
     global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBFreqvalue
     global AWGBLength, AWGBperiodvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
-    temp = 0
-    BAWGBAmpl(temp)
-    BAWGBOffset(temp)
-    BAWGBFreq(temp)
+    BAWGBAmpl(0)
+    BAWGBOffset(0)
+    BAWGBFreq(0)
     
     if AWGBFreqvalue > 0.0:
         AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
@@ -9161,10 +9167,9 @@ def AWGBMakeUGNoise():
     global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBFreqvalue
     global AWGBLength, AWGBperiodvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
-    temp = 0
-    BAWGBAmpl(temp)
-    BAWGBOffset(temp)
-    BAWGBFreq(temp)
+    BAWGBAmpl(0)
+    BAWGBOffset(0)
+    BAWGBFreq(0)
     
     if AWGBFreqvalue > 0.0:
         AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
@@ -9341,18 +9346,17 @@ def BAWGEnab():
 
     # Stream = False
     # print "Updateing AWGs"
-    temp = 0
-    BAWGAAmpl(temp)
-    BAWGAOffset(temp)
-    BAWGAFreq(temp)
-    BAWGAPhase(temp)
-    BAWGADutyCycle(temp)
+    BAWGAAmpl(0)
+    BAWGAOffset(0)
+    BAWGAFreq(0)
+    BAWGAPhase(0)
+    BAWGADutyCycle(0)
     BAWGAShape()
-    BAWGBAmpl(temp)
-    BAWGBOffset(temp)
-    BAWGBFreq(temp)
-    BAWGBPhase(temp)
-    BAWGBDutyCycle(temp)
+    BAWGBAmpl(0)
+    BAWGBOffset(0)
+    BAWGBFreq(0)
+    BAWGBPhase(0)
+    BAWGBDutyCycle(0)
     BAWGBShape()
     UpdateAWGA()
     UpdateAWGB()
@@ -9617,7 +9621,7 @@ def BNumDiv():
 
 def BStartSA():
     global RUNstatus, PowerStatus, devx, PwrBt, freqwindow, session, AWGSync, contloop, discontloop
-    global ShowC1_VdB, ShowC1_P, ShowC2_VdB, ShowC2_P, ShowMathSA, DevID, FWRevOne
+    global ShowC1_VdB, ShowC1_P, ShowC2_VdB, ShowC2_P, ShowMathSA, DevID, FWRevOne, StopFreqEntry
 
     #AWGSync.set(0) # always run in continuous mode
     if DevID == "No Device":
@@ -9633,20 +9637,7 @@ def BStartSA():
         if ShowC1_VdB.get() == 0 and ShowC2_VdB.get() == 0 and ShowMathSA.get() == 0 and ShowC1_P.get() == 0 and ShowC2_P.get() == 0:
             showwarning("WARNING","Select at least one trace first",  parent=freqwindow)
             return()    
-        if RUNstatus.get() == 0:
-            RUNstatus.set(1)
-            if AWGSync.get() == 0: # running in continuous mode
-                # print "number streaming ", session.active_devices
-                if contloop == 0 or session.active_devices < 1:
-                    session.start(0)
-                    contloop = 1
-                    discontloop = 0
-                BAWGEnab()
-                
-            else:
-                session.cancel() # cancel continuous session mode
-                contloop = 0
-                discontloop = 1
+    BStart()
 #
     UpdateFreqAll()          # Always Update
 
@@ -9820,7 +9811,7 @@ def BStartBP():
     global ShowCA_VdB, ShowCB_P, ShowCB_VdB, ShowCB_P, ShowMathBP, contloop, discontloop
     global FStep, NSteps, FSweepMode, HScaleBP, CutDC, AWGAMode, AWGAShape, AWGBMode, AWGBShape
     global StartBodeEntry, StopBodeEntry, SweepStepBodeEntry, DevID, FWRevOne
-    global AWGAFreqEntry, AWGBFreqEntry, Reset_Freq
+    global AWGAFreqEntry, AWGBFreqEntry, Reset_Freq, AWGAIOMode, AWGBIOMode
 
     if DevID == "No Device":
         showwarning("WARNING","No Device Plugged In!")
@@ -9848,6 +9839,9 @@ def BStartBP():
             AWGBShape.set(18) # Set Shape to Sine
             AWGAMode.set(2) # Set AWG A to Hi-Z
             Reset_Freq = AWGBFreqEntry.get()
+        if FSweepMode.get() == 3: # using external Minigen
+            AWGAMode.set(2) # Set AWG A to Hi-Z
+            AWGBMode.set(2) # Set AWG B to Hi-Z
         try:
             NSteps.set(float(SweepStepBodeEntry.get()))
         except:
@@ -9865,35 +9859,42 @@ def BStartBP():
             StartBodeEntry.delete(0,"end")
             StartBodeEntry.insert(0,100)
             BeginFreq = 100
-        if RUNstatus.get() == 0:
-            RUNstatus.set(1)
-            if AWGSync.get() == 0: # running in continuous mode
-                if contloop == 0:
-                    #print "number streaming ", session.active_devices
-                    if session.active_devices < 1:
-                        session.start(0)
-                    contloop = 1
-                    discontloop = 0
-                BAWGEnab()
-                #print "Starting continuous mode"
-            else:
-                session.cancel() # cancel continuous session mode
-            if FSweepMode.get() > 0:
-                LoopNum.set(1)
-                BeginIndex = int((BeginFreq/50000)*16384)
-                EndIndex = int((EndFreq/50000)*16384)
-                if NSteps.get() < 5:
-                    NSteps.set(5)
-                if HScaleBP.get() == 1:
-                    LogFStop = math.log10(EndIndex)
-                    try:
-                        LogFStart = math.log10(BeginIndex)
-                    except:
-                        LogFStart = 1.0
-                    FStep = numpy.logspace(LogFStart, LogFStop, num=NSteps.get(), base=10.0)
-                else:
-                    FStep = numpy.linspace(BeginIndex, EndIndex, num=NSteps.get())
         #
+        if FSweepMode.get() == 1:
+            if AWGAMode.get() == 2:
+                AWGAMode.set(0) # Set AWG A to SVMI
+            AWGAShape.set(18) # Set Shape to Sine
+            Reset_Freq = AWGAFreqEntry.get()
+        if FSweepMode.get() == 2:
+            if AWGBMode.get() == 2:
+                AWGBMode.set(0) # Set AWG B to SVMI
+            AWGBShape.set(18) # Set Shape to Sine
+            Reset_Freq = AWGBFreqEntry.get()
+        if FSweepMode.get() == 3: # using external Minigen
+            AWGAMode.set(2) # Set AWG A to Hi-Z
+            AWGBMode.set(2) # Set AWG B to Hi-Z
+        try:
+            NSteps.set(float(SweepStepBodeEntry.get()))
+        except:
+            SweepStepBodeEntry.delete(0,"end")
+            SweepStepBodeEntry.insert(0, NSteps.get())
+        #
+        if FSweepMode.get() > 0:
+            LoopNum.set(1)
+            BeginIndex = int((BeginFreq/50000)*16384)
+            EndIndex = int((EndFreq/50000)*16384)
+            if NSteps.get() < 5:
+                NSteps.set(5)
+            if HScaleBP.get() == 1:
+                LogFStop = math.log10(EndIndex)
+                try:
+                    LogFStart = math.log10(BeginIndex)
+                except:
+                    LogFStart = 1.0
+                FStep = numpy.logspace(LogFStart, LogFStop, num=NSteps.get(), base=10.0)
+            else:
+                FStep = numpy.linspace(BeginIndex, EndIndex, num=NSteps.get())
+        BStart()
         # UpdateBodeAll()          # Always Update
 #
 def BStopBP():
@@ -10094,8 +10095,7 @@ def DoFFT():            # Fast Fourier transformation
     ALL = numpy.absolute(ALL)               # Make absolute SQR(REX*REX + IMX*IMX) for VOLTAGE!
     ALL = ALL * ALL                         # Convert from Voltage to Power (P = (V*V) / R; R = 1)
 
-    le = len(ALL)
-    le = le / 2                             # Only half is used, other half is mirror
+    le = len(ALL) / 2                             # Only half is used, other half is mirror
     ALL = ALL[:le]                          # So take only first half of the array
     PhaseA = PhaseA[:le]
     Totalcorr = float(ZEROstuffingvalue)/ fftsamples # For VOLTAGE!
@@ -10127,8 +10127,7 @@ def DoFFT():            # Fast Fourier transformation
     ALL = numpy.absolute(ALL)               # Make absolute SQR(REX*REX + IMX*IMX) for VOLTAGE!
     ALL = ALL * ALL                         # Convert from Voltage to Power (P = (U*U) / R; R = 1)
 
-    le = len(ALL)
-    le = le / 2                             # Only half is used, other half is mirror
+    le = len(ALL) / 2                             # Only half is used, other half is mirror
     ALL = ALL[:le]                          # So take only first half of the array
     PhaseB = PhaseB[:le]
     Totalcorr = float(ZEROstuffingvalue)/ fftsamples # For VOLTAGE!
@@ -10937,22 +10936,16 @@ def DoImpedance():
     except:
         ResValue = 1000.0
         
-    VVvoltageRatio = math.pow(10,((PeakdbB-PeakdbA)/20)) # VZ/VA 
+    VA = math.pow(10,(PeakdbA/20))
+    VB = math.pow(10,(PeakdbB/20))
+    VZ = VB # VZ=VA-VB
     VVangleCosine = math.cos(math.radians(PeakRelPhase))
-    Temp1 = ResValue * VVvoltageRatio
-    Temp2 = 1.0 + VVvoltageRatio**2 - (2.0 * VVvoltageRatio * VVangleCosine)
-    if(Temp2 < SMALL):
-        Temp2 = SMALL # This handles negative and too small positive
-        
-    Temp3 = math.sqrt(Temp2)  # VI/VA
-    Temp4 = ResValue * (1-(VVvoltageRatio * VVangleCosine))
-
-    ImpedanceMagnitude = (Temp1/Temp3) #  # Zx
-    ImpedanceRseries = (Temp4/Temp2) - ResValue # Rx
-    temp = ImpedanceMagnitude**2 - ImpedanceRseries**2
-    if(temp < 0.0):
-        temp = 0.0
-    ImpedanceXseries = math.sqrt(temp) # Xx
+    VI = math.sqrt(VA**2 + VZ**2 - 2*VA*VZ*VVangleCosine)
+    costheta = (VA**2 + VI**2 - VZ**2)/(2 * VA * VI) 
+    Za = ResValue * VA / VI
+    ImpedanceRseries = Za * costheta - ResValue
+    ImpedanceMagnitude = ResValue * VZ / VI
+    ImpedanceXseries = math.sqrt(ImpedanceMagnitude**2 - ImpedanceRseries**2)
     if(PeakRelPhase < 0.0):
         ImpedanceXseries = -ImpedanceXseries
     ImpedanceAngle = math.atan2(ImpedanceXseries, ImpedanceRseries) / DEG2RAD
@@ -10978,8 +10971,7 @@ def MakeIATrace():        # Update the grid and trace
     global Y0TIA          # Left top Y value 
     global ImpedanceMagnitude # in ohms 
     global ImpedanceAngle # in degrees 
-    global ImpedanceRseries # in ohms 
-    global ImpedanceXseries # in ohms
+    global ImpedanceRseries, ImpedanceXseries # in ohms
 
     # Set the TRACEsize variable
     TRACEsize = len(FFTresultA)     # Set the trace length
@@ -11073,7 +11065,7 @@ def MakeIAScreen():       # Update the screen with traces and text
     global COLORgrid    # The colors
     global COLORsignalband, COLORtext, COLORgrid
     global COLORtrace1, COLORtrace2, COLORtrace6
-    global ResScale   # Ohms per div 
+    global ResScale, DisplaySeries   # Ohms per div 
     global FFTwindow, FFTbandwidth, ZEROstuffing, FFTwindowname
     global X0LIA          # Left top X value
     global Y0TIA          # Left top Y value
@@ -11087,8 +11079,7 @@ def MakeIAScreen():       # Update the screen with traces and text
     global Vdiv         # Number of vertical divisions
     global ImpedanceMagnitude # in ohms 
     global ImpedanceAngle # in degrees 
-    global ImpedanceRseries # in ohms 
-    global ImpedanceXseries # in ohms
+    global ImpedanceRseries, ImpedanceXseries # in ohms
 
     # Delete all items on the screen
     de = IAca.find_enclosed( -10000, -10000, CANVASwidthIA+10000, CANVASheightIA+10000 )    
@@ -11214,38 +11205,85 @@ def MakeIAScreen():       # Update the screen with traces and text
 #
     if ImpedanceXseries < 0: # calculate series capacitance
         y = y + 24
-        txt = "Series Capacitance"
-        IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
-        Cseries = -1 / ( 2 * 3.14159 * PeakfreqA * ImpedanceXseries ) # in farads
-        Cseries = Cseries * 1E6
-        y = y + 20
-        if Cseries < 1:
-            Cseries = Cseries * 1E3
+        try:
+            Cseries = -1 / ( 2 * math.pi * PeakfreqA * ImpedanceXseries ) # in farads
+        except:
+            Cseries = 0
+        Qseries = 1/(2*math.pi*PeakfreqA*Cseries*ImpedanceRseries)
+        Cparallel = Cseries * (Qseries**2 / (1+Qseries**2))
+        Cparallel = Cparallel * 1E6 # convert to micro Farads
+        Rparallel = ImpedanceRseries * (1+Qseries**2)
+        Cseries = Cseries * 1E6 # convert to micro Farads
+        if DisplaySeries.get() == 0:
+            txt = "Series Capacitance"
+            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+            y = y + 20
             if Cseries < 1:
                 Cseries = Cseries * 1E3
-                txt = ' {0:.1f} '.format(Cseries) + "pF"
+                if Cseries < 1:
+                    Cseries = Cseries * 1E3
+                    txt = ' {0:.1f} '.format(Cseries) + "pF"
+                else:
+                    txt = ' {0:.3f} '.format(Cseries) + "nF"
             else:
-                txt = ' {0:.3f} '.format(Cseries) + "nF"
+                txt = ' {0:.3f} '.format(Cseries) + "uF"
+            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
         else:
-            txt = ' {0:.3f} '.format(Cseries) + "uF"
-        IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+            txt = "Parallel"
+            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+            y = y + 20
+            if Cparallel < 1:
+                Cparallel = Cparallel * 1E3
+                if Cparallel < 1:
+                    Cparallel = Cparallel * 1E3
+                    txt = "Capacitance " + ' {0:.1f} '.format(Cparallel) + "pF"
+                else:
+                    txt = "Capacitance " + ' {0:.3f} '.format(Cparallel) + "nF"
+            else:
+                txt = "Capacitance " + ' {0:.3f} '.format(Cparallel) + "uF"
+            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+            y = y + 20
+            txt = "Resistance" + ' {0:.1f} '.format(Rparallel) + "ohms"
+            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
         y = y + 20
         dissp = abs(ImpedanceRseries/ImpedanceXseries) * 100 # Dissipation factor is ratio of XR to XC in percent
         txt = 'D =  {0:.2f} '.format(dissp) + " %"
         IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+        
     elif ImpedanceXseries > 0: # calculate series inductance
         y = y + 24
-        txt = "Series Inductance"
-        IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
-        Lseries = ImpedanceXseries / ( 2 * 3.14159 * PeakfreqA ) # in henry
+        try:
+            Lseries = ImpedanceXseries / ( 2 * 3.14159 * PeakfreqA ) # in henry
+        except:
+            Lseries = 0
+        Qseries = (2*math.pi*PeakfreqA*Lseries)/ImpedanceRseries
+        Lparallel = Lseries * ((1+Qseries**2) / Qseries**2)
+        Lparallel = Lparallel * 1E3 # convert to millihenry
+        Rparallel = ImpedanceRseries * (1+Qseries**2)
         Lseries = Lseries * 1E3 # in millihenry
-        y = y + 22
-        if Lseries < 1:
-            Lseries = Lseries * 1E3
-            txt = ' {0:.2f} '.format(Lseries) + "uH"
+        if DisplaySeries.get() == 0:
+            txt = "Series Inductance"
+            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+            y = y + 22
+            if Lseries < 1:
+                Lseries = Lseries * 1E3
+                txt = ' {0:.2f} '.format(Lseries) + "uH"
+            else:
+                txt = ' {0:.2f} '.format(Lseries) + "mH"
+            IAca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
         else:
-            txt = ' {0:.2f} '.format(Lseries) + "mH"
-        IAca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+            txt = "Parallel"
+            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+            y = y + 20
+            if Lparallel < 1:
+                Lparallel = Lparallel * 1E3
+                txt = "Inductance " + ' {0:.2f} '.format(Lparallel) + "uH"
+            else:
+                txt = "Inductance " + ' {0:.2f} '.format(Lparallel) + "mH"
+            IAca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+            y = y + 20
+            txt = "Resistance" + ' {0:.1f} '.format(Rparallel) + "ohms"
+            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
         y = y + 20
         qf = abs(ImpedanceXseries/ImpedanceRseries) * 100 # Quality Factor is ratio of XL to XR
         txt = 'Q =  {0:.2f} '.format(qf)
@@ -11288,9 +11326,9 @@ def IACaresize(event):
 #
 # ================ Make IA Window ==========================
 def MakeIAWindow():
-    global iawindow, IAca, logo, IAScreenStatus, RsystemEntry, IADisp, AWGSync
+    global iawindow, IAca, logo, IAScreenStatus, RsystemEntry, IADisp, AWGSync, IASource
     global COLORcanvas, CANVASwidthIA, CANVASheightIA, RevDate, AWGAMode, AWGAShape, AWGBMode
-    global FFTwindow, CutDC, ColorMode, ResScale, GainCorEntry, PhaseCorEntry
+    global FFTwindow, CutDC, ColorMode, ResScale, GainCorEntry, PhaseCorEntry, DisplaySeries
     global CANVASwidthIA, GRWIA, X0LIA, CANVASheightIA, GRHIA, Y0TIA
 
     if IAScreenStatus.get() == 0:
@@ -11324,7 +11362,7 @@ def MakeIAWindow():
         rsemenu.pack(side=TOP)
         rseb2 = Button(rsemenu, text="Stop", style="Stop.TButton", command=BStop)
         rseb2.pack(side=RIGHT)
-        rseb3 = Button(rsemenu, text="Run", style="Run.TButton", command=BStart)
+        rseb3 = Button(rsemenu, text="Run", style="Run.TButton", command=BStartIA)
         rseb3.pack(side=RIGHT)
         #
         smpmenu = Frame( frame2iar )
@@ -11365,8 +11403,12 @@ def MakeIAWindow():
         Optionmenu["menu"]  = Optionmenu.menu
         Optionmenu.menu.add_command(label='Change Settings', command=MakeSettingsMenu)
         Optionmenu.menu.add_checkbutton(label='Cut-DC', variable=CutDC)
-        Optionmenu.menu.add_radiobutton(label='Black BG', variable=ColorMode, value=0, command=BgColor)
-        Optionmenu.menu.add_radiobutton(label='White BG', variable=ColorMode, value=1, command=BgColor)
+        Optionmenu.menu.add_command(label="-Meas As-", command=donothing)
+        Optionmenu.menu.add_radiobutton(label='Series', variable=DisplaySeries, value=0)
+        Optionmenu.menu.add_radiobutton(label='Parallel', variable=DisplaySeries, value=1)
+        Optionmenu.menu.add_command(label="-Background-", command=donothing)
+        Optionmenu.menu.add_radiobutton(label='Black', variable=ColorMode, value=0, command=BgColor)
+        Optionmenu.menu.add_radiobutton(label='White', variable=ColorMode, value=1, command=BgColor)
         Optionmenu.pack(side=LEFT, anchor=W)
         # Temp set source resistance to 1000
         rsystem = Frame( frame2iar )
@@ -11411,6 +11453,13 @@ def MakeIAWindow():
         PhaseCorEntry.pack(side=LEFT, anchor=W)
         PhaseCorEntry.delete(0,"end")
         PhaseCorEntry.insert(4,0.0)
+        #
+        srclab = Label(frame2iar, text="Source")
+        srclab.pack(side=TOP)
+        extsrc1 = Radiobutton(frame2iar, text="Internal", variable=IASource, value=0) #, command=)
+        extsrc1.pack(side=TOP)
+        extsrc2 = Radiobutton(frame2iar, text="External", variable=IASource, value=1) #, command=)
+        extsrc2.pack(side=TOP)
         
         dismiss1button = Button(frame2iar, text="Dismiss", style="W8.TButton", command=DestroyIAScreen)
         dismiss1button.pack(side=TOP)
@@ -11678,23 +11727,26 @@ def MakeFreqScreen():       # Update the screen with traces and text
         if ShowMarker.get() > 0:
             k = 1
             while k <= HarmonicMarkers.get():
-                dbA = (10 * math.log10(float(FFTresultA[PeakIndexA*k])) + 17)
-                FreqA = k*PeakIndexA*Fsample
-                if ShowMarker.get() == 2 and k > 1:
-                    Peak_label = ' {0:.2f} '.format(dbA - PeakdbA) + ',' + ' {0:.1f} '.format(FreqA - PeakfreqA)
-                else:
-                    Peak_label = ' {0:.2f} '.format(dbA) + ',' + ' {0:.1f} '.format(FreqA)
-                if HScale.get() == 1:
-                    try:
-                        LogF = math.log10(FreqA) # convet to log Freq
-                        xA = X0LF + int((LogF - LogFStart)/LogFpixel)
-                    except:
-                        xA = X0LF
-                else:
-                    xA = X0LF+int((FreqA - StartFrequency)/Fpixel)# +StartFrequency
-                yA = Yc - Yconv * dbA
-                Freqca.create_text(xA, yA, text=Peak_label, fill=COLORtrace1, anchor="s", font=("arial", 8 ))
-                k = k + 1
+                try:
+                    dbA = (10 * math.log10(float(FFTresultA[PeakIndexA*k])) + 17)
+                    FreqA = k*PeakIndexA*Fsample
+                    if ShowMarker.get() == 2 and k > 1:
+                        Peak_label = ' {0:.2f} '.format(dbA - PeakdbA) + ',' + ' {0:.1f} '.format(FreqA - PeakfreqA)
+                    else:
+                        Peak_label = ' {0:.2f} '.format(dbA) + ',' + ' {0:.1f} '.format(FreqA)
+                    if HScale.get() == 1:
+                        try:
+                            LogF = math.log10(FreqA) # convet to log Freq
+                            xA = X0LF + int((LogF - LogFStart)/LogFpixel)
+                        except:
+                            xA = X0LF
+                    else:
+                        xA = X0LF+int((FreqA - StartFrequency)/Fpixel)# +StartFrequency
+                    yA = Yc - Yconv * dbA
+                    Freqca.create_text(xA, yA, text=Peak_label, fill=COLORtrace1, anchor="s", font=("arial", 8 ))
+                    k = k + 1
+                except:
+                    k = k + 1
     if len(T2Fline) > 4:    # Avoid writing lines with 1 coordinate
         # Write the trace CHB
         if OverRangeFlagB == 1:
@@ -11704,23 +11756,26 @@ def MakeFreqScreen():       # Update the screen with traces and text
         if ShowMarker.get() > 0:
             k = 1
             while k <= HarmonicMarkers.get():
-                dbB = (10 * math.log10(float(FFTresultB[PeakIndexB*k])) + 17)
-                FreqB = k*PeakIndexB*Fsample
-                if ShowMarker.get() == 2 and k > 1:
-                    Peak_label = ' {0:.2f} '.format(dbB - PeakdbB) + ',' + ' {0:.1f} '.format(FreqB - PeakfreqB)
-                else:
-                    Peak_label = ' {0:.2f} '.format(dbB) + ',' + ' {0:.1f} '.format(FreqB)
-                if HScale.get() == 1:
-                    try:
-                        LogF = math.log10(FreqB) # convet to log Freq
-                        xB = X0LF + int((LogF - LogFStart)/LogFpixel)
-                    except:
-                        xB = X0LF
-                else:
-                    xB = X0LF+int((FreqB - StartFrequency)/Fpixel)# +StartFrequency
-                yB = Yc - Yconv * dbB
-                Freqca.create_text(xB, yB, text=Peak_label, fill=COLORtrace2, anchor="s", font=("arial", 8 ))
-                k = k + 1
+                try:
+                    dbB = (10 * math.log10(float(FFTresultB[PeakIndexB*k])) + 17)
+                    FreqB = k*PeakIndexB*Fsample
+                    if ShowMarker.get() == 2 and k > 1:
+                        Peak_label = ' {0:.2f} '.format(dbB - PeakdbB) + ',' + ' {0:.1f} '.format(FreqB - PeakfreqB)
+                    else:
+                        Peak_label = ' {0:.2f} '.format(dbB) + ',' + ' {0:.1f} '.format(FreqB)
+                    if HScale.get() == 1:
+                        try:
+                            LogF = math.log10(FreqB) # convet to log Freq
+                            xB = X0LF + int((LogF - LogFStart)/LogFpixel)
+                        except:
+                            xB = X0LF
+                    else:
+                        xB = X0LF+int((FreqB - StartFrequency)/Fpixel)# +StartFrequency
+                    yB = Yc - Yconv * dbB
+                    Freqca.create_text(xB, yB, text=Peak_label, fill=COLORtrace2, anchor="s", font=("arial", 8 ))
+                    k = k + 1
+                except:
+                    k = k + 1
     if len(T1Pline) > 4:    # Avoid writing lines with 1 coordinate
         # Write the phase trace A-B 
         Freqca.create_line(T1Pline, fill=COLORtrace3, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
@@ -12531,7 +12586,7 @@ def MakeAWGWindow():
         ShapeAMenu.menu = Menu(ShapeAMenu, tearoff = 0 )
         ShapeAMenu["menu"] = ShapeAMenu.menu
         ShapeAMenu.menu.add_radiobutton(label="DC", variable=AWGAShape, value=0, command=UpdateAwgCont)
-        ShapeAMenu.menu.add_radiobutton(label="Sine", variable=AWGAShape, value=18, command=AWGAMakeBodeSine)# command=UpdateAwgCont)
+        ShapeAMenu.menu.add_radiobutton(label="Sine", variable=AWGAShape, value=18, command=AWGAMakeBodeSine)# command=UpdateAwgCont) # 
         ShapeAMenu.menu.add_radiobutton(label="Triangle", variable=AWGAShape, value=2, command=UpdateAwgCont)
         ShapeAMenu.menu.add_radiobutton(label="Sawtooth", variable=AWGAShape, value=3, command=UpdateAwgCont)
         ShapeAMenu.menu.add_radiobutton(label="Square", variable=AWGAShape, value=4, command=UpdateAwgCont)
@@ -12544,7 +12599,7 @@ def MakeAWGWindow():
         ShapeAMenu.menu.add_radiobutton(label="U-D Ramp", variable=AWGAShape, value=12, command=AWGAMakeUpDownRamp)
         ShapeAMenu.menu.add_radiobutton(label="Fourier Series", variable=AWGAShape, value=14, command=AWGAMakeFourier)
         ShapeAMenu.menu.add_radiobutton(label="PWM Sine", variable=AWGAShape, value=17, command=AWGAMakePWMSine)
-        # ShapeAMenu.menu.add_radiobutton(label="Bode Sine", variable=AWGAShape, value=18, command=AWGAMakeBodeSine)
+        #ShapeAMenu.menu.add_radiobutton(label="Bode Sine", variable=AWGAShape, value=18, command=AWGAMakeBodeSine)
         ShapeAMenu.menu.add_radiobutton(label="UU Noise", variable=AWGAShape, value=7, command=AWGAMakeUUNoise)
         ShapeAMenu.menu.add_radiobutton(label="UG Noise", variable=AWGAShape, value=8, command=AWGAMakeUGNoise)
         ShapeAMenu.menu.add_radiobutton(label="Math", variable=AWGAShape, value=10, command=AWGAMakeMath)
