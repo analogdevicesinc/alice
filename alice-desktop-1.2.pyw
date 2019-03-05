@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 alice-desktop 1.2.py(w) (2-26-2019)
+# ADALM1000 alice-desktop 1.2.py(w) (3-5-2019)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu.rework >= 1.0 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -36,7 +36,7 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(26 Feb 2019)"
+RevDate = "(5 March 2019)"
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.2.1/alice-desktop-1.2-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
@@ -2121,19 +2121,19 @@ def BStart():
             devx.ctrl_transfer( 0x40, 0x51, 49, 0, 0, 0, 100) # turn on analog power
         if (RUNstatus.get() == 0):
             RUNstatus.set(1)
-            if AWGSync.get() == 0: # running in continuous mode
-                
-                # print "number streaming ", session.active_devices
-                time.sleep(0.01)
+            if AWGSync.get() == 0:
+                session.flush()
+                CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z mode
+                CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z mode
+                BAWGEnab()
                 if not session.continuous:
-                    session.flush()
                     session.start(0)
-                    time.sleep(0.01)
-                    # print "From Start session(0)"
-                contloop = 1
-                discontloop = 0
-                time.sleep(0.01)
-                # print "Starting continuous mode"
+                time.sleep(0.02) # wait awhile here for some reason
+            elif session.continuous:
+                session.end()
+                session.flush()
+                CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z mode
+                CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z mode
                 BAWGEnab()
             else:
                 contloop = 0
@@ -2178,6 +2178,7 @@ def BStop():
         else:
             contloop = 0
             discontloop = 1
+            #session.end()
             session.cancel()
     elif (RUNstatus.get() == 2):
         RUNstatus.set(3)
@@ -2370,6 +2371,7 @@ def Analog_In():
     global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
     global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2
     global SV1, SI1, SV2, SI2, SVA_B
+    global FregPoint, FBins, FStep
     # Analog Mux channel measurement variables
     global TRACEresetTime, TRACEmodeTime, DualMuxMode
     global DCVMuxA, MinVMuxA, MaxVMuxA, MidVMuxA, PPVMuxA, SVMuxA
@@ -2541,14 +2543,15 @@ def Analog_In():
                     AWGSync.set(1) # Impedance analyzer and Bode plotter must be run in discontinuous mode
                 if BodeDisp.get() > 0:
                     if LoopNum.get() <= len(FStep):
-                        if FStep[LoopNum.get()-1] < 16:
+                        FregPoint = FBins[int(FStep[LoopNum.get()-1])] # look up next frequency from list of bins
+                        if FregPoint < 100.0:
                             SMPfft = 16384
-                        elif FStep[LoopNum.get()-1] < 32:
+                        elif FregPoint < 500.0:
                             SMPfft = 8192
-                        elif FStep[LoopNum.get()-1] < 64:
+                        elif FregPoint < 2000.0:
                             SMPfft = 4096
                         else:
-                            SMPfft = 4096
+                            SMPfft = 2048
                 Analog_Freq_In()
         elif OhmRunStatus.get() == 1 and OhmDisp.get() == 1:
             Ohm_Analog_In()
@@ -5368,7 +5371,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
     global ShowRA_V, ShowRA_I, ShowRB_V, ShowRB_I, ShowMath
     global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MathUnits, MathXUnits, MathYUnits
     global Xsignal, Ysignal, MathTrace, MathAxis, MathXAxis, MathYAxis
-    global RUNstatus, SingleShot    # 0 stopped, 1 start, 2 running, 3 stop now, 4 stop and restart
+    global RUNstatus, SingleShot, session    # 0 stopped, 1 start, 2 running, 3 stop now, 4 stop and restart
     global CHAsb        # spinbox Index for channel 1 V
     global CHBsb        # spinbox Index for channel 2 V
     global CHAOffset    # Offset value for channel 1 V
@@ -5842,7 +5845,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
 
     # General information on top of the grid
     # Sweep information
-    if contloop == 1:
+    if session.continuous:
         sttxt = "Running Continuous"
     else:
         sttxt = "Running Discontinuous"
@@ -8030,7 +8033,7 @@ def AWGAMakeBodeSine():
             AWGAdelayvalue = 0.0
     elif AWGAPhaseDelay.get() == 1:
         AWGAdelayvalue = AWGAPhasevalue * AWGSAMPLErate / 1000
-    Cycles = int(131072/AWGAperiodvalue) # 131072
+    Cycles = int(32768/AWGAperiodvalue) # 131072
     if Cycles < 1:
         Cycles = 1
     RecLength = Cycles * AWGAperiodvalue
@@ -8845,7 +8848,7 @@ def AWGBMakeBodeSine():
             AWGBdelayvalue = 0.0
     elif AWGBPhaseDelay.get() == 1:
         AWGBdelayvalue = AWGBPhasevalue * AWGSAMPLErate / 1000
-    Cycles = int(131072/AWGBperiodvalue)
+    Cycles = int(32768/AWGBperiodvalue)
     if Cycles < 1:
         Cycles = 1
     RecLength = Cycles * AWGBperiodvalue
@@ -12537,7 +12540,7 @@ def MakeAWGWindow():
     global AWGBAmplEntry, AWGBOffsetEntry, AWGBFreqEntry, AWGBPhaseEntry, AWGBDutyCycleEntry
     global AWGALength, AWGBLength, RevDate, phasealab, phaseblab, AWGAModeLabel, AWGBModeLabel
     global AWGAIOMode, AWGBIOMode, duty1lab, duty2lab, awgaph, awgadel, awgbph, awgbdel
-    global AwgLayout, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AwgLayout, AWG_Amp_Mode, awgsync # 0 = Min/Max mode, 1 = Amp/Offset
     global amp1lab, amp2lab, off1lab, off2lab, Reset_Freq
     
     if AWGScreenStatus.get() == 0:
@@ -12839,13 +12842,14 @@ def MakeMuxModeWindow():
     global CHB_Asb, CHB_APosEntry, CHB_Bsb, CHB_BPosEntry
     global CHB_Csb, CHB_CPosEntry, CHB_Dsb, CHB_DPosEntry, SyncButton
     global CHB_Alab, CHB_Blab, CHB_Clab, CHB_Dlab, CHBlab, CHBofflab
-    global CHB_Cofflab, CHB_Dofflab
+    global CHB_Cofflab, CHB_Dofflab, awgsync
     global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MuxEnb, MuxSync, hipulseimg, lowpulseimg, DualMuxMode
     
     if MuxScreenStatus.get() == 0 and DacScreenStatus.get() == 0 and DigScreenStatus.get() == 0:
         MuxScreenStatus.set(1)
         #
         AWGSync.set(1) # force discontinuous mode
+        awgsync.config(state=DISABLED)
         BAWGEnab() # update AWG settings
         #
         muxwindow = Toplevel()
@@ -12991,9 +12995,10 @@ def SyncImage():
         SyncButton.config(image=lowpulseimg)
         
 def DestroyMuxScreen():
-    global muxwindow, MuxScreenStatus, CHAlab, CHAofflab, CHBlab, CHBofflab
+    global muxwindow, awgsync, MuxScreenStatus, CHAlab, CHAofflab, CHBlab, CHBofflab
     
     MuxScreenStatus.set(0)
+    awgsync.config(state=NORMAL)
     # Reset main Channel B control colors
     CHBlab.config(style="Rtrace2.TButton")
     CHBofflab.config(style="Rtrace2.TButton")
