@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 alice-desktop 1.2.py(w) (3-5-2019)
+# ADALM1000 alice-desktop 1.2.py(w) (4-16-2019)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu.rework >= 1.0 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -36,7 +36,7 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(5 March 2019)"
+RevDate = "(16 April 2019)"
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.2.1/alice-desktop-1.2-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
@@ -2515,7 +2515,7 @@ def Analog_In():
                             except:
                             # buffer size mismatch so reset memory buffers
                                 VmemoryMuxB = VBuffMB
-                    if Show_CBA.get() == 1 or ShowC1_V.get() == 1:
+                    if Show_CBA.get() == 1:
                         devx.ctrl_transfer(0x40, 0x50, PIO_0, 0, 0, 0, 100) # set PIO 0 to 0
                         devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
                         devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO 2 to 0
@@ -2537,6 +2537,8 @@ def Analog_In():
                             except:
                             # buffer size mismatch so reset memory buffers
                                 VmemoryMuxA = VBuffMA
+                    if Show_CBA.get() == 0 and Show_CBB.get() == 0 and Show_CBC.get() == 0 and Show_CBD.get() == 0 and ShowC1_V.get() == 1:
+                        Analog_Time_In()
             if (FreqDisp.get() > 0 and SpectrumScreenStatus.get() == 1) or (IADisp.get() > 0 and IAScreenStatus.get() == 1) or (BodeDisp.get() > 0 and BodeScreenStatus.get() == 1):
                 if IADisp.get() > 0 or BodeDisp.get() > 0:
                     CutDC.set(1) # remove DC portion of waveform
@@ -2827,8 +2829,9 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
             devx.ctrl_transfer( 0x40, 0x51, 38, 0, 0, 0, 100) # set CHB GND switch to open
             # time.sleep(1000.0/SHOWsamples)
         else: # running in continuous mode
+            time.sleep(0.5)
             if session.continuous:
-                ADsignal1 = devx.read(SHOWsamples, -1, True) # get samples for both channel A and B
+                ADsignal1 = devx.read(SHOWsamples, -1, True) # get samples for both channel A and B 
     #
     else:
         # session.flush()
@@ -4237,7 +4240,7 @@ def MakeTimeTrace():    # Make the traces
         SCmin = int(-1 * TRIGGERsample)
         SCmax = int(TRACEsize - TRIGGERsample - 20)
     else:
-        SCmin = hldn
+        SCmin = 0 # hldn
         SCmax = TRACEsize
     if SCstart < SCmin:             # No reading before start of array
         SCstart = SCmin
@@ -9597,31 +9600,7 @@ def BCSVfile(): # Store the trace as CSV file [frequency, magnitude or dB value]
         n = n + 1    
 
     DataFile.close()                           # Close the file
-
-def BNumDiv():
-    global Vdiv, freqwindow
-    
-    s = askstring("Vert Divisions", "Value: " + str(Vdiv.get()) + "\n\nNew value:\n(4-20)", parent=freqwindow)
-
-    if (s == None): # If Cancel pressed, then None
-        return()
-
-    try:        # Error if for example no numeric characters or OK pressed without input (s = "")
-        vs = int(s)
-    except:
-        s = "error"
-        vs = 10
-
-    if s != "error":
-        Vdiv.set(vs)
-
-    if Vdiv.get() < 4:
-        Vdiv.set(4)
-
-    if Vdiv.get() > 20:
-        Vdiv.set(20)
-    UpdateFreqTrace()
-
+#
 def BStartSA():
     global RUNstatus, PowerStatus, devx, PwrBt, freqwindow, session, AWGSync, contloop, discontloop
     global ShowC1_VdB, ShowC1_P, ShowC2_VdB, ShowC2_P, ShowMathSA, DevID, FWRevOne, StopFreqEntry
@@ -9708,48 +9687,7 @@ def Blevel4():
     
     if RUNstatus.get() == 0:      # Update if stopped
         UpdateFreqTrace()
-
-def BZeroStuff():
-    global RUNstatus, AWGSAMPLErate
-    global ZEROstuffing, freqwindow, bodewindow
-    
-    if (RUNstatus.get() != 0):
-        try:
-            showwarning("WARNING","Stop sweep first", parent=freqwindow)
-            return()
-        except:
-            try:
-                showwarning("WARNING","Stop sweep first", parent=bodewindow)
-                return()
-            except:
-                return()
-    
-    try:
-        s = askstring("Zero stuffing","For better interpolation of levels between frequency samples.\nBut increases processing time!\n\nValue: "
-                  + str(ZEROstuffing.get()) + "\n\nNew value:\n(0-5, 0 is no zero stuffing)", parent=freqwindow)
-    except:
-        try:
-            s = askstring("Zero stuffing","For better interpolation of levels between frequency samples.\nBut increases processing time!\n\nValue: "
-                  + str(ZEROstuffing.get()) + "\n\nNew value:\n(0-5, 0 is no zero stuffing)", parent=bodewindow)
-        except:
-            return()
-    if (s == None):         # If Cancel pressed, then None
-        return()
-
-    try:                    # Error if for example no numeric characters or OK pressed without input (s = "")
-        v = int(s)
-    except:
-        s = "error"
-
-    if s != "error":
-        if v < 0:
-            v = 0
-        if v > 5:
-            v = 5
-        ZEROstuffing.set(v)
-
-    # UpdateFreqScreen()          # Always Update    
-
+#
 def Bsamples1():
     global RUNstatus, SpectrumScreenStatus, IAScreenStatus
     global SMPfftpwrTwo, SMPfft, FFTwindow
@@ -13045,6 +12983,7 @@ def BDSweepFromFile():
             CSVFile = open(filename)
             csv_f = csv.reader(CSVFile)
             FileSweepFreq = []
+            FileSweepAmpl = []
             for row in csv_f:
                 try:
                     FileSweepFreq.append(float(row[0]))
@@ -13055,7 +12994,7 @@ def BDSweepFromFile():
             FileSweepAmpl = numpy.array(FileSweepAmpl)
             MaxAmpl = numpy.amax(FileSweepAmpl)
             NormAmpl = MaxAmpl
-            s = askstring("Normalize Max Amplitude", "Max Amplitude = " + str(MaxAmpl) + "\n\n Enter New Max value:\n in dB")
+            s = askstring("Normalize Max Amplitude", "Max Amplitude = " + str(MaxAmpl) + "\n\n Enter New Max value:\n in dB", parent = bodewindow)
             if (s == None):         # If Cancel pressed, then None
                 return()
             try:                    # Error if for example no numeric characters or OK pressed without input (s = "")
@@ -13076,7 +13015,7 @@ def BDSweepFromFile():
             SweepStepBodeEntry.delete(0,"end")
             SweepStepBodeEntry.insert(0,len(FileSweepFreq))
         except:
-            showwarning("WARNING","No such file found or wrong format!")
+            showwarning("WARNING","No such file found or wrong format!", parent = bodewindow)
 #
 # ========== Make Bode Plot Window =============
 def MakeBodeWindow():
