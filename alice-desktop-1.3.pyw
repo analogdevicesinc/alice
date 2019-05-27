@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
-# ADALM1000 alice-desktop 1.3.py(w) (4-17-2019)
+# ADALM1000 alice-desktop 1.3.py(w) (5-25-2019)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -38,8 +38,8 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(17 April 2019)"
-Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.0/alice-desktop-1.3-setup.exe'
+RevDate = "(25 May 2019)"
+Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.1/alice-desktop-1.3-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
 R0lGODlhIAAgAHAAACH5BAEAAAIALAAAAAAgACAAgQAAAP///wAAAAAAAAJJhI+py+0PYwtBWkDp
@@ -116,6 +116,7 @@ OnBoardRes = 50.83
 AD584act = 2.5
 # Set sample buffer size
 HoldOff = 0.0
+LShift = 0
 BaseSampleRate = 100000
 AWGSAMPLErate = BaseSampleRate # Sample rate of the AWG channels
 SAMPLErate = BaseSampleRate # Scope sample rate can be decimated
@@ -196,6 +197,10 @@ FFTwindow.set(5)        # FFTwindow 0=None (rectangular B=1), 1=Cosine (B=1.24),
 RelPhaseCorrection = 15 # Relative Phase error seems to be a random number each time board is powered up
 RelPhaseCenter = IntVar(0)
 RelPhaseCenter.set(0) # Center line value for phase plots
+ImpedanceCenter = IntVar(0)
+ImpedanceCenter.set(0) # Center line value for impedance plots
+MultipleBoards = IntVar(0)
+MultipleBoards.set(0) # Turn on access for multiple m1k boards
 EnableCommandInterface = 0
 EnableMuxMode = 1
 EnableMinigenMode = 0
@@ -284,6 +289,11 @@ AWGBdelayvalue = 0
 AWGBDutyCyclevalue = 50
 AWGBWave = 'dc'
 Reset_Freq = 300
+MeasGateLeft = 0.0
+MeasGateRight = 0.0 # in mSec
+MeasGateNum = 0
+MeasGateStatus = IntVar(0)
+MeasGateStatus.set(0)
 #
 DCV1 = DCV2 = MinV1 = MaxV1 = MinV2 = MaxV2 = MidV1 = PPV1 = MidV2 = PPV2 = SV1 = SI1 = 0
 # Analog Mux channel measurement variables
@@ -386,7 +396,8 @@ LoopNum = IntVar(0)
 LoopNum.set(1)
 LastWindow = -1
 LastSMPfft = 0
-FBins = numpy.linspace(0, 100000, num=32768)
+CurrentFreqX = X0LBP + 14
+FBins = numpy.linspace(0, 100000, num=16384)
 FStep = numpy.linspace(0, 32767, num=NSteps.get())
 FSweepMode = IntVar(0)
 FSweepCont = IntVar(0)
@@ -691,9 +702,10 @@ def BSaveConfig(filename):
     global ChaMeasString1, ChaMeasString2, ChaMeasString3, ChaMeasString4, ChaMeasString5, ChaMeasString6
     global ChbMeasString1, ChbMeasString2, ChbMeasString3, ChbMeasString4, ChbMeasString5, ChbMeasString6
     global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
-    global CHA_A1, CHA_A2, CHB_A1, CHB_A2, RelPhaseCenter
+    global CHA_A1, CHA_A2, CHB_A1, CHB_A2, RelPhaseCenter, ImpedanceCenter, NetworkScreenStatus
     global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
     global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
+    global Show_Rseries, Show_Xseries, Show_Magnitude, Show_Angle
     
     # open Config file for Write
     ConfgFile = open(filename, "w")
@@ -746,6 +758,7 @@ def BSaveConfig(filename):
         ConfgFile.write('GainCorEntry.insert(5, ' + GainCorEntry.get() + ')\n')
         ConfgFile.write('PhaseCorEntry.delete(0,END)\n')
         ConfgFile.write('PhaseCorEntry.insert(5, ' + PhaseCorEntry.get() + ')\n')
+        ConfgFile.write('NetworkScreenStatus.set(' + str(NetworkScreenStatus.get()) + ')\n')
     else:
         ConfgFile.write('DestroyIAScreen()\n')
     if SpectrumScreenStatus.get() > 0:
@@ -816,6 +829,7 @@ def BSaveConfig(filename):
         ConfgFile.write('global GRWBP; GRWBP = ' + str(GRWBP) + '\n')
         ConfgFile.write('global GRHBP; GRHBP = ' + str(GRHBP) + '\n')
         ConfgFile.write('RelPhaseCenter.set(' + str(RelPhaseCenter.get()) + ')\n')
+        ConfgFile.write('ImpedanceCenter.set(' + str(ImpedanceCenter.get()) + ')\n')
         ConfgFile.write('MakeBodeWindow()\n')
         ConfgFile.write("bodewindow.geometry('+" + str(bodewindow.winfo_x()) + '+' + str(bodewindow.winfo_y()) + "')\n")
         ConfgFile.write('ShowCA_VdB.set(' + str(ShowCA_VdB.get()) + ')\n')
@@ -841,6 +855,10 @@ def BSaveConfig(filename):
         ConfgFile.write('StopBodeEntry.insert(4, ' + StopBodeEntry.get() + ')\n')
         ConfgFile.write('StartBodeEntry.delete(0,END)\n')
         ConfgFile.write('StartBodeEntry.insert(4, ' + StartBodeEntry.get() + ')\n')
+        ConfgFile.write('Show_Rseries.set(' + str(Show_Rseries.get()) + ')\n')
+        ConfgFile.write('Show_Xseries.set(' + str(Show_Xseries.get()) + ')\n')
+        ConfgFile.write('Show_Magnitude.set(' + str(Show_Magnitude.get()) + ')\n')
+        ConfgFile.write('Show_Angle.set(' + str(Show_Angle.get()) + ')\n')
     else:
         ConfgFile.write('DestroyBodeScreen()\n')
     if MeasureStatus.get() == 1:
@@ -1167,9 +1185,10 @@ def BLoadConfig(filename):
     global ChaMeasString1, ChaMeasString2, ChaMeasString3, ChaMeasString4, ChaMeasString5, ChaMeasString6
     global ChbMeasString1, ChbMeasString2, ChbMeasString3, ChbMeasString4, ChbMeasString5, ChbMeasString6
     global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
-    global CHA_A1, CHA_A2, CHB_A1, CHB_A2, RelPhaseCenter
+    global CHA_A1, CHA_A2, CHB_A1, CHB_A2, RelPhaseCenter, ImpedanceCenter
     global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
     global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
+    global Show_Rseries, Show_Xseries, Show_Magnitude, Show_Angle
     
     # Read configuration values from file
     try:
@@ -1198,7 +1217,7 @@ def BLoadConfig(filename):
     except:
         print "Config File Not Found."
 def ReMakeAWGwaves(): # re make awg waveforms ib case something changed
-    global AWGAShape, AWGBShape
+    global AWGAShape, AWGBShape, BisCompA
 
     if AWGAShape.get()==9:
         AWGAMakeImpulse()
@@ -1216,11 +1235,15 @@ def ReMakeAWGwaves(): # re make awg waveforms ib case something changed
         AWGAMakeUpDownRamp()
     elif AWGAShape.get()==14:
         AWGAMakeFourier()
+    elif AWGAShape.get()==19:
+        AWGAMakeSinc()
     elif AWGAShape.get()==7:
         AWGAMakeUUNoise()
     elif AWGAShape.get()==8:
         AWGAMakeUGNoise()
 #
+    if BisCompA.get() == 1:
+        SetBCompA()
     if AWGBShape.get()==9:
         AWGBMakeImpulse()
     elif AWGBShape.get()==11:
@@ -1237,6 +1260,8 @@ def ReMakeAWGwaves(): # re make awg waveforms ib case something changed
         AWGBMakeUpDownRamp()
     elif AWGBShape.get()==14:
         AWGBMakeFourier()
+    elif AWGBShape.get()==19:
+        AWGBMakeSinc()
     elif AWGBShape.get()==7:
         AWGBMakeUUNoise()
     elif AWGBShape.get()==8:
@@ -2756,7 +2781,7 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
     global VmemoryA, VmemoryB, ImemoryA, ImemoryB, VmemoryMuxA, VmemoryMuxB, VmemoryMuxC, VmemoryMuxD
     global AWGSync, AWGAMode, AWGBMode, TMsb, HoldOff, HoldOffentry, HozPoss, HozPossentry
     global AWGAIOMode, AWGBIOMode, DecimateOption, DualMuxMode
-    global TRACEresetTime, TRACEmodeTime, TRACEaverage, TRIGGERsample, TgInput
+    global TRACEresetTime, TRACEmodeTime, TRACEaverage, TRIGGERsample, TgInput, LShift
     global CHA, CHB, session, devx, discontloop, contloop
     global TRACES, TRACESread, TRACEsize
     global RUNstatus, SingleShot, TimeDisp, XYDisp, FreqDisp
@@ -2779,6 +2804,8 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
     global VAets, VBets, Samples_Cycle, MulX, ETSDisp, ETSDir, ETSts, Fmin, FminE, eqivsamplerate
     global DivXEntry, FOffEntry, FminDisp, FOff, DivX, FminEntry, FBase, MaxETSrecord
     global cal, Two_X_Sample, ADC_Mux_Mode, Alternate_Sweep_Mode, Last_ADC_Mux_Mode
+    global MeasGateLeft, MeasGateRight, MeasGateNum, MeasGateStatus
+
     # get time scale
     try:
         TIMEdiv = eval(TMsb.get())
@@ -3271,11 +3298,23 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
                 VmemoryB = VBuffB
             ImemoryA = IBuffA
             ImemoryB = IBuffB
+        if TgInput.get() == 1:
+            ReInterploateTrigger(VBuffA)
+        if TgInput.get() == 2:
+            ReInterploateTrigger(IBuffA)
+        if TgInput.get() == 3:
+            ReInterploateTrigger(VBuffB)
+        if TgInput.get() == 4:
+            ReInterploateTrigger(IBuffB)
 # DC value = average of the data record
     if CHA_RC_HP.get() == 1 or CHB_RC_HP.get() == 1:
         Endsample = hldn+onescreen # average over only one screen's worth of samples
     else:
         Endsample = SHOWsamples - 10 # average over all samples
+    if MeasGateStatus.get() == 1:
+        if (MeasGateRight-MeasGateLeft) > 0:
+            hldn = int(MeasGateLeft * SAMPLErate/1000) + TRIGGERsample
+            Endsample = int(MeasGateRight * SAMPLErate/1000) + TRIGGERsample
     DCV1 = numpy.mean(VBuffA[hldn:Endsample])
     DCV2 = numpy.mean(VBuffB[hldn:Endsample])
     # convert current values to mA
@@ -3379,6 +3418,7 @@ def Analog_Freq_In():   # Read from the stream and store the data into the array
     global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
     global Reset_Freq, AWGAFreqEntry, AWGBFreqEntry, MinigenFout, IASource, IA_Ext_Conf
     
+    HalfSAMPLErate = SAMPLErate/2
     # Do input divider Calibration CH1VGain, CH2VGain, CH1VOffset, CH2VOffset
     try:
         InOffA = float(eval(CHAVOffsetEntry.get()))
@@ -3430,7 +3470,7 @@ def Analog_Freq_In():   # Read from the stream and store the data into the array
                 FregPoint = FBins[FStep[0]]
         else:
             if LoopNum.get() <= len(FileSweepFreq): #
-                FreqIndex = int((FileSweepFreq[LoopNum.get()-1]*16384)/50000)
+                FreqIndex = int((FileSweepFreq[LoopNum.get()-1]*16384)/HalfSAMPLErate)
                 FregPoint = FBins[FreqIndex] # look up next frequency from list of bins
                 VRMSAmpl = 10**(FileSweepAmpl[LoopNum.get()-1]/20) # convert to V RMS 0 dBV = 1V RMS
             else:
@@ -3729,7 +3769,7 @@ def BHistAsPercent():
         HistAsPercent = 0
 #
 def FindRisingEdge(Trace1, Trace2):
-    global MinV1, MaxV1, MinV2, MaxV2, HoldOff
+    global MinV1, MaxV1, MinV2, MaxV2, HoldOff, TRIGGERsample, TgInput, LShift
     # global VBuffA, VBuffB
     global SHOWsamples, SAMPLErate, CHAperiod, CHAfreq, CHBperiod, CHBfreq
     global CHAHW, CHALW, CHADCy, CHBHW, CHBLW, CHBDCy, ShowC1_V, ShowC2_V
@@ -3739,8 +3779,12 @@ def FindRisingEdge(Trace1, Trace2):
     anf1 = bnf1 = 1
     anr2 = bnr2 = 2
     hldn = int(HoldOff * SAMPLErate/1000)
-    Trace1 = numpy.roll(Trace1, -hldn)
-    Trace2 = numpy.roll(Trace2, -hldn)
+    if TgInput.get() > 0: # if triggering right shift arrays to undo trigger left shift
+        Trace1 = numpy.roll(Trace1, -LShift)
+        Trace2 = numpy.roll(Trace2, -LShift)
+    else:
+        Trace1 = numpy.roll(Trace1, -hldn)
+        Trace2 = numpy.roll(Trace2, -hldn)
     try:
         MidV1 = (numpy.amax(Trace1)+numpy.amin(Trace1))/2.0
         MidV2 = (numpy.amax(Trace2)+numpy.amin(Trace2))/2.0
@@ -3850,6 +3894,17 @@ def FindRisingEdge(Trace1, Trace2):
     if CHABphase < 0.0:
         CHABphase = CHABphase + 360.0
 #
+def ReInterploateTrigger(TrgBuff):
+    global DX, TRIGGERsample, TRIGGERlevel
+
+    DX = 0
+    n = TRIGGERsample
+    DY = TrgBuff[int(n)] - TrgBuff[int(n+1)]
+    if DY != 0.0:
+        DX = (TRIGGERlevel - TrgBuff[int(n+1)])/DY # calculate interpolated trigger point
+    else:
+        DX = 0
+    
 def FindTriggerSample(TrgBuff): # find trigger time sample point of passed waveform array
     global AutoLevel, TgInput, TRIGGERlevel, TRIGGERentry, DX, SAMPLErate, Is_Triggered
     global HoldOffentry, HozPossentry, TRIGGERsample, TRACEsize, HozPoss, hozpos
@@ -5631,9 +5686,9 @@ def MakeTimeScreen():     # Update the screen with traces and text
     global CH1pdvRange, CHAOffset, CH2pdvRange, CHBOffset
     global CHB_Asb, CHB_APosEntry, CHB_Bsb, CHB_BPosEntry
     global CHB_Csb, CHB_CPosEntry, CHB_Dsb, CHB_DPosEntry
-    global DacScreenStatus, DigScreenStatus
+    global DacScreenStatus, DigScreenStatus, CHA_RC_HP, CHB_RC_HP
     global D0, D1, D2, D3, D4, D5, D6, D7
-    global DevID, devx, MarkerNum, MarkerScale
+    global DevID, devx, MarkerNum, MarkerScale, MeasGateLeft, MeasGateRight, MeasGateStatus
     global HozPoss, HozPossentry
     global VABase, VATop, VBBase, VBTop, UserALabel, UserAString, UserBLabel, UserBString
     global MeasTopV1, MeasBaseV1, MeasTopV2, MeasBaseV2, MeasUserA, MeasUserB
@@ -5670,6 +5725,8 @@ def MakeTimeScreen():     # Update the screen with traces and text
         TMsb.insert(0,TIMEdiv)
     if TIMEdiv < 0.0002:
         TIMEdiv = 0.1
+    DISsamples = (10.0 * TIMEdiv) # grid width in time 
+    Tstep = DISsamples / GRW # time in mS per pixel
     # get the vertical ranges
     try:
         CH1pdvRange = float(eval(CHAsb.get()))
@@ -5986,8 +6043,6 @@ def MakeTimeScreen():     # Update the screen with traces and text
     if ShowTCur.get() > 0:
         Dline = [TCursor, Y0T, TCursor, Y0T+GRH]
         ca.create_line(Dline, dash=(4,3), fill=COLORgrid, width=GridWidth.get())
-        DISsamples = (10.0 * TIMEdiv) # grid width in time 
-        Tstep = DISsamples / GRW # time in mS per pixel
         Tpoint = ((TCursor-X0L) * Tstep) + vt
         if TIMEdiv < 0.1:
             TString = ' {0:.3f} '.format(Tpoint)
@@ -6007,8 +6062,6 @@ def MakeTimeScreen():     # Update the screen with traces and text
         if MouseX > X0L and MouseX < X0L+GRW and MouseY > Y0T and MouseY < Y0T+GRH:
             Dline = [MouseX, Y0T, MouseX, Y0T+GRH]
             ca.create_line(Dline, dash=(4,3), fill=COLORgrid, width=GridWidth.get())
-            DISsamples = (10.0 * TIMEdiv) # grid width in time 
-            Tstep = DISsamples / GRW # time in mS per pixel
             Tpoint = ((MouseX-X0L) * Tstep) + vt
             if TIMEdiv < 0.1:
                 TString = ' {0:.3f} '.format(Tpoint)
@@ -6023,6 +6076,12 @@ def MakeTimeScreen():     # Update the screen with traces and text
             V1String = ' {0:.3f} '.format(-yvolts)
             V_label = V1String + Units
             ca.create_text(MouseX+1, MouseY+5, text=V_label, fill=COLORmarker, anchor="w", font=("arial", 8 ))
+#
+    if MeasGateStatus.get() == 1:
+        LeftGate = X0L + MeasGateLeft / Tstep
+        RightGate = X0L + MeasGateRight / Tstep
+        ca.create_line(LeftGate, Y0T, LeftGate, Y0T+GRH, dash=(5,3), fill=COLORtrace5)
+        ca.create_line(RightGate, Y0T, RightGate, Y0T+GRH, dash=(5,3), fill=COLORtrace7)
 #
     SmoothBool = SmoothCurves.get()
     # Write the traces if available
@@ -6188,7 +6247,10 @@ def MakeTimeScreen():     # Update the screen with traces and text
     txt = " "
     if ShowC1_V.get() == 1:
     # Channel A information
-        txt = "CHA: "
+        if CHA_RC_HP.get() == 1:
+            txt = "CHA: HP "
+        else:
+            txt = "CHA: "
         txt = txt + str(CH1pdvRange) + " V/div"
         if MeasDCV1.get() == 1: 
             txt = txt + " AvgV = " + ' {0:.4f} '.format(DCV1)
@@ -6275,7 +6337,10 @@ def MakeTimeScreen():     # Update the screen with traces and text
                 V1String = "####"
             txt = txt +  UserBLabel + " = " + V1String
     if ShowC2_V.get() == 1:
-        txt = "CHB: "
+        if CHB_RC_HP.get() == 1:
+            txt = "CHB: HP "
+        else:
+            txt = "CHB: "
         txt = txt + str(CH2pdvRange) + " V/div"
         if MeasDCV2.get() == 1:
             txt = txt + " AvgV = " + ' {0:.4f} '.format(DCV2)
@@ -7353,19 +7418,28 @@ def onCanvasClickLeft(event):
     global CHAOffset, CHAIOffset, CHBOffset, CHBIOffset
     global CHB_Asb, CHB_APosEntry, CHB_Bsb, CHB_BPosEntry
     global CHB_Csb, CHB_CPosEntry, CHB_Dsb, CHB_DPosEntry
+    global MeasGateLeft, MeasGateRight, MeasGateStatus, MeasGateNum, TMsb, SAMPLErate
+    
+    try:
+        HoldOff = float(eval(HoldOffentry.get()))
+        if HoldOff < 0:
+            HoldOff = 0
+    except:
+        HoldOffentry.delete(0,END)
+        HoldOffentry.insert(0, HoldOff)
+    # get time scale
+    try:
+        TIMEdiv = float(eval(TMsb.get()))
+    except:
+        TIMEdiv = 0.5
+        TMsb.delete(0,"end")
+        TMsb.insert(0,TIMEdiv)
+    # prevent divide by zero error
+    if TIMEdiv < 0.0002:
+        TIMEdiv = 0.01
     # add markers only if stopped
     if (RUNstatus.get() == 0):
         MarkerNum = MarkerNum + 1
-        # get time scale
-        try:
-            TIMEdiv = float(eval(TMsb.get()))
-        except:
-            TIMEdiv = 0.5
-            TMsb.delete(0,"end")
-            TMsb.insert(0,TIMEdiv)
-        # prevent divide by zero error
-        if TIMEdiv < 0.0002:
-            TIMEdiv = 0.01
         # get the vertical ranges
         try:
             CH1pdvRange = float(eval(CHAsb.get()))
@@ -7417,13 +7491,6 @@ def onCanvasClickLeft(event):
             CH1IpdvRange = 1.0
         if CH2IpdvRange < 1.0:
             CH2IpdvRange = 1.0
-        try:
-            HoldOff = float(eval(HoldOffentry.get()))
-            if HoldOff < 0:
-                HoldOff = 0
-        except:
-            HoldOffentry.delete(0,END)
-            HoldOffentry.insert(0, HoldOff)
 #
         if MuxScreenStatus.get() == 1: # if using analog Mux set up axis controls
             try:
@@ -7565,6 +7632,21 @@ def onCanvasClickLeft(event):
         ca.create_text(x, y, text=V_label, fill=COLORmarker, anchor=Justify, font=("arial", 8 ))
         PrevV = yvolts
         PrevT = Tpoint
+    else:
+        if MeasGateStatus.get() == 1:
+            DISsamples = (10.0 * TIMEdiv) # grid width in time 
+            Tstep = DISsamples / GRW # time in mS per pixel
+            if MeasGateNum == 0:
+                MeasGateLeft = ((event.x-X0L) * Tstep) #+ HoldOff
+                MeasGateNum = 1
+            else:
+                MeasGateRight = ((event.x-X0L) * Tstep) #+ HoldOff
+                MeasGateNum = 0
+            LeftGate = X0L + MeasGateLeft / Tstep
+            RightGate = X0L + MeasGateRight / Tstep
+            ca.create_line(LeftGate, Y0T, LeftGate, Y0T+GRH, fill=COLORtext)
+            ca.create_line(RightGate, Y0T, RightGate, Y0T+GRH, fill=COLORtext)
+            
 #
 def onCanvasOne(event):
     global ShowC1_V
@@ -8300,6 +8382,61 @@ def AWGAMakeFourier():
     duty1lab.config(text="Harmonics")
     UpdateAwgCont()
 #
+def AWGAMakeSinc():
+    global AWGAwaveform, AWGSampleRate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
+    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay
+    global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    
+    BAWGAAmpl(0)
+    BAWGAOffset(0)
+    BAWGAFreq(0)
+    BAWGAPhase(0)
+    BAWGADutyCycle(0)
+
+    if AWGAFreqvalue > 0.0:
+        if AWG_2X.get() == 1:
+            AWGAperiodvalue = int((BaseSampleRate*2)/AWGAFreqvalue)
+            if AWGAperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
+                AWGAperiodvalue = AWGAperiodvalue + 1
+        else:
+            AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
+    else:
+        AWGAperiodvalue = 0.0
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
+        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+    else:
+        MaxV = AWGAOffsetvalue
+        MinV = AWGAAmplvalue
+    
+    if AWGAPhaseDelay.get() == 0:
+        if AWGAPhasevalue > 0:
+            AWGAdelayvalue = AWGAperiodvalue * AWGAPhasevalue / 360.0
+        else:
+            AWGAdelayvalue = 0.0
+    elif AWGAPhaseDelay.get() == 1:
+        AWGAdelayvalue = AWGAPhasevalue * SampleRate / 1000
+
+    Cycles = int(AWGADutyCyclevalue*100)
+    NCycles = -1 * Cycles
+    AWGAwaveform = []
+    AWGAwaveform = numpy.sinc(numpy.linspace(NCycles, Cycles, SAMPLErate/AWGAFreqvalue))
+    amplitude = (MaxV-MinV) / 2.0
+    offset = (MaxV+MinV) / 2.0
+    AWGAwaveform = (AWGAwaveform * amplitude) + offset # scale and offset the waveform
+    Cycles = int(37500/AWGAperiodvalue)
+    if Cycles < 1:
+        Cycles = 1
+    if Cycles > 1:
+        Extend = int((Cycles-1.0)*AWGAperiodvalue/2.0)
+        AWGAwaveform = numpy.pad(AWGAwaveform, (Extend,Extend), 'wrap')
+    AWGAwaveform = numpy.roll(AWGAwaveform, int(AWGAdelayvalue))
+    SplitAWGAwaveform()
+    AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
+    #BAWGAPhaseDelay()
+    duty1lab.config(text="Cycles")
+    UpdateAwgCont()
+#
 def AWGAMakeSSQ():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, phasealab, duty1lab
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
@@ -8784,7 +8921,35 @@ def UpdateAWGA():
             if HWRevOne == "D":
                 AWGAMode.set(1)
                 CHA.mode = Mode.SIMV_SPLIT # channel must be in source current mode
-# AWG B functions 
+# AWG B functions
+def SetBCompA():
+    global AWGAAmplEntry, AWGBAmplEntry, AWGAOffsetEntry, AWGBOffsetEntry, AWGAFreqEntry, AWGBFreqEntry
+    global AWGAPhaseEntry, AWGBPhaseEntry, AWGADutyCycleEntry, AWGBDutyCycleEntry, AWGAShape, AWGBShape
+    global BisCompA
+
+    # if BisCompA.get() == 1:
+    # sawp Min and Max values
+    AWGBAmplvalue = float(eval(AWGAAmplEntry.get()))
+    AWGBOffsetvalue = float(eval(AWGAOffsetEntry.get()))
+    AWGBAmplEntry.delete(0,"end")
+    AWGBAmplEntry.insert(0, AWGBOffsetvalue)
+    AWGBOffsetEntry.delete(0,"end")
+    AWGBOffsetEntry.insert(0, AWGBAmplvalue)
+    # copy everything else
+    AWGBFreqvalue = float(eval(AWGAFreqEntry.get()))
+    AWGBFreqEntry.delete(0,"end")
+    AWGBFreqEntry.insert(0, AWGBFreqvalue)
+    AWGBPhasevalue = float(eval(AWGAPhaseEntry.get()))
+    AWGBPhaseEntry.delete(0,"end")
+    AWGBPhaseEntry.insert(0, AWGBPhasevalue)
+    AWGBDutyCyclevalue = float(eval(AWGADutyCycleEntry.get()))
+    AWGBDutyCycleEntry.delete(0,"end")
+    AWGBDutyCycleEntry.insert(0, AWGBDutyCyclevalue)
+    AWGBShape.set(AWGAShape.get())
+    #
+#        ReMakeAWGwaves()
+#        UpdateAwgCont()
+#
 def BAWGBAmpl(temp):
     global AWGBAmplEntry, AWGBAmplvalue, AWGBMode, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
@@ -9200,6 +9365,61 @@ def AWGBMakePWMSine():
                 AWGBwaveform.append(MinV) # j>=v?1:0
     SplitAWGBwaveform()
     AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
+    UpdateAwgCont()
+#
+def AWGBMakeSinc():
+    global AWGBwaveform, AWGSampleRate, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBperiodvalue
+    global AWGBDutyCyclevalue, AWGBFreqvalue, duty2lab, AWGBgain, AWGBoffset, AWGBPhaseDelay
+    global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    
+    BAWGBAmpl(0)
+    BAWGBOffset(0)
+    BAWGBFreq(0)
+    BAWGBPhase(0)
+    BAWGBDutyCycle(0)
+
+    if AWGBFreqvalue > 0.0:
+        if AWG_2X.get() == 1:
+            AWGBperiodvalue = int((BaseSampleRate*2)/AWGBFreqvalue)
+            if AWGBperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
+                AWGBperiodvalue = AWGBperiodvalue + 1
+        else:
+            AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
+    else:
+        AWGBperiodvalue = 0.0
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
+        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+    else:
+        MaxV = AWGBOffsetvalue
+        MinV = AWGBAmplvalue
+    
+    if AWGBPhaseDelay.get() == 0:
+        if AWGBPhasevalue > 0:
+            AWGBdelayvalue = AWGBperiodvalue * AWGBPhasevalue / 360.0
+        else:
+            AWGBdelayvalue = 0.0
+    elif AWGBPhaseDelay.get() == 1:
+        AWGBdelayvalue = AWGBPhasevalue * SampleRate / 1000
+
+    Cycles = int(AWGBDutyCyclevalue*100)
+    NCycles = -1 * Cycles
+    AWGBwaveform = []
+    AWGBwaveform = numpy.sinc(numpy.linspace(NCycles, Cycles, SAMPLErate/AWGBFreqvalue))
+    amplitude = (MaxV-MinV) / 2.0
+    offset = (MaxV+MinV) / 2.0
+    AWGBwaveform = (AWGBwaveform * amplitude) + offset # scale and offset the waveform
+    Cycles = int(37500/AWGBperiodvalue)
+    if Cycles < 1:
+        Cycles = 1
+    if Cycles > 1:
+        Extend = int((Cycles-1.0)*AWGBperiodvalue/2.0)
+        AWGBwaveform = numpy.pad(AWGBwaveform, (Extend,Extend), 'wrap')
+    AWGBwaveform = numpy.roll(AWGBwaveform, int(AWGBdelayvalue))
+    SplitAWGBwaveform()
+    AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
+    #BAWGAPhaseDelay()
+    duty2lab.config(text="Cycles")
     UpdateAwgCont()
 #
 def AWGBMakeSSQ():
@@ -10133,7 +10353,8 @@ def BStartBP():
     global FStep, NSteps, FSweepMode, HScaleBP, CutDC, AWGAMode, AWGAShape, AWGBMode, AWGBShape
     global StartBodeEntry, StopBodeEntry, SweepStepBodeEntry, DevID, FWRevOne
     global AWGAFreqEntry, AWGBFreqEntry, Reset_Freq, AWGAIOMode, AWGBIOMode
-    global Two_X_Sample, ADC_Mux_Mode, AWG_2X
+    global Two_X_Sample, ADC_Mux_Mode, AWG_2X, ZEROstuffing, SAMPLErate
+    global BeginIndex, EndIndex
 
     if DevID == "No Device":
         showwarning("WARNING","No Device Plugged In!")
@@ -10149,6 +10370,8 @@ def BStartBP():
             showwarning("WARNING","Select at least one trace first",  parent=bodewindow)
             return()
         #
+        if ZEROstuffing.get() < 3:
+            ZEROstuffing.set(3)
         CutDC.set(1) # set to remove DC
         try:
             EndFreq = float(StopBodeEntry.get())
@@ -10206,8 +10429,9 @@ def BStartBP():
         #
         if FSweepMode.get() > 0:
             LoopNum.set(1)
-            BeginIndex = int((BeginFreq/50000)*16384)
-            EndIndex = int((EndFreq/50000)*16384)
+            NyquistFreq = SAMPLErate/2
+            BeginIndex = int((BeginFreq/NyquistFreq)*16384)
+            EndIndex = int((EndFreq/NyquistFreq)*16384)
             if NSteps.get() < 5:
                 NSteps.set(5)
             if HScaleBP.get() == 1:
@@ -10814,14 +11038,14 @@ def MakeBodeTrace():        # Update the grid and trace
     global AWGSAMPLErate, HScaleBP, RUNstatus, SAMPLErate, BaseSampleRate
     global StartBodeEntry, StopBodeEntry
     global STARTsample, STOPsample, LoopNum, FSweepMode
-    global FreqTraceMode, RelPhaseCenter, PhCenBodeEntry
+    global FreqTraceMode, RelPhaseCenter, PhCenBodeEntry, ImCenBodeEntry, ImpedanceCenter, Impedcenter
     global TAFline, TBFline, TBPMline, TAPline, TBPline
     global Vdiv         # Number of vertical divisions
     global X0LBP        # Left top X value
     global Y0TBP        # Left top Y value
     global ResScale, NetworkScreenStatus, Show_Rseries, NSweepSeriesR, Show_Xseries, NSweepSeriesX
     global Show_Magnitude, NSweepSeriesMag, Show_Angle, NSweepSeriesAng
-    global TIARline, TIAXline, TIAMagline, TIAAngline
+    global TIARline, TIAXline, TIAMagline, TIAAngline, CurrentFreqX
 
     # Set the TRACEsize variable
     TRACEsize = 0
@@ -10852,8 +11076,19 @@ def MakeBodeTrace():        # Update the grid and trace
         PhCenBodeEntry.insert(0,0)
         RelPhaseCenter.set(0)
         Phasecenter = 0
-    BeginIndex = int((BeginFreq/50000)*16384)
-    EndIndex = int((EndFreq/50000)*16384)
+    try:
+        Impedcenter = int(ImCenBodeEntry.get())
+        ImpedanceCenter.set(Impedcenter)
+    except:
+        ImCenBodeEntry.delete(0,"end")
+        ImCenBodeEntry.insert(0,0)
+        ImpedanceCenter.set(0)
+        Impedcenter = 0
+    #
+    HalfSAMPLErate = SAMPLErate/2
+    BeginIndex = int((BeginFreq/HalfSAMPLErate)*16384)
+    EndIndex = int((EndFreq/HalfSAMPLErate)*16384)
+    CurrentFreqX = X0LBP + 14
     if FSweepMode.get() > 0 and len(FSweepAdB) > 4:
         # Vertical conversion factors (level dBs) and border limits
         Yconv = float(GRHBP) / (Vdiv.get() * DBdivlist[DBdivindexBP.get()])     # Conversion factors, Yconv is the number of screenpoints per dB
@@ -10898,6 +11133,7 @@ def MakeBodeTrace():        # Update the grid and trace
                         x = x1
                 else:
                     x = x1 + (F - BeginFreq)  / Fpixel
+                CurrentFreqX = x
                 if ShowCA_VdB.get() == 1: 
                     TAFline.append(int(x + 0.5))
                     try:
@@ -11002,7 +11238,7 @@ def MakeBodeTrace():        # Update the grid and trace
                         x = x1 + (F - BeginFreq)  / Fpixel
                     if Show_Rseries.get() == 1:
                         TIARline.append(int(x + 0.5))
-                        y1 = ycenter - NSweepSeriesR[n] / OhmsperPixel
+                        y1 = ycenter - ((NSweepSeriesR[n]-Impedcenter) / OhmsperPixel)
                         if (y1 < Ymin):
                             y1 = Ymin
                         if (y1 > Ymax):
@@ -11010,7 +11246,7 @@ def MakeBodeTrace():        # Update the grid and trace
                         TIARline.append(y1)
                     if Show_Xseries.get() == 1:
                         TIAXline.append(int(x + 0.5))
-                        y1 = ycenter - NSweepSeriesX[n] / OhmsperPixel
+                        y1 = ycenter - ((NSweepSeriesX[n]-Impedcenter) / OhmsperPixel)
                         if (y1 < Ymin):
                             y1 = Ymin
                         if (y1 > Ymax):
@@ -11018,7 +11254,7 @@ def MakeBodeTrace():        # Update the grid and trace
                         TIAXline.append(y1)
                     if Show_Magnitude.get() == 1:
                         TIAMagline.append(int(x + 0.5))
-                        y1 = ycenter - NSweepSeriesMag[n] / OhmsperPixel
+                        y1 = ycenter - ((NSweepSeriesMag[n]-Impedcenter) / OhmsperPixel)
                         if (y1 < Ymin):
                             y1 = Ymin
                         if (y1 > Ymax):
@@ -11026,7 +11262,7 @@ def MakeBodeTrace():        # Update the grid and trace
                         TIAMagline.append(y1)
                     if Show_Angle.get() == 1:
                         TIAAngline.append(int(x + 0.5))
-                        y1 = ycenter - Yphconv * NSweepSeriesAng[n]
+                        y1 = ycenter - Yphconv * (NSweepSeriesAng[n]-Phasecenter)
                         if (y1 < Ymin):
                             y1 = Ymin
                         if (y1 > Ymax):
@@ -11058,7 +11294,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
     global StartBodeEntry, StopBodeEntry
     global ShowCA_P, ShowCB_P, ShowRA_VdB, ShowRB_VdB, ShowMarkerBP
     global ShowCA_RdB, ShowCA_RP, ShowCB_RdB, ShowCB_RP
-    global ShowMathBP, BodeDisp, RelPhaseCenter, PhCenBodeEntry
+    global ShowMathBP, BodeDisp, RelPhaseCenter, PhCenBodeEntry, ImCenBodeEntry, ImpedanceCenter, Impedcenter
     global ShowBPCur, ShowBdBCur, BPCursor, BdBCursor
     global Show_Rseries, Show_Xseries, Show_Magnitude, Show_Angle, NetworkScreenStatus
     global TAFline, TBFline, TAPline, TAFRline, TBFRline, TBPMline, TBPRMline
@@ -11066,7 +11302,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
     global TRACEaverage # Number of traces for averageing
     global FreqTraceMode    # 1 normal 2 max 3 average
     global Vdiv, ResScale # Number of vertical divisions
-    global TIARline, TIAXline, TIAMagline, TIAAngline
+    global TIARline, TIAXline, TIAMagline, TIAAngline, CurrentFreqX
 
     # Delete all items on the screen
     de = Bodeca.find_enclosed( -1000, -1000, CANVASwidthBP+1000, CANVASheightBP+1000 )
@@ -11094,6 +11330,15 @@ def MakeBodeScreen():       # Update the screen with traces and text
         PhCenBodeEntry.insert(0,0)
         RelPhaseCenter.set(0)
         Phasecenter = 0
+    try:
+        Impedcenter = int(ImCenBodeEntry.get())
+        ImpedanceCenter.set(Impedcenter)
+    except:
+        ImCenBodeEntry.delete(0,"end")
+        ImCenBodeEntry.insert(0,0)
+        ImpedanceCenter.set(0)
+        Impedcenter = 0
+    #
     # Draw horizontal grid lines
     i = 0
     x1 = X0LBP + 14
@@ -11109,14 +11354,13 @@ def MakeBodeScreen():       # Update the screen with traces and text
         Vaxis_label = str(Vaxis_value)
         Bodeca.create_text(x1-3, y, text=Vaxis_label, fill=COLORtrace1, anchor="e", font=("arial", 8 ))
         if ShowCA_P.get() == 1 or ShowCB_P.get() == 1 or Show_Angle.get() == 1:
-            Vaxis_value = ( 180 - ( i * (360 / Vdiv.get())))
-            Vaxis_value = Vaxis_value + Phasecenter
+            Vaxis_value = ( 180 - ( i * (360 / Vdiv.get()))) + Phasecenter
             Vaxis_label = str(Vaxis_value)
             Bodeca.create_text(x2+3, y, text=Vaxis_label, fill=COLORtrace3, anchor="w", font=("arial", 8 ))
         if NetworkScreenStatus.get() > 0:
             if Show_Rseries.get() == 1 or Show_Xseries.get() == 1 or Show_Magnitude.get() == 1:
                 RperDiv = float(ResScale.get())
-                Vaxis_value = ( (RperDiv * Vdiv.get()/2) - (i * RperDiv) )
+                Vaxis_value = ( (RperDiv * Vdiv.get()/2) - (i * RperDiv) ) + Impedcenter
                 if Vaxis_value > 500 or Vaxis_value < -500:
                     Vaxis_value = Vaxis_value/1000.0
                     if Vaxis_value > 5 or Vaxis_value < -5:
@@ -11183,20 +11427,20 @@ def MakeBodeScreen():       # Update the screen with traces and text
             Bodeca.create_text(x, y2+3, text=axis_label, fill=COLORgrid, anchor="n", font=("arial", 8 ))
             i = i + 1
     # Draw X - Y cursors if needed
+    Fpixel = (EndFreq - BeginFreq) / GRWBP # Frequency step per screen pixel
+    LogFStop = math.log10(EndFreq)
+    try:
+        LogFStart = math.log10(BeginFreq)
+    except:
+        LogFStart = 0.0
+    LogFpixel = (LogFStop - LogFStart) / GRWBP
     if ShowBPCur.get() > 0:
         Dline = [BPCursor, Y0TBP, BPCursor, Y0TBP+GRHBP]
         Bodeca.create_line(Dline, dash=(3,4), fill=COLORtrigger, width=GridWidth.get())
         # Horizontal conversion factors (frequency Hz) and border limits
         if HScaleBP.get() == 1:
-            LogFStop = math.log10(EndFreq)
-            try:
-                LogFStart = math.log10(BeginFreq)
-            except:
-                LogFStart = 0.0
-            LogFpixel = (LogFStop - LogFStart) / GRWBP
             xfreq = 10**(((BPCursor-x1)*LogFpixel) + LogFStart)
         else:
-            Fpixel = (EndFreq - BeginFreq) / GRWBP # Frequency step per screen pixel
             xfreq = ((BPCursor-x1)*Fpixel)+BeginFreq
         XFString = ' {0:.2f} '.format(xfreq)
         V_label = XFString + " Hz"
@@ -11280,6 +11524,15 @@ def MakeBodeScreen():       # Update the screen with traces and text
     if Show_Angle.get() == 1 and len(TIAAngline) > 4:
         Bodeca.create_line(TIAAngline, fill=COLORtraceR3, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
 
+    Dline = [CurrentFreqX, Y0TBP, CurrentFreqX, Y0TBP+GRHBP]
+    Bodeca.create_line(Dline, dash=(2,2), fill=COLORgrid, width=GridWidth.get())
+    if HScaleBP.get() == 1:
+        xfreq = 10**(((CurrentFreqX-x1)*LogFpixel) + LogFStart)
+    else:
+        xfreq = ((CurrentFreqX-x1)*Fpixel)+BeginFreq
+    XFString = ' {0:.0f} '.format(xfreq)
+    V_label = XFString + " Hz"
+    Bodeca.create_text(CurrentFreqX, Y0TBP+GRHBP+1, text=V_label, fill=COLORtext, anchor="n", font=("arial", 8 ))
     # General information on top of the grid
 
     txt = "    Sample rate: " + str(SAMPLErate)
@@ -11521,7 +11774,7 @@ def MakeIAScreen():       # Update the screen with traces and text
     global PeakxRA, PeakyRA, PeakxRB, PeakyRB, PeakdbRA, PeakdbRB
     global PeakxRM, PeakyRM, PeakRMdb, PeakfreqRM
     global PeakphaseA, PeakphaseB, PeakRelPhase, PhaseCalEntry
-    global COLORgrid, SmoothCurvesBP, TRACEwidth, GridWidth    # The colors
+    global SmoothCurvesBP, TRACEwidth, GridWidth    # The colors
     global COLORsignalband, COLORtext, COLORgrid, IASweepSaved
     global COLORtrace1, COLORtrace2, COLORtrace5, COLORtrace6
     global ResScale, DisplaySeries   # Ohms per div 
@@ -11856,37 +12109,37 @@ def MakeIAWindow():
         dropmenu = Frame( frame2iar )
         dropmenu.pack(side=TOP)
         # File menu 
-        Filemenu = Menubutton(dropmenu, text="File", style="W5.TButton")
-        Filemenu.menu = Menu(Filemenu, tearoff = 0 )
-        Filemenu["menu"] = Filemenu.menu
-        Filemenu.menu.add_command(label="Save Config", command=BSaveConfigIA)
-        Filemenu.menu.add_command(label="Load Config", command=BLoadConfigIA)
-        Filemenu.menu.add_command(label="Save V Cal", command=BSaveCal)
-        Filemenu.menu.add_command(label="Load V Cal", command=BLoadCal)
-        Filemenu.menu.add_command(label="Save Data", command=BSaveDataIA)
-        Filemenu.menu.add_command(label="Save Screen", command=BSaveScreenIA)
-        Filemenu.menu.add_command(label="Help", command=BHelp)
-        Filemenu.pack(side=LEFT, anchor=W)
+        IAFilemenu = Menubutton(dropmenu, text="File", style="W5.TButton")
+        IAFilemenu.menu = Menu(IAFilemenu, tearoff = 0 )
+        IAFilemenu["menu"] = IAFilemenu.menu
+        IAFilemenu.menu.add_command(label="Save Config", command=BSaveConfigIA)
+        IAFilemenu.menu.add_command(label="Load Config", command=BLoadConfigIA)
+        IAFilemenu.menu.add_command(label="Save V Cal", command=BSaveCal)
+        IAFilemenu.menu.add_command(label="Load V Cal", command=BLoadCal)
+        IAFilemenu.menu.add_command(label="Save Data", command=BSaveDataIA)
+        IAFilemenu.menu.add_command(label="Save Screen", command=BSaveScreenIA)
+        IAFilemenu.menu.add_command(label="Help", command=BHelp)
+        IAFilemenu.pack(side=LEFT, anchor=W)
         #
-        Optionmenu = Menubutton(dropmenu, text="Options", style="W8.TButton")
-        Optionmenu.menu = Menu(Optionmenu, tearoff = 0 )
-        Optionmenu["menu"]  = Optionmenu.menu
-        Optionmenu.menu.add_command(label='Change Settings', command=MakeSettingsMenu)
-        Optionmenu.menu.add_command(label='Set Sample Rate', command=MakeSampleRateMenu) # SetSampleRate)
-        Optionmenu.menu.add_checkbutton(label='Cut-DC', variable=CutDC)
-        Optionmenu.menu.add_checkbutton(label='Sweep-on', variable=NetworkScreenStatus)
-        Optionmenu.menu.add_checkbutton(label='Save Sweep', variable=IASweepSaved, command=BSaveIASweep)
+        IAOptionmenu = Menubutton(dropmenu, text="Options", style="W8.TButton")
+        IAOptionmenu.menu = Menu(IAOptionmenu, tearoff = 0 )
+        IAOptionmenu["menu"]  = IAOptionmenu.menu
+        IAOptionmenu.menu.add_command(label='Change Settings', command=MakeSettingsMenu)
+        IAOptionmenu.menu.add_command(label='Set Sample Rate', command=MakeSampleRateMenu) # SetSampleRate)
+        IAOptionmenu.menu.add_checkbutton(label='Cut-DC', variable=CutDC)
+        IAOptionmenu.menu.add_checkbutton(label='Sweep-on', variable=NetworkScreenStatus)
+        IAOptionmenu.menu.add_checkbutton(label='Save Sweep', variable=IASweepSaved, command=BSaveIASweep)
         if DeBugMode == 1:
-            Optionmenu.menu.add_command(label="-Ext Config-", command=donothing)
-            Optionmenu.menu.add_radiobutton(label='1', variable=IA_Ext_Conf, value=0)
-            Optionmenu.menu.add_radiobutton(label='2', variable=IA_Ext_Conf, value=1)
-        Optionmenu.menu.add_command(label="-Meas As-", command=donothing)
-        Optionmenu.menu.add_radiobutton(label='Series', variable=DisplaySeries, value=0)
-        Optionmenu.menu.add_radiobutton(label='Parallel', variable=DisplaySeries, value=1)
-        Optionmenu.menu.add_command(label="-Background-", command=donothing)
-        Optionmenu.menu.add_radiobutton(label='Black', variable=ColorMode, value=0, command=BgColor)
-        Optionmenu.menu.add_radiobutton(label='White', variable=ColorMode, value=1, command=BgColor)
-        Optionmenu.pack(side=LEFT, anchor=W)
+            IAOptionmenu.menu.add_command(label="-Ext Config-", command=donothing)
+            IAOptionmenu.menu.add_radiobutton(label='1', variable=IA_Ext_Conf, value=0)
+            IAOptionmenu.menu.add_radiobutton(label='2', variable=IA_Ext_Conf, value=1)
+        IAOptionmenu.menu.add_command(label="-Meas As-", command=donothing)
+        IAOptionmenu.menu.add_radiobutton(label='Series', variable=DisplaySeries, value=0)
+        IAOptionmenu.menu.add_radiobutton(label='Parallel', variable=DisplaySeries, value=1)
+        IAOptionmenu.menu.add_command(label="-Background-", command=donothing)
+        IAOptionmenu.menu.add_radiobutton(label='Black', variable=ColorMode, value=0, command=BgColor)
+        IAOptionmenu.menu.add_radiobutton(label='White', variable=ColorMode, value=1, command=BgColor)
+        IAOptionmenu.pack(side=LEFT, anchor=W)
         #
         rsemenu = Frame( frame2iar )
         rsemenu.pack(side=TOP)
@@ -11895,17 +12148,17 @@ def MakeIAWindow():
         rseb3 = Button(rsemenu, text="Run", style="Run.TButton", command=BStartIA)
         rseb3.pack(side=RIGHT)
         #
-        FFTwindmenu = Menubutton(frame2iar, text="FFTwindow", style="W11.TButton")
-        FFTwindmenu.menu = Menu(FFTwindmenu, tearoff = 0 )
-        FFTwindmenu["menu"]  = FFTwindmenu.menu
-        FFTwindmenu.menu.add_radiobutton(label='Rectangular window (B=1)', variable=FFTwindow, value=0)
-        FFTwindmenu.menu.add_radiobutton(label='Cosine window (B=1.24)', variable=FFTwindow, value=1)
-        FFTwindmenu.menu.add_radiobutton(label='Triangular window (B=1.33)', variable=FFTwindow, value=2)
-        FFTwindmenu.menu.add_radiobutton(label='Hann window (B=1.5)', variable=FFTwindow, value=3)
-        FFTwindmenu.menu.add_radiobutton(label='Blackman window (B=1.73)', variable=FFTwindow, value=4)
-        FFTwindmenu.menu.add_radiobutton(label='Nuttall window (B=2.02)', variable=FFTwindow, value=5)
-        FFTwindmenu.menu.add_radiobutton(label='Flat top window (B=3.77)', variable=FFTwindow, value=6)
-        FFTwindmenu.pack(side=TOP)
+        IAFFTwindmenu = Menubutton(frame2iar, text="FFTwindow", style="W11.TButton")
+        IAFFTwindmenu.menu = Menu(IAFFTwindmenu, tearoff = 0 )
+        IAFFTwindmenu["menu"]  = IAFFTwindmenu.menu
+        IAFFTwindmenu.menu.add_radiobutton(label='Rectangular window (B=1)', variable=FFTwindow, value=0)
+        IAFFTwindmenu.menu.add_radiobutton(label='Cosine window (B=1.24)', variable=FFTwindow, value=1)
+        IAFFTwindmenu.menu.add_radiobutton(label='Triangular window (B=1.33)', variable=FFTwindow, value=2)
+        IAFFTwindmenu.menu.add_radiobutton(label='Hann window (B=1.5)', variable=FFTwindow, value=3)
+        IAFFTwindmenu.menu.add_radiobutton(label='Blackman window (B=1.73)', variable=FFTwindow, value=4)
+        IAFFTwindmenu.menu.add_radiobutton(label='Nuttall window (B=2.02)', variable=FFTwindow, value=5)
+        IAFFTwindmenu.menu.add_radiobutton(label='Flat top window (B=3.77)', variable=FFTwindow, value=6)
+        IAFFTwindmenu.pack(side=TOP)
         #
         smpmenu = Frame( frame2iar )
         smpmenu.pack(side=TOP)
@@ -13059,12 +13312,12 @@ def onCanvasBodeLeftClick(event):
     global GRHBP          # Screenheight
     global Bodeca, MarkerLoc, SAMPLErate
     global COLORgrid, COLORtext, HScaleBP, ShowCA_VdB, ShowCB_VdB, DBdivindexBP
-    global COLORtrace1, COLORtrace2, StartBodeEntry, StopBodeEntry, DBlevelBP
+    global COLORtrace1, COLORtrace2, COLORtrace6, StartBodeEntry, StopBodeEntry, DBlevelBP
     global AWGSAMPLErate, RUNstatus, COLORtext, MarkerFreqNum, PrevdBV, PrevF, Vdiv
 
     if (RUNstatus.get() == 0):
         MarkerFreqNum = MarkerFreqNum + 1
-        COLORmarker = COLORgrid
+        COLORmarker = COLORtrace6 # COLORgrid
         if ShowCA_VdB.get() == 1:
             COLORmarker = COLORtrace1
         elif ShowCB_VdB.get() == 1:
@@ -13090,6 +13343,8 @@ def onCanvasBodeLeftClick(event):
         Yc = float(Y0TBP) + Yconv * (DBlevelBP.get()) # Yc is the 0 dBm position, can be outside the screen!
         Yphconv = float(GRHBP) / 360
         Yp = float(Y0TBP) + Yphconv + 180
+        x1 = X0LBP + 14
+        x2 = x1 + GRWBP
         # Horizontal conversion factors (frequency Hz) and border limits
         if HScaleBP.get() == 1:
             LogFStop = math.log10(EndFreq)
@@ -13098,10 +13353,10 @@ def onCanvasBodeLeftClick(event):
             except:
                 LogFStart = 0.0
             LogFpixel = (LogFStop - LogFStart) / GRWBP
-            xfreq = 10**(((event.x-X0LBP)*LogFpixel) + LogFStart)
+            xfreq = 10**(((event.x-x1)*LogFpixel) + LogFStart)
         else:
             Fpixel = (EndFreq - BeginFreq) / GRWBP # Frequency step per screen pixel
-            xfreq = ((event.x-X0LBP)*Fpixel)+BeginFreq
+            xfreq = ((event.x-x1)*Fpixel)+BeginFreq
 
         yvdB = ((Yc-event.y)/Yconv)
         VdBString = ' {0:.1f} '.format(yvdB)
@@ -13111,19 +13366,19 @@ def onCanvasBodeLeftClick(event):
             DeltaV = ' {0:.3f} '.format(yvdB-PrevdBV)
             DeltaF = ' {0:.2f} '.format(xfreq-PrevF)
             V_label = V_label + " Delta " + DeltaF + " Hz, " + DeltaV + " dBV"
-        x = X0LBP + 5
+        x = x1 + 5
         y = Y0TBP + 3 + (MarkerFreqNum*10)
         Justify = 'w'
         if MarkerLoc == 'UR' or MarkerLoc == 'ur':
-            x = X0LBP + GRWBP - 5
+            x = x2 - 5
             y = Y0TBP + 3 + (MarkerFreqNum*10)
             Justify = 'e'
         if MarkerLoc == 'LL' or MarkerLoc == 'll':
-            x = X0LBP + 5
+            x = x1 + 5
             y = Y0TBP + GRHBP + 3 - (MarkerFreqNum*10)
             Justify = 'w'
         if MarkerLoc == 'LR' or MarkerLoc == 'lr':
-            x = X0LBP + GRWBP - 5
+            x = x2 - 5
             y = Y0TBP + GRHBP + 3 - (MarkerFreqNum*10)
             Justify = 'e'
         Bodeca.create_text(x, y, text=V_label, fill=COLORmarker, anchor=Justify, font=("arial", 8 ))
@@ -13220,28 +13475,7 @@ def onAWGAscroll(event):
     
     onTextScroll(event)
     time.sleep(0.05)
-    if AWGAShape.get()==9:
-        AWGAMakeImpulse()
-    elif AWGAShape.get()==11:
-        AWGAMakeTrapazoid()
-    elif AWGAShape.get()==15:
-        AWGAMakeSSQ()
-    elif AWGAShape.get()==16:
-        AWGAMakeRamp()
-    elif AWGAShape.get()==17:
-        AWGAMakePWMSine()
-    elif AWGAShape.get()==18:
-        AWGAMakeBodeSine()
-    elif AWGAShape.get()==12:
-        AWGAMakeUpDownRamp()
-    elif AWGAShape.get()==14:
-        AWGAMakeFourier()
-    elif AWGAShape.get()==7:
-        AWGAMakeUUNoise()
-    elif AWGAShape.get()==8:
-        AWGAMakeUGNoise()
-    else:
-        UpdateAwgCont()
+    ReMakeAWGwaves()
     time.sleep(0.05)
 #
 def onAWGBscroll(event):
@@ -13249,28 +13483,7 @@ def onAWGBscroll(event):
     
     onTextScroll(event)
     time.sleep(0.05)
-    if AWGBShape.get()==9:
-        AWGBMakeImpulse()
-    elif AWGBShape.get()==11:
-        AWGBMakeTrapazoid()
-    elif AWGBShape.get()==15:
-        AWGBMakeSSQ()
-    elif AWGBShape.get()==16:
-        AWGBMakeRamp()
-    elif AWGBShape.get()==17:
-        AWGBMakePWMSine()
-    elif AWGBShape.get()==18:
-        AWGBMakeBodeSine()
-    elif AWGBShape.get()==12:
-        AWGBMakeUpDownRamp()
-    elif AWGBShape.get()==14:
-        AWGBMakeFourier()
-    elif AWGBShape.get()==7:
-        AWGBMakeUUNoise()
-    elif AWGBShape.get()==8:
-        AWGBMakeUGNoise()
-    else:
-        UpdateAwgCont()
+    ReMakeAWGwaves()
     time.sleep(0.05)
 #
 def onTextScroll(event):   # august 7
@@ -13308,43 +13521,13 @@ def onAWGAkey(event):
     global AWGAShape
     
     onTextKey(event)
-    if AWGAShape.get()==9:
-        AWGAMakeImpulse()
-    elif AWGAShape.get()==11:
-        AWGAMakeTrapazoid()
-    elif AWGAShape.get()==15:
-        AWGAMakeSSQ()
-    elif AWGAShape.get()==16:
-        AWGAMakeRamp()
-    elif AWGAShape.get()==12:
-        AWGAMakeUpDownRamp()
-    elif AWGAShape.get()==14:
-        AWGAMakeFourier()
-    elif AWGAShape.get()==7:
-        AWGAMakeUUNoise()
-    elif AWGAShape.get()==8:
-        AWGAMakeUGNoise()
+    ReMakeAWGwaves()
 #
 def onAWGBkey(event):
     global AWGBShape
     
     onTextKey(event)
-    if AWGBShape.get()==9:
-        AWGBMakeImpulse()
-    elif AWGBShape.get()==11:
-        AWGBMakeTrapazoid()
-    elif AWGBShape.get()==15:
-        AWGBMakeSSQ()
-    elif AWGBShape.get()==16:
-        AWGBMakeRamp()
-    elif AWGBShape.get()==12:
-        AWGBMakeUpDownRamp()
-    elif AWGBShape.get()==14:
-        AWGBMakeFourier()
-    elif AWGBShape.get()==7:
-        AWGBMakeUUNoise()
-    elif AWGBShape.get()==8:
-        AWGBMakeUGNoise()
+    ReMakeAWGwaves()
 #
 def onTextKeyAWG(event):
     onTextKey(event)
@@ -13425,7 +13608,7 @@ def MakeAWGWindow():
     global AWGALength, AWGBLength, RevDate, phasealab, phaseblab, AWGAModeLabel, AWGBModeLabel
     global AWGAIOMode, AWGBIOMode, duty1lab, duty2lab, awgaph, awgadel, awgbph, awgbdel
     global AwgLayout, AWG_Amp_Mode, awgsync # 0 = Min/Max mode, 1 = Amp/Offset
-    global amp1lab, amp2lab, off1lab, off2lab, Reset_Freq, AWG_2X
+    global amp1lab, amp2lab, off1lab, off2lab, Reset_Freq, AWG_2X, BisCompA
     
     if AWGScreenStatus.get() == 0:
         AWGScreenStatus.set(1)
@@ -13472,23 +13655,24 @@ def MakeAWGWindow():
         ShapeAMenu = Menubutton(awg1eb, text="Shape", style="W5.TButton")
         ShapeAMenu.menu = Menu(ShapeAMenu, tearoff = 0 )
         ShapeAMenu["menu"] = ShapeAMenu.menu
-        ShapeAMenu.menu.add_radiobutton(label="DC", variable=AWGAShape, value=0, command=UpdateAwgCont)
-        ShapeAMenu.menu.add_radiobutton(label="Sine", variable=AWGAShape, value=18, command=AWGAMakeBodeSine)# command=UpdateAwgCont)
-        ShapeAMenu.menu.add_radiobutton(label="Triangle", variable=AWGAShape, value=2, command=UpdateAwgCont)
-        ShapeAMenu.menu.add_radiobutton(label="Sawtooth", variable=AWGAShape, value=3, command=UpdateAwgCont)
-        ShapeAMenu.menu.add_radiobutton(label="Square", variable=AWGAShape, value=4, command=UpdateAwgCont)
-        ShapeAMenu.menu.add_radiobutton(label="StairStep", variable=AWGAShape, value=5, command=UpdateAwgCont)
+        ShapeAMenu.menu.add_radiobutton(label="DC", variable=AWGAShape, value=0, command=ReMakeAWGwaves)# UpdateAwgCont)
+        ShapeAMenu.menu.add_radiobutton(label="Sine", variable=AWGAShape, value=18, command=ReMakeAWGwaves)# AWGAMakeBodeSine)# command=UpdateAwgCont)
+        ShapeAMenu.menu.add_radiobutton(label="Triangle", variable=AWGAShape, value=2, command=ReMakeAWGwaves)# UpdateAwgCont)
+        ShapeAMenu.menu.add_radiobutton(label="Sawtooth", variable=AWGAShape, value=3, command=ReMakeAWGwaves)# UpdateAwgCont)
+        ShapeAMenu.menu.add_radiobutton(label="Square", variable=AWGAShape, value=4, command=ReMakeAWGwaves)# UpdateAwgCont)
+        ShapeAMenu.menu.add_radiobutton(label="StairStep", variable=AWGAShape, value=5, command=ReMakeAWGwaves)# UpdateAwgCont)
         ShapeAMenu.menu.add_separator()
-        ShapeAMenu.menu.add_radiobutton(label="Impulse", variable=AWGAShape, value=9, command=AWGAMakeImpulse)
-        ShapeAMenu.menu.add_radiobutton(label="Trapezoid", variable=AWGAShape, value=11, command=AWGAMakeTrapazoid)
-        ShapeAMenu.menu.add_radiobutton(label="Ramp", variable=AWGAShape, value=16, command=AWGAMakeRamp)
-        ShapeAMenu.menu.add_radiobutton(label="SSQ Pulse", variable=AWGAShape, value=15, command=AWGAMakeSSQ)
-        ShapeAMenu.menu.add_radiobutton(label="U-D Ramp", variable=AWGAShape, value=12, command=AWGAMakeUpDownRamp)
+        ShapeAMenu.menu.add_radiobutton(label="Impulse", variable=AWGAShape, value=9, command=ReMakeAWGwaves)# AWGAMakeImpulse)
+        ShapeAMenu.menu.add_radiobutton(label="Trapezoid", variable=AWGAShape, value=11, command=ReMakeAWGwaves)# AWGAMakeTrapazoid)
+        ShapeAMenu.menu.add_radiobutton(label="Ramp", variable=AWGAShape, value=16, command=ReMakeAWGwaves)# AWGAMakeRamp)
+        ShapeAMenu.menu.add_radiobutton(label="SSQ Pulse", variable=AWGAShape, value=15, command=ReMakeAWGwaves)# AWGAMakeSSQ)
+        ShapeAMenu.menu.add_radiobutton(label="U-D Ramp", variable=AWGAShape, value=12, command=ReMakeAWGwaves)# AWGAMakeUpDownRamp)
         ShapeAMenu.menu.add_radiobutton(label="Fourier Series", variable=AWGAShape, value=14, command=AWGAMakeFourier)
-        ShapeAMenu.menu.add_radiobutton(label="PWM Sine", variable=AWGAShape, value=17, command=AWGAMakePWMSine)
+        ShapeAMenu.menu.add_radiobutton(label="Sin X/X", variable=AWGAShape, value=19, command=ReMakeAWGwaves)# AWGAMakeSinc)
+        ShapeAMenu.menu.add_radiobutton(label="PWM Sine", variable=AWGAShape, value=17, command=ReMakeAWGwaves)# AWGAMakePWMSine)
         # ShapeAMenu.menu.add_radiobutton(label="Bode Sine", variable=AWGAShape, value=18, command=AWGAMakeBodeSine)
-        ShapeAMenu.menu.add_radiobutton(label="UU Noise", variable=AWGAShape, value=7, command=AWGAMakeUUNoise)
-        ShapeAMenu.menu.add_radiobutton(label="UG Noise", variable=AWGAShape, value=8, command=AWGAMakeUGNoise)
+        ShapeAMenu.menu.add_radiobutton(label="UU Noise", variable=AWGAShape, value=7, command=ReMakeAWGwaves)# AWGAMakeUUNoise)
+        ShapeAMenu.menu.add_radiobutton(label="UG Noise", variable=AWGAShape, value=8, command=ReMakeAWGwaves)# AWGAMakeUGNoise)
         ShapeAMenu.menu.add_radiobutton(label="Math", variable=AWGAShape, value=10, command=AWGAMakeMath)
         ShapeAMenu.menu.add_radiobutton(label="Read CSV File", variable=AWGAShape, value=6, command=AWGAReadFile)
         ShapeAMenu.menu.add_radiobutton(label="Read WAV File", variable=AWGAShape, value=13, command=AWGAReadWAV)
@@ -13609,22 +13793,23 @@ def MakeAWGWindow():
         ShapeBMenu = Menubutton(awg2eb, text="Shape", style="W5.TButton")
         ShapeBMenu.menu = Menu(ShapeBMenu, tearoff = 0 )
         ShapeBMenu["menu"] = ShapeBMenu.menu
-        ShapeBMenu.menu.add_radiobutton(label="DC", variable=AWGBShape, value=0, command=UpdateAwgCont)
-        ShapeBMenu.menu.add_radiobutton(label="Sine", variable=AWGBShape, value=18, command=AWGBMakeBodeSine)# command=UpdateAwgCont)
-        ShapeBMenu.menu.add_radiobutton(label="Triangle", variable=AWGBShape, value=2, command=UpdateAwgCont)
-        ShapeBMenu.menu.add_radiobutton(label="Sawtooth", variable=AWGBShape, value=3, command=UpdateAwgCont)
-        ShapeBMenu.menu.add_radiobutton(label="Square", variable=AWGBShape, value=4, command=UpdateAwgCont)
-        ShapeBMenu.menu.add_radiobutton(label="StairStep", variable=AWGBShape, value=5, command=UpdateAwgCont)
+        ShapeBMenu.menu.add_radiobutton(label="DC", variable=AWGBShape, value=0, command=ReMakeAWGwaves)# UpdateAwgCont)
+        ShapeBMenu.menu.add_radiobutton(label="Sine", variable=AWGBShape, value=18, command=ReMakeAWGwaves)# AWGBMakeBodeSine)# command=UpdateAwgCont)
+        ShapeBMenu.menu.add_radiobutton(label="Triangle", variable=AWGBShape, value=2, command=ReMakeAWGwaves)# UpdateAwgCont)
+        ShapeBMenu.menu.add_radiobutton(label="Sawtooth", variable=AWGBShape, value=3, command=ReMakeAWGwaves)# UpdateAwgCont)
+        ShapeBMenu.menu.add_radiobutton(label="Square", variable=AWGBShape, value=4, command=ReMakeAWGwaves)# UpdateAwgCont)
+        ShapeBMenu.menu.add_radiobutton(label="StairStep", variable=AWGBShape, value=5, command=ReMakeAWGwaves)# UpdateAwgCont)
         ShapeBMenu.menu.add_separator()
-        ShapeBMenu.menu.add_radiobutton(label="Impulse", variable=AWGBShape, value=9, command=AWGBMakeImpulse)
-        ShapeBMenu.menu.add_radiobutton(label="Trapezoid", variable=AWGBShape, value=11, command=AWGBMakeTrapazoid)
-        ShapeBMenu.menu.add_radiobutton(label="Ramp", variable=AWGBShape, value=16, command=AWGBMakeRamp)
-        ShapeBMenu.menu.add_radiobutton(label="SSQ Pulse", variable=AWGBShape, value=15, command=AWGBMakeSSQ)
-        ShapeBMenu.menu.add_radiobutton(label="U-D Ramp", variable=AWGBShape, value=12, command=AWGBMakeUpDownRamp)
+        ShapeBMenu.menu.add_radiobutton(label="Impulse", variable=AWGBShape, value=9, command=ReMakeAWGwaves)# AWGBMakeImpulse)
+        ShapeBMenu.menu.add_radiobutton(label="Trapezoid", variable=AWGBShape, value=11, command=ReMakeAWGwaves)# AWGBMakeTrapazoid)
+        ShapeBMenu.menu.add_radiobutton(label="Ramp", variable=AWGBShape, value=16, command=ReMakeAWGwaves)# AWGBMakeRamp)
+        ShapeBMenu.menu.add_radiobutton(label="SSQ Pulse", variable=AWGBShape, value=15, command=ReMakeAWGwaves)# AWGBMakeSSQ)
+        ShapeBMenu.menu.add_radiobutton(label="U-D Ramp", variable=AWGBShape, value=12, command=ReMakeAWGwaves)# AWGBMakeUpDownRamp)
         ShapeBMenu.menu.add_radiobutton(label="Fourier Series", variable=AWGBShape, value=14, command=AWGBMakeFourier)
-        ShapeBMenu.menu.add_radiobutton(label="PWM Sine", variable=AWGBShape, value=17, command=AWGBMakePWMSine)
-        ShapeBMenu.menu.add_radiobutton(label="UU Noise", variable=AWGBShape, value=7, command=AWGBMakeUUNoise)
-        ShapeBMenu.menu.add_radiobutton(label="UG Noise", variable=AWGBShape, value=8, command=AWGBMakeUGNoise)
+        ShapeBMenu.menu.add_radiobutton(label="Sin X/X", variable=AWGBShape, value=19, command=ReMakeAWGwaves)# AWGBMakeSinc)
+        ShapeBMenu.menu.add_radiobutton(label="PWM Sine", variable=AWGBShape, value=17, command=ReMakeAWGwaves)# AWGBMakePWMSine)
+        ShapeBMenu.menu.add_radiobutton(label="UU Noise", variable=AWGBShape, value=7, command=ReMakeAWGwaves)# AWGBMakeUUNoise)
+        ShapeBMenu.menu.add_radiobutton(label="UG Noise", variable=AWGBShape, value=8, command=ReMakeAWGwaves)# AWGBMakeUGNoise)
         ShapeBMenu.menu.add_radiobutton(label="Math", variable=AWGBShape, value=10, command=AWGBMakeMath)
         ShapeBMenu.menu.add_radiobutton(label="Read CSV File", variable=AWGBShape, value=6, command=AWGBReadFile)
         ShapeBMenu.menu.add_radiobutton(label="Read WAV File", variable=AWGBShape, value=13, command=AWGBReadWAV)
@@ -13712,6 +13897,11 @@ def MakeAWGWindow():
         AWGBLength = Label(frame3, text="Length")
         AWGBLength.pack(side=TOP)
         #
+        BisCompA = IntVar(0) # Sync start both AWG channels
+        BisCompA.set(0)
+        bcompa = Checkbutton(frame3, text="B = Comp A", variable=BisCompA, command=ReMakeAWGwaves)#SetBCompA)
+        bcompa.pack(side=TOP)
+        
         AWGSync = IntVar(0) # Sync start both AWG channels
         AWGSync.set(1)
         awgsync = Checkbutton(frame3, text="Sync AWG", variable=AWGSync, command=BAWGSync)
@@ -13723,7 +13913,7 @@ def MakeAWGWindow():
         awgwindow.deiconify()
 #
 def BAWG2X():
-    global AWG_2X, devx, AWGAIOMode, AWGBIOMode 
+    global AWG_2X, devx, AWGAIOMode, AWGBIOMode, BisCompA
 
     ReMakeAWGwaves()
     if AWG_2X.get() == 0: # configure board for both AWG channels at 1X sampling
@@ -13735,12 +13925,14 @@ def BAWG2X():
         if AWGBIOMode.get() == 0: # if channel b is not in split I/O mode turn off output
             devx.ctrl_transfer(0x40, 0x51, 40, 0, 0, 0, 100) # set IN3 switch to open
             devx.ctrl_transfer(0x40, 0x51, 52, 0, 0, 0, 100) # set IN3 switch to open
+        BisCompA.set(0)
     elif AWG_2X.get() == 2: # configure board for single AWG channel B at 2X sampling
         devx.ctrl_transfer(0x40, 0x24, 0x1, 0, 0, 0, 100) # set to addr DAC B 
         devx.ctrl_transfer(0x40, 0x25, 0x1, 0, 0, 0, 100) # set to addr DAC B
         if AWGAIOMode.get() == 0: # if channel a is not in split I/O mode turn off output
             devx.ctrl_transfer(0x40, 0x51, 35, 0, 0, 0, 100) # set IN3 switch to open
             devx.ctrl_transfer(0x40, 0x51, 51, 0, 0, 0, 100) # set IN3 switch to open
+        BisCompA.set(0)
 #
 def DestroyAWGScreen():
     global awgwindow, AWGScreenStatus
@@ -13759,8 +13951,8 @@ def MakeMuxModeWindow():
     if MuxScreenStatus.get() == 0 and DacScreenStatus.get() == 0 and DigScreenStatus.get() == 0:
         MuxScreenStatus.set(1)
         #
-        #AWGSync.set(1) # force discontinuous mode
-        #awgsync.config(state=DISABLED)
+        AWGSync.set(1) # force discontinuous mode
+        awgsync.config(state=DISABLED)
         BAWGEnab() # update AWG settings
         #
         muxwindow = Toplevel()
@@ -13999,7 +14191,7 @@ def MakeBodeWindow():
     global BPSweepMode, BPSweepCont, Bodeca, BodeScreenStatus, RevDate, SweepStepBodeEntry
     global HScaleBP, StopBodeEntry, StartBodeEntry, ShowBPCur, ShowBdBCur, BPCursor, BdBCursor
     global GRWBP, GRHBP, X0LBP, FStepSync, FSweepSync, BDSweepFile, MinigenScreenStatus
-    global Show_Rseries, Show_Xseries, Show_Magnitude, Show_Angle
+    global Show_Rseries, Show_Xseries, Show_Magnitude, Show_Angle, ImpedanceCenter, ImCenBodeEntry
     
     if BodeScreenStatus.get() == 0:
         BodeScreenStatus.set(1)
@@ -14049,33 +14241,33 @@ def MakeBodeWindow():
         dropmenu = Frame( frame2bp )
         dropmenu.pack(side=TOP)
         # File menu
-        Filemenu = Menubutton(dropmenu, text="File", style="W5.TButton")
-        Filemenu.menu = Menu(Filemenu, tearoff = 0 )
-        Filemenu["menu"] = Filemenu.menu
-        Filemenu.menu.add_command(label="Save Config", command=BSaveConfigBP)
-        Filemenu.menu.add_command(label="Load Config", command=BLoadConfigBP)
-        Filemenu.menu.add_command(label="Save Screen", command=BSaveScreenBP)
-        Filemenu.menu.add_command(label="Save Data", command=BCSVfile)
-        Filemenu.pack(side=LEFT, anchor=W)
+        BodeFilemenu = Menubutton(dropmenu, text="File", style="W5.TButton")
+        BodeFilemenu.menu = Menu(BodeFilemenu, tearoff = 0 )
+        BodeFilemenu["menu"] = BodeFilemenu.menu
+        BodeFilemenu.menu.add_command(label="Save Config", command=BSaveConfigBP)
+        BodeFilemenu.menu.add_command(label="Load Config", command=BLoadConfigBP)
+        BodeFilemenu.menu.add_command(label="Save Screen", command=BSaveScreenBP)
+        BodeFilemenu.menu.add_command(label="Save Data", command=BCSVfile)
+        BodeFilemenu.pack(side=LEFT, anchor=W)
         #
-        Optionmenu = Menubutton(dropmenu, text="Options", style="W8.TButton")
-        Optionmenu.menu = Menu(Optionmenu, tearoff = 0 )
-        Optionmenu["menu"]  = Optionmenu.menu
-        Optionmenu.menu.add_command(label='Change Settings', command=MakeSettingsMenu)
-        Optionmenu.menu.add_checkbutton(label='Smooth', variable=SmoothCurvesBP)
-        Optionmenu.menu.add_checkbutton(label='Cut-DC', variable=CutDC)
-        Optionmenu.menu.add_command(label="Store trace [s]", command=BSTOREtraceBP)
-        Optionmenu.menu.add_radiobutton(label='Black BG', variable=ColorMode, value=0, command=BgColor)
-        Optionmenu.menu.add_radiobutton(label='White BG', variable=ColorMode, value=1, command=BgColor)
-        Optionmenu.menu.add_command(label="-Step Sync Pulse-", command=donothing)
-        Optionmenu.menu.add_radiobutton(label='None', variable=FStepSync, value=0, command=BStepSync)
-        Optionmenu.menu.add_radiobutton(label='Rising', variable=FStepSync, value=1, command=BStepSync)
-        Optionmenu.menu.add_radiobutton(label='Falling', variable=FStepSync, value=2, command=BStepSync)
-        Optionmenu.menu.add_command(label="-Sweep Sync Pulse-", command=donothing)
-        Optionmenu.menu.add_radiobutton(label='None', variable=FSweepSync, value=0, command=BSweepSync)
-        Optionmenu.menu.add_radiobutton(label='Rising', variable=FSweepSync, value=1, command=BSweepSync)
-        Optionmenu.menu.add_radiobutton(label='Falling', variable=FSweepSync, value=2, command=BSweepSync)
-        Optionmenu.pack(side=LEFT, anchor=W)
+        BodeOptionmenu = Menubutton(dropmenu, text="Options", style="W8.TButton")
+        BodeOptionmenu.menu = Menu(BodeOptionmenu, tearoff = 0 )
+        BodeOptionmenu["menu"]  = BodeOptionmenu.menu
+        BodeOptionmenu.menu.add_command(label='Change Settings', command=MakeSettingsMenu)
+        BodeOptionmenu.menu.add_checkbutton(label='Smooth', variable=SmoothCurvesBP)
+        BodeOptionmenu.menu.add_checkbutton(label='Cut-DC', variable=CutDC)
+        BodeOptionmenu.menu.add_command(label="Store trace [s]", command=BSTOREtraceBP)
+        BodeOptionmenu.menu.add_radiobutton(label='Black BG', variable=ColorMode, value=0, command=BgColor)
+        BodeOptionmenu.menu.add_radiobutton(label='White BG', variable=ColorMode, value=1, command=BgColor)
+        BodeOptionmenu.menu.add_command(label="-Step Sync Pulse-", command=donothing)
+        BodeOptionmenu.menu.add_radiobutton(label='None', variable=FStepSync, value=0, command=BStepSync)
+        BodeOptionmenu.menu.add_radiobutton(label='Rising', variable=FStepSync, value=1, command=BStepSync)
+        BodeOptionmenu.menu.add_radiobutton(label='Falling', variable=FStepSync, value=2, command=BStepSync)
+        BodeOptionmenu.menu.add_command(label="-Sweep Sync Pulse-", command=donothing)
+        BodeOptionmenu.menu.add_radiobutton(label='None', variable=FSweepSync, value=0, command=BSweepSync)
+        BodeOptionmenu.menu.add_radiobutton(label='Rising', variable=FSweepSync, value=1, command=BSweepSync)
+        BodeOptionmenu.menu.add_radiobutton(label='Falling', variable=FSweepSync, value=2, command=BSweepSync)
+        BodeOptionmenu.pack(side=LEFT, anchor=W)
         #
         RUNframe = Frame( frame2bp )
         RUNframe.pack(side=TOP)
@@ -14084,65 +14276,65 @@ def MakeBodeWindow():
         rbode = Button(RUNframe, text="Run", style="Run.TButton", command=BStartBP)
         rbode.pack(side=LEFT)
         #
-        FFTwindmenu = Menubutton(frame2bp, text="FFTwindow", style="W11.TButton")
-        FFTwindmenu.menu = Menu(FFTwindmenu, tearoff = 0 )
-        FFTwindmenu["menu"]  = FFTwindmenu.menu
-        FFTwindmenu.menu.add_radiobutton(label='Rectangular window (B=1)', variable=FFTwindow, value=0)
-        FFTwindmenu.menu.add_radiobutton(label='Cosine window (B=1.24)', variable=FFTwindow, value=1)
-        FFTwindmenu.menu.add_radiobutton(label='Triangular window (B=1.33)', variable=FFTwindow, value=2)
-        FFTwindmenu.menu.add_radiobutton(label='Hann window (B=1.5)', variable=FFTwindow, value=3)
-        FFTwindmenu.menu.add_radiobutton(label='Blackman window (B=1.73)', variable=FFTwindow, value=4)
-        FFTwindmenu.menu.add_radiobutton(label='Nuttall window (B=2.02)', variable=FFTwindow, value=5)
-        FFTwindmenu.menu.add_radiobutton(label='Flat top window (B=3.77)', variable=FFTwindow, value=6)
-        FFTwindmenu.menu.add_radiobutton(label='User Defined window', variable=FFTwindow, value=7)
-        FFTwindmenu.menu.add_command(label="Enter User function", command=BUserFFTwindow)
-        FFTwindmenu.menu.add_radiobutton(label='FFT Window from file', variable=FFTwindow, value=8, command=BFileFFTwindow)
-        FFTwindmenu.pack(side=TOP)
+        BodeFFTwindmenu = Menubutton(frame2bp, text="FFTwindow", style="W11.TButton")
+        BodeFFTwindmenu.menu = Menu(BodeFFTwindmenu, tearoff = 0 )
+        BodeFFTwindmenu["menu"]  = BodeFFTwindmenu.menu
+        BodeFFTwindmenu.menu.add_radiobutton(label='Rectangular window (B=1)', variable=FFTwindow, value=0)
+        BodeFFTwindmenu.menu.add_radiobutton(label='Cosine window (B=1.24)', variable=FFTwindow, value=1)
+        BodeFFTwindmenu.menu.add_radiobutton(label='Triangular window (B=1.33)', variable=FFTwindow, value=2)
+        BodeFFTwindmenu.menu.add_radiobutton(label='Hann window (B=1.5)', variable=FFTwindow, value=3)
+        BodeFFTwindmenu.menu.add_radiobutton(label='Blackman window (B=1.73)', variable=FFTwindow, value=4)
+        BodeFFTwindmenu.menu.add_radiobutton(label='Nuttall window (B=2.02)', variable=FFTwindow, value=5)
+        BodeFFTwindmenu.menu.add_radiobutton(label='Flat top window (B=3.77)', variable=FFTwindow, value=6)
+        BodeFFTwindmenu.menu.add_radiobutton(label='User Defined window', variable=FFTwindow, value=7)
+        BodeFFTwindmenu.menu.add_command(label="Enter User function", command=BUserFFTwindow)
+        BodeFFTwindmenu.menu.add_radiobutton(label='FFT Window from file', variable=FFTwindow, value=8, command=BFileFFTwindow)
+        BodeFFTwindmenu.pack(side=TOP)
         #
         tracemenu = Frame( frame2bp )
         tracemenu.pack(side=TOP)
         # Curves menu
         # Show channels menu
-        Showmenu = Menubutton(tracemenu, text="Curves", style="W7.TButton")
-        Showmenu.menu = Menu(Showmenu, tearoff = 0 )
-        Showmenu["menu"] = Showmenu.menu
-        Showmenu.menu.add_command(label="-Show-", command=donothing)
-        Showmenu.menu.add_command(label="All", command=BShowCurvesAllBP)
-        Showmenu.menu.add_command(label="None", command=BShowCurvesNoneBP)
-        Showmenu.menu.add_checkbutton(label='CA-dBV   [1]', variable=ShowCA_VdB, command=UpdateBodeAll)
-        Showmenu.menu.add_checkbutton(label='CB-dBV   [2]', variable=ShowCB_VdB, command=UpdateBodeAll)
-        Showmenu.menu.add_checkbutton(label='Phase A-B [3]', variable=ShowCA_P, command=UpdateBodeAll)
-        Showmenu.menu.add_checkbutton(label='Phase B-A [4]', variable=ShowCB_P, command=UpdateBodeAll)
-        Showmenu.menu.add_command(label="-Math-", command=donothing)
-        Showmenu.menu.add_radiobutton(label='None [0]', variable=ShowMathBP, value=0, command=UpdateBodeAll)
-        Showmenu.menu.add_radiobutton(label='CA-dB - CB-dB [9]', variable=ShowMathBP, value=1, command=UpdateBodeAll)
-        Showmenu.menu.add_radiobutton(label='CB-dB - CA-dB [8]', variable=ShowMathBP, value=2, command=UpdateBodeAll)
-        Showmenu.menu.add_command(label="-Impedance-", command=donothing)
-        Showmenu.menu.add_checkbutton(label='Series R', variable=Show_Rseries, command=UpdateBodeAll)
-        Showmenu.menu.add_checkbutton(label='Series X', variable=Show_Xseries, command=UpdateBodeAll)
-        Showmenu.menu.add_checkbutton(label='Series Mag', variable= Show_Magnitude, command=UpdateBodeAll)
-        Showmenu.menu.add_checkbutton(label='Series Ang', variable=Show_Angle, command=UpdateBodeAll)
-        Showmenu.menu.add_separator() 
-        Showmenu.menu.add_checkbutton(label='RA-dBV [6]', variable=ShowCA_RdB, command=UpdateBodeAll)
-        Showmenu.menu.add_checkbutton(label='RB-dBV [7]', variable=ShowCB_RdB, command=UpdateBodeAll)
-        Showmenu.menu.add_checkbutton(label='RPhase A-B', variable=ShowCA_RP, command=UpdateBodeAll)
-        Showmenu.menu.add_checkbutton(label='RPhase B-A', variable=ShowCB_RP, command=UpdateBodeAll)
-        Showmenu.menu.add_checkbutton(label='Math', variable=ShowRMathBP, command=UpdateBodeAll)
-        Showmenu.pack(side=LEFT, anchor=W)
+        BodeShowmenu = Menubutton(tracemenu, text="Curves", style="W7.TButton")
+        BodeShowmenu.menu = Menu(BodeShowmenu, tearoff = 0 )
+        BodeShowmenu["menu"] = BodeShowmenu.menu
+        BodeShowmenu.menu.add_command(label="-Show-", command=donothing)
+        BodeShowmenu.menu.add_command(label="All", command=BShowCurvesAllBP)
+        BodeShowmenu.menu.add_command(label="None", command=BShowCurvesNoneBP)
+        BodeShowmenu.menu.add_checkbutton(label='CA-dBV   [1]', variable=ShowCA_VdB, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_checkbutton(label='CB-dBV   [2]', variable=ShowCB_VdB, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_checkbutton(label='Phase A-B [3]', variable=ShowCA_P, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_checkbutton(label='Phase B-A [4]', variable=ShowCB_P, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_command(label="-Math-", command=donothing)
+        BodeShowmenu.menu.add_radiobutton(label='None [0]', variable=ShowMathBP, value=0, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_radiobutton(label='CA-dB - CB-dB [9]', variable=ShowMathBP, value=1, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_radiobutton(label='CB-dB - CA-dB [8]', variable=ShowMathBP, value=2, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_command(label="-Impedance-", command=donothing)
+        BodeShowmenu.menu.add_checkbutton(label='Series R', variable=Show_Rseries, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_checkbutton(label='Series X', variable=Show_Xseries, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_checkbutton(label='Series Mag', variable= Show_Magnitude, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_checkbutton(label='Series Ang', variable=Show_Angle, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_separator() 
+        BodeShowmenu.menu.add_checkbutton(label='RA-dBV [6]', variable=ShowCA_RdB, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_checkbutton(label='RB-dBV [7]', variable=ShowCB_RdB, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_checkbutton(label='RPhase A-B', variable=ShowCA_RP, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_checkbutton(label='RPhase B-A', variable=ShowCB_RP, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_checkbutton(label='Math', variable=ShowRMathBP, command=UpdateBodeAll)
+        BodeShowmenu.pack(side=LEFT, anchor=W)
         #
-        Markmenu = Menubutton(tracemenu, text="Cursors", style="W7.TButton")
-        Markmenu.menu = Menu(Markmenu, tearoff = 0 )
-        Markmenu["menu"] = Markmenu.menu
-        Markmenu.menu.add_command(label="-Cursors&Markers-", command=donothing)
-        Markmenu.menu.add_checkbutton(label='Marker   [5]', variable=ShowMarkerBP, command=UpdateBodeAll)
-        Markmenu.menu.add_checkbutton(label='Freq Cursor', variable=ShowBPCur)
-        Markmenu.menu.add_checkbutton(label='dB Cursor', variable=ShowBdBCur)
-        Markmenu.menu.add_radiobutton(label='Cursor Off', variable=ShowBdBCur, value=0)
-        Markmenu.menu.add_radiobutton(label='dB Cursor [d]', variable=ShowBdBCur, value=1)
-        Markmenu.menu.add_radiobutton(label='Phase Cursor [h]', variable=ShowBdBCur, value=2)
-        Markmenu.menu.add_checkbutton(label='Freq Cursor [f]', variable=ShowBPCur)
-        Markmenu.pack(side=LEFT, anchor=W)
-        #Showmenu.menu.add_separator()
+        BodeMarkmenu = Menubutton(tracemenu, text="Cursors", style="W7.TButton")
+        BodeMarkmenu.menu = Menu(BodeMarkmenu, tearoff = 0 )
+        BodeMarkmenu["menu"] = BodeMarkmenu.menu
+        BodeMarkmenu.menu.add_command(label="-Cursors&Markers-", command=donothing)
+        BodeMarkmenu.menu.add_checkbutton(label='Marker   [5]', variable=ShowMarkerBP, command=UpdateBodeAll)
+        BodeMarkmenu.menu.add_checkbutton(label='Freq Cursor', variable=ShowBPCur)
+        BodeMarkmenu.menu.add_checkbutton(label='dB Cursor', variable=ShowBdBCur)
+        BodeMarkmenu.menu.add_radiobutton(label='Cursor Off', variable=ShowBdBCur, value=0)
+        BodeMarkmenu.menu.add_radiobutton(label='dB Cursor [d]', variable=ShowBdBCur, value=1)
+        BodeMarkmenu.menu.add_radiobutton(label='Phase Cursor [h]', variable=ShowBdBCur, value=2)
+        BodeMarkmenu.menu.add_checkbutton(label='Freq Cursor [f]', variable=ShowBPCur)
+        BodeMarkmenu.pack(side=LEFT, anchor=W)
+        #
         # Horz Scale        
         HScaleBP = IntVar(0)
         HScaleBP.set(1)
@@ -14184,6 +14376,17 @@ def MakeBodeWindow():
         PhCenBodeEntry.pack(side=LEFT)
         PhCenBodeEntry.delete(0,"end")
         PhCenBodeEntry.insert(0,RelPhaseCenter.get())
+        #
+        ImpedCenter = Frame( frame2bp )
+        ImpedCenter.pack(side=TOP)
+        ImCenlab = Label(ImpedCenter, text="Center Imped on")
+        ImCenlab.pack(side=LEFT)
+        ImCenBodeEntry = Entry(ImpedCenter, width=5)
+        ImCenBodeEntry.bind('<MouseWheel>', onTextScroll)
+        ImCenBodeEntry.bind('<Key>', onTextKey)
+        ImCenBodeEntry.pack(side=LEFT)
+        ImCenBodeEntry.delete(0,"end")
+        ImCenBodeEntry.insert(0,ImpedanceCenter.get())
         # sweep generator mode menu buttons
         FSweepmenu = Label(frame2bp, text="-Sweep Gen-", style="A10B.TLabel")
         FSweepmenu.pack(side=TOP)
@@ -14335,26 +14538,26 @@ def MakeSpectrumWindow():
         dropmenu = Frame( frame2fr )
         dropmenu.pack(side=TOP)
         # File menu
-        Filemenu = Menubutton(dropmenu, text="File", style="W5.TButton")
-        Filemenu.menu = Menu(Filemenu, tearoff = 0 )
-        Filemenu["menu"] = Filemenu.menu
-        Filemenu.menu.add_command(label="Save Config", command=BSaveConfigSA)
-        Filemenu.menu.add_command(label="Load Config", command=BLoadConfigSA)
-        Filemenu.menu.add_command(label="Save Screen", command=BSaveScreenSA)
-        Filemenu.menu.add_command(label="Save Data", command=STOREcsvfile)
-        Filemenu.pack(side=LEFT, anchor=W)
+        SAFilemenu = Menubutton(dropmenu, text="File", style="W5.TButton")
+        SAFilemenu.menu = Menu(SAFilemenu, tearoff = 0 )
+        SAFilemenu["menu"] = SAFilemenu.menu
+        SAFilemenu.menu.add_command(label="Save Config", command=BSaveConfigSA)
+        SAFilemenu.menu.add_command(label="Load Config", command=BLoadConfigSA)
+        SAFilemenu.menu.add_command(label="Save Screen", command=BSaveScreenSA)
+        SAFilemenu.menu.add_command(label="Save Data", command=STOREcsvfile)
+        SAFilemenu.pack(side=LEFT, anchor=W)
         #
-        Optionmenu = Menubutton(dropmenu, text="Options", style="W8.TButton")
-        Optionmenu.menu = Menu(Optionmenu, tearoff = 0 )
-        Optionmenu["menu"]  = Optionmenu.menu
-        Optionmenu.menu.add_command(label='Change Settings', command=MakeSettingsMenu)
-        Optionmenu.menu.add_command(label='Set Sample Rate', command=MakeSampleRateMenu) # SetSampleRate)
-        Optionmenu.menu.add_checkbutton(label='Smooth', variable=SmoothCurvesSA)
-        Optionmenu.menu.add_checkbutton(label='Cut-DC', variable=CutDC)
-        Optionmenu.menu.add_command(label="Store trace [s]", command=BSTOREtraceSA)
-        Optionmenu.menu.add_radiobutton(label='Black BG', variable=ColorMode, value=0, command=BgColor)
-        Optionmenu.menu.add_radiobutton(label='White BG', variable=ColorMode, value=1, command=BgColor)
-        Optionmenu.pack(side=LEFT, anchor=W)
+        SAOptionmenu = Menubutton(dropmenu, text="Options", style="W8.TButton")
+        SAOptionmenu.menu = Menu(SAOptionmenu, tearoff = 0 )
+        SAOptionmenu["menu"]  = SAOptionmenu.menu
+        SAOptionmenu.menu.add_command(label='Change Settings', command=MakeSettingsMenu)
+        SAOptionmenu.menu.add_command(label='Set Sample Rate', command=MakeSampleRateMenu) # SetSampleRate)
+        SAOptionmenu.menu.add_checkbutton(label='Smooth', variable=SmoothCurvesSA)
+        SAOptionmenu.menu.add_checkbutton(label='Cut-DC', variable=CutDC)
+        SAOptionmenu.menu.add_command(label="Store trace [s]", command=BSTOREtraceSA)
+        SAOptionmenu.menu.add_radiobutton(label='Black BG', variable=ColorMode, value=0, command=BgColor)
+        SAOptionmenu.menu.add_radiobutton(label='White BG', variable=ColorMode, value=1, command=BgColor)
+        SAOptionmenu.pack(side=LEFT, anchor=W)
         #
         RUNframe = Frame( frame2fr )
         RUNframe.pack(side=TOP)
@@ -14376,20 +14579,20 @@ def MakeSpectrumWindow():
         Modemenu.menu.add_checkbutton(label='SingleShot', variable=SingleShot)
         Modemenu.pack(side=LEFT)
         #
-        FFTwindmenu = Menubutton(Modeframe, text="FFTwindow", style="W11.TButton")
-        FFTwindmenu.menu = Menu(FFTwindmenu, tearoff = 0 )
-        FFTwindmenu["menu"]  = FFTwindmenu.menu
-        FFTwindmenu.menu.add_radiobutton(label='Rectangular window (B=1)', variable=FFTwindow, value=0)
-        FFTwindmenu.menu.add_radiobutton(label='Cosine window (B=1.24)', variable=FFTwindow, value=1)
-        FFTwindmenu.menu.add_radiobutton(label='Triangular window (B=1.33)', variable=FFTwindow, value=2)
-        FFTwindmenu.menu.add_radiobutton(label='Hann window (B=1.5)', variable=FFTwindow, value=3)
-        FFTwindmenu.menu.add_radiobutton(label='Blackman window (B=1.73)', variable=FFTwindow, value=4)
-        FFTwindmenu.menu.add_radiobutton(label='Nuttall window (B=2.02)', variable=FFTwindow, value=5)
-        FFTwindmenu.menu.add_radiobutton(label='Flat top window (B=3.77)', variable=FFTwindow, value=6)
-        FFTwindmenu.menu.add_radiobutton(label='User Defined window', variable=FFTwindow, value=7)
-        FFTwindmenu.menu.add_command(label="Enter User function", command=BUserFFTwindow)
-        FFTwindmenu.menu.add_radiobutton(label='FFT Window from file', variable=FFTwindow, value=8, command=BFileFFTwindow)
-        FFTwindmenu.pack(side=LEFT)
+        SAFFTwindmenu = Menubutton(Modeframe, text="FFTwindow", style="W11.TButton")
+        SAFFTwindmenu.menu = Menu(SAFFTwindmenu, tearoff = 0 )
+        SAFFTwindmenu["menu"]  = SAFFTwindmenu.menu
+        SAFFTwindmenu.menu.add_radiobutton(label='Rectangular window (B=1)', variable=FFTwindow, value=0)
+        SAFFTwindmenu.menu.add_radiobutton(label='Cosine window (B=1.24)', variable=FFTwindow, value=1)
+        SAFFTwindmenu.menu.add_radiobutton(label='Triangular window (B=1.33)', variable=FFTwindow, value=2)
+        SAFFTwindmenu.menu.add_radiobutton(label='Hann window (B=1.5)', variable=FFTwindow, value=3)
+        SAFFTwindmenu.menu.add_radiobutton(label='Blackman window (B=1.73)', variable=FFTwindow, value=4)
+        SAFFTwindmenu.menu.add_radiobutton(label='Nuttall window (B=2.02)', variable=FFTwindow, value=5)
+        SAFFTwindmenu.menu.add_radiobutton(label='Flat top window (B=3.77)', variable=FFTwindow, value=6)
+        SAFFTwindmenu.menu.add_radiobutton(label='User Defined window', variable=FFTwindow, value=7)
+        SAFFTwindmenu.menu.add_command(label="Enter User function", command=BUserFFTwindow)
+        SAFFTwindmenu.menu.add_radiobutton(label='FFT Window from file', variable=FFTwindow, value=8, command=BFileFFTwindow)
+        SAFFTwindmenu.pack(side=LEFT)
         #
         SamplesMenu = Frame( frame2fr )
         SamplesMenu.pack(side=TOP)
@@ -14411,35 +14614,35 @@ def MakeSpectrumWindow():
         ShowMathSA = IntVar(0)
         ShowRMath = IntVar(0)
         #
-        Showmenu = Menubutton(frame2fr, text="Curves", style="W7.TButton")
-        Showmenu.menu = Menu(Showmenu, tearoff = 0 )
-        Showmenu["menu"] = Showmenu.menu
-        Showmenu.menu.add_command(label="-Show-", command=donothing)
-        Showmenu.menu.add_command(label="All", command=BShowCurvesAllSA)
-        Showmenu.menu.add_command(label="None", command=BShowCurvesNoneSA)
-        Showmenu.menu.add_checkbutton(label='CA-dBV   [1]', variable=ShowC1_VdB, command=UpdateFreqAll)
-        Showmenu.menu.add_checkbutton(label='CB-dBV   [2]', variable=ShowC2_VdB, command=UpdateFreqAll)
-        Showmenu.menu.add_checkbutton(label='Phase A-B [3]', variable=ShowC1_P, command=UpdateFreqAll)
-        Showmenu.menu.add_checkbutton(label='Phase B-A [4]', variable=ShowC2_P, command=UpdateFreqAll)
-        Showmenu.menu.add_radiobutton(label='Markers  Off', variable=ShowMarker, value=0, command=UpdateFreqAll)
-        Showmenu.menu.add_radiobutton(label='Markers  [5]', variable=ShowMarker, value=1, command=UpdateFreqAll)
-        Showmenu.menu.add_radiobutton(label='Delta Markers', variable=ShowMarker, value=2, command=UpdateFreqAll)
-        Showmenu.menu.add_separator()
-        Showmenu.menu.add_radiobutton(label='Cursor Off', variable=ShowdBCur, value=0)
-        Showmenu.menu.add_radiobutton(label='dB Cursor   [d]', variable=ShowdBCur, value=1)
-        Showmenu.menu.add_radiobutton(label='Phase Cursor [h]', variable=ShowdBCur, value=2)
-        Showmenu.menu.add_checkbutton(label='Freq Cursor [f]', variable=ShowFCur)
-        Showmenu.menu.add_separator()
-        Showmenu.menu.add_radiobutton(label='None  [0]', variable=ShowMathSA, value=0, command=UpdateFreqAll)
-        Showmenu.menu.add_radiobutton(label='CA-dB - CB-dB [9]', variable=ShowMathSA, value=1, command=UpdateFreqAll)
-        Showmenu.menu.add_radiobutton(label='CB-dB - CA-dB [8]', variable=ShowMathSA, value=2, command=UpdateFreqAll)
-        Showmenu.menu.add_separator()
-        Showmenu.menu.add_checkbutton(label='RA-dBV  [6]', variable=ShowRA_VdB, command=UpdateFreqAll)
-        Showmenu.menu.add_checkbutton(label='RB-dBV  [7]', variable=ShowRB_VdB, command=UpdateFreqAll)
-        Showmenu.menu.add_checkbutton(label='RPhase A-B', variable=ShowRA_P, command=UpdateFreqAll)
-        Showmenu.menu.add_checkbutton(label='RPhase B-A', variable=ShowRB_P, command=UpdateFreqAll)
-        Showmenu.menu.add_checkbutton(label='Math', variable=ShowRMath, command=UpdateFreqAll)
-        Showmenu.pack(side=TOP)
+        SAShowmenu = Menubutton(frame2fr, text="Curves", style="W7.TButton")
+        SAShowmenu.menu = Menu(SAShowmenu, tearoff = 0 )
+        SAShowmenu["menu"] = SAShowmenu.menu
+        SAShowmenu.menu.add_command(label="-Show-", command=donothing)
+        SAShowmenu.menu.add_command(label="All", command=BShowCurvesAllSA)
+        SAShowmenu.menu.add_command(label="None", command=BShowCurvesNoneSA)
+        SAShowmenu.menu.add_checkbutton(label='CA-dBV   [1]', variable=ShowC1_VdB, command=UpdateFreqAll)
+        SAShowmenu.menu.add_checkbutton(label='CB-dBV   [2]', variable=ShowC2_VdB, command=UpdateFreqAll)
+        SAShowmenu.menu.add_checkbutton(label='Phase A-B [3]', variable=ShowC1_P, command=UpdateFreqAll)
+        SAShowmenu.menu.add_checkbutton(label='Phase B-A [4]', variable=ShowC2_P, command=UpdateFreqAll)
+        SAShowmenu.menu.add_radiobutton(label='Markers  Off', variable=ShowMarker, value=0, command=UpdateFreqAll)
+        SAShowmenu.menu.add_radiobutton(label='Markers  [5]', variable=ShowMarker, value=1, command=UpdateFreqAll)
+        SAShowmenu.menu.add_radiobutton(label='Delta Markers', variable=ShowMarker, value=2, command=UpdateFreqAll)
+        SAShowmenu.menu.add_separator()
+        SAShowmenu.menu.add_radiobutton(label='Cursor Off', variable=ShowdBCur, value=0)
+        SAShowmenu.menu.add_radiobutton(label='dB Cursor   [d]', variable=ShowdBCur, value=1)
+        SAShowmenu.menu.add_radiobutton(label='Phase Cursor [h]', variable=ShowdBCur, value=2)
+        SAShowmenu.menu.add_checkbutton(label='Freq Cursor [f]', variable=ShowFCur)
+        SAShowmenu.menu.add_separator()
+        SAShowmenu.menu.add_radiobutton(label='None  [0]', variable=ShowMathSA, value=0, command=UpdateFreqAll)
+        SAShowmenu.menu.add_radiobutton(label='CA-dB - CB-dB [9]', variable=ShowMathSA, value=1, command=UpdateFreqAll)
+        SAShowmenu.menu.add_radiobutton(label='CB-dB - CA-dB [8]', variable=ShowMathSA, value=2, command=UpdateFreqAll)
+        SAShowmenu.menu.add_separator()
+        SAShowmenu.menu.add_checkbutton(label='RA-dBV  [6]', variable=ShowRA_VdB, command=UpdateFreqAll)
+        SAShowmenu.menu.add_checkbutton(label='RB-dBV  [7]', variable=ShowRB_VdB, command=UpdateFreqAll)
+        SAShowmenu.menu.add_checkbutton(label='RPhase A-B', variable=ShowRA_P, command=UpdateFreqAll)
+        SAShowmenu.menu.add_checkbutton(label='RPhase B-A', variable=ShowRB_P, command=UpdateFreqAll)
+        SAShowmenu.menu.add_checkbutton(label='Math', variable=ShowRMath, command=UpdateFreqAll)
+        SAShowmenu.pack(side=TOP)
         # HScale
         Frange1 = Frame( frame2fr )
         Frange1.pack(side=TOP)
@@ -16245,10 +16448,10 @@ def DestroyMeasureScreen():
     measurewindow.destroy()
 #
 def MakeBoardScreen():
-    global boardwindow, BoardStatus, session, devx, dev0, dev1, dev2
+    global boardwindow, BoardStatus, session, devx, dev0, dev1, dev2, MultipleBoards
     global RevDate, BrdSel, FWRevOne, HWRevOne, FWRevTwo, HWRevTwo, WRevThree, HWRevThree
     
-    if len(session.devices) > 1: # make screen only if more than one board present
+    if len(session.devices) > 1 and MultipleBoards.get() > 0: # make screen only if more than one board present
         if BoardStatus.get() == 0:
             BoardStatus.set(1)
             boardwindow = Toplevel()
@@ -16263,20 +16466,20 @@ def MakeBoardScreen():
                     devx.set_led(0b010) # LED.green
                     FWRevOne = float(devx.fwver)
                     HWRevOne = devx.hwver
-                    dev0 = session.devices[0]
-                    brd = Radiobutton(boardwindow, text=BrdText, fg="green", variable=BrdSel, value=idx, command=SelectBoard)
+                    dev0 = devx #session.devices[0]
+                    brd = Radiobutton(boardwindow, text=BrdText, style="Run.TRadiobutton", variable=BrdSel, value=idx, command=SelectBoard)
                 elif idx == 1:
                     devx.set_led(0b100) # LED.blue,
                     FWRevTwo = float(devx.fwver)
                     HWRevTwo = devx.hwver
-                    dev1 = session.devices[1]
-                    brd = Radiobutton(boardwindow, text=BrdText, fg="blue", variable=BrdSel, value=idx, command=SelectBoard)
+                    dev1 = devx #session.devices[1]
+                    brd = Radiobutton(boardwindow, text=BrdText, style="Stop.TRadiobutton", variable=BrdSel, value=idx, command=SelectBoard)
                 elif idx == 2:
                     devx.set_led(0b001) # LED.red,
                     FWRevThree = float(devx.fwver)
                     HWRevThree = devx.hwver
-                    dev2 = session.devices[2]
-                    brd = Radiobutton(boardwindow, text=BrdText, fg="red", variable=BrdSel, value=idx, command=SelectBoard)
+                    dev2 = devx #session.devices[2]
+                    brd = Radiobutton(boardwindow, text=BrdText, variable=BrdSel, value=idx, command=SelectBoard)
                 else:
                     dev3 = session.devices[3]
                     brd = Radiobutton(boardwindow, text=BrdText, variable=BrdSel, value=idx, command=SelectBoard)
@@ -16301,12 +16504,12 @@ def DestroyBoardScreen():
 #
 def ConnectDevice():
     global devx, dev0, dev1, dev2, session, BrdSel, CHA, CHB, DevID, MaxSamples, AWGSAMPLErate
-    global bcon, FWRevOne, HWRevOne, FWRevTwo, HWRevTwo, WRevThree, HWRevThree, SAMPLErate
+    global bcon, FWRevOne, HWRevOne, FWRevTwo, HWRevTwo, WRevThree, HWRevThree, SAMPLErate, MultipleBoards
 
     if DevID == "No Device" or DevID == "m1k":
         #print("Request sample rate: " + str(SAMPLErate))
         session = Session(ignore_dataflow=True, sample_rate=SAMPLErate, queue_size=MaxSamples)
-        # session.add_all()
+        session.add_all()
         # SAMPLErate = 200000 #AWGSAMPLErate # Scope sample rate
         if not session.devices:
             print 'No Device plugged IN!'
@@ -16324,31 +16527,41 @@ def ConnectDevice():
         session.start(0)
 #
 def SelectBoard():
-    global devx, dev0, dev1, dev2, session, BrdSel, CHA, CHB, DevID
-    global PIO_0, PIO_1, PIO_2, PIO_3, PIO_4, PIO_5, PIO_6, PIO_7, cal
+    global devx, dev0, dev1, dev2, session, BrdSel, CHA, CHB, DevID, RUNstatus
+    global PIO_0, PIO_1, PIO_2, PIO_3, PIO_4, PIO_5, PIO_6, PIO_7, cal, SAMPLErate, MaxSamples
+
+    if RUNstatus.get() == 1:
+        BStop()
+        print "STOP"
 
     if BrdSel.get() == 0:
         try:
             session.remove(dev1)
+            print "Removing dev1"
         except:
             print "Skipping dev1"
         try:
             session.remove(dev2)
+            print "Removing dev2"
         except:
             print "Skipping dev2"
         session.add(dev0)
         devx = dev0
+        #session.add(devx)
     if BrdSel.get() == 1:
         try:
             session.remove(dev0)
+            print "Removing dev0"
         except:
             print "Skipping dev0"
         try:
             session.remove(dev2)
+            print "Removing dev2"
         except:
             print "Skipping dev2"
         session.add(dev1)
         devx = dev1
+    #session.add(devx)
     DevID = devx.serial
     print DevID
     print devx.fwver, devx.hwver
@@ -16362,6 +16575,8 @@ def SelectBoard():
     CHB = devx.channels['B']    # Open CHB
     CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z split mode
     #
+    # if session.continuous == 0:
+        #session.start(0)
 ##    print "Channel A label = " + str(CHA.signal.label)
 ##    print "Channel A max = " + str(CHA.signal.max)
 ##    print "Channel A min = " + str(CHA.signal.min)
@@ -17493,11 +17708,11 @@ Showmenu.menu.add_checkbutton(label='CB-I [4]', variable=ShowC2_I, command=Trace
 Showmenu.menu.add_checkbutton(label='Math-X', variable=Show_MathX, command=UpdateTimeTrace)
 Showmenu.menu.add_checkbutton(label='Math-Y', variable=Show_MathY, command=UpdateTimeTrace)
 Showmenu.menu.add_command(label="-Auto Vert Center-", foreground="blue", command=donothing)
-Showmenu.menu.add_checkbutton(label='CA-V', variable=AutoCenterA)
-Showmenu.menu.add_checkbutton(label='CB-V', variable=AutoCenterB)
+Showmenu.menu.add_checkbutton(label='Center CA-V', variable=AutoCenterA)
+Showmenu.menu.add_checkbutton(label='Center CB-V', variable=AutoCenterB)
 Showmenu.menu.add_command(label="-Input HP Comp-", foreground="blue", command=donothing)
-Showmenu.menu.add_checkbutton(label='CA-V', variable=CHA_RC_HP)
-Showmenu.menu.add_checkbutton(label='CB-V', variable=CHB_RC_HP)
+Showmenu.menu.add_checkbutton(label='Comp CA-V', variable=CHA_RC_HP)
+Showmenu.menu.add_checkbutton(label='Comp CB-V', variable=CHB_RC_HP)
 Showmenu.menu.add_separator()  
 Showmenu.menu.add_checkbutton(label='RA-V', variable=ShowRA_V, command=UpdateTimeTrace)
 Showmenu.menu.add_checkbutton(label='RA-I', variable=ShowRA_I, command=UpdateTimeTrace)
@@ -17588,6 +17803,7 @@ Optionmenu.menu.add_command(label='Set Sample Rate', command=MakeSampleRateMenu)
 Optionmenu.menu.add_checkbutton(label='Smooth', variable=SmoothCurves, command=UpdateTimeTrace)
 Optionmenu.menu.add_checkbutton(label='Z-O-Hold', variable=ZOHold, command=UpdateTimeTrace)
 Optionmenu.menu.add_checkbutton(label='Decimate', variable=DecimateOption)
+Optionmenu.menu.add_checkbutton(label='Gated Meas', variable=MeasGateStatus)
 Optionmenu.menu.add_checkbutton(label='Trace Avg [a]', variable=TRACEmodeTime)
 Optionmenu.menu.add_checkbutton(label='Persistance', variable=ScreenTrefresh)
 Optionmenu.menu.add_command(label='Set Marker Location', command=BSetMarkerLocation)
