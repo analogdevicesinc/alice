@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
-# ADALM1000 alice-desktop 1.3.py(w) (5-25-2019)
+# ADALM1000 alice-desktop 1.3.py(w) (6-13-2019)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -38,7 +38,8 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(25 May 2019)"
+RevDate = "(13 June 2019)"
+SWRev = "1.3 "
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.1/alice-desktop-1.3-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
@@ -48,7 +49,7 @@ i8fUAgA7
 """
 
 root=Tk()
-root.title("ALICE DeskTop 1.3 " + RevDate + ": ALM1000 Oscilloscope")
+root.title("ALICE DeskTop " + SWRev + RevDate + ": ALM1000 Oscilloscope")
 img = PhotoImage(data=TBicon)
 root.call('wm', 'iconphoto', root._w, '-default', img)
 # Window graph area Values that can be modified
@@ -243,8 +244,8 @@ CHB_A1 = DoubleVar(0)
 CHB_A1.set(1)
 CHB_A2 = DoubleVar(0)
 CHB_A2.set(1)
-PhaseOffset1x = 23
-PhaseOffset2x = 23
+PhaseOffset1x = 37
+PhaseOffset2x = 37
 # Check if there is an alice_init.ini file to read in
 try:
     InitFile = open("alice_init.ini")
@@ -397,8 +398,8 @@ LoopNum.set(1)
 LastWindow = -1
 LastSMPfft = 0
 CurrentFreqX = X0LBP + 14
-FBins = numpy.linspace(0, 100000, num=16384)
-FStep = numpy.linspace(0, 32767, num=NSteps.get())
+FBins = numpy.linspace(0, 50000, num=16384)
+FStep = numpy.linspace(0, 16384, num=NSteps.get())
 FSweepMode = IntVar(0)
 FSweepCont = IntVar(0)
 FStepSync = IntVar(0)
@@ -1237,6 +1238,8 @@ def ReMakeAWGwaves(): # re make awg waveforms ib case something changed
         AWGAMakeFourier()
     elif AWGAShape.get()==19:
         AWGAMakeSinc()
+    elif AWGAShape.get()==20:
+        AWGAMakePulse()
     elif AWGAShape.get()==7:
         AWGAMakeUUNoise()
     elif AWGAShape.get()==8:
@@ -1262,6 +1265,8 @@ def ReMakeAWGwaves(): # re make awg waveforms ib case something changed
         AWGBMakeFourier()
     elif AWGBShape.get()==19:
         AWGBMakeSinc()
+    elif AWGBShape.get()==20:
+        AWGBMakePulse()
     elif AWGBShape.get()==7:
         AWGBMakeUUNoise()
     elif AWGBShape.get()==8:
@@ -1470,7 +1475,7 @@ def BHelp():
     webbrowser.open(url,new=2)
 
 def BAbout():
-    global RevDate, FWRevOne, HWRevOne, DevID, Version_url
+    global RevDate, SWRev, FWRevOne, HWRevOne, DevID, Version_url
     # show info on software / firmware / hardware
     try:
         u = urllib2.urlopen(Version_url)
@@ -1479,7 +1484,7 @@ def BAbout():
     except:
         time_string = "Unavailable"
     print time_string
-    showinfo("About ALICE", "ALICE DeskTop 1.3 " + RevDate + "\n" +
+    showinfo("About ALICE", "ALICE DeskTop" + SWRev + RevDate + "\n" +
              "Latest Version: " + time_string[7:18] + "\n" +
              "ADALM1000 Hardware Rev " + str(HWRevOne) + "\n" +
              "Firmware Rev " + str(FWRevOne) + "\n" +
@@ -1642,7 +1647,7 @@ def BUserBMeas():
     MeasUserB.set(1)
 #
 def NewEnterMathControls():
-    global RUNstatus, MathScreenStatus, MathWindow
+    global RUNstatus, MathScreenStatus, MathWindow, SWRev, RevDate
     global MathString, MathUnits, MathXString, MathXUnits, MathYString, MathYUnits
     global MathAxis, MathXAxis, MathYAxis, MathTrace
     global formentry, unitsentry, axisentry, xformentry, xunitsentry, xaxisentry, yformentry, yunitsentry, yaxisentry
@@ -1652,7 +1657,7 @@ def NewEnterMathControls():
         MathScreenStatus.set(1)
         #
         MathWindow = Toplevel()
-        MathWindow.title("Math Formula 1.3 " + RevDate)
+        MathWindow.title("Math Formula " + SWRev + RevDate)
         MathWindow.resizable(FALSE,FALSE)
         MathWindow.protocol("WM_DELETE_WINDOW", DestroyMathScreen)
         frame1 = LabelFrame(MathWindow, text="Built-in Exp", style="A10R1.TLabelframe")
@@ -2233,18 +2238,19 @@ def BStart():
                     
     # UpdateTimeScreen()          # Always Update
 def BStartIA():
-    global AWGAFreqEntry, AWGAFreqvalue, Two_X_Sample
+    global AWGAFreqEntry, AWGAFreqvalue, Two_X_Sample, FWRevOne
     
     try:
         AWGAFreqvalue = float(eval(AWGAFreqEntry.get()))
     except:
         AWGAFreqEntry.delete(0,"end")
         AWGAFreqEntry.insert(0, AWGAFreqvalue)
-    if AWGAFreqvalue > 20000.0:
-        Two_X_Sample.set(1)
-    else:
-        Two_X_Sample.set(0)
-    SetADC_Mux()
+    if FWRevOne > 2.16:
+        if AWGAFreqvalue > 20000.0:
+            Two_X_Sample.set(1)
+        else:
+            Two_X_Sample.set(0)
+        SetADC_Mux()
     IASourceSet()
     BStart()
     
@@ -2314,7 +2320,7 @@ def BPower():
         devx.ctrl_transfer( 0x40, 0x51, 49, 0, 0, 0, 100) # turn on analog power
     
 def BTime():
-    global TIMEdiv, TMsb, RUNstatus, Two_X_Sample, ETSDisp
+    global TIMEdiv, TMsb, RUNstatus, Two_X_Sample, ETSDisp, FWRevOne
 
     try: # get time scale in mSec/div
         TIMEdiv = float(eval(TMsb.get()))
@@ -2329,11 +2335,12 @@ def BTime():
     # Switch to 2X sampleling if time scale small enough and not runing ETS
     if ETSDisp.get() == 0:
         Samples_per_div = TIMEdiv * 100.0 # samples per mSec @ base sample rate
-        if Samples_per_div < 20.0:
-            Two_X_Sample.set(1)
-        else:
-            Two_X_Sample.set(0)
-        SetADC_Mux()
+        if FWRevOne > 2.16:
+            if Samples_per_div < 20.0:
+                Two_X_Sample.set(1)
+            else:
+                Two_X_Sample.set(0)
+            SetADC_Mux()
     #
     if RUNstatus.get() == 2:      # Restart if running
         RUNstatus.set(4)
@@ -2480,16 +2487,18 @@ def ETSCheckBox():
 def Analog_In():
     global RUNstatus, SingleShot, TimeDisp, XYDisp, FreqDisp, SpectrumScreenStatus, HWRevOne
     global IADisp, IAScreenStatus, CutDC, DevOne, AWGBMode, MuxEnb, BodeScreenStatus, BodeDisp
-    global MuxScreenStatus, VBuffA, VBuffB, VBuffMA, VBuffMB, VBuffMC, VBuffMD, MuxSync, AWGBIOMode
-    global VmemoryMuxA, VmemoryMuxB, VmemoryMuxC, VmemoryMuxD
-    global Show_CBA, Show_CBB, Show_CBC, Show_CBD, ShowC1_V, ShowC2_V, ShowC2_I, SMPfft
+    global MuxScreenStatus, VBuffA, VBuffB, MuxSync, AWGBIOMode
+    global VmemoryMuxA, VmemoryMuxB, VmemoryMuxC, VmemoryMuxD, MuxChan
+    global ShowC1_V, ShowC2_V, ShowC2_I, SMPfft
     global PIO_0, PIO_1, PIO_2, PIO_3, PIO_4, PIO_5, PIO_6, PIO_7
     global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
     global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2
     global SV1, SI1, SV2, SI2, SVA_B
     global FregPoint, FBins, FStep
     # Analog Mux channel measurement variables
-    global TRACEresetTime, TRACEmodeTime, DualMuxMode
+    global TRACEresetTime, TRACEmodeTime
+    global VBuffMA, VBuffMB, VBuffMC, VBuffMD, DualMuxMode
+    global Show_CBA, Show_CBB, Show_CBC, Show_CBD
     global DCVMuxA, MinVMuxA, MaxVMuxA, MidVMuxA, PPVMuxA, SVMuxA
     global DCVMuxB, MinVMuxB, MaxVMuxB, MidVMuxB, PPVMuxB, SVMuxB
     global DCVMuxC, MinVMuxC, MaxVMuxC, MidVMuxC, PPVMuxC, SVMuxC
@@ -2500,9 +2509,9 @@ def Analog_In():
         if (RUNstatus.get() == 1) or (RUNstatus.get() == 2):
             if TimeDisp.get() > 0 or XYDisp.get() > 0:
                 if MuxScreenStatus.get() == 0:
+                    MuxChan = -1
                     Analog_Time_In()
                 else:
-                    #AWGSync.set(1) # force discontinuous mode
                     if DualMuxMode.get() == 1: # force split I/O mode if dual mux mode set
                         AWGAIOMode.set(1)
                         AWGBIOMode.set(1)
@@ -2533,119 +2542,15 @@ def Analog_In():
                         VmemoryMuxB = VBuffMB
                         VmemoryMuxC = VBuffMC
                         ImemoryMuxD = VBuffMD
-                    if Show_CBD.get() == 1:
-                        if DualMuxMode.get() == 1:
-                            devx.ctrl_transfer(0x40, 0x50, PIO_0, 0, 0, 0, 100) # set PIO 0 to 0
-                            devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
-                        else:
-                            devx.ctrl_transfer(0x40, 0x51, PIO_0, 0, 0, 0, 100) # set PIO 0 to 1
-                            devx.ctrl_transfer(0x40, 0x51, PIO_1, 0, 0, 0, 100) # set PIO 1 to 1
-                        devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO 2 to 0
-                        devx.ctrl_transfer(0x40, PIO3, PIO_3, 0, 0, 0, 100) # set PIO 3 to sync pulse for sweep start
-                        time.sleep(0.002)
-                        devx.ctrl_transfer(0x40, PIO3x, PIO_3, 0, 0, 0, 100) # set PIO 3 to return value
-                        Analog_Time_In()
-                        if DualMuxMode.get() == 1:
-                            DCVMuxD = DCV1
-                            MinVMuxD = MinV1
-                            MaxVMuxD = MaxV1
-                            MidVMuxD = (MaxV1+MinV1)/2.0
-                            PPVMuxD = MaxV1-MinV1
-                            SVMuxD = SV1
-                            VBuffMD = VBuffA
-                        else:
-                            VBuffMD = VBuffB
-                            DCVMuxD = DCV2
-                            MinVMuxD = MinV2
-                            MaxVMuxD = MaxV2
-                            MidVMuxD = (MaxV2+MinV2)/2.0
-                            PPVMuxD = MaxV2-MinV2
-                            SVMuxD = SV2
-                        # Average mode 1, add difference / TRACEaverage to arrayif :
-                        if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
-                            try:
-                                VBuffMD = VmemoryMuxD + (VBuffMD - VmemoryMuxD) / TRACEaverage.get()
-                            except:
-                            # buffer size mismatch so reset memory buffers
-                                VmemoryMuxD = VBuffMD
-                    if Show_CBC.get() == 1:
-                        if DualMuxMode.get() == 1:
-                            devx.ctrl_transfer(0x40, 0x51, PIO_0, 0, 0, 0, 100) # set PIO 0 to 1
-                            devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
-                        else:
-                            devx.ctrl_transfer(0x40, 0x50, PIO_0, 0, 0, 0, 100) # set PIO 0 to 0
-                            devx.ctrl_transfer(0x40, 0x51, PIO_1, 0, 0, 0, 100) # set PIO 1 to 1
-                        devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO 2 to 0
-                        devx.ctrl_transfer(0x40, PIO3, PIO_3, 0, 0, 0, 100) # set PIO 3 to sync pulse for sweep start
-                        time.sleep(0.002)
-                        devx.ctrl_transfer(0x40, PIO3x, PIO_3, 0, 0, 0, 100) # set PIO 3 to return value
-                        Analog_Time_In()
-                        DCVMuxC = DCV2
-                        MinVMuxC = MinV2
-                        MaxVMuxC = MaxV2
-                        MidVMuxC = (MaxV2+MinV2)/2.0
-                        PPVMuxC = MaxV2-MinV2
-                        SVMuxC = SV2
-                        if DualMuxMode.get() == 1:
-                            DCVMuxC = DCV1
-                            MinVMuxC = MinV1
-                            MaxVMuxC = MaxV1
-                            MidVMuxC = (MaxV1+MinV1)/2.0
-                            PPVMuxC = MaxV1-MinV1
-                            SVMuxC = SV1
-                            VBuffMC = VBuffA
-                        else:
-                            VBuffMC = VBuffB
-                            DCVMuxC = DCV2
-                            MinVMuxC = MinV2
-                            MaxVMuxC = MaxV2
-                            MidVMuxC = (MaxV2+MinV2)/2.0
-                            PPVMuxC = MaxV2-MinV2
-                            SVMuxC = SV2
-                        # Average mode 1, add difference / TRACEaverage to arrayif :
-                        if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
-                            try:
-                                VBuffMC = VmemoryMuxC + (VBuffMC - VmemoryMuxC) / TRACEaverage.get()
-                            except:
-                            # buffer size mismatch so reset memory buffers
-                                VmemoryMuxC = VBuffMC
-                    if Show_CBB.get() == 1:
-                        devx.ctrl_transfer(0x40, 0x51, PIO_0, 0, 0, 0, 100) # set PIO 0 to 1
-                        devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
-                        devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO 2 to 0
-                        devx.ctrl_transfer(0x40, PIO3, PIO_3, 0, 0, 0, 100) # set PIO 3 to sync pulse for sweep start
-                        time.sleep(0.002)
-                        devx.ctrl_transfer(0x40, PIO3x, 3, 0, 0, 0, 100) # set PIO 3 to return value
-                        Analog_Time_In()
-                        DCVMuxB = DCV2
-                        MinVMuxB = MinV2
-                        MaxVMuxB = MaxV2
-                        MidVMuxB = (MaxV2+MinV2)/2.0
-                        PPVMuxB = MaxV2-MinV2
-                        SVMuxB = SV2
-                        VBuffMB = VBuffB
-                        # Average mode 1, add difference / TRACEaverage to arrayif :
-                        if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
-                            try:
-                                VBuffMB = VmemoryMuxB + (VBuffMB - VmemoryMuxB) / TRACEaverage.get()
-                            except:
-                            # buffer size mismatch so reset memory buffers
-                                VmemoryMuxB = VBuffMB
                     if Show_CBA.get() == 1:
+                        MuxChan = 0
                         devx.ctrl_transfer(0x40, 0x50, PIO_0, 0, 0, 0, 100) # set PIO 0 to 0
                         devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
-                        devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO 2 to 0
+                        devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO enable
                         devx.ctrl_transfer(0x40, PIO3, PIO_3, 0, 0, 0, 100) # set PIO 3 to 1 sync pulse for sweep start
                         time.sleep(0.002)
                         devx.ctrl_transfer(0x40, PIO3x, PIO_3, 0, 0, 0, 100) # set PIO 3 to return value
                         Analog_Time_In()
-                        DCVMuxA = DCV2
-                        MinVMuxA = MinV2
-                        MaxVMuxA = MaxV2
-                        MidVMuxA = (MaxV2+MinV2)/2.0
-                        PPVMuxA = MaxV2-MinV2
-                        SVMuxA = SV2
-                        VBuffMA = VBuffB
                         # Average mode 1, add difference / TRACEaverage to arrayif :
                         if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
                             try:
@@ -2653,6 +2558,62 @@ def Analog_In():
                             except:
                             # buffer size mismatch so reset memory buffers
                                 VmemoryMuxA = VBuffMA
+                    if Show_CBB.get() == 1:
+                        MuxChan = 1
+                        devx.ctrl_transfer(0x40, 0x51, PIO_0, 0, 0, 0, 100) # set PIO 0 to 1
+                        devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
+                        devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO 2 to 0
+                        devx.ctrl_transfer(0x40, PIO3, PIO_3, 0, 0, 0, 100) # set PIO 3 to sync pulse for sweep start
+                        time.sleep(0.002)
+                        devx.ctrl_transfer(0x40, PIO3x, 3, 0, 0, 0, 100) # set PIO 3 to return value
+                        Analog_Time_In()
+                        # Average mode 1, add difference / TRACEaverage to arrayif :
+                        if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
+                            try:
+                                VBuffMB = VmemoryMuxB + (VBuffMB - VmemoryMuxB) / TRACEaverage.get()
+                            except:
+                            # buffer size mismatch so reset memory buffers
+                                VmemoryMuxB = VBuffMB
+                    if Show_CBC.get() == 1:
+                        MuxChan = 2
+                        if DualMuxMode.get() == 1:
+                            devx.ctrl_transfer(0x40, 0x51, PIO_0, 0, 0, 0, 100) # set PIO 0 to 1
+                            devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
+                        else:
+                            devx.ctrl_transfer(0x40, 0x50, PIO_0, 0, 0, 0, 100) # set PIO 0 to 0
+                            devx.ctrl_transfer(0x40, 0x51, PIO_1, 0, 0, 0, 100) # set PIO 1 to 1
+                        devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO 2 to 0
+                        devx.ctrl_transfer(0x40, PIO3, PIO_3, 0, 0, 0, 100) # set PIO 3 to sync pulse for sweep start
+                        time.sleep(0.002)
+                        devx.ctrl_transfer(0x40, PIO3x, PIO_3, 0, 0, 0, 100) # set PIO 3 to return value
+                        Analog_Time_In()
+                        # Average mode 1, add difference / TRACEaverage to arrayif :
+                        if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
+                            try:
+                                VBuffMC = VmemoryMuxC + (VBuffMC - VmemoryMuxC) / TRACEaverage.get()
+                            except:
+                            # buffer size mismatch so reset memory buffers
+                                VmemoryMuxC = VBuffMC
+                    if Show_CBD.get() == 1:
+                        MuxChan = 3
+                        if DualMuxMode.get() == 1:
+                            devx.ctrl_transfer(0x40, 0x50, PIO_0, 0, 0, 0, 100) # set PIO 0 to 0
+                            devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
+                        else:
+                            devx.ctrl_transfer(0x40, 0x51, PIO_0, 0, 0, 0, 100) # set PIO 0 to 1
+                            devx.ctrl_transfer(0x40, 0x51, PIO_1, 0, 0, 0, 100) # set PIO 1 to 1
+                        devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO 2 to 0
+                        devx.ctrl_transfer(0x40, PIO3, PIO_3, 0, 0, 0, 100) # set PIO 3 to sync pulse for sweep start
+                        time.sleep(0.002)
+                        devx.ctrl_transfer(0x40, PIO3x, PIO_3, 0, 0, 0, 100) # set PIO 3 to return value
+                        Analog_Time_In()
+                        # Average mode 1, add difference / TRACEaverage to arrayif :
+                        if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
+                            try:
+                                VBuffMD = VmemoryMuxD + (VBuffMD - VmemoryMuxD) / TRACEaverage.get()
+                            except:
+                            # buffer size mismatch so reset memory buffers
+                                VmemoryMuxD = VBuffMD
                     if Show_CBA.get() == 0 and Show_CBB.get() == 0 and Show_CBC.get() == 0 and Show_CBD.get() == 0 and ShowC1_V.get() == 1:
                         Analog_Time_In()
             if (FreqDisp.get() > 0 and SpectrumScreenStatus.get() == 1) or (IADisp.get() > 0 and IAScreenStatus.get() == 1) or (BodeDisp.get() > 0 and BodeScreenStatus.get() == 1):
@@ -2778,9 +2739,9 @@ def Ohm_Analog_In():
 #        
 def Analog_Time_In():   # Read the analog data and store the data into the arrays
     global ADsignal1, VBuffA, VBuffB, IBuffA, IBuffB, VFilterA, VFilterB
-    global VmemoryA, VmemoryB, ImemoryA, ImemoryB, VmemoryMuxA, VmemoryMuxB, VmemoryMuxC, VmemoryMuxD
+    global VmemoryA, VmemoryB, ImemoryA, ImemoryB
     global AWGSync, AWGAMode, AWGBMode, TMsb, HoldOff, HoldOffentry, HozPoss, HozPossentry
-    global AWGAIOMode, AWGBIOMode, DecimateOption, DualMuxMode
+    global AWGAIOMode, AWGBIOMode, DecimateOption, DualMuxMode, MuxChan
     global TRACEresetTime, TRACEmodeTime, TRACEaverage, TRIGGERsample, TgInput, LShift
     global CHA, CHB, session, devx, discontloop, contloop
     global TRACES, TRACESread, TRACEsize
@@ -2805,6 +2766,14 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
     global DivXEntry, FOffEntry, FminDisp, FOff, DivX, FminEntry, FBase, MaxETSrecord
     global cal, Two_X_Sample, ADC_Mux_Mode, Alternate_Sweep_Mode, Last_ADC_Mux_Mode
     global MeasGateLeft, MeasGateRight, MeasGateNum, MeasGateStatus
+    global VBuffMA, VBuffMB, VBuffMC, VBuffMD, DualMuxMode
+    global VmemoryMuxA, VmemoryMuxB, VmemoryMuxC, VmemoryMuxD
+    global Show_CBA, Show_CBB, Show_CBC, Show_CBD
+    global DCVMuxA, MinVMuxA, MaxVMuxA, MidVMuxA, PPVMuxA, SVMuxA
+    global DCVMuxB, MinVMuxB, MaxVMuxB, MidVMuxB, PPVMuxB, SVMuxB
+    global DCVMuxC, MinVMuxC, MaxVMuxC, MidVMuxC, PPVMuxC, SVMuxC
+    global DCVMuxD, MinVMuxD, MaxVMuxD, MidVMuxD, PPVMuxD, SVMuxD
+    global PIO_0, PIO_1, PIO_2, PIO_3, PIO_4, PIO_5, PIO_6, PIO_7
 
     # get time scale
     try:
@@ -2954,7 +2923,6 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
                 ADsignal1 = devx.read(SHOWsamples, -1, True) # get samples for both channel A and B
     #
     else:
-        # session.flush()
         ADsignal1 = devx.get_samples(SHOWsamples) # , True) # get samples for both channel A and B
         # time.sleep(0.01)
         # waite to finish then return to open termination
@@ -3204,18 +3172,10 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
         #
         try:
             Gain1A = float(cha_A1Entry.get())
-            if Gain1A < 0:
-                Gain1A = 1
-                cha_A1Entry.delete(0,END)
-                cha_A1Entry.insert(0, Gain1A)
         except:
             Gain1A = CHA_A1.get()
         try:
             Gain2A = float(cha_A2Entry.get())
-            if Gain2A < 0:
-                Gain2A = 0
-                cha_A2Entry.delete(0,END)
-                cha_A2Entry.insert(0, Gain2A)
         except:
             Gain2A = CHA_A2.get()
         #
@@ -3241,18 +3201,10 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
         #
         try:
             Gain1B = float(chb_A1Entry.get())
-            if Gain1B < 0:
-                Gain1B = 1
-                chb_A1Entry.delete(0,END)
-                chb_A1Entry.insert(0, Gain1B)
         except:
             Gain1B = CHB_A1.get()
         try:
             Gain2B = float(chb_A2Entry.get())
-            if Gain2B < 0:
-                Gain2B = 0
-                chb_A2Entry.delete(0,END)
-                chb_A2Entry.insert(0, Gain2B)
         except:
             Gain2B = CHB_A2.get()
         #
@@ -3335,6 +3287,69 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
     SV2 = numpy.sqrt(numpy.mean(numpy.square(VBuffB[hldn:Endsample])))
     SI2 = numpy.sqrt(numpy.mean(numpy.square(IBuffB[hldn:Endsample])))
     SVA_B = numpy.sqrt(numpy.mean(numpy.square(VBuffA[hldn:Endsample]-VBuffB[hldn:Endsample])))
+# Transfer to mux buffers as necessary
+    if TgInput.get() > 0 and MuxChan > -1 and TRACEmodeTime.get() != 1:
+        # if triggering left shift all arrays such that trigger point is at index 0
+        LShift = 0 - TRIGGERsample
+        VBuffA = numpy.roll(VBuffA, LShift)
+        VBuffB = numpy.roll(VBuffB, LShift)
+        IBuffA = numpy.roll(IBuffA, LShift)
+        IBuffB = numpy.roll(IBuffB, LShift)
+        TRIGGERsample = hozpos # set trigger sample to index 0 offset by horizontal position
+    if MuxChan > -1:
+        Dval0 = devx.ctrl_transfer( 0xc0, 0x91, PIO_4, 0, 0, 1, 100)
+        Dval1 = devx.ctrl_transfer( 0xc0, 0x91, PIO_5, 0, 0, 1, 100)
+        #print Dval0[0], Dval1[0], MuxChan
+        if Show_CBA.get() == 1 and Dval0[0] == 0 and Dval1[0] == 0:
+            DCVMuxA = DCV2
+            MinVMuxA = MinV2
+            MaxVMuxA = MaxV2
+            MidVMuxA = (MaxV2+MinV2)/2.0
+            PPVMuxA = MaxV2-MinV2
+            SVMuxA = SV2
+            VBuffMA = VBuffB
+        if Show_CBB.get() == 1 and Dval0[0] == 1 and Dval1[0] == 0:
+            DCVMuxB = DCV2
+            MinVMuxB = MinV2
+            MaxVMuxB = MaxV2
+            MidVMuxB = (MaxV2+MinV2)/2.0
+            PPVMuxB = MaxV2-MinV2
+            SVMuxB = SV2
+            VBuffMB = VBuffB
+        if Show_CBC.get() == 1 and Dval0[0] == 0 and Dval1[0] == 1:
+            if DualMuxMode.get() == 1:
+                DCVMuxC = DCV1
+                MinVMuxC = MinV1
+                MaxVMuxC = MaxV1
+                MidVMuxC = (MaxV1+MinV1)/2.0
+                PPVMuxC = MaxV1-MinV1
+                SVMuxC = SV1
+                VBuffMC = VBuffA
+            else:
+                DCVMuxC = DCV2
+                MinVMuxC = MinV2
+                MaxVMuxC = MaxV2
+                MidVMuxC = (MaxV2+MinV2)/2.0
+                PPVMuxC = MaxV2-MinV2
+                SVMuxC = SV2
+                VBuffMC = VBuffB
+        if Show_CBD.get() == 1 and Dval0[0] == 1 and Dval1[0] == 1:
+            if DualMuxMode.get() == 1:
+                DCVMuxD = DCV1
+                MinVMuxD = MinV1
+                MaxVMuxD = MaxV1
+                MidVMuxD = (MaxV1+MinV1)/2.0
+                PPVMuxD = MaxV1-MinV1
+                SVMuxD = SV1
+                VBuffMD = VBuffA
+            else:
+                DCVMuxD = DCV2
+                MinVMuxD = MinV2
+                MaxVMuxD = MaxV2
+                MidVMuxD = (MaxV2+MinV2)/2.0
+                PPVMuxD = MaxV2-MinV2
+                SVMuxD = SV2
+                VBuffMD = VBuffB
 #
     if TimeDisp.get() > 0:
         UpdateTimeAll()         # Update Data, trace and time screen
@@ -3622,18 +3637,10 @@ def Analog_Freq_In():   # Read from the stream and store the data into the array
         #
         try:
             Gain1A = float(cha_A1Entry.get())
-            if Gain1A < 0:
-                Gain1A = 1
-                cha_A1Entry.delete(0,END)
-                cha_A1Entry.insert(0, Gain1A)
         except:
             Gain1A = CHA_A1.get()
         try:
             Gain2A = float(cha_A2Entry.get())
-            if Gain2A < 0:
-                Gain2A = 0
-                cha_A2Entry.delete(0,END)
-                cha_A2Entry.insert(0, Gain2A)
         except:
             Gain2A = CHA_A2.get()
         #
@@ -3659,18 +3666,10 @@ def Analog_Freq_In():   # Read from the stream and store the data into the array
         #
         try:
             Gain1B = float(chb_A1Entry.get())
-            if Gain1B < 0:
-                Gain1B = 1
-                chb_A1Entry.delete(0,END)
-                chb_A1Entry.insert(0, Gain1B)
         except:
             Gain1B = CHB_A1.get()
         try:
             Gain2B = float(chb_A2Entry.get())
-            if Gain2B < 0:
-                Gain2B = 0
-                chb_A2Entry.delete(0,END)
-                chb_A2Entry.insert(0, Gain2B)
         except:
             Gain2B = CHB_A2.get()
         #
@@ -4260,13 +4259,13 @@ def sel3(temp):
         devx.ctrl_transfer( 0x40, 0x51, PIO_7, 0, 0, 0, 100) # set PIO 4
                 
 def MakeDacScreen():
-    global DAC0, DAC1, DAC2, DAC3
+    global DAC0, DAC1, DAC2, DAC3, SWRev, RevDate
     global DacScreenStatus, DigScreenStatus, win1, MuxScreenStatus
     # setup Dig output window
     if DacScreenStatus.get() == 0 and DigScreenStatus.get() == 0 and MuxScreenStatus.get() == 0:
         DacScreenStatus.set(1)
         win1 = Toplevel()
-        win1.title("DAC Out")
+        win1.title("DAC Out "+ SWRev + RevDate)
         win1.resizable(FALSE,FALSE)
         win1.protocol("WM_DELETE_WINDOW", DestroyDacScreen)
         DAC0 = Scale(win1, from_=9, to=1, orient=VERTICAL, command=sel0, length=90)
@@ -4279,7 +4278,7 @@ def MakeDacScreen():
         DAC3.grid(row=0, column=3, sticky=W)        
 
         dismissbutton = Button(win1, text="Dismiss", command=DestroyDacScreen)
-        dismissbutton.grid(row=1, column=0, columnspan=2, sticky=W)
+        dismissbutton.grid(row=1, column=0, columnspan=4, sticky=W)
 #
 def UpdateTimeAll():        # Update Data, trace and time screen
     
@@ -8273,7 +8272,7 @@ def AWGAMakeBodeSine():
         if AWG_2X.get() == 1:
             AWGAperiodvalue = (BaseSampleRate*2)/AWGAFreqvalue
         else:
-            AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
+            AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
     else:
         AWGAperiodvalue = 10.0
 
@@ -8322,7 +8321,7 @@ def AWGAMakePWMSine():
         if AWG_2X.get() == 1:
             AWGAperiodvalue = int((BaseSampleRate*2)/AWGAFreqvalue)
         else:
-            AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
+            AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -8361,7 +8360,7 @@ def AWGAMakeFourier():
     if AWG_2X.get() == 1:
         TempRate = (BaseSampleRate*2)
     else:
-        TempRate = AWGSAMPLErate
+        TempRate = BaseSampleRate
     AWGAwaveform = []
     AWGAwaveform = numpy.cos(numpy.linspace(0, 2*numpy.pi, TempRate/AWGAFreqvalue)) # the fundamental
     k = 3
@@ -8396,10 +8395,12 @@ def AWGAMakeSinc():
     if AWGAFreqvalue > 0.0:
         if AWG_2X.get() == 1:
             AWGAperiodvalue = int((BaseSampleRate*2)/AWGAFreqvalue)
+            SamplesPermS = 200
             if AWGAperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
                 AWGAperiodvalue = AWGAperiodvalue + 1
         else:
-            AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
+            AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
+            SamplesPermS = 200
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -8451,10 +8452,12 @@ def AWGAMakeSSQ():
     if AWGAFreqvalue > 0.0:
         if AWG_2X.get() == 1:
             AWGAperiodvalue = int((BaseSampleRate*2)/AWGAFreqvalue)
+            SamplesPermS = 200
             if AWGAperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
                 AWGAperiodvalue = AWGAperiodvalue + 1
         else:
-            AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
+            AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
+            SamplesPermS = 100
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -8464,7 +8467,7 @@ def AWGAMakeSSQ():
         MaxV = AWGAOffsetvalue
         MinV = AWGAAmplvalue
     AWGAwaveform = []
-    SlopeValue = int(AWGAPhasevalue*100)
+    SlopeValue = int(AWGAPhasevalue*SamplesPermS)
     if SlopeValue <= 0:
         SlopeValue = 1
     PulseWidth = int(AWGAperiodvalue * AWGADutyCyclevalue)
@@ -8502,10 +8505,12 @@ def AWGAMakeTrapazoid():
     if AWGAFreqvalue > 0.0:
         if AWG_2X.get() == 1:
             AWGAperiodvalue = int((BaseSampleRate*2)/AWGAFreqvalue)
+            SamplesPermS = 200
             if AWGAperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
                 AWGAperiodvalue = AWGAperiodvalue + 1
         else:
-            AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
+            AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
+            SamplesPermS = 100
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -8515,7 +8520,7 @@ def AWGAMakeTrapazoid():
         MaxV = AWGAOffsetvalue
         MinV = AWGAAmplvalue
     AWGAwaveform = []
-    SlopeValue = int(AWGAPhasevalue*100) # convert mS to samples
+    SlopeValue = int(AWGAPhasevalue*SamplesPermS) # convert mS to samples
     if SlopeValue <= 0:
         SlopeValue = 1
     PulseWidth = int(AWGAperiodvalue * AWGADutyCyclevalue)
@@ -8545,6 +8550,70 @@ def AWGAMakeTrapazoid():
     phasealab.config(text = "Rise Time")
     UpdateAwgCont()
 #
+def AWGAMakePulse():
+    global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, phasealab, duty1lab
+    global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
+
+    BAWGAAmpl(0)
+    BAWGAOffset(0)
+    BAWGAFreq(0)
+    BAWGAPhase(0)
+
+    try:
+        AWGADutyCyclevalue = float(eval(AWGADutyCycleEntry.get()))
+    except:
+        AWGADutyCycleEntry.delete(0,"end")
+        AWGADutyCycleEntry.insert(0, AWGADutyCyclevalue)
+        
+    if AWGAFreqvalue > 0.0:
+        if AWG_2X.get() == 1:
+            AWGAperiodvalue = int((BaseSampleRate*2)/AWGAFreqvalue)
+            SamplesPermS = 200
+            if AWGAperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
+                AWGAperiodvalue = AWGAperiodvalue + 1
+        else:
+            AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
+            SamplesPermS = 100
+    else:
+        AWGAperiodvalue = 0.0
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
+        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+    else:
+        MaxV = AWGAOffsetvalue
+        MinV = AWGAAmplvalue
+    AWGAwaveform = []
+    SlopeValue = int(AWGAPhasevalue*SamplesPermS) # convert mS to samples
+    if SlopeValue <= 0:
+        SlopeValue = 1
+    PulseWidth = int(AWGADutyCyclevalue*SamplesPermS) # convert mS to samples
+    if PulseWidth <=0:
+        PulseWidth = 1
+    Remainder = int(AWGAperiodvalue - PulseWidth) - SlopeValue
+    if Remainder <= 0:
+        Remainder = 1
+    PulseWidth = PulseWidth - SlopeValue
+    if PulseWidth <=0:
+        PulseWidth = 1
+    StepValue = (MaxV - MinV) / SlopeValue
+    SampleValue = MinV
+    for i in range(SlopeValue):
+        AWGAwaveform.append(SampleValue)
+        SampleValue = SampleValue + StepValue
+    for i in range(PulseWidth):
+        AWGAwaveform.append(MaxV)
+    for i in range(SlopeValue):
+        AWGAwaveform.append(SampleValue)
+        SampleValue = SampleValue - StepValue
+    for i in range(Remainder):
+        AWGAwaveform.append(MinV)
+    SplitAWGAwaveform()
+    AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
+    duty1lab.config(text="Width mS")
+    phasealab.config(text = "Rise Time")
+    UpdateAwgCont()
+#
 def AWGAMakeRamp():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, phasealab, duty1lab
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
@@ -8559,10 +8628,12 @@ def AWGAMakeRamp():
     if AWGAFreqvalue > 0.0:
         if AWG_2X.get() == 1:
             AWGAperiodvalue = int((BaseSampleRate*2)/AWGAFreqvalue)
+            SamplesPermS = 200
             if AWGAperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
                 AWGAperiodvalue = AWGAperiodvalue + 1
         else:
-            AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
+            AWGAperiodvalue = BaseSampleRate*2/AWGAFreqvalue
+            SamplesPermS = 100
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -8572,7 +8643,7 @@ def AWGAMakeRamp():
         MaxV = AWGAOffsetvalue
         MinV = AWGAAmplvalue
     AWGAwaveform = []
-    SlopeValue = int(AWGAPhasevalue*100) # convert mS to samples
+    SlopeValue = int(AWGAPhasevalue*SamplesPermS) # convert mS to samples
     if SlopeValue <= 0:
         SlopeValue = 1
     PulseWidth = int(AWGAperiodvalue * AWGADutyCyclevalue)
@@ -8671,10 +8742,12 @@ def AWGAMakeImpulse():
     if AWGAFreqvalue > 0.0:
         if AWG_2X.get() == 1:
             AWGAperiodvalue = int((BaseSampleRate*2)/AWGAFreqvalue)
+            SamplesPermS = 200
             if AWGAperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
                 AWGAperiodvalue = AWGAperiodvalue + 1
         else:
-            AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
+            AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
+            SamplesPermS = 100
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -8688,7 +8761,7 @@ def AWGAMakeImpulse():
     if AWGAPhaseDelay.get() == 0:
         DelayValue = int(AWGAperiodvalue*(AWGAPhasevalue/360))
     elif AWGAPhaseDelay.get() == 1:
-        DelayValue = int(AWGAPhasevalue*100)
+        DelayValue = int(AWGAPhasevalue*SamplesPermS)
     for i in range(DelayValue-PulseWidth):
         AWGAwaveform.append((MinV+MaxV)/2.0)
     for i in range(PulseWidth):
@@ -8717,7 +8790,7 @@ def AWGAMakeUUNoise():
             if AWGAperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
                 AWGAperiodvalue = AWGAperiodvalue + 1
         else:
-            AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
+            AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -8751,7 +8824,7 @@ def AWGAMakeUGNoise():
             if AWGAperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
                 AWGAperiodvalue = AWGAperiodvalue + 1
         else:
-            AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
+            AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -9246,7 +9319,7 @@ def AWGBMakeFourier():
     if AWG_2X.get() == 1:
         TempRate = (BaseSampleRate*2)
     else:
-        TempRate = AWGSAMPLErate
+        TempRate = BaseSampleRate
     AWGBwaveform = []
     AWGBwaveform = numpy.cos(numpy.linspace(0, 2*numpy.pi, TempRate/AWGBFreqvalue)) # the fundamental
     k = 3
@@ -9288,7 +9361,7 @@ def AWGBMakeBodeSine():
         if AWG_2X.get() == 2:
             AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
         else:
-            AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
+            AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
     else:
         AWGBperiodvalue = 10.0
 
@@ -9342,7 +9415,7 @@ def AWGBMakePWMSine():
         if AWG_2X.get() == 2:
             AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
         else:
-            AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
+            AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
     else:
         AWGBperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -9384,7 +9457,7 @@ def AWGBMakeSinc():
             if AWGBperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
                 AWGBperiodvalue = AWGBperiodvalue + 1
         else:
-            AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
+            AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
     else:
         AWGBperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -9437,8 +9510,10 @@ def AWGBMakeSSQ():
     if AWGBFreqvalue > 0.0:
         if AWG_2X.get() == 2:
             AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
+            SamplesPermS = 200
         else:
-            AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
+            AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
+            SamplesPermS = 100
     else:
         AWGBperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -9448,7 +9523,7 @@ def AWGBMakeSSQ():
         MaxV = AWGBOffsetvalue
         MinV = AWGBAmplvalue
     AWGBwaveform = []
-    SlopeValue = int(AWGBPhasevalue*100)
+    SlopeValue = int(AWGBPhasevalue*SamplesPermS)
     if SlopeValue <= 0:
         SlopeValue = 1
     PulseWidth = int(AWGBperiodvalue * AWGBDutyCyclevalue)
@@ -9487,8 +9562,10 @@ def AWGBMakeTrapazoid():
     if AWGBFreqvalue > 0.0:
         if AWG_2X.get() == 2:
             AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
+            SamplesPermS = 200
         else:
-            AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
+            AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
+            SamplesPermS = 100
     else:
         AWGBperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -9498,7 +9575,7 @@ def AWGBMakeTrapazoid():
         MaxV = AWGBOffsetvalue
         MinV = AWGBAmplvalue
     AWGBwaveform = []
-    SlopeValue = int(AWGBPhasevalue*100)
+    SlopeValue = int(AWGBPhasevalue*SamplesPermS) # convert mS to samples
     if SlopeValue <= 0:
         SlopeValue = 1
     PulseWidth = int(AWGBperiodvalue * AWGBDutyCyclevalue)
@@ -9528,6 +9605,69 @@ def AWGBMakeTrapazoid():
     phaseblab.config(text = "Rise Time")
     UpdateAwgCont()
 #
+def AWGBMakePulse():
+    global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
+    global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
+    global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
+
+    BAWGBAmpl(0)
+    BAWGBOffset(0)
+    BAWGBFreq(0)
+    BAWGBPhase(0)
+    
+    try:
+        AWGBDutyCyclevalue = float(eval(AWGBDutyCycleEntry.get()))
+    except:
+        AWGBDutyCycleEntry.delete(0,"end")
+        AWGBDutyCycleEntry.insert(0, AWGBDutyCyclevalue)
+        
+    if AWGBFreqvalue > 0.0:
+        if AWG_2X.get() == 2:
+            AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
+            SamplesPermS = 200
+        else:
+            AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
+            SamplesPermS = 100
+    else:
+        AWGBperiodvalue = 0.0
+    if AWG_Amp_Mode.get() == 1:
+        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
+        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+    else:
+        MaxV = AWGBOffsetvalue
+        MinV = AWGBAmplvalue
+    AWGBwaveform = []
+    SlopeValue = int(AWGBPhasevalue*SamplesPermS) # convert mS to samples
+    if SlopeValue <= 0:
+        SlopeValue = 1
+    PulseWidth = int(AWGBDutyCyclevalue*SamplesPermS) # convert mS to samples
+    if PulseWidth <=0:
+        PulseWidth = 1
+    Remainder = int(AWGBperiodvalue - PulseWidth) - SlopeValue
+    if Remainder <= 0:
+        Remainder = 1
+    PulseWidth = PulseWidth - SlopeValue
+    if PulseWidth <=0:
+        PulseWidth = 1
+    StepValue = (MaxV - MinV) / SlopeValue
+    SampleValue = MinV
+    for i in range(SlopeValue):
+        AWGBwaveform.append(SampleValue)
+        SampleValue = SampleValue + StepValue
+    for i in range(PulseWidth):
+        AWGBwaveform.append(MaxV)
+    for i in range(SlopeValue):
+        AWGBwaveform.append(SampleValue)
+        SampleValue = SampleValue - StepValue
+    for i in range(Remainder):
+        AWGBwaveform.append(MinV)
+    SplitAWGBwaveform()
+    AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
+    duty2lab.config(text="Width mS")
+    phaseblab.config(text = "Rise Time")
+    UpdateAwgCont()
+#
 def AWGBMakeRamp():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
@@ -9543,8 +9683,10 @@ def AWGBMakeRamp():
     if AWGBFreqvalue > 0.0:
         if AWG_2X.get() == 2:
             AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
+            SamplesPermS = 200
         else:
-            AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
+            AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
+            SamplesPermS = 100
     else:
         AWGBperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -9554,7 +9696,7 @@ def AWGBMakeRamp():
         MaxV = AWGBOffsetvalue
         MinV = AWGBAmplvalue
     AWGBwaveform = []
-    SlopeValue = int(AWGBPhasevalue*100)
+    SlopeValue = int(AWGBPhasevalue*SamplesPermS)
     if SlopeValue <= 0:
         SlopeValue = 1
     PulseWidth = int(AWGBperiodvalue * AWGBDutyCyclevalue)
@@ -9597,7 +9739,7 @@ def AWGBMakeUpDownRamp():
         if AWG_2X.get() == 2:
             AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
         else:
-            AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
+            AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
     else:
         AWGBperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -9653,8 +9795,10 @@ def AWGBMakeImpulse():
     if AWGBFreqvalue > 0.0:
         if AWG_2X.get() == 2:
             AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
+            SamplesPermS = 200
         else:
-            AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
+            AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
+            SamplesPermS = 100
     else:
         AWGBperiodvalue = 0.0
     MaxV = AWGBOffsetvalue
@@ -9670,7 +9814,7 @@ def AWGBMakeImpulse():
     if AWGBPhaseDelay.get() == 0:
         DelayValue = int(AWGBperiodvalue*(AWGBPhasevalue/360))
     elif AWGBPhaseDelay.get() == 1:
-        DelayValue = int(AWGBPhasevalue*100)
+        DelayValue = int(AWGBPhasevalue*SamplesPermS)
     for i in range(DelayValue-PulseWidth):
         AWGBwaveform.append((MinV+MaxV)/2)
     for i in range(PulseWidth):
@@ -9697,7 +9841,7 @@ def AWGBMakeUUNoise():
         if AWG_2X.get() == 2:
             AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
         else:
-            AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
+            AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
     else:
         AWGBperiodvalue = 0.0
 
@@ -9729,7 +9873,7 @@ def AWGBMakeUGNoise():
         if AWG_2X.get() == 2:
             AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
         else:
-            AWGBperiodvalue = AWGSAMPLErate/AWGBFreqvalue
+            AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
     else:
         AWGBperiodvalue = 0.0
     if AWGBAmplvalue > AWGBOffsetvalue:
@@ -10212,12 +10356,11 @@ def BStartSA():
             StopFreqEntry.delete(0,"end")
             StopFreqEntry.insert(0,50000)
             StopFrequency = 50000
-        if StopFrequency >= 50000:
-            Two_X_Sample.set(1)
-            ADC_Mux_Mode.set(0)
-            SetADC_Mux()
-        else:
-            Two_X_Sample.set(0)
+        if FWRevOne > 2.16:
+            if StopFrequency >= 50000:
+                Two_X_Sample.set(1)
+            else:
+                Two_X_Sample.set(0)
             ADC_Mux_Mode.set(0)
             SetADC_Mux()
         #
@@ -10350,7 +10493,8 @@ def BDBdiv2():
 def BStartBP():
     global RUNstatus, LoopNum, PowerStatus, devx, PwrBt, bodewindow, session, AWGSync
     global ShowCA_VdB, ShowCB_P, ShowCB_VdB, ShowCB_P, ShowMathBP, contloop, discontloop
-    global FStep, NSteps, FSweepMode, HScaleBP, CutDC, AWGAMode, AWGAShape, AWGBMode, AWGBShape
+    global FBins, FStep, NSteps, FSweepMode, HScaleBP, CutDC
+    global AWGAMode, AWGAShape, AWGBMode, AWGBShape
     global StartBodeEntry, StopBodeEntry, SweepStepBodeEntry, DevID, FWRevOne
     global AWGAFreqEntry, AWGBFreqEntry, Reset_Freq, AWGAIOMode, AWGBIOMode
     global Two_X_Sample, ADC_Mux_Mode, AWG_2X, ZEROstuffing, SAMPLErate
@@ -10379,12 +10523,13 @@ def BStartBP():
             StopBodeEntry.delete(0,"end")
             StopBodeEntry.insert(0,10000)
             EndFreq = 10000
-        if EndFreq >= 20000:
-            Two_X_Sample.set(1)
-            ADC_Mux_Mode.set(0)
-            SetADC_Mux()
-        else:
-            Two_X_Sample.set(0)
+        if FWRevOne > 2.16:
+            if EndFreq >= 20000:
+                Two_X_Sample.set(1)
+                FBins = numpy.linspace(0, 100000, num=16384)
+            else:
+                Two_X_Sample.set(0)
+                FBins = numpy.linspace(0, 50000, num=16384)
             ADC_Mux_Mode.set(0)
             SetADC_Mux()
         try:
@@ -12075,7 +12220,7 @@ def MakeIAWindow():
     global iawindow, IAca, logo, IAScreenStatus, RsystemEntry, IADisp, AWGSync, IASource
     global COLORcanvas, CANVASwidthIA, CANVASheightIA, RevDate, AWGAMode, AWGAShape, AWGBMode
     global FFTwindow, CutDC, ColorMode, ResScale, GainCorEntry, PhaseCorEntry, DisplaySeries
-    global GRWIA, X0LIA, GRHIA, Y0TIA, IA_Ext_Conf, DeBugMode
+    global GRWIA, X0LIA, GRHIA, Y0TIA, IA_Ext_Conf, DeBugMode, SWRev
     global NetworkScreenStatus, IASweepSaved
 
     if IAScreenStatus.get() == 0:
@@ -12090,7 +12235,7 @@ def MakeIAWindow():
         AWGBMode.set(2) # Set AWG B to Hi-Z
         AWGSync.set(1) # Set AWGs to run sync
         iawindow = Toplevel()
-        iawindow.title("Impedance Analyzer 1.3 " + RevDate)
+        iawindow.title("Impedance Analyzer " + SWRev + RevDate)
         iawindow.protocol("WM_DELETE_WINDOW", DestroyIAScreen)
         frame2iar = Frame(iawindow, borderwidth=5, relief=RIDGE)
         frame2iar.pack(side=RIGHT, expand=NO, fill=BOTH)
@@ -12240,7 +12385,7 @@ def BSaveIASweep():
 def MakeNyquistPlot():
     global nqpwindow, NqPca, logo, NqPScreenStatus, NqPDisp
     global COLORcanvas, CANVASwidthNqP, CANVASheightNqP, RevDate
-    global GRWNqP, X0LNqP, GRHNqP, Y0TNqP, DeBugMode
+    global GRWNqP, X0LNqP, GRHNqP, Y0TNqP, DeBugMode, SWRev
     global NetworkScreenStatus, NqPSweepSaved
 
     if NqPScreenStatus.get() == 0:
@@ -12249,7 +12394,7 @@ def MakeNyquistPlot():
         CANVASwidthNqP = GRWNqP + (2 * X0LNqP)     # The canvas width
         CANVASheightNqP = GRHNqP + Y0TNqP + 10  # The canvas height
         nqpwindow = Toplevel()
-        nqpwindow.title("Nyquist Plot 1.3 " + RevDate)
+        nqpwindow.title("Nyquist Plot " + SWRev + RevDate)
         nqpwindow.protocol("WM_DELETE_WINDOW", DestroyNqPScreen)
         #frame2iar = Frame(nqpwindow, borderwidth=5, relief=RIDGE)
         #frame2iar.pack(side=RIGHT, expand=NO, fill=BOTH)
@@ -12366,7 +12511,7 @@ def MakeNqPScreen():
 #
 def MakeNicPlot():
     global NiCScreenStatus, NiCDisp
-    global nicwindow, NiCca, logo
+    global nicwindow, NiCca, logo, SWRev
     global COLORcanvas, CANVASwidthNic, CANVASheightNic, RevDate
     global GRWNiC, X0LNiC, GRHNiC, Y0TNiC, DeBugMode
     global NetworkScreenStatus, NiCSweepSaved
@@ -12377,7 +12522,7 @@ def MakeNicPlot():
         CANVASwidthNic = GRWNiC + 18 + X0LNiC     # The canvas width
         CANVASheightNic = GRHNiC + 60  # The canvas height
         nicwindow = Toplevel()
-        nicwindow.title("Nichols Plot 1.3 " + RevDate)
+        nicwindow.title("Nichols Plot " + SWRev + RevDate)
         nicwindow.protocol("WM_DELETE_WINDOW", DestroyNiCScreen)
         #frame2iar = Frame(nqpwindow, borderwidth=5, relief=RIDGE)
         #frame2iar.pack(side=RIGHT, expand=NO, fill=BOTH)
@@ -13607,14 +13752,14 @@ def MakeAWGWindow():
     global AWGBAmplEntry, AWGBOffsetEntry, AWGBFreqEntry, AWGBPhaseEntry, AWGBDutyCycleEntry
     global AWGALength, AWGBLength, RevDate, phasealab, phaseblab, AWGAModeLabel, AWGBModeLabel
     global AWGAIOMode, AWGBIOMode, duty1lab, duty2lab, awgaph, awgadel, awgbph, awgbdel
-    global AwgLayout, AWG_Amp_Mode, awgsync # 0 = Min/Max mode, 1 = Amp/Offset
-    global amp1lab, amp2lab, off1lab, off2lab, Reset_Freq, AWG_2X, BisCompA
+    global AwgLayout, AWG_Amp_Mode, awgsync, SWRev # 0 = Min/Max mode, 1 = Amp/Offset
+    global amp1lab, amp2lab, off1lab, off2lab, Reset_Freq, AWG_2X, BisCompA, FWRevOne
     
     if AWGScreenStatus.get() == 0:
         AWGScreenStatus.set(1)
         
         awgwindow = Toplevel()
-        awgwindow.title("AWG 1.3 " + RevDate)
+        awgwindow.title("AWG Controls " + SWRev + RevDate)
         awgwindow.resizable(FALSE,FALSE)
         awgwindow.geometry('+0+100')
         awgwindow.protocol("WM_DELETE_WINDOW", DestroyAWGScreen)
@@ -13636,6 +13781,8 @@ def MakeAWGWindow():
         AWGAShape = IntVar(0)  # AWG A Wave shape variable
         AWGARepeatFlag = IntVar(0) # AWG A Arb shape repeat flag
         AWGAMode.set(2)
+        AWGSync = IntVar(0) # Sync start both AWG channels
+        AWGSync.set(1)
         awg1eb = Frame( frame2 )
         awg1eb.pack(side=TOP)
         ModeAMenu = Menubutton(awg1eb, text="Mode", style="W5.TButton")
@@ -13655,24 +13802,25 @@ def MakeAWGWindow():
         ShapeAMenu = Menubutton(awg1eb, text="Shape", style="W5.TButton")
         ShapeAMenu.menu = Menu(ShapeAMenu, tearoff = 0 )
         ShapeAMenu["menu"] = ShapeAMenu.menu
-        ShapeAMenu.menu.add_radiobutton(label="DC", variable=AWGAShape, value=0, command=ReMakeAWGwaves)# UpdateAwgCont)
-        ShapeAMenu.menu.add_radiobutton(label="Sine", variable=AWGAShape, value=18, command=ReMakeAWGwaves)# AWGAMakeBodeSine)# command=UpdateAwgCont)
-        ShapeAMenu.menu.add_radiobutton(label="Triangle", variable=AWGAShape, value=2, command=ReMakeAWGwaves)# UpdateAwgCont)
-        ShapeAMenu.menu.add_radiobutton(label="Sawtooth", variable=AWGAShape, value=3, command=ReMakeAWGwaves)# UpdateAwgCont)
-        ShapeAMenu.menu.add_radiobutton(label="Square", variable=AWGAShape, value=4, command=ReMakeAWGwaves)# UpdateAwgCont)
-        ShapeAMenu.menu.add_radiobutton(label="StairStep", variable=AWGAShape, value=5, command=ReMakeAWGwaves)# UpdateAwgCont)
+        ShapeAMenu.menu.add_radiobutton(label="DC", variable=AWGAShape, value=0, command=ReMakeAWGwaves)
+        ShapeAMenu.menu.add_radiobutton(label="Sine", variable=AWGAShape, value=18, command=ReMakeAWGwaves)
+        ShapeAMenu.menu.add_radiobutton(label="Triangle", variable=AWGAShape, value=2, command=ReMakeAWGwaves)
+        ShapeAMenu.menu.add_radiobutton(label="Sawtooth", variable=AWGAShape, value=3, command=ReMakeAWGwaves)
+        ShapeAMenu.menu.add_radiobutton(label="Square", variable=AWGAShape, value=4, command=ReMakeAWGwaves)
+        ShapeAMenu.menu.add_radiobutton(label="StairStep", variable=AWGAShape, value=5, command=ReMakeAWGwaves)
         ShapeAMenu.menu.add_separator()
-        ShapeAMenu.menu.add_radiobutton(label="Impulse", variable=AWGAShape, value=9, command=ReMakeAWGwaves)# AWGAMakeImpulse)
-        ShapeAMenu.menu.add_radiobutton(label="Trapezoid", variable=AWGAShape, value=11, command=ReMakeAWGwaves)# AWGAMakeTrapazoid)
-        ShapeAMenu.menu.add_radiobutton(label="Ramp", variable=AWGAShape, value=16, command=ReMakeAWGwaves)# AWGAMakeRamp)
-        ShapeAMenu.menu.add_radiobutton(label="SSQ Pulse", variable=AWGAShape, value=15, command=ReMakeAWGwaves)# AWGAMakeSSQ)
-        ShapeAMenu.menu.add_radiobutton(label="U-D Ramp", variable=AWGAShape, value=12, command=ReMakeAWGwaves)# AWGAMakeUpDownRamp)
+        ShapeAMenu.menu.add_radiobutton(label="Impulse", variable=AWGAShape, value=9, command=ReMakeAWGwaves)
+        ShapeAMenu.menu.add_radiobutton(label="Trapezoid", variable=AWGAShape, value=11, command=ReMakeAWGwaves)
+        ShapeAMenu.menu.add_radiobutton(label="Pulse", variable=AWGAShape, value=20, command=ReMakeAWGwaves)
+        ShapeAMenu.menu.add_radiobutton(label="Ramp", variable=AWGAShape, value=16, command=ReMakeAWGwaves)
+        ShapeAMenu.menu.add_radiobutton(label="SSQ Pulse", variable=AWGAShape, value=15, command=ReMakeAWGwaves)
+        ShapeAMenu.menu.add_radiobutton(label="U-D Ramp", variable=AWGAShape, value=12, command=ReMakeAWGwaves)
         ShapeAMenu.menu.add_radiobutton(label="Fourier Series", variable=AWGAShape, value=14, command=AWGAMakeFourier)
-        ShapeAMenu.menu.add_radiobutton(label="Sin X/X", variable=AWGAShape, value=19, command=ReMakeAWGwaves)# AWGAMakeSinc)
-        ShapeAMenu.menu.add_radiobutton(label="PWM Sine", variable=AWGAShape, value=17, command=ReMakeAWGwaves)# AWGAMakePWMSine)
+        ShapeAMenu.menu.add_radiobutton(label="Sin X/X", variable=AWGAShape, value=19, command=ReMakeAWGwaves)
+        ShapeAMenu.menu.add_radiobutton(label="PWM Sine", variable=AWGAShape, value=17, command=ReMakeAWGwaves)
         # ShapeAMenu.menu.add_radiobutton(label="Bode Sine", variable=AWGAShape, value=18, command=AWGAMakeBodeSine)
-        ShapeAMenu.menu.add_radiobutton(label="UU Noise", variable=AWGAShape, value=7, command=ReMakeAWGwaves)# AWGAMakeUUNoise)
-        ShapeAMenu.menu.add_radiobutton(label="UG Noise", variable=AWGAShape, value=8, command=ReMakeAWGwaves)# AWGAMakeUGNoise)
+        ShapeAMenu.menu.add_radiobutton(label="UU Noise", variable=AWGAShape, value=7, command=ReMakeAWGwaves)
+        ShapeAMenu.menu.add_radiobutton(label="UG Noise", variable=AWGAShape, value=8, command=ReMakeAWGwaves)
         ShapeAMenu.menu.add_radiobutton(label="Math", variable=AWGAShape, value=10, command=AWGAMakeMath)
         ShapeAMenu.menu.add_radiobutton(label="Read CSV File", variable=AWGAShape, value=6, command=AWGAReadFile)
         ShapeAMenu.menu.add_radiobutton(label="Read WAV File", variable=AWGAShape, value=13, command=AWGAReadWAV)
@@ -13760,12 +13908,16 @@ def MakeAWGWindow():
         AWGALength = Label(frame2, text="Length")
         AWGALength.pack(side=TOP)
         #
-        awg2x1 = Radiobutton(frame2, text="Both CH 1X", variable=AWG_2X, value=0, command=BAWG2X)
-        awg2x1.pack(side=TOP)
-        awg2x2 = Radiobutton(frame2, text="CH A 2X", variable=AWG_2X, value=1, command=BAWG2X)
-        awg2x2.pack(side=TOP)
-        awg2x3 = Radiobutton(frame2, text="CH B 2X", variable=AWG_2X, value=2, command=BAWG2X)
-        awg2x3.pack(side=TOP)
+        if FWRevOne > 2.16:
+            awg2x1 = Radiobutton(frame2, text="Both CH 1X", variable=AWG_2X, value=0, command=BAWG2X)
+            awg2x1.pack(side=TOP)
+            awg2x2 = Radiobutton(frame2, text="CH A 2X", variable=AWG_2X, value=1, command=BAWG2X)
+            awg2x2.pack(side=TOP)
+            awg2x3 = Radiobutton(frame2, text="CH B 2X", variable=AWG_2X, value=2, command=BAWG2X)
+            awg2x3.pack(side=TOP)
+        else:
+            awgsync = Checkbutton(frame2, text="Sync AWG", variable=AWGSync, command=BAWGSync)
+            awgsync.pack(side=TOP)
         # now AWG B
         # AWG enable sub frame
         AWGBMode = IntVar(0)   # AWG B mode variable
@@ -13793,23 +13945,24 @@ def MakeAWGWindow():
         ShapeBMenu = Menubutton(awg2eb, text="Shape", style="W5.TButton")
         ShapeBMenu.menu = Menu(ShapeBMenu, tearoff = 0 )
         ShapeBMenu["menu"] = ShapeBMenu.menu
-        ShapeBMenu.menu.add_radiobutton(label="DC", variable=AWGBShape, value=0, command=ReMakeAWGwaves)# UpdateAwgCont)
-        ShapeBMenu.menu.add_radiobutton(label="Sine", variable=AWGBShape, value=18, command=ReMakeAWGwaves)# AWGBMakeBodeSine)# command=UpdateAwgCont)
-        ShapeBMenu.menu.add_radiobutton(label="Triangle", variable=AWGBShape, value=2, command=ReMakeAWGwaves)# UpdateAwgCont)
-        ShapeBMenu.menu.add_radiobutton(label="Sawtooth", variable=AWGBShape, value=3, command=ReMakeAWGwaves)# UpdateAwgCont)
-        ShapeBMenu.menu.add_radiobutton(label="Square", variable=AWGBShape, value=4, command=ReMakeAWGwaves)# UpdateAwgCont)
-        ShapeBMenu.menu.add_radiobutton(label="StairStep", variable=AWGBShape, value=5, command=ReMakeAWGwaves)# UpdateAwgCont)
+        ShapeBMenu.menu.add_radiobutton(label="DC", variable=AWGBShape, value=0, command=ReMakeAWGwaves)
+        ShapeBMenu.menu.add_radiobutton(label="Sine", variable=AWGBShape, value=18, command=ReMakeAWGwaves)
+        ShapeBMenu.menu.add_radiobutton(label="Triangle", variable=AWGBShape, value=2, command=ReMakeAWGwaves)
+        ShapeBMenu.menu.add_radiobutton(label="Sawtooth", variable=AWGBShape, value=3, command=ReMakeAWGwaves)
+        ShapeBMenu.menu.add_radiobutton(label="Square", variable=AWGBShape, value=4, command=ReMakeAWGwaves)
+        ShapeBMenu.menu.add_radiobutton(label="StairStep", variable=AWGBShape, value=5, command=ReMakeAWGwaves)
         ShapeBMenu.menu.add_separator()
-        ShapeBMenu.menu.add_radiobutton(label="Impulse", variable=AWGBShape, value=9, command=ReMakeAWGwaves)# AWGBMakeImpulse)
-        ShapeBMenu.menu.add_radiobutton(label="Trapezoid", variable=AWGBShape, value=11, command=ReMakeAWGwaves)# AWGBMakeTrapazoid)
-        ShapeBMenu.menu.add_radiobutton(label="Ramp", variable=AWGBShape, value=16, command=ReMakeAWGwaves)# AWGBMakeRamp)
-        ShapeBMenu.menu.add_radiobutton(label="SSQ Pulse", variable=AWGBShape, value=15, command=ReMakeAWGwaves)# AWGBMakeSSQ)
-        ShapeBMenu.menu.add_radiobutton(label="U-D Ramp", variable=AWGBShape, value=12, command=ReMakeAWGwaves)# AWGBMakeUpDownRamp)
+        ShapeBMenu.menu.add_radiobutton(label="Impulse", variable=AWGBShape, value=9, command=ReMakeAWGwaves)
+        ShapeBMenu.menu.add_radiobutton(label="Trapezoid", variable=AWGBShape, value=11, command=ReMakeAWGwaves)
+        ShapeBMenu.menu.add_radiobutton(label="Pulse", variable=AWGBShape, value=20, command=ReMakeAWGwaves)
+        ShapeBMenu.menu.add_radiobutton(label="Ramp", variable=AWGBShape, value=16, command=ReMakeAWGwaves)
+        ShapeBMenu.menu.add_radiobutton(label="SSQ Pulse", variable=AWGBShape, value=15, command=ReMakeAWGwaves)
+        ShapeBMenu.menu.add_radiobutton(label="U-D Ramp", variable=AWGBShape, value=12, command=ReMakeAWGwaves)
         ShapeBMenu.menu.add_radiobutton(label="Fourier Series", variable=AWGBShape, value=14, command=AWGBMakeFourier)
-        ShapeBMenu.menu.add_radiobutton(label="Sin X/X", variable=AWGBShape, value=19, command=ReMakeAWGwaves)# AWGBMakeSinc)
-        ShapeBMenu.menu.add_radiobutton(label="PWM Sine", variable=AWGBShape, value=17, command=ReMakeAWGwaves)# AWGBMakePWMSine)
-        ShapeBMenu.menu.add_radiobutton(label="UU Noise", variable=AWGBShape, value=7, command=ReMakeAWGwaves)# AWGBMakeUUNoise)
-        ShapeBMenu.menu.add_radiobutton(label="UG Noise", variable=AWGBShape, value=8, command=ReMakeAWGwaves)# AWGBMakeUGNoise)
+        ShapeBMenu.menu.add_radiobutton(label="Sin X/X", variable=AWGBShape, value=19, command=ReMakeAWGwaves)
+        ShapeBMenu.menu.add_radiobutton(label="PWM Sine", variable=AWGBShape, value=17, command=ReMakeAWGwaves)
+        ShapeBMenu.menu.add_radiobutton(label="UU Noise", variable=AWGBShape, value=7, command=ReMakeAWGwaves)
+        ShapeBMenu.menu.add_radiobutton(label="UG Noise", variable=AWGBShape, value=8, command=ReMakeAWGwaves)
         ShapeBMenu.menu.add_radiobutton(label="Math", variable=AWGBShape, value=10, command=AWGBMakeMath)
         ShapeBMenu.menu.add_radiobutton(label="Read CSV File", variable=AWGBShape, value=6, command=AWGBReadFile)
         ShapeBMenu.menu.add_radiobutton(label="Read WAV File", variable=AWGBShape, value=13, command=AWGBReadWAV)
@@ -13901,11 +14054,9 @@ def MakeAWGWindow():
         BisCompA.set(0)
         bcompa = Checkbutton(frame3, text="B = Comp A", variable=BisCompA, command=ReMakeAWGwaves)#SetBCompA)
         bcompa.pack(side=TOP)
-        
-        AWGSync = IntVar(0) # Sync start both AWG channels
-        AWGSync.set(1)
-        awgsync = Checkbutton(frame3, text="Sync AWG", variable=AWGSync, command=BAWGSync)
-        awgsync.pack(side=TOP)
+        if FWRevOne > 2.16:
+            awgsync = Checkbutton(frame3, text="Sync AWG", variable=AWGSync, command=BAWGSync)
+            awgsync.pack(side=TOP)
         #
         dismissbutton = Button(frame3, text="Minimize", style="W8.TButton", command=DestroyAWGScreen)
         dismissbutton.pack(side=TOP)
@@ -13945,18 +14096,16 @@ def MakeMuxModeWindow():
     global CHB_Asb, CHB_APosEntry, CHB_Bsb, CHB_BPosEntry
     global CHB_Csb, CHB_CPosEntry, CHB_Dsb, CHB_DPosEntry, SyncButton
     global CHB_Alab, CHB_Blab, CHB_Clab, CHB_Dlab, CHBlab, CHBofflab
-    global CHB_Cofflab, CHB_Dofflab, awgsync
+    global CHB_Cofflab, CHB_Dofflab, awgsync, SWRev
     global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MuxEnb, MuxSync, hipulseimg, lowpulseimg, DualMuxMode
     
     if MuxScreenStatus.get() == 0 and DacScreenStatus.get() == 0 and DigScreenStatus.get() == 0:
         MuxScreenStatus.set(1)
         #
-        AWGSync.set(1) # force discontinuous mode
-        awgsync.config(state=DISABLED)
         BAWGEnab() # update AWG settings
         #
         muxwindow = Toplevel()
-        muxwindow.title("CH-B Mux 1.3 " + RevDate)
+        muxwindow.title("CH-B Mux " + SWRev + RevDate)
         muxwindow.resizable(FALSE,FALSE)
         muxwindow.protocol("WM_DELETE_WINDOW", DestroyMuxScreen)
         #
@@ -14184,7 +14333,7 @@ def BDSweepFromFile():
 #
 # ========== Make Bode Plot Window =============
 def MakeBodeWindow():
-    global logo, SmoothCurvesBP, CutDC, SingleShotBP, bodewindow
+    global logo, SmoothCurvesBP, CutDC, SingleShotBP, bodewindow, SWRev
     global CANVASwidthBP, CANVASheightBP, FFTwindow, CutDC, AWGAMode, AWGAShape, AWGBMode 
     global ShowCA_VdB, ShowCA_P, ShowCB_VdB, ShowCB_P, ShowMarkerBP, BodeDisp, RelPhaseCenter
     global ShowCA_RdB, ShowCA_RP, ShowCB_RdB, ShowCB_RP, ShowMathBP, ShowRMathBP, PhCenBodeEntry
@@ -14204,7 +14353,7 @@ def MakeBodeWindow():
         AWGAShape.set(1) # Set Shape to Sine
         AWGBMode.set(2) # Set AWG B to Hi-Z
         bodewindow = Toplevel()
-        bodewindow.title("Bode Plotter 1.3 " + RevDate)
+        bodewindow.title("Bode Plotter " + SWRev + RevDate)
         bodewindow.protocol("WM_DELETE_WINDOW", DestroyBodeScreen)
         frame2bp = Frame(bodewindow, borderwidth=5, relief=RIDGE)
         frame2bp.pack(side=RIGHT, expand=NO, fill=BOTH)
@@ -14486,7 +14635,7 @@ def FreqCaresize(event):
 def MakeSpectrumWindow():
     global logo, SmoothCurvesSA, CutDC, SingleShot, FFTwindow, freqwindow, SmoothCurvesSA
     global ShowC1_VdB, ShowC1_P, ShowC2_VdB, ShowC2_P, ShowMarker, FreqDisp
-    global ShowRA_VdB, ShowRA_P, ShowRB_VdB, ShowRB_P, ShowMathSA
+    global ShowRA_VdB, ShowRA_P, ShowRB_VdB, ShowRB_P, ShowMathSA, SWRev
     global ShowRMath, FSweepMode, FSweepCont, Freqca, SpectrumScreenStatus, RevDate
     global HScale, StopFreqEntry, StartFreqEntry, ShowFCur, ShowdBCur, FCursor, dBCursor
     global CANVASwidthF, GRWF, X0LF, CANVASheightF, GRHF, PhCenFreqEntry, RelPhaseCenter
@@ -14498,7 +14647,7 @@ def MakeSpectrumWindow():
         CANVASwidthF = GRWF + 2 * X0LF     # The spectrum canvas width
         CANVASheightF = GRHF + 80         # The spectrum canvas height
         freqwindow = Toplevel()
-        freqwindow.title("Spectrum Analyzer 1.3 " + RevDate)
+        freqwindow.title("Spectrum Analyzer " + SWRev + RevDate)
         freqwindow.protocol("WM_DELETE_WINDOW", DestroySpectrumScreen)
         frame2fr = Frame(freqwindow, borderwidth=5, relief=RIDGE)
         frame2fr.pack(side=RIGHT, expand=NO, fill=BOTH)
@@ -14749,7 +14898,7 @@ def XYcaresize(event):
 # ================ Make spectrum sub window ==========================
 def MakeXYWindow():
     global logo, CANVASwidthXY, CANVASheightXY, Xsignal, Ysignal, ShowRXY
-    global XYScreenStatus, MarkerXYScale, XYca, xywindow, RevDate, XYDisp
+    global XYScreenStatus, MarkerXYScale, XYca, xywindow, RevDate, SWRev, XYDisp
     global CHAsbxy, CHBsbxy, CHAxylab, CHBxylab, CHAVPosEntryxy, CHBVPosEntryxy
     global CHAIsbxy, CHBIsbxy, CHAIPosEntryxy, CHBIPosEntryxy, ScreenXYrefresh
     global YminXY, Y0TXY, YmaxXY, GRHXY, XminXY, X0LXY, XmaxXY, X0LXY, GRWXY, CANVASwidthXY, CANVASheightXY
@@ -14765,7 +14914,7 @@ def MakeXYWindow():
         CANVASwidthXY = GRWXY + 18 + X0LXY     # The XY canvas width
         CANVASheightXY = GRHXY + 80         # The XY canvas height
         xywindow = Toplevel()
-        xywindow.title("X-Y Plot 1.3 " + RevDate)
+        xywindow.title("X-Y Plot " + SWRev + RevDate)
         xywindow.protocol("WM_DELETE_WINDOW", DestroyXYScreen)
         frame2xyr = Frame(xywindow, borderwidth=5, relief=RIDGE)
         frame2xyr.pack(side=RIGHT, expand=NO, fill=BOTH)
@@ -14966,14 +15115,14 @@ def DestroyXYScreen():
 #
 def SelfCalibration():
     global DevID, devx, CHA, CHB, RevDate, OnBoardRes, AD584act, FWRevOne
-    global discontloop, contloop, session, AWGSync
+    global discontloop, contloop, session, AWGSync, SWRev
     # global OnBoardResAgnd, OnBoardResA25, OnBoardResBgnd, OnBoardResB25
     # setup cal results window
     if FWRevOne < 2.06: # Check firmware revision level > 2.06
         showwarning("WARNING","Out of date Firmware Revision!")
         return
     calwindow = Toplevel()
-    calwindow.title("ALM1000 Calibration tool 1.3 " + RevDate)
+    calwindow.title("ALM1000 Calibration tool " + SWRev + RevDate)
     # display wigets
     prlab = Label(calwindow, text="Channel Gain / Offset calibration")
     prlab.grid(row=0, column=0, columnspan=2, sticky=W)
@@ -15577,12 +15726,12 @@ def BSendMG():
     SPIShiftOut(FValue)
     
 def MakeMinigenWindow():
-    global  RevDate, minigenwindow, MinigenMode, MinigenScreenStatus, MinigenFclk, MinigenFout
+    global  RevDate, minigenwindow, MinigenMode, MinigenScreenStatus, MinigenFclk, MinigenFout, SWRev
 
     if MinigenScreenStatus.get() == 0:
         MinigenScreenStatus.set(1)
         minigenwindow = Toplevel()
-        minigenwindow.title("MiniGen 1.3 " + RevDate)
+        minigenwindow.title("-MiniGen-   " + SWRev + RevDate)
         minigenwindow.resizable(FALSE,FALSE)
         minigenwindow.protocol("WM_DELETE_WINDOW", DestroyMinigenScreen)
         # 
@@ -15709,12 +15858,12 @@ def BSendDA1():
 
 def MakeDA1Window():
     global da1window, DA1ScreenStatus, DAC1Entry, DAC2Entry, DAC3Entry, DAC4Entry
-    global REFEntry, RevDate
+    global REFEntry, RevDate, SWRev
     
     if DA1ScreenStatus.get() == 0:
         DA1ScreenStatus.set(1)
         da1window = Toplevel()
-        da1window.title("DA1 PMOD 1.3 " + RevDate)
+        da1window.title("-DA1 PMOD-  " + SWRev + RevDate)
         da1window.resizable(FALSE,FALSE)
         da1window.protocol("WM_DELETE_WINDOW", DestroyDA1Screen)
 #
@@ -15857,13 +16006,13 @@ def UpdatePotSlider():
     
 def MakeDigPotWindow(): # set up for single, dual or quad, digital pots
     global digpotwindow, DigPotScreenStatus, DigPot1, DigPot2, DigPot3, DigPot4, RevDate
-    global SendPot1, SendPot2, SendPot3, SendPot4, SingleDualPot
+    global SendPot1, SendPot2, SendPot3, SendPot4, SingleDualPot, SWRev
     global DPotlabel, DigPot1, DigPot2, DigPot3, DigPot4
 
     if DigPotScreenStatus.get() == 0:
         DigPotScreenStatus.set(1)
         digpotwindow = Toplevel()
-        digpotwindow.title("Digital Potentiometer 1.3 " + RevDate)
+        digpotwindow.title("Digital Potentiometer " + SWRev + RevDate)
         digpotwindow.resizable(FALSE,FALSE)
         digpotwindow.protocol("WM_DELETE_WINDOW", DestroyDigPotScreen)
         #
@@ -15987,8 +16136,7 @@ def BSendGS():
 #
 def MakeAD5626Window():
     global ad5626window, AD5626SerialStatus, SCLKPort, SDATAPort, SLATCHPort, SLatchPhase, SClockPhase
-    global GenericSerialStatus
-    global AD5626Entry, SerDirection
+    global GenericSerialStatus, AD5626Entry, SerDirection, SWRev
     global PIO_0, PIO_1, PIO_2, PIO_3
 
     if GenericSerialStatus.get() == 1:
@@ -15997,7 +16145,7 @@ def MakeAD5626Window():
     if AD5626SerialStatus.get() == 0:
         AD5626SerialStatus.set(1)
         ad5626window = Toplevel()
-        ad5626window.title("AD5626 Output 1.3" + RevDate)
+        ad5626window.title("AD5626 Output " + SWRev + RevDate)
         ad5626window.resizable(FALSE,FALSE)
         ad5626window.protocol("WM_DELETE_WINDOW", DestroyAD5626Screen)
         #
@@ -16072,13 +16220,13 @@ def DestroyAD5626Screen():
         
 def MakeGenericSerialWindow():
     global serialwindow, GenericSerialStatus, SCLKPort, SDATAPort, SLATCHPort, SLatchPhase, SClockPhase
-    global NumBitsEntry, DataBitsEntry, SerDirection, RevDate
+    global NumBitsEntry, DataBitsEntry, SerDirection, RevDate, SWRev
     global PIO_0, PIO_1, PIO_2, PIO_3
 
     if GenericSerialStatus.get() == 0:
         GenericSerialStatus.set(1)
         serialwindow = Toplevel()
-        serialwindow.title("Generic Serial Output 1.3" + RevDate)
+        serialwindow.title("Generic Serial Output " + SWRev + RevDate)
         serialwindow.resizable(FALSE,FALSE)
         serialwindow.protocol("WM_DELETE_WINDOW", DestroyGenericSerialScreen)
         #
@@ -16169,13 +16317,13 @@ def DestroyGenericSerialScreen():
     serialwindow.destroy()
 
 def MakeDigFiltWindow():
-    global digfltwindow, DigFiltStatus, RevDate
+    global digfltwindow, DigFiltStatus, RevDate, SWRev
     global DigFiltA, DigFiltB, DifFiltALength, DifFiltBLength, DifFiltAFile, DifFiltBFile
 
     if DigFiltStatus.get() == 0:
         DigFiltStatus.set(1)
         digfltwindow = Toplevel()
-        digfltwindow.title("Digital Filter 1.3 " + RevDate)
+        digfltwindow.title("Digital Filter " + SWRev + RevDate)
         digfltwindow.resizable(FALSE,FALSE)
         digfltwindow.protocol("WM_DELETE_WINDOW", DestroyDigFiltScreen)
         titlab = Label(digfltwindow,text="Apply Digital Filters ", style="A12B.TLabel")
@@ -16287,12 +16435,12 @@ def BDFiltBMath():
     DifFiltBFile.config(text = "Using Filter B formula" ) # change displayed file name
 #
 def MakeCommandScreen():
-    global commandwindow, CommandStatus, ExecString, LastCommand, RevDate
+    global commandwindow, CommandStatus, ExecString, LastCommand, RevDate, SWRev
     
     if CommandStatus.get() == 0:
         CommandStatus.set(1)
         commandwindow = Toplevel()
-        commandwindow.title("Command Line 1.3 " + RevDate)
+        commandwindow.title("Command Line " + SWRev + RevDate)
         commandwindow.resizable(FALSE,FALSE)
         commandwindow.protocol("WM_DELETE_WINDOW", DestroyCommandScreen)
         toplab = Label(commandwindow,text="Command Line Interface ", style="A12B.TLabel")
@@ -16375,7 +16523,7 @@ def UpdateMeasureScreen():
     ChbValue6.config(text = ValueText)
 #
 def MakeMeasureScreen():
-    global measurewindow, MeasureStatus, RevDate
+    global measurewindow, MeasureStatus, RevDate, SWRev
     global ChaLab1, ChaLab12, ChaLab3, ChaLab4, ChaLab5, ChaLab6
     global ChaValue1, ChaValue2, ChaValue3, ChaValue4, ChaValue5, ChaValue6
     global ChbLab1, ChbLab12, ChbLab3, ChbLab4, ChbLab5, ChbLab6
@@ -16386,7 +16534,7 @@ def MakeMeasureScreen():
     if MeasureStatus.get() == 0:
         MeasureStatus.set(1)
         measurewindow = Toplevel()
-        measurewindow.title("Measurements 1.3 " + RevDate)
+        measurewindow.title("Measurements " + SWRev + RevDate)
         measurewindow.resizable(FALSE,FALSE)
         measurewindow.protocol("WM_DELETE_WINDOW", DestroyMeasureScreen)
         toplab = Label(measurewindow,text="Measurements ", style="A12B.TLabel")
@@ -16514,6 +16662,7 @@ def ConnectDevice():
         if not session.devices:
             print 'No Device plugged IN!'
             DevID = "No Device"
+            FWRevOne = 0.0
             bcon.configure(text="Recon", style="RConn.TButton")
             return
         session.configure(sample_rate=SAMPLErate)
@@ -16527,7 +16676,7 @@ def ConnectDevice():
         session.start(0)
 #
 def SelectBoard():
-    global devx, dev0, dev1, dev2, session, BrdSel, CHA, CHB, DevID, RUNstatus
+    global devx, dev0, dev1, dev2, session, BrdSel, CHA, CHB, DevID, RUNstatus, FWRevOne
     global PIO_0, PIO_1, PIO_2, PIO_3, PIO_4, PIO_5, PIO_6, PIO_7, cal, SAMPLErate, MaxSamples
 
     if RUNstatus.get() == 1:
@@ -16566,8 +16715,9 @@ def SelectBoard():
     print DevID
     print devx.fwver, devx.hwver
     print("Session sample rate: " + str(session.sample_rate))
-    if float(devx.fwver) < 2.17:
-        showwarning("WARNING","ALICE 1.3 Requires Firmware version > 2.16")
+    FWRevOne = float(devx.fwver)
+    if FWRevOne < 2.17:
+        showwarning("WARNING","This ALICE version Requires Firmware version > 2.16")
         UpdateFirmware()
     cal = devx.calibration
     CHA = devx.channels['A']    # Open CHA
@@ -16610,12 +16760,12 @@ def SelectBoard():
 def MakeSampleRateMenu():
     global SAMPLErate, AWGSAMPLErate, BaseSampleRate, session, ETSStatus, etssrlab, RevDate
     global Two_X_Sample, ADC_Mux_Mode, SampleRatewindow, SampleRateStatus, BaseRateEntry
-    global Alternate_Sweep_Mode, DeBugMode
+    global Alternate_Sweep_Mode, DeBugMode, FWRevOne, SWRev
 
     if SampleRateStatus.get() == 0:
         SampleRateStatus.set(1)
         SampleRatewindow = Toplevel()
-        SampleRatewindow.title("Set Sample Rate 1.3 " + RevDate)
+        SampleRatewindow.title("Set Sample Rate " + SWRev + RevDate)
         SampleRatewindow.resizable(FALSE,FALSE)
         SampleRatewindow.protocol("WM_DELETE_WINDOW", DestroySampleRate)
         frame1 = Frame(SampleRatewindow, borderwidth=5, relief=RIDGE)
@@ -16632,33 +16782,35 @@ def MakeSampleRateMenu():
         BaseRateEntry.delete(0,"end")
         BaseRateEntry.insert(0,BaseSampleRate)
         #
-        twoX = Checkbutton(frame1, text="Double Sample Rate", variable=Two_X_Sample, command=SetADC_Mux )
-        twoX.grid(row=1, column=0, sticky=W)
-        muxlab1 = Label(frame1, text="ADC MUX Modes", style="A10B.TLabel") #, font = "Arial 10 bold")
-        muxlab1.grid(row=2, column=0, sticky=W)
-        AltSweep = Checkbutton(frame1, text="Alternate Sweep Mode", variable=Alternate_Sweep_Mode ) #, command=SetADC_Mux )
-        AltSweep.grid(row=3, column=0, sticky=W)
-        chabuttons = Frame( frame1 )
-        chabuttons.grid(row=4, column=0, sticky=W)
-        muxrb1 = Radiobutton(chabuttons, text="VA and VB", variable=ADC_Mux_Mode, value=0, command=SetADC_Mux ) #style="W8.TButton",
-        muxrb1.pack(side=LEFT)
-        muxrb2 = Radiobutton(chabuttons, text="IA and IB", variable=ADC_Mux_Mode, value=1, command=SetADC_Mux ) #style="W8.TButton",
-        muxrb2.pack(side=LEFT)
-        chcbuttons = Frame( frame1 )
-        chcbuttons.grid(row=5, column=0, sticky=W)
-        muxrb5 = Radiobutton(chcbuttons, text="VA and IA", variable=ADC_Mux_Mode, value=4, command=SetADC_Mux ) # style="W8.TButton",
-        muxrb5.pack(side=LEFT)
-        muxrb6 = Radiobutton(chcbuttons, text="VB and IB", variable=ADC_Mux_Mode, value=5, command=SetADC_Mux ) # style="W8.TButton",
-        muxrb6.pack(side=LEFT)
-        nextrow = 6
-        if DeBugMode == 1:
-            chbbuttons = Frame( frame1 )
-            chbbuttons.grid(row=nextrow, column=0, sticky=W)
-            muxrb3 = Radiobutton(chbbuttons, text="VA and IB", variable=ADC_Mux_Mode, value=2, command=SetADC_Mux ) # style="W8.TButton",
-            muxrb3.pack(side=LEFT)
-            muxrb4 = Radiobutton(chbbuttons, text="VB and IA", variable=ADC_Mux_Mode, value=3, command=SetADC_Mux ) # style="W8.TButton",
-            muxrb4.pack(side=LEFT)
-            nextrow = nextrow + 1
+        nextrow = 2
+        if FWRevOne > 2.16:
+            twoX = Checkbutton(frame1, text="Double Sample Rate", variable=Two_X_Sample, command=SetADC_Mux )
+            twoX.grid(row=1, column=0, sticky=W)
+            muxlab1 = Label(frame1, text="ADC MUX Modes", style="A10B.TLabel") #, font = "Arial 10 bold")
+            muxlab1.grid(row=2, column=0, sticky=W)
+            AltSweep = Checkbutton(frame1, text="Alternate Sweep Mode", variable=Alternate_Sweep_Mode ) #, command=SetADC_Mux )
+            AltSweep.grid(row=3, column=0, sticky=W)
+            chabuttons = Frame( frame1 )
+            chabuttons.grid(row=4, column=0, sticky=W)
+            muxrb1 = Radiobutton(chabuttons, text="VA and VB", variable=ADC_Mux_Mode, value=0, command=SetADC_Mux ) #style="W8.TButton",
+            muxrb1.pack(side=LEFT)
+            muxrb2 = Radiobutton(chabuttons, text="IA and IB", variable=ADC_Mux_Mode, value=1, command=SetADC_Mux ) #style="W8.TButton",
+            muxrb2.pack(side=LEFT)
+            chcbuttons = Frame( frame1 )
+            chcbuttons.grid(row=5, column=0, sticky=W)
+            muxrb5 = Radiobutton(chcbuttons, text="VA and IA", variable=ADC_Mux_Mode, value=4, command=SetADC_Mux ) # style="W8.TButton",
+            muxrb5.pack(side=LEFT)
+            muxrb6 = Radiobutton(chcbuttons, text="VB and IB", variable=ADC_Mux_Mode, value=5, command=SetADC_Mux ) # style="W8.TButton",
+            muxrb6.pack(side=LEFT)
+            nextrow = 6
+            if DeBugMode == 1:
+                chbbuttons = Frame( frame1 )
+                chbbuttons.grid(row=nextrow, column=0, sticky=W)
+                muxrb3 = Radiobutton(chbbuttons, text="VA and IB", variable=ADC_Mux_Mode, value=2, command=SetADC_Mux ) # style="W8.TButton",
+                muxrb3.pack(side=LEFT)
+                muxrb4 = Radiobutton(chbbuttons, text="VB and IA", variable=ADC_Mux_Mode, value=3, command=SetADC_Mux ) # style="W8.TButton",
+                muxrb4.pack(side=LEFT)
+                nextrow = nextrow + 1
         #
         sratedismissclbutton = Button(frame1, text="Dismiss", style="W8.TButton", command=DestroySampleRate)
         sratedismissclbutton.grid(row=nextrow, column=0, sticky=W, pady=7)
@@ -16670,7 +16822,7 @@ def DestroySampleRate():
     SampleRatewindow.destroy()
 #
 def onStopfreqScroll(event):
-    global StopFreqEntry, Two_X_Sample, ADC_Mux_Mode 
+    global StopFreqEntry, Two_X_Sample, ADC_Mux_Mode, FWRevOne
 
     onTextScroll(event)
     try:
@@ -16679,17 +16831,18 @@ def onStopfreqScroll(event):
         StopFreqEntry.delete(0,"end")
         StopFreqEntry.insert(0,50000)
         StopFrequency = 50000
-    if StopFrequency >= 50000:
-        Two_X_Sample.set(1)
-        ADC_Mux_Mode.set(0)
-        SetADC_Mux()
-    else:
-        Two_X_Sample.set(0)
-        ADC_Mux_Mode.set(0)
-        SetADC_Mux()
+    if FWRevOne > 2.16:
+        if StopFrequency >= 50000:
+            Two_X_Sample.set(1)
+            ADC_Mux_Mode.set(0)
+            SetADC_Mux()
+        else:
+            Two_X_Sample.set(0)
+            ADC_Mux_Mode.set(0)
+            SetADC_Mux()
 #
 def onStopBodeScroll(event):
-    global StopBodeEntry, Two_X_Sample, ADC_Mux_Mode 
+    global StopBodeEntry, Two_X_Sample, ADC_Mux_Mode, FWRevOne
 
     onTextScroll(event)
     try:
@@ -16698,14 +16851,15 @@ def onStopBodeScroll(event):
         StopBodeEntry.delete(0,"end")
         StopBodeEntry.insert(0,20000)
         StopFrequency = 20000
-    if StopFrequency >= 20000:
-        Two_X_Sample.set(1)
-        ADC_Mux_Mode.set(0)
-        SetADC_Mux()
-    else:
-        Two_X_Sample.set(0)
-        ADC_Mux_Mode.set(0)
-        SetADC_Mux()
+    if FWRevOne > 2.16:
+        if StopFrequency >= 20000:
+            Two_X_Sample.set(1)
+            ADC_Mux_Mode.set(0)
+            SetADC_Mux()
+        else:
+            Two_X_Sample.set(0)
+            ADC_Mux_Mode.set(0)
+            SetADC_Mux()
 #
 def onSrateScroll(event):
 
@@ -16873,14 +17027,14 @@ def UpdateFirmware():
 #
 def MakeOhmWindow():
     global OhmDisp, OhmStatus, ohmwindow, RevDate, RMode, OhmA0, OhmA1, OhmRunStatus
-    global CHATestVEntry, CHATestREntry
+    global CHATestVEntry, CHATestREntry, SWRev
     
     if OhmStatus.get() == 0:
         OhmStatus.set(1)
         OhmDisp.set(1)
         OhmCheckBox()
         ohmwindow = Toplevel()
-        ohmwindow.title("DC Ohmmeter 1.3" + RevDate)
+        ohmwindow.title("DC Ohmmeter " + SWRev + RevDate)
         ohmwindow.resizable(FALSE,FALSE)
         ohmwindow.protocol("WM_DELETE_WINDOW", DestroyOhmScreen)
         frame1 = Frame(ohmwindow, borderwidth=5, relief=RIDGE)
@@ -16945,7 +17099,7 @@ def DestroyOhmScreen():
 #
 def MakeETSWindow():
     global FminEntry, MulXEntry, etswindow, ETSStatus, ETSDisp, ETSDir, ETSts, eqivsamplerate
-    global SAMPLErate, DivXEntry, FOffEntry, FminDisp, enb1, etssrlab
+    global SAMPLErate, DivXEntry, FOffEntry, FminDisp, enb1, etssrlab, RevDate, SWRev
 
     #
     if ETSStatus.get() == 0:
@@ -16953,7 +17107,7 @@ def MakeETSWindow():
         ETSStatus.set(1)
         ETSDisp.set(0)
         etswindow = Toplevel()
-        etswindow.title("ETS Controls 1.3" + RevDate)
+        etswindow.title("ETS Controls " + SWRev + RevDate)
         etswindow.resizable(FALSE,FALSE)
         etswindow.protocol("WM_DELETE_WINDOW", DestroyETSScreen)
         frame1 = Frame(etswindow, borderwidth=5, relief=RIDGE)
@@ -17106,7 +17260,7 @@ def Settingsscroll(event):
 def MakeSettingsMenu():
     global GridWidth, TRACEwidth, TRACEaverage, Vdiv, HarmonicMarkers, ZEROstuffing, RevDate
     global Settingswindow, SettingsStatus, SettingsDisp, ZSTuff, TAvg, VDivE, TwdthE, GwdthE, HarMon
-    global AWG_Amp_Mode
+    global AWG_Amp_Mode, SWRev
     global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
     global CHA_A1, CHA_A2, CHB_A1, CHB_A2
     global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
@@ -17114,7 +17268,7 @@ def MakeSettingsMenu():
 
     if SettingsStatus.get() == 0:
         Settingswindow = Toplevel()
-        Settingswindow.title("Settings 1.3 " + RevDate)
+        Settingswindow.title("Settings " + SWRev + RevDate)
         Settingswindow.resizable(FALSE,FALSE)
         Settingswindow.protocol("WM_DELETE_WINDOW", DestroySettings)
         frame1 = Frame(Settingswindow, borderwidth=5, relief=RIDGE)
@@ -17188,71 +17342,71 @@ def MakeSettingsMenu():
         #
         AwgAmplrb1 = Radiobutton(frame1, text="AWG Min/Max", variable=AWG_Amp_Mode, value=0, command=UpdateAWGWin)
         AwgAmplrb1.grid(row=6, column=0, sticky=W)
-        AwgAmplrb2 = Radiobutton(frame1, text="AWG Amp/Off", variable=AWG_Amp_Mode, value=1, command=UpdateAWGWin)
+        AwgAmplrb2 = Radiobutton(frame1, text="AWG Amp/Off ", variable=AWG_Amp_Mode, value=1, command=UpdateAWGWin)
         AwgAmplrb2.grid(row=6, column=1, sticky=W)
         #
-        cha_Rcomplab = Label(frame1, text="CHA Comp, TC1 in uSec, A1", style= "A10B.TLabel") # in micro seconds
+        cha_Rcomplab = Label(frame1, text="CHA Comp, TC1 (uSec), A1", style= "A10B.TLabel") # in micro seconds
         cha_Rcomplab.grid(row=7, column=0, sticky=W)
         cha_RcomplabMode = Frame( frame1 )
         cha_RcomplabMode.grid(row=7, column=1, sticky=W)
-        cha_TC1Entry = Entry(cha_RcomplabMode, width=4)
+        cha_TC1Entry = Entry(cha_RcomplabMode, width=5)
         cha_TC1Entry.bind('<MouseWheel>', Settingsscroll)
         cha_TC1Entry.bind('<Key>', onTextKey)
         cha_TC1Entry.pack(side=LEFT)
         cha_TC1Entry.delete(0,"end")
         cha_TC1Entry.insert(0,CHA_TC1.get())
-        cha_A1Entry = Entry(cha_RcomplabMode, width=4)
+        cha_A1Entry = Entry(cha_RcomplabMode, width=5)
         cha_A1Entry.bind('<MouseWheel>', Settingsscroll)
         cha_A1Entry.bind('<Key>', onTextKey)
         cha_A1Entry.pack(side=LEFT)
         cha_A1Entry.delete(0,"end")
         cha_A1Entry.insert(0,CHA_A1.get())
         #
-        cha_Ccomplab = Label(frame1, text="CHA Comp, TC2 in uSec, A2", style= "A10B.TLabel") # in micro seconds
+        cha_Ccomplab = Label(frame1, text="CHA Comp, TC2 (uSec), A2", style= "A10B.TLabel") # in micro seconds
         cha_Ccomplab.grid(row=8, column=0, sticky=W)
         cha_CcomplabMode = Frame( frame1 )
         cha_CcomplabMode.grid(row=8, column=1, sticky=W)
-        cha_TC2Entry = Entry(cha_CcomplabMode, width=4)
+        cha_TC2Entry = Entry(cha_CcomplabMode, width=5)
         cha_TC2Entry.bind('<MouseWheel>', Settingsscroll)
         cha_TC2Entry.bind('<Key>', onTextKey)
         cha_TC2Entry.pack(side=LEFT)
         cha_TC2Entry.delete(0,"end")
         cha_TC2Entry.insert(0,CHA_TC2.get())
-        cha_A2Entry = Entry(cha_CcomplabMode, width=4)
+        cha_A2Entry = Entry(cha_CcomplabMode, width=5)
         cha_A2Entry.bind('<MouseWheel>', Settingsscroll)
         cha_A2Entry.bind('<Key>', onTextKey)
         cha_A2Entry.pack(side=LEFT)
         cha_A2Entry.delete(0,"end")
         cha_A2Entry.insert(0,CHA_A2.get())
         #
-        chb_Rcomplab = Label(frame1, text="CHB Comp, TC1 in uSec, A1", style= "A10B.TLabel") # in micro seconds
+        chb_Rcomplab = Label(frame1, text="CHB Comp, TC1 (uSec), A1", style= "A10B.TLabel") # in micro seconds
         chb_Rcomplab.grid(row=9, column=0, sticky=W)
         chb_RcomplabMode = Frame( frame1 )
         chb_RcomplabMode.grid(row=9, column=1, sticky=W)
-        chb_TC1Entry = Entry(chb_RcomplabMode, width=4)
+        chb_TC1Entry = Entry(chb_RcomplabMode, width=5)
         chb_TC1Entry.bind('<MouseWheel>', Settingsscroll)
         chb_TC1Entry.bind('<Key>', onTextKey)
         chb_TC1Entry.pack(side=LEFT)
         chb_TC1Entry.delete(0,"end")
         chb_TC1Entry.insert(0,CHB_TC1.get())
-        chb_A1Entry = Entry(chb_RcomplabMode, width=4)
+        chb_A1Entry = Entry(chb_RcomplabMode, width=5)
         chb_A1Entry.bind('<MouseWheel>', Settingsscroll)
         chb_A1Entry.bind('<Key>', onTextKey)
         chb_A1Entry.pack(side=LEFT)
         chb_A1Entry.delete(0,"end")
         chb_A1Entry.insert(0,CHB_A1.get())
         #
-        chb_Ccomplab = Label(frame1, text="CHB Comp, TC2 in uSec, A2", style= "A10B.TLabel") # in micro seconds
+        chb_Ccomplab = Label(frame1, text="CHB Comp, TC2 (uSec), A2", style= "A10B.TLabel") # in micro seconds
         chb_Ccomplab.grid(row=10, column=0, sticky=W)
         chb_CcomplabMode = Frame( frame1 )
         chb_CcomplabMode.grid(row=10, column=1, sticky=W)
-        chb_TC2Entry = Entry(chb_CcomplabMode, width=4)
+        chb_TC2Entry = Entry(chb_CcomplabMode, width=5)
         chb_TC2Entry.bind('<MouseWheel>', Settingsscroll)
         chb_TC2Entry.bind('<Key>', onTextKey)
         chb_TC2Entry.pack(side=LEFT)
         chb_TC2Entry.delete(0,"end")
         chb_TC2Entry.insert(0,CHB_TC2.get())
-        chb_A2Entry = Entry(chb_CcomplabMode, width=4)
+        chb_A2Entry = Entry(chb_CcomplabMode, width=5)
         chb_A2Entry.bind('<MouseWheel>', Settingsscroll)
         chb_A2Entry.bind('<Key>', onTextKey)
         chb_A2Entry.pack(side=LEFT)
@@ -17388,20 +17542,12 @@ def SettingsUpdate():
     try:
         Gain1A = float(cha_A1Entry.get())
         CHA_A1.set(Gain1A)
-        if Gain1A < 0:
-            Gain1A = 1
-            cha_A1Entry.delete(0,END)
-            cha_A1Entry.insert(0, Gain1A)
     except:
         cha_A1Entry.delete(0,END)
         cha_A1Entry.insert(0, CHA_A1.get())
     try:
         Gain2A = float(cha_A2Entry.get())
         CHA_A2.set(Gain2A)
-        if Gain2A < 0:
-            Gain2A = 0
-            cha_A2Entry.delete(0,END)
-            cha_A2Entry.insert(0, Gain2A)
     except:
         cha_A2Entry.delete(0,END)
         cha_A2Entry.insert(0, CHA_A2.get())
@@ -17430,20 +17576,12 @@ def SettingsUpdate():
     try:
         Gain1B = float(chb_A1Entry.get())
         CHB_A1.set(Gain1B)
-        if Gain1B < 0:
-            Gain1B = 1
-            chb_A1Entry.delete(0,END)
-            chb_A1Entry.insert(0, Gain1B)
     except:
         chb_A1Entry.delete(0,END)
         chb_A1Entry.insert(0, CHB_A1.get())
     try:
         Gain2B = float(chb_A2Entry.get())
         CHB_A2.set(Gain2B)
-        if Gain2B < 0:
-            Gain2B = 0
-            chb_A2Entry.delete(0,END)
-            chb_A2Entry.insert(0, Gain2B)
     except:
         chb_A2Entry.delete(0,END)
         chb_A2Entry.insert(0, CHB_A2.get())
