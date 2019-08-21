@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
-# ADALM1000 alice-desktop 1.3.py(w) (6-13-2019)
+# ADALM1000 alice-desktop 1.3.py(w) (8-21-2019)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -38,7 +38,7 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(13 June 2019)"
+RevDate = "(21 Aug 2019)"
 SWRev = "1.3 "
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.1/alice-desktop-1.3-setup.exe'
 # samll bit map of ADI logo for window icon
@@ -289,6 +289,10 @@ AWGBPhasevalue = 0
 AWGBdelayvalue = 0
 AWGBDutyCyclevalue = 50
 AWGBWave = 'dc'
+AWGACycles = 1
+AWGBCycles = 1
+AWGABurstDelay = 0
+AWGBBurstDelay = 0
 Reset_Freq = 300
 MeasGateLeft = 0.0
 MeasGateRight = 0.0 # in mSec
@@ -1217,6 +1221,7 @@ def BLoadConfig(filename):
         BTime()
     except:
         print "Config File Not Found."
+        
 def ReMakeAWGwaves(): # re make awg waveforms ib case something changed
     global AWGAShape, AWGBShape, BisCompA
 
@@ -2237,6 +2242,24 @@ def BStart():
                     session.end() # end continuous session mode
                     
     # UpdateTimeScreen()          # Always Update
+def BStartOhm():
+    global session, AWGSync
+
+    AWGSync.set(1)
+    if AWGSync.get() == 0:
+        session.flush()
+        if not session.continuous:
+            session.start(0)
+        time.sleep(0.02) # wait awhile here for some reason
+    elif session.continuous:
+        session.end()
+        session.flush()
+    else:
+        contloop = 0
+        discontloop = 1
+        if session.continuous:
+            session.end() # end continuous session mode
+                    
 def BStartIA():
     global AWGAFreqEntry, AWGAFreqvalue, Two_X_Sample, FWRevOne
     
@@ -2641,7 +2664,8 @@ def Analog_In():
         root.update()
 #
 def Ohm_Analog_In():
-    global RMode, CHATestVEntry, CHATestREntry, CHA, CHB, devx, OhmA0, OhmA1
+    global RMode, CHATestVEntry, CHATestREntry, CHA, CHB, devx, OhmA0, OhmA1, discontloop
+    global AWGAMode, AWGBMode, AWGAShape, AWGSync, AWGBTerm, AWGAOffsetEntry
 
 # Do input probe Calibration CH1VGain, CH2VGain, CH1VOffset, CH2VOffset
     try:
@@ -2697,15 +2721,30 @@ def Ohm_Analog_In():
     # 
     DCVA0 = DCVB0 = DCIA0 = DCIB0 = 0.0 # initalize measurment variable
     RIN = 1000000 # nominal ALM1000 input resistance is 1 Mohm
-    # Get A0 and B0 data
-    CHA.mode = Mode.SVMI
-    CHB.mode = Mode.HI_Z
-    CHA.constant(chatestv)
+    # set A and B channels
+    AWGAMode.set(0) # Set AWG A to SVMI
+    AWGAShape.set(0) # DC
+    AWGBMode.set(2) # Set AWG B to Hi-Z
+    AWGAOffsetEntry.delete(0,"end")
+    AWGAOffsetEntry.insert(0, chatestv)
     if RMode.get() == 0:
-        devx.ctrl_transfer(0x40, 0x51, 38, 0, 0, 0, 100) # set CHB GND switch to open
+        AWGBTerm.set(0)
     else:
-        devx.ctrl_transfer(0x40, 0x50, 38, 0, 0, 0, 100) # set CHB GND switch to closed
-    ADsignal1 = devx.get_samples(210) # get samples for both channel A0 and B0
+        AWGBTerm.set(1)
+    #
+    if AWGSync.get() > 0: # awg syn flag set so run in discontinuous mode
+        if discontloop > 0:
+            session.flush()
+        else:
+            discontloop = 1
+        time.sleep(0.01)
+        BAWGEnab()
+        ADsignal1 = devx.get_samples(210) # get samples for both channel A and B
+        # time.sleep(1000.0/SHOWsamples)
+    else: # running in continuous mode
+        if session.continuous:
+            ADsignal1 = devx.read(210, -1, True) # get samples for both channel A and B
+    #
     # get_samples returns a list of values for voltage [0] and current [1]
     for index in range(200): # calculate average
         DCVA0 += ADsignal1[index+10][0][0] # VAdata # Sum for average CA voltage 
@@ -2730,7 +2769,7 @@ def Ohm_Analog_In():
         OhmString = '{0:.2f} '.format(DCR) + "Ohms "# format with 2 decimal places
     else:
         OhmString = '{0:.3f} '.format(DCR/1000) + "KOhms " # divide by 1000 and format with 3 decimal places
-    IAString = "Meas " + ' {0:.2f} '.format(DCIA0) + " mA " + ' {0:.2f} '.format(DCVA0) + " V"
+    IAString = "Meas " + ' {0:.2f} '.format(DCIA0) + " mA " + ' {0:.2f} '.format(DCVB0) + " V"
     OhmA0.config(text = OhmString) # change displayed value
     OhmA1.config(text = IAString) # change displayed value
 #
@@ -8184,6 +8223,20 @@ def SplitAWGAwaveform():
         Tempwaveform = AWGAwaveform[::2] # even numbered samples Tempwaveform
         AWGAwaveform = Tempwaveform
 #
+def AWGANumCycles():
+    global AWGABurstFlag, AWGACycles, AWGABurstDelay
+
+    if AWGABurstFlag.get() == 1:
+        AWGACyclesString = askstring("AWG A Burst Mode", "Current number of cycles " + str(AWGACycles) + "\n\nNew number of cycles:\n", initialvalue=str(AWGACycles), parent=awgwindow)
+        if (AWGACyclesString == None):         # If Cancel pressed, then None
+            return
+        AWGACycles = int(AWGACyclesString)
+        AWGADelayString = askstring("AWG A Burst Mode", "Current Burst delay " + str(AWGABurstDelay) + "\n\nNew burst delay in mS:\n", initialvalue=str(AWGABurstDelay), parent=awgwindow)
+        if (AWGADelayString == None):         # If Cancel pressed, then None
+            return
+        AWGABurstDelay = float(AWGADelayString)
+    ReMakeAWGwaves()
+#
 def AWGAReadWAV():
     global AWGAwaveform, AWGALength, AWGAShape, awgwindow, AWGBwaveform, AWGBLength, AWGBShape
     global AWG_2X, AWGA2X
@@ -8344,6 +8397,7 @@ def AWGAMakePWMSine():
                 AWGAwaveform.append(MinV) # j>=v?1:0
     SplitAWGAwaveform()
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
+    duty1lab.config(text="PWidth")
     UpdateAwgCont()
 #
 def AWGAMakeFourier():
@@ -8395,12 +8449,12 @@ def AWGAMakeSinc():
     if AWGAFreqvalue > 0.0:
         if AWG_2X.get() == 1:
             AWGAperiodvalue = int((BaseSampleRate*2)/AWGAFreqvalue)
-            SamplesPermS = 200
+            SamplesPermS = int((BaseSampleRate*2)/1000) # 200
             if AWGAperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
                 AWGAperiodvalue = AWGAperiodvalue + 1
         else:
             AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
-            SamplesPermS = 200
+            SamplesPermS = int(BaseSampleRate/1000) # 100
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -8416,7 +8470,7 @@ def AWGAMakeSinc():
         else:
             AWGAdelayvalue = 0.0
     elif AWGAPhaseDelay.get() == 1:
-        AWGAdelayvalue = AWGAPhasevalue * SampleRate / 1000
+        AWGAdelayvalue = AWGAPhasevalue * SAMPLErate / 1000
 
     Cycles = int(AWGADutyCyclevalue*100)
     NCycles = -1 * Cycles
@@ -8441,6 +8495,7 @@ def AWGAMakeSinc():
 def AWGAMakeSSQ():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, phasealab, duty1lab
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
 
     BAWGAAmpl(0)
@@ -8452,12 +8507,12 @@ def AWGAMakeSSQ():
     if AWGAFreqvalue > 0.0:
         if AWG_2X.get() == 1:
             AWGAperiodvalue = int((BaseSampleRate*2)/AWGAFreqvalue)
-            SamplesPermS = 200
+            SamplesPermS = int((BaseSampleRate*2)/1000) # 200
             if AWGAperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
                 AWGAperiodvalue = AWGAperiodvalue + 1
         else:
             AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
-            SamplesPermS = 100
+            SamplesPermS = int(BaseSampleRate/1000) # 100
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -8485,6 +8540,12 @@ def AWGAMakeSSQ():
     MidArray = numpy.ones(PulseWidth) * MinV
     AWGAwaveform = numpy.insert(AWGAwaveform, SlopeValue, MidArray)
     AWGAwaveform = numpy.pad(AWGAwaveform, (Remainder, Remainder), 'edge')
+    if AWGABurstFlag.get() == 1:
+        TempOneCycle = AWGAwaveform
+        for i in range(AWGACycles-1):
+            AWGAwaveform = numpy.concatenate((AWGAwaveform, TempOneCycle))
+        TempDelay = int(AWGABurstDelay*SamplesPermS/2) # convert mS to samples
+        AWGAwaveform = numpy.pad(AWGAwaveform, (TempDelay, TempDelay), 'edge')
     SplitAWGAwaveform()
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
     duty1lab.config(text="%")
@@ -8494,6 +8555,7 @@ def AWGAMakeSSQ():
 def AWGAMakeTrapazoid():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, phasealab, duty1lab
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
 
     BAWGAAmpl(0)
@@ -8505,12 +8567,12 @@ def AWGAMakeTrapazoid():
     if AWGAFreqvalue > 0.0:
         if AWG_2X.get() == 1:
             AWGAperiodvalue = int((BaseSampleRate*2)/AWGAFreqvalue)
-            SamplesPermS = 200
+            SamplesPermS = int((BaseSampleRate*2)/1000) # 200
             if AWGAperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
                 AWGAperiodvalue = AWGAperiodvalue + 1
         else:
             AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
-            SamplesPermS = 100
+            SamplesPermS = int(BaseSampleRate/1000) # 100
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -8544,6 +8606,12 @@ def AWGAMakeTrapazoid():
         SampleValue = SampleValue - StepValue
     for i in range(Remainder):
         AWGAwaveform.append(MinV)
+    if AWGABurstFlag.get() == 1:
+        TempOneCycle = AWGAwaveform
+        for i in range(AWGACycles-1):
+            AWGAwaveform = numpy.concatenate((AWGAwaveform, TempOneCycle))
+        TempDelay = int(AWGABurstDelay*SamplesPermS/2) # convert mS to samples
+        AWGAwaveform = numpy.pad(AWGAwaveform, (TempDelay, TempDelay), 'edge')
     SplitAWGAwaveform()
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
     duty1lab.config(text="%")
@@ -8553,6 +8621,7 @@ def AWGAMakeTrapazoid():
 def AWGAMakePulse():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, phasealab, duty1lab
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
 
     BAWGAAmpl(0)
@@ -8569,12 +8638,12 @@ def AWGAMakePulse():
     if AWGAFreqvalue > 0.0:
         if AWG_2X.get() == 1:
             AWGAperiodvalue = int((BaseSampleRate*2)/AWGAFreqvalue)
-            SamplesPermS = 200
+            SamplesPermS = int((BaseSampleRate*2)/1000) # 200
             if AWGAperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
                 AWGAperiodvalue = AWGAperiodvalue + 1
         else:
             AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
-            SamplesPermS = 100
+            SamplesPermS = int(BaseSampleRate/1000) # 100
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -8608,6 +8677,12 @@ def AWGAMakePulse():
         SampleValue = SampleValue - StepValue
     for i in range(Remainder):
         AWGAwaveform.append(MinV)
+    if AWGABurstFlag.get() == 1:
+        TempOneCycle = AWGAwaveform
+        for i in range(AWGACycles-1):
+            AWGAwaveform = numpy.concatenate((AWGAwaveform, TempOneCycle))
+        TempDelay = int(AWGABurstDelay*SamplesPermS/2) # convert mS to samples
+        AWGAwaveform = numpy.pad(AWGAwaveform, (TempDelay, TempDelay), 'edge')
     SplitAWGAwaveform()
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
     duty1lab.config(text="Width mS")
@@ -8617,6 +8692,7 @@ def AWGAMakePulse():
 def AWGAMakeRamp():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, phasealab, duty1lab
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
 
     BAWGAAmpl(0)
@@ -8628,12 +8704,12 @@ def AWGAMakeRamp():
     if AWGAFreqvalue > 0.0:
         if AWG_2X.get() == 1:
             AWGAperiodvalue = int((BaseSampleRate*2)/AWGAFreqvalue)
-            SamplesPermS = 200
+            SamplesPermS = int((BaseSampleRate*2)/1000) # 200
             if AWGAperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
                 AWGAperiodvalue = AWGAperiodvalue + 1
         else:
-            AWGAperiodvalue = BaseSampleRate*2/AWGAFreqvalue
-            SamplesPermS = 100
+            AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
+            SamplesPermS = int(BaseSampleRate/1000) # 100
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -8664,6 +8740,12 @@ def AWGAMakeRamp():
         AWGAwaveform.append(MaxV)
     for i in range(Remainder):
         AWGAwaveform.append(MinV)
+    if AWGABurstFlag.get() == 1:
+        TempOneCycle = AWGAwaveform
+        for i in range(AWGACycles-1):
+            AWGAwaveform = numpy.concatenate((AWGAwaveform, TempOneCycle))
+        TempDelay = int(AWGABurstDelay*SamplesPermS/2) # convert mS to samples
+        AWGAwaveform = numpy.pad(AWGAwaveform, (TempDelay, TempDelay), 'edge')
     SplitAWGAwaveform()
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
     duty1lab.config(text="%")
@@ -8673,6 +8755,7 @@ def AWGAMakeRamp():
 def AWGAMakeUpDownRamp():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, duty1lab
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
 
     BAWGAAmpl(0)
@@ -8684,10 +8767,12 @@ def AWGAMakeUpDownRamp():
     if AWGAFreqvalue > 0.0:
         if AWG_2X.get() == 1:
             AWGAperiodvalue = int((BaseSampleRate*2)/AWGAFreqvalue)
+            SamplesPermS = int((BaseSampleRate*2)/1000) # 200
             if AWGAperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
                 AWGAperiodvalue = AWGAperiodvalue + 1
         else:
             AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
+            SamplesPermS = int(BaseSampleRate/1000) # 100
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -8722,6 +8807,12 @@ def AWGAMakeUpDownRamp():
         AWGAwaveform.append(SampleValue)
         SampleValue = SampleValue - DownStepValue
     AWGAwaveform = numpy.roll(AWGAwaveform, int(AWGAdelayvalue))
+    if AWGABurstFlag.get() == 1:
+        TempOneCycle = AWGAwaveform
+        for i in range(AWGACycles-1):
+            AWGAwaveform = numpy.concatenate((AWGAwaveform, TempOneCycle))
+        TempDelay = int(AWGABurstDelay*SamplesPermS) # convert mS to samples
+        AWGAwaveform = numpy.pad(AWGAwaveform, (TempDelay, 0), 'edge')
     SplitAWGAwaveform()
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
     BAWGAPhaseDelay()
@@ -8731,6 +8822,7 @@ def AWGAMakeUpDownRamp():
 def AWGAMakeImpulse():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue
+    global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
 
     BAWGAAmpl(0)
@@ -8742,12 +8834,12 @@ def AWGAMakeImpulse():
     if AWGAFreqvalue > 0.0:
         if AWG_2X.get() == 1:
             AWGAperiodvalue = int((BaseSampleRate*2)/AWGAFreqvalue)
-            SamplesPermS = 200
+            SamplesPermS = int((BaseSampleRate*2)/1000) # 200
             if AWGAperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
                 AWGAperiodvalue = AWGAperiodvalue + 1
         else:
             AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
-            SamplesPermS = 100
+            SamplesPermS = int(BaseSampleRate/1000) # 100
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -8771,6 +8863,12 @@ def AWGAMakeImpulse():
     DelayValue = int(AWGAperiodvalue-DelayValue)
     for i in range(DelayValue-PulseWidth):
         AWGAwaveform.append((MinV+MaxV)/2.0)
+    if AWGABurstFlag.get() == 1:
+        TempOneCycle = AWGAwaveform
+        for i in range(AWGACycles-1):
+            AWGAwaveform = numpy.concatenate((AWGAwaveform, TempOneCycle))
+        TempDelay = int(AWGABurstDelay*SamplesPermS) # convert mS to samples
+        AWGAwaveform = numpy.pad(AWGAwaveform, (TempDelay, 0), 'edge')
     SplitAWGAwaveform()
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
     UpdateAwgCont()
@@ -8778,6 +8876,7 @@ def AWGAMakeImpulse():
 def AWGAMakeUUNoise():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGAFreqvalue
     global AWGALength, AWGAperiodvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
 
     BAWGAAmpl(0)
@@ -8787,10 +8886,12 @@ def AWGAMakeUUNoise():
     if AWGAFreqvalue > 0.0:
         if AWG_2X.get() == 1:
             AWGAperiodvalue = int((BaseSampleRate*2)/AWGAFreqvalue)
+            SamplesPermS = int((BaseSampleRate*2)/1000) # 200
             if AWGAperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
                 AWGAperiodvalue = AWGAperiodvalue + 1
         else:
             AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
+            SamplesPermS = int(BaseSampleRate/1000) # 100
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -8805,6 +8906,13 @@ def AWGAMakeUUNoise():
             MinV = AWGAAmplvalue
     AWGAwaveform = []
     AWGAwaveform = numpy.random.uniform(MinV, MaxV, int(AWGAperiodvalue))
+    Mid = (MaxV+MinV)/2.0
+    if AWGABurstFlag.get() == 1:
+        TempOneCycle = AWGAwaveform
+        for i in range(AWGACycles-1):
+            AWGAwaveform = numpy.concatenate((AWGAwaveform, TempOneCycle))
+        TempDelay = int(AWGABurstDelay*SamplesPermS) # convert mS to samples
+        AWGAwaveform = numpy.pad(AWGAwaveform, (TempDelay, 0), 'constant', constant_values=(Mid))
     SplitAWGAwaveform()
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
     UpdateAwgCont()
@@ -8812,6 +8920,7 @@ def AWGAMakeUUNoise():
 def AWGAMakeUGNoise():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGAFreqvalue
     global AWGALength, AWGAperiodvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
 
     BAWGAAmpl(0)
@@ -8821,10 +8930,12 @@ def AWGAMakeUGNoise():
     if AWGAFreqvalue > 0.0:
         if AWG_2X.get() == 1:
             AWGAperiodvalue = int((BaseSampleRate*2)/AWGAFreqvalue)
+            SamplesPermS = int((BaseSampleRate*2)/1000) # 200
             if AWGAperiodvalue % 2 != 0: # make sure record length is even so 2X mode works for all Freq
                 AWGAperiodvalue = AWGAperiodvalue + 1
         else:
             AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
+            SamplesPermS = int(BaseSampleRate/1000) # 100
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -8839,6 +8950,13 @@ def AWGAMakeUGNoise():
             MinV = AWGAAmplvalue
     AWGAwaveform = []
     AWGAwaveform = numpy.random.normal((MinV+MaxV)/2, (MaxV-MinV)/3, int(AWGAperiodvalue))
+    Mid = (MaxV+MinV)/2.0
+    if AWGABurstFlag.get() == 1:
+        TempOneCycle = AWGAwaveform
+        for i in range(AWGACycles-1):
+            AWGAwaveform = numpy.concatenate((AWGAwaveform, TempOneCycle))
+        TempDelay = int(AWGABurstDelay*SamplesPermS) # convert mS to samples
+        AWGAwaveform = numpy.pad(AWGAwaveform, (TempDelay, 0), 'constant', constant_values=(Mid))
     SplitAWGAwaveform()
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
     UpdateAwgCont()
@@ -9023,6 +9141,20 @@ def SetBCompA():
 #        ReMakeAWGwaves()
 #        UpdateAwgCont()
 #
+def AWGBNumCycles():
+    global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
+
+    if AWGBBurstFlag.get() == 1:
+        AWGBCyclesString = askstring("AWG B Burst Mode", "Current number of cycles " + str(AWGBCycles) + "\n\nNew number of cycles:\n", initialvalue=str(AWGBCycles), parent=awgwindow)
+        if (AWGBCyclesString == None):         # If Cancel pressed, then None
+            return
+        AWGBCycles = int(AWGBCyclesString)
+        AWGBDelayString = askstring("AWG B Burst Mode", "Current Burst delay " + str(AWGBBurstDelay) + "\n\nNew burst delay in mS:\n", initialvalue=str(AWGBBurstDelay), parent=awgwindow)
+        if (AWGBDelayString == None):         # If Cancel pressed, then None
+            return
+        AWGBBurstDelay = float(AWGBDelayString)
+    ReMakeAWGwaves()
+#    
 def BAWGBAmpl(temp):
     global AWGBAmplEntry, AWGBAmplvalue, AWGBMode, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
 
@@ -9438,6 +9570,7 @@ def AWGBMakePWMSine():
                 AWGBwaveform.append(MinV) # j>=v?1:0
     SplitAWGBwaveform()
     AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
+    duty2lab.config(text="PWidth")
     UpdateAwgCont()
 #
 def AWGBMakeSinc():
@@ -9499,6 +9632,7 @@ def AWGBMakeSSQ():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
 
     BAWGBAmpl(0)
@@ -9510,10 +9644,10 @@ def AWGBMakeSSQ():
     if AWGBFreqvalue > 0.0:
         if AWG_2X.get() == 2:
             AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
-            SamplesPermS = 200
+            SamplesPermS = int((BaseSampleRate*2)/1000) # 200
         else:
             AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
-            SamplesPermS = 100
+            SamplesPermS = int(BaseSampleRate/1000) # 100
     else:
         AWGBperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -9541,6 +9675,12 @@ def AWGBMakeSSQ():
     MidArray = numpy.ones(PulseWidth) * MinV
     AWGBwaveform = numpy.insert(AWGBwaveform, SlopeValue, MidArray)
     AWGBwaveform = numpy.pad(AWGBwaveform, (Remainder, Remainder), 'edge')
+    if AWGBBurstFlag.get() == 1:
+        TempOneCycle = AWGBwaveform
+        for i in range(AWGBCycles-1):
+            AWGBwaveform = numpy.concatenate((AWGBwaveform, TempOneCycle))
+        TempDelay = int(AWGBBurstDelay*SamplesPermS) # convert mS to samples
+        AWGBwaveform = numpy.pad(AWGBwaveform, (TempDelay, 0), 'edge')
     SplitAWGBwaveform()
     AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
     duty2lab.config(text="%")
@@ -9551,6 +9691,7 @@ def AWGBMakeTrapazoid():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
 
     BAWGBAmpl(0)
@@ -9562,10 +9703,10 @@ def AWGBMakeTrapazoid():
     if AWGBFreqvalue > 0.0:
         if AWG_2X.get() == 2:
             AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
-            SamplesPermS = 200
+            SamplesPermS = int((BaseSampleRate*2)/1000) # 200
         else:
             AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
-            SamplesPermS = 100
+            SamplesPermS = int(BaseSampleRate/1000) # 100
     else:
         AWGBperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -9599,6 +9740,12 @@ def AWGBMakeTrapazoid():
         SampleValue = SampleValue - StepValue
     for i in range(Remainder):
         AWGBwaveform.append(MinV)
+    if AWGBBurstFlag.get() == 1:
+        TempOneCycle = AWGBwaveform
+        for i in range(AWGBCycles-1):
+            AWGBwaveform = numpy.concatenate((AWGBwaveform, TempOneCycle))
+        TempDelay = int(AWGBBurstDelay*SamplesPermS) # convert mS to samples
+        AWGBwaveform = numpy.pad(AWGBwaveform, (TempDelay, 0), 'edge')
     SplitAWGBwaveform()
     AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
     duty2lab.config(text="%")
@@ -9609,6 +9756,7 @@ def AWGBMakePulse():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
 
     BAWGBAmpl(0)
@@ -9625,10 +9773,10 @@ def AWGBMakePulse():
     if AWGBFreqvalue > 0.0:
         if AWG_2X.get() == 2:
             AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
-            SamplesPermS = 200
+            SamplesPermS = int((BaseSampleRate*2)/1000) # 200
         else:
             AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
-            SamplesPermS = 100
+            SamplesPermS = int(BaseSampleRate/1000) # 100
     else:
         AWGBperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -9662,6 +9810,12 @@ def AWGBMakePulse():
         SampleValue = SampleValue - StepValue
     for i in range(Remainder):
         AWGBwaveform.append(MinV)
+    if AWGBBurstFlag.get() == 1:
+        TempOneCycle = AWGBwaveform
+        for i in range(AWGBCycles-1):
+            AWGBwaveform = numpy.concatenate((AWGBwaveform, TempOneCycle))
+        TempDelay = int(AWGBBurstDelay*SamplesPermS) # convert mS to samples
+        AWGBwaveform = numpy.pad(AWGBwaveform, (TempDelay, 0), 'edge')
     SplitAWGBwaveform()
     AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
     duty2lab.config(text="Width mS")
@@ -9672,6 +9826,7 @@ def AWGBMakeRamp():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
 
     BAWGBAmpl(0)
@@ -9683,10 +9838,10 @@ def AWGBMakeRamp():
     if AWGBFreqvalue > 0.0:
         if AWG_2X.get() == 2:
             AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
-            SamplesPermS = 200
+            SamplesPermS = int((BaseSampleRate*2)/1000) # 200
         else:
             AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
-            SamplesPermS = 100
+            SamplesPermS = int(BaseSampleRate/1000) # 100
     else:
         AWGBperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -9717,6 +9872,12 @@ def AWGBMakeRamp():
         AWGBwaveform.append(MaxV)
     for i in range(Remainder):
         AWGBwaveform.append(MinV)
+    if AWGBBurstFlag.get() == 1:
+        TempOneCycle = AWGBwaveform
+        for i in range(AWGBCycles-1):
+            AWGBwaveform = numpy.concatenate((AWGBwaveform, TempOneCycle))
+        TempDelay = int(AWGBBurstDelay*SamplesPermS) # convert mS to samples
+        AWGBwaveform = numpy.pad(AWGBwaveform, (TempDelay, 0), 'edge')
     SplitAWGBwaveform()
     AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
     duty2lab.config(text="%")
@@ -9727,6 +9888,7 @@ def AWGBMakeUpDownRamp():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
 
     BAWGBAmpl(0)
@@ -9738,8 +9900,10 @@ def AWGBMakeUpDownRamp():
     if AWGBFreqvalue > 0.0:
         if AWG_2X.get() == 2:
             AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
+            SamplesPermS = int((BaseSampleRate*2)/1000) # 200
         else:
             AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
+            SamplesPermS = int(BaseSampleRate/1000) # 100
     else:
         AWGBperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
@@ -9774,6 +9938,12 @@ def AWGBMakeUpDownRamp():
         AWGBwaveform.append(SampleValue)
         SampleValue = SampleValue - DownStepValue
     AWGBwaveform = numpy.roll(AWGBwaveform, int(AWGBdelayvalue))
+    if AWGBBurstFlag.get() == 1:
+        TempOneCycle = AWGBwaveform
+        for i in range(AWGBCycles-1):
+            AWGBwaveform = numpy.concatenate((AWGBwaveform, TempOneCycle))
+        TempDelay = int(AWGBBurstDelay*SamplesPermS) # convert mS to samples
+        AWGBwaveform = numpy.pad(AWGBwaveform, (TempDelay, 0), 'edge')
     SplitAWGBwaveform()
     AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
     BAWGBPhaseDelay()
@@ -9784,6 +9954,7 @@ def AWGBMakeImpulse():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGSAMPLErate, AWGBDutyCyclevalue, AWGBPhasevalue
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
 
     BAWGBAmpl(0)
@@ -9795,10 +9966,10 @@ def AWGBMakeImpulse():
     if AWGBFreqvalue > 0.0:
         if AWG_2X.get() == 2:
             AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
-            SamplesPermS = 200
+            SamplesPermS = int((BaseSampleRate*2)/1000) # 200
         else:
             AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
-            SamplesPermS = 100
+            SamplesPermS = int(BaseSampleRate/1000) # 100
     else:
         AWGBperiodvalue = 0.0
     MaxV = AWGBOffsetvalue
@@ -9824,6 +9995,12 @@ def AWGBMakeImpulse():
     DelayValue = int(AWGBperiodvalue-DelayValue)
     for i in range(DelayValue-PulseWidth):
         AWGBwaveform.append((MinV+MaxV)/2)
+    if AWGBBurstFlag.get() == 1:
+        TempOneCycle = AWGBwaveform
+        for i in range(AWGBCycles-1):
+            AWGBwaveform = numpy.concatenate((AWGBwaveform, TempOneCycle))
+        TempDelay = int(AWGBBurstDelay*SamplesPermS) # convert mS to samples
+        AWGBwaveform = numpy.pad(AWGBwaveform, (TempDelay, 0), 'edge')
     SplitAWGBwaveform()
     AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
     UpdateAwgCont()
@@ -9831,6 +10008,7 @@ def AWGBMakeImpulse():
 def AWGBMakeUUNoise():
     global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBFreqvalue
     global AWGBLength, AWGBperiodvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
 
     BAWGBAmpl(0)
@@ -9840,8 +10018,10 @@ def AWGBMakeUUNoise():
     if AWGBFreqvalue > 0.0:
         if AWG_2X.get() == 2:
             AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
+            SamplesPermS = int((BaseSampleRate*2)/1000) # 200
         else:
             AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
+            SamplesPermS = int(BaseSampleRate/1000) # 100
     else:
         AWGBperiodvalue = 0.0
 
@@ -9856,6 +10036,13 @@ def AWGBMakeUUNoise():
         MinV = (AWGBOffsetvalue-AWGBAmplvalue)
     AWGBwaveform = []
     AWGBwaveform = numpy.random.uniform(MinV, MaxV, int(AWGBperiodvalue))
+    Mid = (MaxV+MinV)/2
+    if AWGBBurstFlag.get() == 1:
+        TempOneCycle = AWGBwaveform
+        for i in range(AWGBCycles-1):
+            AWGBwaveform = numpy.concatenate((AWGBwaveform, TempOneCycle))
+        TempDelay = int(AWGBBurstDelay*SamplesPermS) # convert mS to samples
+        AWGBwaveform = numpy.pad(AWGBwaveform, (TempDelay, 0), 'constant', constant_values=(Mid))
     SplitAWGBwaveform()
     AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
     UpdateAwgCont()
@@ -9863,6 +10050,7 @@ def AWGBMakeUUNoise():
 def AWGBMakeUGNoise():
     global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBFreqvalue
     global AWGBLength, AWGBperiodvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
 
     BAWGBAmpl(0)
@@ -9872,8 +10060,10 @@ def AWGBMakeUGNoise():
     if AWGBFreqvalue > 0.0:
         if AWG_2X.get() == 2:
             AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
+            SamplesPermS = int((BaseSampleRate*2)/1000) # 200
         else:
             AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
+            SamplesPermS = int(BaseSampleRate/1000) # 100
     else:
         AWGBperiodvalue = 0.0
     if AWGBAmplvalue > AWGBOffsetvalue:
@@ -9887,6 +10077,13 @@ def AWGBMakeUGNoise():
         MinV = (AWGBOffsetvalue-AWGBAmplvalue)
     AWGBwaveform = []
     AWGBwaveform = numpy.random.normal((MinV+MaxV)/2, (MaxV-MinV)/3, int(AWGBperiodvalue))
+    Mid = (MaxV+MinV)/2
+    if AWGBBurstFlag.get() == 1:
+        TempOneCycle = AWGBwaveform
+        for i in range(AWGBCycles-1):
+            AWGBwaveform = numpy.concatenate((AWGBwaveform, TempOneCycle))
+        TempDelay = int(AWGBBurstDelay*SamplesPermS) # convert mS to samples
+        AWGBwaveform = numpy.pad(AWGBwaveform, (TempDelay, 0), 'constant', constant_values=(Mid))
     SplitAWGBwaveform()
     AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
     UpdateAwgCont()
@@ -13748,6 +13945,7 @@ def onSpinBoxScroll(event):
 def MakeAWGWindow():
     global AWGAMode, AWGATerm, AWGAShape, AWGSync, awgwindow, AWGAPhaseDelay, AWGBPhaseDelay
     global AWGBMode, AWGBTerm, AWGBShape, AWGScreenStatus, AWGARepeatFlag, AWGBRepeatFlag
+    global AWGABurstFlag, AWGBBurstFlag
     global AWGAAmplEntry, AWGAOffsetEntry, AWGAFreqEntry, AWGAPhaseEntry, AWGADutyCycleEntry
     global AWGBAmplEntry, AWGBOffsetEntry, AWGBFreqEntry, AWGBPhaseEntry, AWGBDutyCycleEntry
     global AWGALength, AWGBLength, RevDate, phasealab, phaseblab, AWGAModeLabel, AWGBModeLabel
@@ -13780,6 +13978,8 @@ def MakeAWGWindow():
         AWGATerm = IntVar(0)   # AWG A termination variable
         AWGAShape = IntVar(0)  # AWG A Wave shape variable
         AWGARepeatFlag = IntVar(0) # AWG A Arb shape repeat flag
+        AWGABurstFlag = IntVar(0) # AWG A Burst mode flag
+        AWGBBurstFlag = IntVar(0) # AWG B Burst mode flag
         AWGAMode.set(2)
         AWGSync = IntVar(0) # Sync start both AWG channels
         AWGSync.set(1)
@@ -13825,6 +14025,7 @@ def MakeAWGWindow():
         ShapeAMenu.menu.add_radiobutton(label="Read CSV File", variable=AWGAShape, value=6, command=AWGAReadFile)
         ShapeAMenu.menu.add_radiobutton(label="Read WAV File", variable=AWGAShape, value=13, command=AWGAReadWAV)
         ShapeAMenu.menu.add_command(label="Save CSV File", command=AWGAWriteFile)
+        ShapeAMenu.menu.add_checkbutton(label='Burst', variable=AWGABurstFlag, command=AWGANumCycles)
         ShapeAMenu.menu.add_checkbutton(label='Repeat', variable=AWGARepeatFlag)
         ShapeAMenu.pack(side=LEFT, anchor=W)
         #
@@ -13967,6 +14168,7 @@ def MakeAWGWindow():
         ShapeBMenu.menu.add_radiobutton(label="Read CSV File", variable=AWGBShape, value=6, command=AWGBReadFile)
         ShapeBMenu.menu.add_radiobutton(label="Read WAV File", variable=AWGBShape, value=13, command=AWGBReadWAV)
         ShapeBMenu.menu.add_command(label="Save CSV File", command=AWGBWriteFile)
+        ShapeBMenu.menu.add_checkbutton(label='Burst', variable=AWGBBurstFlag, command=AWGBNumCycles)
         ShapeBMenu.menu.add_checkbutton(label='Repeat', variable=AWGBRepeatFlag)
         ShapeBMenu.pack(side=LEFT, anchor=W)
         #
@@ -16672,7 +16874,11 @@ def ConnectDevice():
         bcon.configure(text="Conn", style="GConn.TButton")
         devx.set_adc_mux(0)
         devx.ctrl_transfer(0x40, 0x24, 0x0, 0, 0, 0, 100) # set to addr DAC A 
-        devx.ctrl_transfer(0x40, 0x25, 0x1, 0, 0, 0, 100) # set not addr DAC B 
+        devx.ctrl_transfer(0x40, 0x25, 0x1, 0, 0, 0, 100) # set not addr DAC B
+##        temp = 0
+##        print "read ADM1177 controler"
+##        print devx.ctrl_transfer( 0xa0, 0x17, 0, 0, temp, 0, 100 )
+##        print temp
         session.start(0)
 #
 def SelectBoard():
@@ -17027,9 +17233,10 @@ def UpdateFirmware():
 #
 def MakeOhmWindow():
     global OhmDisp, OhmStatus, ohmwindow, RevDate, RMode, OhmA0, OhmA1, OhmRunStatus
-    global CHATestVEntry, CHATestREntry, SWRev
+    global CHATestVEntry, CHATestREntry, SWRev, AWGSync
     
     if OhmStatus.get() == 0:
+        AWGSync.set(1)
         OhmStatus.set(1)
         OhmDisp.set(1)
         OhmCheckBox()
@@ -17042,9 +17249,9 @@ def MakeOhmWindow():
         #
         buttons = Frame( frame1 )
         buttons.grid(row=0, column=0, sticky=W)
-        rb1 = Radiobutton(buttons, text="Stop", style="Stop.TRadiobutton", variable=OhmRunStatus, value=0 )
+        rb1 = Radiobutton(buttons, text="Stop", style="Stop.TRadiobutton", variable=OhmRunStatus, value=0, command=BStop )
         rb1.pack(side=LEFT)
-        rb2 = Radiobutton(buttons, text="Run", style="Run.TRadiobutton", variable=OhmRunStatus, value=1 )
+        rb2 = Radiobutton(buttons, text="Run", style="Run.TRadiobutton", variable=OhmRunStatus, value=1, command=BStartOhm )
         rb2.pack(side=LEFT)
         #
         OhmA0 = Label(frame1, style="A16B.TLabel") # , font = "Arial 16 bold")
