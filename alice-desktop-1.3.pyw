@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
-# ADALM1000 alice-desktop 1.3.py(w) (8-21-2019)
+# ADALM1000 alice-desktop 1.3.py(w) (8-27-2019)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -38,7 +38,7 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(21 Aug 2019)"
+RevDate = "(27 Aug 2019)"
 SWRev = "1.3 "
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.1/alice-desktop-1.3-setup.exe'
 # samll bit map of ADI logo for window icon
@@ -711,6 +711,8 @@ def BSaveConfig(filename):
     global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
     global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
     global Show_Rseries, Show_Xseries, Show_Magnitude, Show_Angle
+    global AWGABurstFlag, AWGACycles, AWGABurstDelay
+    global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     
     # open Config file for Write
     ConfgFile = open(filename, "w")
@@ -720,6 +722,15 @@ def BSaveConfig(filename):
     ConfgFile.write('global GRW; GRW = ' + str(GRW) + '\n')
     ConfgFile.write('global GRH; GRH = ' + str(GRH) + '\n')
     # Windows configuration
+    ConfgFile.write('global MathString; MathString = "' + MathString + '"\n')
+    ConfgFile.write('global MathUnits; MathUnits = "' + MathUnits + '"\n')
+    ConfgFile.write('global MathAxis; MathAxis = "' + MathAxis + '"\n')
+    ConfgFile.write('global MathXString; MathXString = "' + MathXString + '"\n')
+    ConfgFile.write('global MathXUnits; MathXUnits = "' + MathXUnits + '"\n')
+    ConfgFile.write('global MathXAxis; MathXAxis = "' + MathXAxis + '"\n')
+    ConfgFile.write('global MathYString; MathYString = "' + MathYString + '"\n')
+    ConfgFile.write('global MathYUnits; MathYUnits = "' + MathYUnits + '"\n')
+    ConfgFile.write('global MathYAxis; MathYAxis = "' + MathYAxis + '"\n')
     if MathScreenStatus.get() > 0:
         ConfgFile.write('NewEnterMathControls()\n')
         ConfgFile.write("MathWindow.geometry('+" + str(MathWindow.winfo_x()) + '+' + str(MathWindow.winfo_y()) + "')\n")
@@ -974,6 +985,9 @@ def BSaveConfig(filename):
     ConfgFile.write('AWGADutyCycleEntry.insert(4, ' + AWGADutyCycleEntry.get() + ')\n')
     ConfgFile.write('AWGAShape.set(' + str(AWGAShape.get()) + ')\n')
     ConfgFile.write('AWGARepeatFlag.set(' + str(AWGARepeatFlag.get()) + ')\n')
+    ConfgFile.write('AWGABurstFlag.set(' + str(AWGABurstFlag.get()) + ')\n')
+    ConfgFile.write('global AWGACycles; AWGACycles = ' + str(AWGACycles) + '\n')
+    ConfgFile.write('global AWGABurstDelay; AWGABurstDelay = ' + str(AWGABurstDelay) + '\n')
     #
     ConfgFile.write('AWGBMode.set('+ str(AWGBMode.get()) + ')\n')
     ConfgFile.write('AWGBIOMode.set('+ str(AWGBIOMode.get()) + ')\n')
@@ -991,6 +1005,9 @@ def BSaveConfig(filename):
     ConfgFile.write('AWGBDutyCycleEntry.insert(4, ' + AWGBDutyCycleEntry.get() + ')\n')
     ConfgFile.write('AWGBShape.set(' + str(AWGBShape.get()) + ')\n')
     ConfgFile.write('AWGBRepeatFlag.set(' + str(AWGBRepeatFlag.get()) + ')\n')
+    ConfgFile.write('AWGBBurstFlag.set(' + str(AWGBBurstFlag.get()) + ')\n')
+    ConfgFile.write('global AWGBCycles; AWGBCycles = ' + str(AWGBCycles) + '\n')
+    ConfgFile.write('global AWGBBurstDelay; AWGBBurstDelay = ' + str(AWGBBurstDelay) + '\n')
     #
     ConfgFile.write('AWGSync.set(' + str(AWGSync.get()) + ')\n')
     #
@@ -1058,18 +1075,10 @@ def BSaveConfig(filename):
     ConfgFile.write('CHBIOffsetEntry.delete(0,END)\n')
     ConfgFile.write('CHBIOffsetEntry.insert(4, ' + CHBIOffsetEntry.get() + ')\n')
     # Save strings
-    ConfgFile.write('global MathString; MathString = "' + MathString + '"\n')
-    ConfgFile.write('global MathXString; MathXString = "' + MathXString + '"\n')
-    ConfgFile.write('global MathYString; MathYString = "' + MathYString + '"\n')
     ConfgFile.write('global UserAString; UserAString = "' + UserAString + '"\n')
-    ConfgFile.write('global MathXUnits; MathXSUnits = "' + MathXUnits + '"\n')
-    ConfgFile.write('global MathYUnits; MathYUnits = "' + MathYUnits + '"\n')
     ConfgFile.write('global UserALabel; UserALabel = "' + UserALabel + '"\n')
     ConfgFile.write('global UserBString; UserBString = "' + UserBString + '"\n')
     ConfgFile.write('global UserBLabel; UserBLabel = "' + UserBLabel + '"\n')
-    ConfgFile.write('global MathAxis; MathAxis = "' + MathAxis + '"\n')
-    ConfgFile.write('global MathXAxis; MathXAxis = "' + MathXAxis + '"\n')
-    ConfgFile.write('global MathYAxis; MathYAxis = "' + MathYAxis + '"\n')
     ConfgFile.write('global AWGAMathString; AWGAMathString = "' + AWGAMathString + '"\n')
     ConfgFile.write('global AWGBMathString; AWGBMathString = "' + AWGBMathString + '"\n')
     ConfgFile.write('global FFTUserWindowString; FFTUserWindowString= "' +  FFTUserWindowString + '"\n')
@@ -1194,6 +1203,8 @@ def BLoadConfig(filename):
     global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
     global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
     global Show_Rseries, Show_Xseries, Show_Magnitude, Show_Angle
+    global AWGABurstFlag, AWGACycles, AWGABurstDelay
+    global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     
     # Read configuration values from file
     try:
@@ -4636,13 +4647,14 @@ def MakeTimeTrace():    # Make the traces
     else:
         YconvMxy = Yconv1
         CHMYOffset = CHAOffset
+#
     if MathXAxis == "V-A":
         XconvMxy = Yconv1
         CHMXOffset = CHAOffset
     elif MathXAxis == "V-B":
         XconvMxy = Yconv2
         CHMXOffset = CHBOffset
-    elif MathYAxis == "I-A":
+    elif MathXAxis == "I-A":
         XconvMxy = YIconv1
         CHMXOffset = CHAIOffset
     elif MathXAxis == "I-B":
@@ -4651,6 +4663,7 @@ def MakeTimeTrace():    # Make the traces
     else:
         XconvMxy = Yconv1
         CHMXOffset = CHAOffset
+#
     c1 = GRH / 2.0 + Y0T    # fixed correction channel A
     c2 = GRH / 2.0 + Y0T    # fixed correction channel B
  
