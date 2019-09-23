@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
-# ADALM1000 alice-desktop 1.3.py(w) (8-27-2019)
+# ADALM1000 alice-desktop 1.3.py(w) (9-23-2019)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -38,7 +38,7 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(27 Aug 2019)"
+RevDate = "(23 Sept 2019)"
 SWRev = "1.3 "
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.1/alice-desktop-1.3-setup.exe'
 # samll bit map of ADI logo for window icon
@@ -88,6 +88,7 @@ GRHNiC = 400                # Height of the grid 400 default
 X0LNiC = 25                 # Left top X value of grid
 Y0TNiC = 25                 # Left top Y value of grid
 #
+FontSize = 8
 MouseX = MouseY = -10
 MouseCAV = MouseCAI = MouseCBV = MouseCBI = MouseMuxA = MouseMuxB = MouseMuxC = MouseMuxD = -10
 # Colors that can be modified
@@ -258,6 +259,9 @@ try:
 except:
     print "No Init File Read"
 #
+X0L = FontSize * 7
+XOLF = XOLBP = XOLXY = XOLIA = int(FontSize * 4.625)
+XOLNqP = XOLNiC = int(FontSize * 3.125)
 root.style = Style()
 #('winnative', 'clam', 'alt', 'default', 'classic', 'vista', 'xpnative')
 try:
@@ -266,7 +270,11 @@ except:
     root.style.theme_use('default')
 if MouseFocus == 1:
     root.tk_focusFollowsMouse()
+#
 DevID = "m1k"
+#
+default_font = tkFont.nametofont("TkDefaultFont")
+default_font.configure(size=FontSize)
 # Vertical Sensitivity list in v/div
 CHvpdiv = (0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0)
 # Vertical Sensitivity list in mA/div
@@ -316,7 +324,7 @@ CHAOffset = CHBOffset = CHBAOffset = CHBBOffset = CHBCOffset = CHBDOffset = 2.5
 CHAIOffset = CHBIOffset = InOffA = InGainA = InOffB = InGainB = 0.0
 # Other global variables required in various routines
 CANVASwidth = GRW + 2 * X0L # The canvas width
-CANVASheight = GRH + 80     # The canvas height
+CANVASheight = GRH + Y0T + (FontSize * 7)     # The canvas height
 
 ADsignal1 = []              # Ain signal array channel A and B
 VBuffA = []
@@ -1852,6 +1860,7 @@ def CheckMathString():
     global VBuffMA, VBuffMB, VBuffMC, VBuffMD
     global VmemoryA, VmemoryB, ImemoryA, ImemoryB
     global FFTBuffA, FFTBuffB, FFTwindowshape
+    global AWGAwaveform, AWGBwaveform
     global Show_MathX, Show_MathY
     global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
     global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2
@@ -1870,6 +1879,7 @@ def CheckMathXString():
     global VBuffMA, VBuffMB, VBuffMC, VBuffMD
     global VmemoryA, VmemoryB, ImemoryA, ImemoryB
     global FFTBuffA, FFTBuffB, FFTwindowshape
+    global AWGAwaveform, AWGBwaveform
     global Show_MathX, Show_MathY
     global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
     global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2
@@ -1888,6 +1898,7 @@ def CheckMathYString():
     global VBuffMA, VBuffMB, VBuffMC, VBuffMD
     global VmemoryA, VmemoryB, ImemoryA, ImemoryB
     global FFTBuffA, FFTBuffB, FFTwindowshape
+    global AWGAwaveform, AWGBwaveform
     global Show_MathX, Show_MathY
     global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
     global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2
@@ -2970,6 +2981,11 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
             # time.sleep(1000.0/SHOWsamples)
         else: # running in continuous mode
             if session.continuous:
+                if MuxScreenStatus.get() > 0:
+                    DummySamples = SHOWsamples*2
+                    if DummySamples < 20000:
+                        DummySamples = 20000
+                    ADsignal1 = devx.read(DummySamples, -1, True) # do dummy read if in analog mux mode
                 ADsignal1 = devx.read(SHOWsamples, -1, True) # get samples for both channel A and B
     #
     else:
@@ -4366,6 +4382,7 @@ def MakeTimeTrace():    # Make the traces
     global VmemoryA, VmemoryB, ImemoryA, ImemoryB
     global VmemoryMuxA, VmemoryMuxB, VmemoryMuxC, VmemoryMuxD
     global FFTBuffA, FFTBuffB, FFTwindowshape
+    global AWGAwaveform, AWGBwaveform
     global T1Vline, T2Vline, T1Iline, T2Iline
     global TMAVline, TMBVline, TMCVline, TMDVline
     global Tmathline, TMXline, TMYline
@@ -5688,6 +5705,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
     global Y0T          # Left top Y value
     global GRW          # Screenwidth
     global GRH          # Screenheight
+    global FontSize
     global MouseX, MouseY, MouseWidget, MouseCAV, MouseCAI, MouseCBV, MouseCBI
     global MouseMuxA, MouseMuxB, MouseMuxC, MouseMuxD
     global ShowXCur, ShowYCur, TCursor, VCursor
@@ -5909,14 +5927,16 @@ def MakeTimeScreen():     # Update the screen with traces and text
         MathFlag3 = (MathAxis == "I-A" and MathTrace.get() == 12) or (MathXAxis == "I-A" and Show_MathX.get() == 1) or (MathYAxis == "I-A" and Show_MathY.get() == 1)
         MathFlag4 = (MathAxis == "I-B" and MathTrace.get() == 12) or (MathXAxis == "I-B" and Show_MathX.get() == 1) or (MathYAxis == "I-B" and Show_MathY.get() == 1)
         # vertical scale text labels
+        RightOffset = FontSize * 3
+        LeftOffset = int(FontSize/2)
         if (ShowC1_V.get() == 1 or MathTrace.get() == 1 or MathTrace.get() == 2 or MathFlag1):
-            ca.create_text(x1-2, 12, text="CA-V", fill=COLORtrace1, anchor="e", font=("arial", 7 ))
+            ca.create_text(x1-LeftOffset, 12, text="CA-V", fill=COLORtrace1, anchor="e", font=("arial", FontSize-1 ))
         if (ShowC1_I.get() == 1 or MathTrace.get() == 4 or MathTrace.get() == 6 or MathTrace.get() == 8 or MathFlag3):
-            ca.create_text(x2+2, 12, text="CA-I", fill=COLORtrace3, anchor="w", font=("arial", 7 ))
+            ca.create_text(x2+LeftOffset, 12, text="CA-I", fill=COLORtrace3, anchor="w", font=("arial", FontSize-1 ))
         if (ShowC2_V.get() == 1 or MathTrace.get() == 3 or MathTrace.get() == 10 or MathFlag2):
-            ca.create_text(x1-26, 12, text="CB-V", fill=COLORtrace2, anchor="e", font=("arial", 7 ))
+            ca.create_text(x1-RightOffset+2, 12, text="CB-V", fill=COLORtrace2, anchor="e", font=("arial", FontSize-1 )) #26
         if (ShowC2_I.get() == 1 or MathTrace.get() == 5 or MathTrace.get() == 7 or MathTrace.get() == 9 or MathTrace.get() == 11 or MathFlag4):
-            ca.create_text(x2+28, 12, text="CB-I", fill=COLORtrace4, anchor="w", font=("arial", 7 ))
+            ca.create_text(x2+RightOffset+4, 12, text="CB-I", fill=COLORtrace4, anchor="w", font=("arial", FontSize-1 )) #28
         #
         while (i < 11):
             y = Y0T + i * GRH/10.0
@@ -5937,40 +5957,40 @@ def MakeTimeScreen():     # Update the screen with traces and text
             if (ShowC1_V.get() == 1 or MathTrace.get() == 1 or MathTrace.get() == 2 or MathFlag1):
                 Vaxis_value = (((5-i) * CH1pdvRange ) + CHAOffset)
                 # Vaxis_label = ' {0:.2f} '.format(Vaxis_value)
-                Vaxis_label = str(Vaxis_value)
-                ca.create_text(x1-3, y, text=Vaxis_label, fill=COLORtrace1, anchor="e", font=("arial", 8 ))
+                Vaxis_label = str(round(Vaxis_value,3 ))
+                ca.create_text(x1-LeftOffset, y, text=Vaxis_label, fill=COLORtrace1, anchor="e", font=("arial", FontSize ))
                 
             if (ShowC1_I.get() == 1 or MathTrace.get() == 4 or MathTrace.get() == 6 or MathTrace.get() == 8 or MathFlag3):
                 Iaxis_value = 1.0 * (((5-i) * CH1IpdvRange ) + CHAIOffset)
-                Iaxis_label = str(Iaxis_value)
-                ca.create_text(x2+2, y, text=Iaxis_label, fill=COLORtrace3, anchor="w", font=("arial", 8 ))
+                Iaxis_label = str(round(Iaxis_value, 3))
+                ca.create_text(x2+LeftOffset, y, text=Iaxis_label, fill=COLORtrace3, anchor="w", font=("arial", FontSize ))
                 
             if (ShowC2_V.get() == 1 or MathTrace.get() == 3 or MathTrace.get() == 10 or MathFlag2):
                 Vaxis_value = (((5-i) * CH2pdvRange ) + CHBOffset)
-                Vaxis_label = str(Vaxis_value)
-                ca.create_text(x1-26, y, text=Vaxis_label, fill=COLORtrace2, anchor="e", font=("arial", 8 ))
+                Vaxis_label = str(round(Vaxis_value, 3))
+                ca.create_text(x1-RightOffset+2, y, text=Vaxis_label, fill=COLORtrace2, anchor="e", font=("arial", FontSize )) # 26
                 
             if (ShowC2_I.get() == 1 or MathTrace.get() == 5 or MathTrace.get() == 7 or MathTrace.get() == 9 or MathTrace.get() == 11 or MathFlag4):
                 Iaxis_value = 1.0 * (((5-i) * CH2IpdvRange ) + CHBIOffset)
-                Iaxis_label = str(Iaxis_value)
-                ca.create_text(x2+28, y, text=Iaxis_label, fill=COLORtrace4, anchor="w", font=("arial", 8 ))
+                Iaxis_label = str(round(Iaxis_value, 3))
+                ca.create_text(x2+RightOffset+4, y, text=Iaxis_label, fill=COLORtrace4, anchor="w", font=("arial", FontSize )) # 28
             if MuxScreenStatus.get() == 1:
                 if Show_CBA.get() == 1: 
                     Vaxis_value = (((5-i) * CHMApdvRange ) + CHBAOffset)
-                    Vaxis_label = str(Vaxis_value)
-                    ca.create_text(x1-26, y, text=Vaxis_label, fill=COLORtrace2, anchor="e", font=("arial", 8 ))
+                    Vaxis_label = str(round(Vaxis_value, 3))
+                    ca.create_text(x1-RightOffset+2, y, text=Vaxis_label, fill=COLORtrace2, anchor="e", font=("arial", FontSize )) # 26
                 if Show_CBB.get() == 1: 
                     Iaxis_value = 1.0 * (((5-i) * CHMBpdvRange ) + CHBBOffset)
-                    Iaxis_label = str(Iaxis_value)
-                    ca.create_text(x2+2, y, text=Iaxis_label, fill=COLORtrace6, anchor="w", font=("arial", 8 ))
+                    Iaxis_label = str(round(Iaxis_value, 3))
+                    ca.create_text(x2+LeftOffset, y, text=Iaxis_label, fill=COLORtrace6, anchor="w", font=("arial", FontSize ))
                 if Show_CBC.get() == 1:
                     Iaxis_value = 1.0 * (((5-i) * CHMCpdvRange ) + CHBCOffset)
-                    Iaxis_label = str(Iaxis_value)
-                    ca.create_text(x2+21, y, text=Iaxis_label, fill=COLORtrace7, anchor="w", font=("arial", 8 ))
+                    Iaxis_label = str(round(Iaxis_value, 3))
+                    ca.create_text(x2+RightOffset-3, y, text=Iaxis_label, fill=COLORtrace7, anchor="w", font=("arial", FontSize )) # 21
                 if Show_CBD.get() == 1:
                     Iaxis_value = 1.0 * (((5-i) * CHMDpdvRange ) + CHBDOffset)
-                    Iaxis_label = str(Iaxis_value)
-                    ca.create_text(x2+38, y, text=Iaxis_label, fill=COLORtrace4, anchor="w", font=("arial", 8 ))
+                    Iaxis_label = str(round(Iaxis_value, 3))
+                    ca.create_text(x2+RightOffset+10, y, text=Iaxis_label, fill=COLORtrace4, anchor="w", font=("arial", FontSize )) # 38
             i = i + 1
         # Draw vertical grid lines
         i = 0
@@ -6002,7 +6022,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
                 if vx < 1:
                     axis_value = ((i * vx) + vt) * 1000.0
                     axis_label = str(int(axis_value)) + " uS"
-                ca.create_text(x, y2+3, text=axis_label, fill=COLORgrid, anchor="n", font=("arial", 8 ))
+                ca.create_text(x, y2+3, text=axis_label, fill=COLORgrid, anchor="n", font=("arial", FontSize ))
             else:
                 ca.create_line(Dline, fill=COLORgrid, width=GridWidth.get())
                 if vx >= 1000:
@@ -6014,7 +6034,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
                 if vx < 1:
                     axis_value = ((i * vx) + vt) * 1000.0
                     axis_label = str(int(axis_value)) + " uS"
-                ca.create_text(x, y2+3, text=axis_label, fill=COLORgrid, anchor="n", font=("arial", 8 ))
+                ca.create_text(x, y2+3, text=axis_label, fill=COLORgrid, anchor="n", font=("arial", FontSize ))
                         
             i = i + 1
     # Write the trigger line if available
@@ -6034,7 +6054,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
         else:
             TgLabel = TgLabel + " Not Triggered"
         x = X0L + (GRW/2) + 12
-        ca.create_text(x, Ymin-8, text=TgLabel, fill=COLORtrigger, anchor="w", font=("arial", 8 ))
+        ca.create_text(x, Ymin-FontSize, text=TgLabel, fill=COLORtrigger, anchor="w", font=("arial", FontSize ))
     # Draw T - V Cursor lines if required
     if MarkerScale.get() == 0:
         Yconv1 = float(GRH/10.0) / CH1pdvRange
@@ -6100,7 +6120,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
         else:
             TString = ' {0:.2f} '.format(Tpoint)
         V_label = TString + " mS"
-        ca.create_text(TCursor+1, VCursor-5, text=V_label, fill=COLORtext, anchor="w", font=("arial", 8 ))
+        ca.create_text(TCursor+1, VCursor-5, text=V_label, fill=COLORtext, anchor="w", font=("arial", FontSize ))
     if ShowVCur.get() > 0:
         Dline = [X0L, VCursor, X0L+GRW, VCursor]
         ca.create_line(Dline, dash=(4,3), fill=COLORmarker, width=GridWidth.get())
@@ -6108,7 +6128,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
         yvolts = ((VCursor-c1)/Yconv1) - Yoffset1
         V1String = ' {0:.3f} '.format(-yvolts)
         V_label = V1String + Units
-        ca.create_text(TCursor+1, VCursor+5, text=V_label, fill=COLORmarker, anchor="w", font=("arial", 8 ))
+        ca.create_text(TCursor+1, VCursor+5, text=V_label, fill=COLORmarker, anchor="w", font=("arial", FontSize ))
     if ShowTCur.get() == 0 and ShowVCur.get() == 0 and MouseWidget == ca:
         if MouseX > X0L and MouseX < X0L+GRW and MouseY > Y0T and MouseY < Y0T+GRH:
             Dline = [MouseX, Y0T, MouseX, Y0T+GRH]
@@ -6119,14 +6139,14 @@ def MakeTimeScreen():     # Update the screen with traces and text
             else:
                 TString = ' {0:.2f} '.format(Tpoint)
             V_label = TString + " mS"
-            ca.create_text(MouseX+1, MouseY-5, text=V_label, fill=COLORtext, anchor="w", font=("arial", 8 ))
+            ca.create_text(MouseX+1, MouseY-5, text=V_label, fill=COLORtext, anchor="w", font=("arial", FontSize ))
             Dline = [X0L, MouseY, X0L+GRW, MouseY]
             ca.create_line(Dline, dash=(4,3), fill=COLORgrid, width=GridWidth.get())
             c1 = GRH / 2 + Y0T    # fixed Y correction 
             yvolts = ((MouseY-c1)/Yconv1) - Yoffset1
             V1String = ' {0:.3f} '.format(-yvolts)
             V_label = V1String + Units
-            ca.create_text(MouseX+1, MouseY+5, text=V_label, fill=COLORmarker, anchor="w", font=("arial", 8 ))
+            ca.create_text(MouseX+1, MouseY+5, text=V_label, fill=COLORmarker, anchor="w", font=("arial", FontSize ))
 #
     if MeasGateStatus.get() == 1:
         LeftGate = X0L + MeasGateLeft / Tstep
@@ -6291,7 +6311,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
                 txt = txt + " CB-A Delay = " + ' {0:.3f} '.format(CHBADelayR1) + " mS "    
          
     x = X0L
-    y = Y0T+GRH+20
+    y = Y0T+GRH+int(2.5 *FontSize) # 20
     ca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
     if MeasTopV1.get() == 1 or MeasBaseV1.get() == 1 or MeasTopV2.get() == 1 or MeasBaseV2.get() == 1:
         MakeHistogram()
@@ -6362,7 +6382,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
             txt = txt +  " RMS = " + ' {0:.4f} '.format(SI1)
         
     x = X0L
-    y = Y0T+GRH+32
+    y = Y0T+GRH+(4*FontSize) # 32
     ca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
     txt= " "
     # Channel B information
@@ -6451,7 +6471,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
             txt = txt +  " RMS = " + ' {0:.4f} '.format(SI2)
             
     x = X0L
-    y = Y0T+GRH+44
+    y = Y0T+GRH+int(5.5*FontSize) # 44
     ca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
 #
 def MakeXYScreen():
@@ -6461,6 +6481,7 @@ def MakeXYScreen():
     global Y0TXY          # Left top Y value
     global GRWXY          # Screenwidth
     global GRHXY          # Screenheight
+    global FontSize
     global XYca, MouseX, MouseY, MouseWidget
     global ShowXCur, ShowYCur, XCursor, YCursor
     global SHOWsamples  # Number of samples in data record
@@ -6615,20 +6636,20 @@ def MakeXYScreen():
                 XYca.create_line(Dline, fill=COLORgrid, width=GridWidth.get())
             if Ysignal.get() == 2 or Xsignal.get() == 6:
                 Iaxis_value = 1.0 * (((5-i) * CH1IpdvRange ) + CHAIOffset)
-                Iaxis_label = str(Iaxis_value)
-                XYca.create_text(x1-3, y, text=Iaxis_label, fill=COLORtrace3, anchor="e", font=("arial", 8 ))
+                Iaxis_label = str(round(Iaxis_value, 3))
+                XYca.create_text(x1-3, y, text=Iaxis_label, fill=COLORtrace3, anchor="e", font=("arial", FontSize ))
             elif Ysignal.get() == 4 or Xsignal.get() == 7:
                 Iaxis_value = 1.0 * (((5-i) * CH2IpdvRange ) + CHBIOffset)
-                Iaxis_label = str(Iaxis_value)
-                XYca.create_text(x1-3, y, text=Iaxis_label, fill=COLORtrace4, anchor="e", font=("arial", 8 ))
+                Iaxis_label = str(round(Iaxis_value, 3))
+                XYca.create_text(x1-3, y, text=Iaxis_label, fill=COLORtrace4, anchor="e", font=("arial", FontSize ))
             elif Ysignal.get() == 1:
                 Vaxis_value = (((5-i) * CH1pdvRange ) + CHAOffset)
-                Vaxis_label = str(Vaxis_value)
-                XYca.create_text(x1-3, y, text=Vaxis_label, fill=COLORtrace1, anchor="e", font=("arial", 8 ))
+                Vaxis_label = str(round(Vaxis_value, 3))
+                XYca.create_text(x1-3, y, text=Vaxis_label, fill=COLORtrace1, anchor="e", font=("arial", FontSize ))
             elif Ysignal.get() == 3:
                 Vaxis_value = (((5-i) * CH2pdvRange ) + CHBOffset)
-                Vaxis_label = str(Vaxis_value)
-                XYca.create_text(x1-3, y, text=Vaxis_label, fill=COLORtrace2, anchor="e", font=("arial", 8 ))
+                Vaxis_label = str(round(Vaxis_value, 3))
+                XYca.create_text(x1-3, y, text=Vaxis_label, fill=COLORtrace2, anchor="e", font=("arial", FontSize ))
             elif Ysignal.get() == 5:
                 TempCOLOR = COLORtrace5
                 if MathTrace.get() == 2:
@@ -6650,8 +6671,8 @@ def MakeXYScreen():
                         TempCOLOR = COLORtrace4
                     else:
                         Vaxis_value = (((5-i) * CH1pdvRange ) + CHAOffset)
-                Vaxis_label = str(Vaxis_value)
-                XYca.create_text(x1-3, y, text=Vaxis_label, fill=TempCOLOR, anchor="e", font=("arial", 8 ))
+                Vaxis_label = str(round(Vaxis_value, 3))
+                XYca.create_text(x1-3, y, text=Vaxis_label, fill=TempCOLOR, anchor="e", font=("arial", FontSize ))
             i = i + 1
         # Draw vertical grid lines
         i = 0
@@ -6675,20 +6696,20 @@ def MakeXYScreen():
                     k = k + 1
                 if Xsignal.get() == 1 or Xsignal.get() == 6: # 
                     Vaxis_value = (((i-5) * CH1pdvRange ) + CHAOffset)
-                    Vaxis_label = str(Vaxis_value)
-                    XYca.create_text(x, y2+3, text=Vaxis_label, fill=COLORtrace1, anchor="n", font=("arial", 8 ))
+                    Vaxis_label = str(round(Vaxis_value, 3))
+                    XYca.create_text(x, y2+3, text=Vaxis_label, fill=COLORtrace1, anchor="n", font=("arial", FontSize ))
                 elif Xsignal.get() == 3 or Xsignal.get() == 7:
                     Vaxis_value = (((i-5) * CH2pdvRange ) + CHBOffset)
-                    Vaxis_label = str(Vaxis_value)
-                    XYca.create_text(x, y2+3, text=Vaxis_label, fill=COLORtrace2, anchor="n", font=("arial", 8 ))
+                    Vaxis_label = str(round(Vaxis_value, 3))
+                    XYca.create_text(x, y2+3, text=Vaxis_label, fill=COLORtrace2, anchor="n", font=("arial", FontSize ))
                 elif Xsignal.get() == 2:
                     Iaxis_value = 1.0 * (((i-5) * CH1IpdvRange ) + CHAIOffset)
-                    Iaxis_label = str(Iaxis_value)
-                    XYca.create_text(x, y2+3, text=Iaxis_label, fill=COLORtrace3, anchor="n", font=("arial", 8 ))
+                    Iaxis_label = str(round(Iaxis_value, 3))
+                    XYca.create_text(x, y2+3, text=Iaxis_label, fill=COLORtrace3, anchor="n", font=("arial", FontSize ))
                 elif Xsignal.get() == 4:
                     Iaxis_value = 1.0 * (((i-5) * CH2IpdvRange ) + CHBIOffset)
-                    Iaxis_label = str(Iaxis_value)
-                    XYca.create_text(x, y2+3, text=Iaxis_label, fill=COLORtrace4, anchor="n", font=("arial", 8 ))
+                    Iaxis_label = str(round(Iaxis_value, 3))
+                    XYca.create_text(x, y2+3, text=Iaxis_label, fill=COLORtrace4, anchor="n", font=("arial", FontSize ))
                 elif Xsignal.get() == 5:
                     TempCOLOR = COLORtrace5
                     if MathTrace.get() == 2:
@@ -6711,26 +6732,26 @@ def MakeXYScreen():
                         else:
                             Vaxis_value = (((i-5) * CH1pdvRange ) + CHAOffset)
                             TempCOLOR = COLORtrace5
-                    Vaxis_label = str(Vaxis_value)
-                    XYca.create_text(x, y2+3, text=Vaxis_label, fill=TempCOLOR, anchor="n", font=("arial", 8 ))
+                    Vaxis_label = str(round(Vaxis_value, 3))
+                    XYca.create_text(x, y2+3, text=Vaxis_label, fill=TempCOLOR, anchor="n", font=("arial", FontSize ))
             else:
                 XYca.create_line(Dline, fill=COLORgrid, width=GridWidth.get())
                 if Xsignal.get() == 1 or Xsignal.get() == 6:
                     Vaxis_value = (((i-5) * CH1pdvRange ) + CHAOffset)
-                    Vaxis_label = str(Vaxis_value)
-                    XYca.create_text(x, y2+3, text=Vaxis_label, fill=COLORtrace1, anchor="n", font=("arial", 8 ))
+                    Vaxis_label = str(round(Vaxis_value, 3))
+                    XYca.create_text(x, y2+3, text=Vaxis_label, fill=COLORtrace1, anchor="n", font=("arial", FontSize ))
                 elif Xsignal.get() == 3 or Xsignal.get() == 7:
                     Vaxis_value = (((i-5) * CH2pdvRange ) + CHBOffset)
-                    Vaxis_label = str(Vaxis_value)
-                    XYca.create_text(x, y2+3, text=Vaxis_label, fill=COLORtrace2, anchor="n", font=("arial", 8 ))
+                    Vaxis_label = str(round(Vaxis_value, 3))
+                    XYca.create_text(x, y2+3, text=Vaxis_label, fill=COLORtrace2, anchor="n", font=("arial", FontSize ))
                 elif Xsignal.get() == 2:
                     Iaxis_value = 1.0 * (((i-5) * CH1IpdvRange ) + CHAIOffset)
-                    Iaxis_label = str(Iaxis_value)
-                    XYca.create_text(x, y2+3, text=Iaxis_label, fill=COLORtrace3, anchor="n", font=("arial", 8 ))
+                    Iaxis_label = str(round(Iaxis_value, 3))
+                    XYca.create_text(x, y2+3, text=Iaxis_label, fill=COLORtrace3, anchor="n", font=("arial", FontSize ))
                 elif Xsignal.get() == 4:
                     Iaxis_value = 1.0 * (((i-5) * CH2IpdvRange ) + CHBIOffset)
-                    Iaxis_label = str(Iaxis_value)
-                    XYca.create_text(x, y2+3, text=Iaxis_label, fill=COLORtrace4, anchor="n", font=("arial", 8 ))
+                    Iaxis_label = str(round(Iaxis_value, 3))
+                    XYca.create_text(x, y2+3, text=Iaxis_label, fill=COLORtrace4, anchor="n", font=("arial", FontSize ))
                 elif Xsignal.get() == 5:
                     TempCOLOR = COLORtrace5
                     if MathTrace.get() == 2:
@@ -6752,8 +6773,8 @@ def MakeXYScreen():
                             TempCOLOR = COLORtrace4
                         else:
                             Vaxis_value = (((i-5) * CH1pdvRange ) + CHAOffset)
-                    Vaxis_label = str(Vaxis_value)
-                    XYca.create_text(x, y2+3, text=Vaxis_label, fill=TempCOLOR, anchor="n", font=("arial", 8 ))
+                    Vaxis_label = str(round(Vaxis_value, 3))
+                    XYca.create_text(x, y2+3, text=Vaxis_label, fill=TempCOLOR, anchor="n", font=("arial", FontSize ))
             i = i + 1
 # Draw traces
     if len(TXYline) > 4:                    # Avoid writing lines with 1 coordinate
@@ -6910,7 +6931,7 @@ def MakeXYScreen():
         xvolts = Xoffset1 - ((c1-XCursor)/Xconv1)
         XString = ' {0:.3f} '.format(xvolts)
         V_label = XString + X_label
-        XYca.create_text(XCursor+1, YCursor-5, text=V_label, fill=COLORXmarker, anchor="w", font=("arial", 8 ))
+        XYca.create_text(XCursor+1, YCursor-5, text=V_label, fill=COLORXmarker, anchor="w", font=("arial", FontSize ))
     if ShowYCur.get() > 0:
         Dline = [X0LXY, YCursor, X0LXY+GRWXY, YCursor]
         XYca.create_line(Dline, dash=(4,3), fill=COLORYmarker, width=GridWidth.get())
@@ -6918,7 +6939,7 @@ def MakeXYScreen():
         yvolts = ((YCursor-c1)/Yconv1) - Yoffset1
         V1String = ' {0:.3f} '.format(-yvolts)
         V_label = V1String + Y_label
-        XYca.create_text(XCursor+1, YCursor+5, text=V_label, fill=COLORYmarker, anchor="w", font=("arial", 8 ))
+        XYca.create_text(XCursor+1, YCursor+5, text=V_label, fill=COLORYmarker, anchor="w", font=("arial", FontSize ))
     if ShowXCur.get() == 0 and ShowYCur.get() == 0 and MouseWidget == XYca:
         if MouseX > X0LXY and MouseX < X0LXY+GRWXY and MouseY > Y0TXY and MouseY < Y0TXY+GRHXY:
             Dline = [MouseX, Y0TXY, MouseX, Y0TXY+GRHXY]
@@ -6927,14 +6948,14 @@ def MakeXYScreen():
             xvolts = Xoffset1 - ((c1-XCursor)/Xconv1)
             XString = ' {0:.3f} '.format(xvolts)
             V_label = XString + X_label
-            XYca.create_text(MouseX+1, MouseY-5, text=V_label, fill=COLORXmarker, anchor="w", font=("arial", 8 ))
+            XYca.create_text(MouseX+1, MouseY-5, text=V_label, fill=COLORXmarker, anchor="w", font=("arial", FontSize ))
             Dline = [X0LXY, MouseY, X0LXY+GRWXY, MouseY]
             XYca.create_line(Dline, dash=(4,3), fill=COLORYmarker, width=GridWidth.get())
             c1 = GRHXY / 2 + Y0TXY    # fixed Y correction 
             yvolts = ((MouseY-c1)/Yconv1) - Yoffset1
             V1String = ' {0:.3f} '.format(-yvolts)
             V_label = V1String + Y_label
-            XYca.create_text(MouseX+1, MouseY+5, text=V_label, fill=COLORYmarker, anchor="w", font=("arial", 8 ))
+            XYca.create_text(MouseX+1, MouseY+5, text=V_label, fill=COLORYmarker, anchor="w", font=("arial", FontSize ))
 #
 # General information on top of the grid
 # Sweep information
@@ -7030,7 +7051,7 @@ def MakeXYScreen():
             txt = txt + " CA-B Phase = " + ' {0:.1f} '.format(CHABphase) + " deg "
             
     x = X0LXY
-    y = Y0TXY+GRHXY+20
+    y = Y0TXY+GRHXY+int(2.5*FontSize) # 20
     XYca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
     txt = " "
     if Xsignal.get() == 1 or Ysignal.get() == 1 or Xsignal.get() == 6:
@@ -7092,7 +7113,7 @@ def MakeXYScreen():
             txt = txt +  " RMS = " + ' {0:.4f} '.format(SI1)
         
     x = X0LXY
-    y = Y0TXY+GRHXY+32
+    y = Y0TXY+GRHXY+int(4*FontSize) # 32
     XYca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
     txt= " "
     # Channel B information
@@ -7154,7 +7175,7 @@ def MakeXYScreen():
             txt = txt +  " RMS = " + ' {0:.4f} '.format(SI2)
             
     x = X0LXY
-    y = Y0TXY+GRHXY+44
+    y = Y0TXY+GRHXY+int(5.5 * FontSize) # 44
     XYca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
 #
 def SetScaleA():
@@ -7459,6 +7480,7 @@ def onCanvasClickLeft(event):
     global Y0T          # Left top Y value
     global GRW          # Screenwidth
     global GRH          # Screenheight
+    global FontSize
     global ca, MarkerLoc
     global HoldOffentry, Xsignal, Ysignal, COLORgrid, COLORtext
     global TMsb, CHAsb, CHBsb, CHAIsb, CHBIsb, MarkerScale
@@ -7679,8 +7701,8 @@ def onCanvasClickLeft(event):
             x = X0L + GRW - 5
             y = Y0T + GRH + 3 - (MarkerNum*10)
             Justify = 'e'
-        ca.create_text(event.x+4, event.y, text=str(MarkerNum), fill=COLORtext, anchor=Justify, font=("arial", 8 ))
-        ca.create_text(x, y, text=V_label, fill=COLORmarker, anchor=Justify, font=("arial", 8 ))
+        ca.create_text(event.x+4, event.y, text=str(MarkerNum), fill=COLORtext, anchor=Justify, font=("arial", FontSize ))
+        ca.create_text(x, y, text=V_label, fill=COLORmarker, anchor=Justify, font=("arial", FontSize ))
         PrevV = yvolts
         PrevT = Tpoint
     else:
@@ -7825,6 +7847,7 @@ def onCanvasXYLeftClick(event):
     global Y0TXY          # Left top Y value
     global GRWXY          # Screenwidth
     global GRHXY          # Screenheight
+    global FontSize
     global XYca
     global HoldOffentry, Xsignal, Ysignal, COLORgrid, COLORtext
     global TMsb, CHAsbxy, CHBsbxy, CHAIsbxy, CHBIsbxy, MarkerScale
@@ -7909,7 +7932,7 @@ def onCanvasXYLeftClick(event):
         # draw X at marker point and number
         XYca.create_line(event.x-4, event.y-4,event.x+4, event.y+5, fill=COLORtext)
         XYca.create_line(event.x+4, event.y-4,event.x-4, event.y+5, fill=COLORtext)
-        XYca.create_text(event.x+4, event.y, text=str(MarkerNum), fill=COLORtext, anchor="w", font=("arial", 8 ))
+        XYca.create_text(event.x+4, event.y, text=str(MarkerNum), fill=COLORtext, anchor="w", font=("arial", FontSize ))
         if (Xsignal.get()==1 or Xsignal.get()==5) and (Ysignal.get()==3 or Ysignal.get()==5):
             yvolts = ((event.y-c2)/Yconv2) - CHBOffset
             xvolts = ((xc1-event.x)/Xconv1) - CHAOffset
@@ -7922,7 +7945,7 @@ def onCanvasXYLeftClick(event):
                 V_label = V_label + " Delta " + DeltaX + " V, " + DeltaY + " V"
             x = X0LXY + 5
             y = Y0TXY + 3 + (MarkerNum*10)
-            XYca.create_text(x, y, text=V_label, fill=COLORtext, anchor="w", font=("arial", 8 ))
+            XYca.create_text(x, y, text=V_label, fill=COLORtext, anchor="w", font=("arial", FontSize ))
             PrevY = yvolts
             PrevX = xvolts
         elif (Xsignal.get()==3 or Xsignal.get()==5) and (Ysignal.get()==1 or Ysignal.get()==5):
@@ -7937,7 +7960,7 @@ def onCanvasXYLeftClick(event):
                 V_label = V_label + " Delta " + DeltaX + " V, " + DeltaY + " V"
             x = X0LXY + 5
             y = Y0TXY + 3 + (MarkerNum*10)
-            XYca.create_text(x, y, text=V_label, fill=COLORtext, anchor="w", font=("arial", 8 ))
+            XYca.create_text(x, y, text=V_label, fill=COLORtext, anchor="w", font=("arial", FontSize ))
             PrevY = yvolts
             PrevX = xvolts               
 #
@@ -10951,13 +10974,13 @@ def DoFFT():            # Fast Fourier transformation
     PhaseB = []
     # Convert list to numpy array REX for faster Numpy calculations
     # Take the first fft samples
-    REX = numpy.array(FFTBuffA[:SMPfft])    # Make a numpy arry of the list
+    REX = numpy.array(FFTBuffA[0:SMPfft])    # Make a numpy arry of the list
 
     # Set Analog level display value MAX value is 5 volts for ALM1000
     REX = REX / 5.0
 
     # Do the FFT window function 
-    REX = REX * FFTwindowshape[:len(REX)]      # The windowing shape function only over the samples
+    REX = REX * FFTwindowshape[0:len(REX)]      # The windowing shape function only over the samples
 
     # Zero stuffing of array for better interpolation of peak level of signals
     ZEROstuffingvalue = int(2 ** ZEROstuffing.get())
@@ -10974,9 +10997,9 @@ def DoFFT():            # Fast Fourier transformation
     ALL = numpy.absolute(ALL)               # Make absolute SQR(REX*REX + IMX*IMX) for VOLTAGE!
     ALL = ALL * ALL                         # Convert from Voltage to Power (P = (V*V) / R; R = 1)
 
-    le = len(ALL) / 2                       # Only half is used, other half is mirror
-    ALL = ALL[:le]                          # So take only first half of the array
-    PhaseA = PhaseA[:le]
+    le = int(len(ALL) / 2)                       # Only half is used, other half is mirror
+    ALL = ALL[0:le]                          # So take only first half of the array
+    PhaseA = PhaseA[0:le]
     Totalcorr = float(ZEROstuffingvalue)/ fftsamples # For VOLTAGE!
     Totalcorr = Totalcorr * Totalcorr               # For POWER!
     FFTresultA = Totalcorr * ALL
@@ -10984,7 +11007,7 @@ def DoFFT():            # Fast Fourier transformation
     REX = []
     # Convert list to numpy array REX for faster Numpy calculations
     # Take the first fft samples
-    REX = numpy.array(FFTBuffB[:SMPfft])    # Make a numpy arry of the list
+    REX = numpy.array(FFTBuffB[0:SMPfft])    # Make a numpy arry of the list
 
     # Set level display value MAX value is 5 volts for ALM1000
     REX = REX / 5.0
@@ -11008,9 +11031,9 @@ def DoFFT():            # Fast Fourier transformation
     ALL = numpy.absolute(ALL)               # Make absolute SQR(REX*REX + IMX*IMX) for VOLTAGE!
     ALL = ALL * ALL                         # Convert from Voltage to Power (P = (U*U) / R; R = 1)
 
-    le = len(ALL) / 2                       # Only half is used, other half is mirror
-    ALL = ALL[:le]                          # So take only first half of the array
-    PhaseB = PhaseB[:le]
+    le = int(len(ALL) / 2 )                      # Only half is used, other half is mirror
+    ALL = ALL[0:le]                          # So take only first half of the array
+    PhaseB = PhaseB[0:le]
     Totalcorr = float(ZEROstuffingvalue)/ fftsamples # For VOLTAGE!
     Totalcorr = Totalcorr * Totalcorr               # For POWER!
     FFTresultB = Totalcorr * ALL
@@ -11020,7 +11043,7 @@ def DoFFT():            # Fast Fourier transformation
         PhaseAB = []
         # Convert list to numpy array REX for faster Numpy calculations
         # Take the first fft samples
-        REX = numpy.array(FFTBuffA[:SMPfft]-FFTBuffB[:SMPfft])    # Make a numpy arry of the VA-VB list
+        REX = numpy.array(FFTBuffA[0:SMPfft]-FFTBuffB[0:SMPfft])    # Make a numpy arry of the VA-VB list
 
         # Set level display value MAX value is 5 volts for ALM1000
         REX = REX / 5.0
@@ -11049,7 +11072,7 @@ def DoFFT():            # Fast Fourier transformation
         Totalcorr = Totalcorr * Totalcorr               # For POWER!
         FFTresultAB = Totalcorr * ALL
 #
-    TRACEsize = len(FFTresultB)
+    TRACEsize = int(len(FFTresultB))
     Fsample = float(SAMPLErate / 2) / (TRACEsize - 1)
     if SpectrumScreenStatus.get() > 0:
         try:
@@ -11074,7 +11097,7 @@ def DoFFT():            # Fast Fourier transformation
             NSweepSeriesAng = [] # in degrees
     if FreqTraceMode.get() == 1:      # Normal mode 1, do not change
         if FSweepMode.get() == 1:
-            ptmax = numpy.argmax(FFTresultA[STARTsample::])
+            ptmax = numpy.argmax(FFTresultA[STARTsample:TRACEsize])
             if ptmax > STARTsample:
                 STARTsample = ptmax
             i = 0
@@ -11082,7 +11105,7 @@ def DoFFT():            # Fast Fourier transformation
                 PhaseMemoryB[ptmax+i] = PhaseB[ptmax]
                 i = i + 1
         if FSweepMode.get() == 2:
-            ptmax = numpy.argmax(FFTresultB[STARTsample::])
+            ptmax = numpy.argmax(FFTresultB[STARTsample:TRACEsize])
             if ptmax > STARTsample:
                 STARTsample = ptmax
             i = 0
@@ -11092,7 +11115,7 @@ def DoFFT():            # Fast Fourier transformation
 
     if FreqTraceMode.get() == 2 and TRACEresetFreq == False:  # Peak hold mode 2, change v to peak value
         if FSweepMode.get() == 1:
-            ptmax = numpy.argmax(FFTresultA[STARTsample::])
+            ptmax = numpy.argmax(FFTresultA[STARTsample:TRACEsize])
             if ptmax > STARTsample:
                 STARTsample = ptmax
             i = 0
@@ -11100,7 +11123,7 @@ def DoFFT():            # Fast Fourier transformation
                 PhaseMemoryB[ptmax+i] = PhaseB[ptmax]
                 i = i + 1
         if FSweepMode.get() == 2:
-            ptmax = numpy.argmax(FFTresultB[STARTsample::])
+            ptmax = numpy.argmax(FFTresultB[STARTsample:TRACEsize])
             if ptmax > STARTsample:
                 STARTsample = ptmax
             i = 0
@@ -11117,7 +11140,7 @@ def DoFFT():            # Fast Fourier transformation
             FFTmemoryB = FFTresultB
             PhaseMemoryB = PhaseB
 # 
-    TRACEsize = len(FFTresultA)
+    TRACEsize = int(len(FFTresultA))
     Fsample = float(AWGSAMPLErate / 2) / (TRACEsize - 1)
     if SpectrumScreenStatus.get() > 0:
         STARTsample = StartFrequency / Fsample
@@ -11127,7 +11150,7 @@ def DoFFT():            # Fast Fourier transformation
         PhaseMemoryA = PhaseA
     if FreqTraceMode.get() == 1:      # Normal mode 1, do not change
         if FSweepMode.get() == 1:
-            ptmax = numpy.argmax(FFTresultA[STARTsample::])
+            ptmax = numpy.argmax(FFTresultA[STARTsample:TRACEsize])
             if ptmax > STARTsample:
                 STARTsample = ptmax
             i = 0
@@ -11135,7 +11158,7 @@ def DoFFT():            # Fast Fourier transformation
                 PhaseMemoryA[ptmax+i] = PhaseA[ptmax]
                 i = i + 1
         if FSweepMode.get() == 2:
-            ptmax = numpy.argmax(FFTresultB[STARTsample::])
+            ptmax = numpy.argmax(FFTresultB[STARTsample:TRACEsize])
             if ptmax > STARTsample:
                 STARTsample = ptmax
             i = 0
@@ -11145,7 +11168,7 @@ def DoFFT():            # Fast Fourier transformation
 
     if FreqTraceMode.get() == 2 and TRACEresetFreq == False:  # Peak hold mode 2, change v to peak value
         if FSweepMode.get() == 1:
-            ptmax = numpy.argmax(FFTresultA[STARTsample::])
+            ptmax = numpy.argmax(FFTresultA[STARTsample:TRACEsize])
             if ptmax > STARTsample:
                 STARTsample = ptmax
             i = 0
@@ -11153,7 +11176,7 @@ def DoFFT():            # Fast Fourier transformation
                 PhaseMemoryA[ptmax+i] = PhaseA[ptmax]
                 i = i + 1
         if FSweepMode.get() == 2:
-            ptmax = numpy.argmax(FFTresultB[STARTsample::])
+            ptmax = numpy.argmax(FFTresultB[STARTsample:TRACEsize])
             if ptmax > STARTsample:
                 STARTsample = ptmax
             i = 0
@@ -11643,6 +11666,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
     global Y0TBP          # Left top Y value
     global GRWBP          # Screenwidth
     global GRHBP          # Screenheight
+    global FontSize
     global RUNstatus    # 0 stopped, 1 start, 2 running, 3 stop now, 4 stop and restart
     global AWGSAMPLErate, SingleShot, HScaleBP, SAMPLErate, BaseSampleRate
     global SMPfft       # number of FFT samples
@@ -11707,11 +11731,11 @@ def MakeBodeScreen():       # Update the screen with traces and text
             Bodeca.create_line(Dline, dash=(4,3), fill=COLORgrid, width=GridWidth.get())
         Vaxis_value = (DBlevelBP.get() - (i * DBdivlist[DBdivindexBP.get()]))
         Vaxis_label = str(Vaxis_value)
-        Bodeca.create_text(x1-3, y, text=Vaxis_label, fill=COLORtrace1, anchor="e", font=("arial", 8 ))
+        Bodeca.create_text(x1-3, y, text=Vaxis_label, fill=COLORtrace1, anchor="e", font=("arial", FontSize ))
         if ShowCA_P.get() == 1 or ShowCB_P.get() == 1 or Show_Angle.get() == 1:
             Vaxis_value = ( 180 - ( i * (360 / Vdiv.get()))) + Phasecenter
             Vaxis_label = str(Vaxis_value)
-            Bodeca.create_text(x2+3, y, text=Vaxis_label, fill=COLORtrace3, anchor="w", font=("arial", 8 ))
+            Bodeca.create_text(x2+3, y, text=Vaxis_label, fill=COLORtrace3, anchor="w", font=("arial", FontSize ))
         if NetworkScreenStatus.get() > 0:
             if Show_Rseries.get() == 1 or Show_Xseries.get() == 1 or Show_Magnitude.get() == 1:
                 RperDiv = float(ResScale.get())
@@ -11724,7 +11748,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
                         Vaxis_label = ' {0:.1f}'.format(Vaxis_value) + 'K'
                 else:
                     Vaxis_label = ' {0:.0f} '.format(Vaxis_value)
-                Bodeca.create_text(x1-23, y, text=Vaxis_label, fill=COLORtrace5, anchor="e", font=("arial", 8 ))
+                Bodeca.create_text(x1-23, y, text=Vaxis_label, fill=COLORtrace5, anchor="e", font=("arial", FontSize ))
         i = i + 1
     # Draw vertical grid lines
     i = 0
@@ -11750,7 +11774,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
                 if F == 1 or F == 10 or F == 100 or F == 1000 or F == 10000 or F == 100000:
                     Bodeca.create_line(Dline, fill=COLORgrid, width=GridWidth.get())
                     axis_label = str(F)
-                    Bodeca.create_text(x, y2+3, text=axis_label, fill=COLORgrid, anchor="n", font=("arial", 8 ))
+                    Bodeca.create_text(x, y2+3, text=axis_label, fill=COLORgrid, anchor="n", font=("arial", FontSize ))
                 else:
                     Bodeca.create_line(Dline, dash=(4,3), fill=COLORgrid, width=GridWidth.get())
                 
@@ -11779,7 +11803,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
                 Bodeca.create_line(Dline, dash=(4,3), fill=COLORgrid, width=GridWidth.get())
             axis_value = BeginFreq + (i * Freqdiv)
             axis_label = str(axis_value)
-            Bodeca.create_text(x, y2+3, text=axis_label, fill=COLORgrid, anchor="n", font=("arial", 8 ))
+            Bodeca.create_text(x, y2+3, text=axis_label, fill=COLORgrid, anchor="n", font=("arial", FontSize ))
             i = i + 1
     # Draw X - Y cursors if needed
     Fpixel = (EndFreq - BeginFreq) / GRWBP # Frequency step per screen pixel
@@ -11799,7 +11823,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
             xfreq = ((BPCursor-x1)*Fpixel)+BeginFreq
         XFString = ' {0:.2f} '.format(xfreq)
         V_label = XFString + " Hz"
-        Bodeca.create_text(BPCursor+1, BdBCursor-5, text=V_label, fill=COLORtext, anchor="w", font=("arial", 8 ))
+        Bodeca.create_text(BPCursor+1, BdBCursor-5, text=V_label, fill=COLORtext, anchor="w", font=("arial", FontSize ))
 #
     if ShowBdBCur.get() > 0:
         Dline = [x1, BdBCursor, x1+GRWBP, BdBCursor]
@@ -11818,7 +11842,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
             yvdB = 180 + ((Yc-BdBCursor)/Yconv) + Phasecenter
             VdBString = ' {0:.1f} '.format(yvdB)
             V_label = VdBString + " Deg"
-        Bodeca.create_text(BPCursor+1, BdBCursor+5, text=V_label, fill=COLORtext, anchor="w", font=("arial", 8 ))
+        Bodeca.create_text(BPCursor+1, BdBCursor+5, text=V_label, fill=COLORtext, anchor="w", font=("arial", FontSize ))
     #
     SmoothBool = SmoothCurvesBP.get()
     # Draw traces
@@ -11830,7 +11854,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
             Bodeca.create_line(TAFline, fill=COLORtrace1, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
         if ShowMarkerBP.get() == 1:
             Peak_label = ' {0:.2f} '.format(PeakdbA) + ',' + ' {0:.1f} '.format(PeakfreqA)
-            Bodeca.create_text(PeakxA, PeakyA, text=Peak_label, fill=COLORtrace1, anchor="e", font=("arial", 8 ))
+            Bodeca.create_text(PeakxA, PeakyA, text=Peak_label, fill=COLORtrace1, anchor="e", font=("arial", FontSize ))
     if len(TBFline) > 4:    # Avoid writing lines with 1 coordinate
         # Write the trace CHB
         if OverRangeFlagB == 1:
@@ -11839,7 +11863,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
             Bodeca.create_line(TBFline, fill=COLORtrace2, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
         if ShowMarkerBP.get() == 1:
             Peak_label = ' {0:.2f} '.format(PeakdbB) + ',' + ' {0:.1f} '.format(PeakfreqB)
-            Bodeca.create_text(PeakxB, PeakyB, text=Peak_label, fill=COLORtrace2, anchor="w", font=("arial", 8 ))
+            Bodeca.create_text(PeakxB, PeakyB, text=Peak_label, fill=COLORtrace2, anchor="w", font=("arial", FontSize ))
     if len(TAPline) > 4:    # Avoid writing lines with 1 coordinate
         # Write the phase trace A-B 
         Bodeca.create_line(TAPline, fill=COLORtrace3, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
@@ -11850,12 +11874,12 @@ def MakeBodeScreen():       # Update the screen with traces and text
         Bodeca.create_line(TAFRline, fill=COLORtraceR1, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
         if ShowMarkerBP.get() == 1:
             Peak_label = ' {0:.2f} '.format(PeakdbRA) + ',' + ' {0:.1f} '.format(PeakfreqRA)
-            Bodeca.create_text(PeakxRA, PeakyRA, text=Peak_label, fill=COLORtraceR1, anchor="e", font=("arial", 8 ))
+            Bodeca.create_text(PeakxRA, PeakyRA, text=Peak_label, fill=COLORtraceR1, anchor="e", font=("arial", FontSize ))
     if ShowCB_RdB.get() == 1 and len(TBFRline) > 4:   # Write the ref trace B if active
         Bodeca.create_line(TBFRline, fill=COLORtraceR2, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
         if ShowMarkerBP.get() == 1:
             Peak_label = ' {0:.2f} '.format(PeakdbRB) + ',' + ' {0:.1f} '.format(PeakfreqRB)
-            Freqca.create_text(PeakxRB, PeakyRB, text=Peak_label, fill=COLORtraceR2, anchor="w", font=("arial", 8 ))
+            Freqca.create_text(PeakxRB, PeakyRB, text=Peak_label, fill=COLORtraceR2, anchor="w", font=("arial", FontSize ))
     if ShowCA_RP.get() == 1 and len(TAPRline) > 4:   # Write the ref trace A if active
         Bodeca.create_line(TAPRline, fill=COLORtraceR3, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
     if ShowCB_RP.get() == 1 and len(TBPRline) > 4:   # Write the ref trace A if active
@@ -11864,12 +11888,12 @@ def MakeBodeScreen():       # Update the screen with traces and text
         Bodeca.create_line(TBPMline, fill=COLORtrace5, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
         if ShowMarkerBP.get() == 1:
             Peak_label = ' {0:.2f} '.format(PeakMdb) + ',' + ' {0:.1f} '.format(PeakfreqM)
-            Bodeca.create_text(PeakxM, PeakyM, text=Peak_label, fill=COLORtrace5, anchor="w", font=("arial", 8 ))
+            Bodeca.create_text(PeakxM, PeakyM, text=Peak_label, fill=COLORtrace5, anchor="w", font=("arial", FontSize ))
     if ShowRMathBP.get() == 1 and len(TBPRMline) > 4:   # Write the ref math trace if active
         Bodeca.create_line(TBPRMline, fill=COLORtraceR5, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
         if ShowMarkerBP.get() == 1:
             Peak_label = ' {0:.2f} '.format(PeakRMdb) + ',' + ' {0:.1f} '.format(PeakfreqRM)
-            Bodeca.create_text(PeakxRM, PeakyRM, text=Peak_label, fill=COLORtraceR5, anchor="w", font=("arial", 8 ))
+            Bodeca.create_text(PeakxRM, PeakyRM, text=Peak_label, fill=COLORtraceR5, anchor="w", font=("arial", FontSize ))
     if Show_Rseries.get() == 1 and len(TIARline) > 4:
         Bodeca.create_line(TIARline, fill=COLORtrace5, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
     if Show_Xseries.get() == 1 and len(TIAXline) > 4:
@@ -11887,7 +11911,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
         xfreq = ((CurrentFreqX-x1)*Fpixel)+BeginFreq
     XFString = ' {0:.0f} '.format(xfreq)
     V_label = XFString + " Hz"
-    Bodeca.create_text(CurrentFreqX, Y0TBP+GRHBP+1, text=V_label, fill=COLORtext, anchor="n", font=("arial", 8 ))
+    Bodeca.create_text(CurrentFreqX, Y0TBP+GRHBP+1, text=V_label, fill=COLORtext, anchor="n", font=("arial", FontSize ))
     # General information on top of the grid
 
     txt = "    Sample rate: " + str(SAMPLErate)
@@ -12138,6 +12162,7 @@ def MakeIAScreen():       # Update the screen with traces and text
     global Y0TIA          # Left top Y value
     global GRWIA          # Screenwidth
     global GRHIA          # Screenheight
+    global FontSize
     global RUNstatus    # 0 stopped, 1 start, 2 running, 3 stop now, 4 stop and restart
     global AWGSAMPLErate, SAMPLErate, BaseSampleRate, OverRangeFlagA, OverRangeFlagB
     global SMPfft       # number of FFT samples
@@ -12178,7 +12203,7 @@ def MakeIAScreen():       # Update the screen with traces and text
         ResTxt = float(ResScale.get()) * i
         IAca.create_oval ( x0, y0, x1, y1, outline=COLORgrid, width=GridWidth.get())
         IAca.create_line(xcenter, y0, xright, y0, fill=COLORgrid, width=GridWidth.get(), dash=(4,3))
-        IAca.create_text(xright, y0, text=str(ResTxt), fill=COLORgrid, anchor="w", font=("arial", 10 ))
+        IAca.create_text(xright, y0, text=str(ResTxt), fill=COLORgrid, anchor="w", font=("arial", FontSize+2 ))
         # 
         i = i + 1
     IAca.create_line(xcenter, y0, xcenter, y1, fill=COLORgrid, width=2)
@@ -12188,10 +12213,10 @@ def MakeIAScreen():       # Update the screen with traces and text
     x = TRadius*math.cos(RAngle)
     IAca.create_line(xcenter-x, ycenter-y, xcenter+x, ycenter+y, fill=COLORgrid, width=GridWidth.get())
     IAca.create_line(xcenter+x, ycenter-y, xcenter-x, ycenter+y, fill=COLORgrid, width=GridWidth.get())
-    IAca.create_text(x0, ycenter, text="180", fill=COLORgrid, anchor="e", font=("arial", 10 ))
-    IAca.create_text(x1, ycenter, text="0.0", fill=COLORgrid, anchor="w", font=("arial", 10 ))
-    IAca.create_text(xcenter, y0, text="90", fill=COLORgrid, anchor="s", font=("arial", 10 ))
-    IAca.create_text(xcenter, y1, text="-90", fill=COLORgrid, anchor="n", font=("arial", 10 ))
+    IAca.create_text(x0, ycenter, text="180", fill=COLORgrid, anchor="e", font=("arial", FontSize+2 ))
+    IAca.create_text(x1, ycenter, text="0.0", fill=COLORgrid, anchor="w", font=("arial", FontSize+2 ))
+    IAca.create_text(xcenter, y0, text="90", fill=COLORgrid, anchor="s", font=("arial", FontSize+2 ))
+    IAca.create_text(xcenter, y1, text="-90", fill=COLORgrid, anchor="n", font=("arial", FontSize+2 ))
 # Draw traces
     # Add saved line if there
     if IASweepSaved.get() > 0:
@@ -12249,12 +12274,12 @@ def MakeIAScreen():       # Update the screen with traces and text
         x = X0LIA+GRWIA+10
         y = Y0TIA+GRHIA-40
         IAca.create_rectangle(x-6, y-6, x+6, y+6, fill="#ff0000")
-        IAca.create_text (x+12, y, text="CHA Over Range", anchor=W, fill="#ff0000", font=("arial", 12 ))
+        IAca.create_text (x+12, y, text="CHA Over Range", anchor=W, fill="#ff0000", font=("arial", FontSize+4 ))
     if OverRangeFlagB == 1:
         x = X0LIA+GRWIA+10
         y = Y0TIA+GRHIA-10
         IAca.create_rectangle(x-6, y-6, x+6, y+6, fill="#ff0000")
-        IAca.create_text (x+12, y, text="CHB Over Range", anchor=W, fill="#ff0000", font=("arial", 12 ))
+        IAca.create_text (x+12, y, text="CHB Over Range", anchor=W, fill="#ff0000", font=("arial", FontSize+4 ))
     # General information on top of the grid
 
     txt = "    Sample rate: " + str(SAMPLErate)
@@ -12269,37 +12294,37 @@ def MakeIAScreen():       # Update the screen with traces and text
     x = X0LIA + GRWIA + 4
     y = 24
     txt = "Gain " + ' {0:.2f} '.format(PeakdbB-PeakdbA) + " dB" 
-    TXT9  = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 14 ))
+    TXT9  = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
     y = y + 24
     txt = "Phase " + ' {0:.2f} '.format(PeakRelPhase) + " Degrees"
-    TXT10  = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 14 ))
+    TXT10  = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
     y = y + 24
     txt = "Freq " + ' {0:.1f} '.format(PeakfreqA) + " Hertz"
-    TXT11  = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 14 ))
+    TXT11  = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
     y = y + 24
     txt = "Impedance Magnitude"
-    TXT1 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 14 ))
+    TXT1 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
     y = y + 24
     txt = ' {0:.1f} '.format(ImpedanceMagnitude)
-    TXT2 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 14 ))
+    TXT2 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
     y = y + 24
     txt = "Impedance Angle" 
-    TXT3 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 14 ))
+    TXT3 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
     y = y + 24
     txt = ' {0:.1f} '.format(ImpedanceAngle)
-    TXT4 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 14 ))
+    TXT4 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
     y = y + 24
     txt = "Impedance R series"
-    TXT5 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 14 ))
+    TXT5 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
     y = y + 24
     txt = ' {0:.1f} '.format(ImpedanceRseries)
-    TXT6 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 14 ))
+    TXT6 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
     y = y + 24
     txt = "Impedance X series"
-    TXT7 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 14 ))
+    TXT7 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
     y = y + 24
     txt = ' {0:.1f} '.format(ImpedanceXseries)
-    TXT8 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 14 ))
+    TXT8 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
 #
     if ImpedanceXseries < 0: # calculate series capacitance
         y = y + 24
@@ -12314,7 +12339,7 @@ def MakeIAScreen():       # Update the screen with traces and text
         Cseries = Cseries * 1E6 # convert to micro Farads
         if DisplaySeries.get() == 0:
             txt = "Series Capacitance"
-            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
             y = y + 20
             if Cseries < 1:
                 Cseries = Cseries * 1E3
@@ -12325,10 +12350,10 @@ def MakeIAScreen():       # Update the screen with traces and text
                     txt = ' {0:.3f} '.format(Cseries) + "nF"
             else:
                 txt = ' {0:.3f} '.format(Cseries) + "uF"
-            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
         else:
             txt = "Parallel"
-            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
             y = y + 20
             if Cparallel < 1:
                 Cparallel = Cparallel * 1E3
@@ -12339,14 +12364,14 @@ def MakeIAScreen():       # Update the screen with traces and text
                     txt = "Capacitance " + ' {0:.3f} '.format(Cparallel) + "nF"
             else:
                 txt = "Capacitance " + ' {0:.3f} '.format(Cparallel) + "uF"
-            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
             y = y + 20
             txt = "Resistance" + ' {0:.1f} '.format(Rparallel) + "ohms"
-            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
         y = y + 20
         dissp = abs(ImpedanceRseries/ImpedanceXseries) * 100 # Dissipation factor is ratio of XR to XC in percent
         txt = 'D =  {0:.2f} '.format(dissp) + " %"
-        IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+        IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
         
     elif ImpedanceXseries > 0: # calculate series inductance
         y = y + 24
@@ -12361,31 +12386,31 @@ def MakeIAScreen():       # Update the screen with traces and text
         Lseries = Lseries * 1E3 # in millihenry
         if DisplaySeries.get() == 0:
             txt = "Series Inductance"
-            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
             y = y + 22
             if Lseries < 1:
                 Lseries = Lseries * 1E3
                 txt = ' {0:.2f} '.format(Lseries) + "uH"
             else:
                 txt = ' {0:.2f} '.format(Lseries) + "mH"
-            IAca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+            IAca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
         else:
             txt = "Parallel"
-            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
             y = y + 20
             if Lparallel < 1:
                 Lparallel = Lparallel * 1E3
                 txt = "Inductance " + ' {0:.2f} '.format(Lparallel) + "uH"
             else:
                 txt = "Inductance " + ' {0:.2f} '.format(Lparallel) + "mH"
-            IAca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+            IAca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
             y = y + 20
             txt = "Resistance" + ' {0:.1f} '.format(Rparallel) + "ohms"
-            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+            IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
         y = y + 20
         qf = abs(ImpedanceXseries/ImpedanceRseries) * 100 # Quality Factor is ratio of XL to XR
         txt = 'Q =  {0:.2f} '.format(qf)
-        IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", 12 ))
+        IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
     # Start and stop frequency and trace mode
     if Two_X_Sample.get() == 0:
         txt = "0.0 to 45000 Hz"
@@ -12417,12 +12442,12 @@ def MakeIAScreen():       # Update the screen with traces and text
     IDtxt  = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext)
 #
 def IACaresize(event):
-    global IAca, GRWIA, XOLIA, GRHIA, Y0TIA, CANVASwidthIA, CANVASheightIA
+    global IAca, GRWIA, XOLIA, GRHIA, Y0TIA, CANVASwidthIA, CANVASheightIA, FontSize
      
     CANVASwidthIA = event.width - 4
     CANVASheightIA = event.height - 4
-    GRWIA = CANVASwidthIA - (2 * X0LIA) - 170 # new grid width
-    GRHIA = CANVASheightIA - Y0TIA - 10     # new grid height
+    GRWIA = CANVASwidthIA - (2 * X0LIA) - int(21.25 * FontSize) # 170 new grid width
+    GRHIA = CANVASheightIA - Y0TIA - int(2.25 * FontSize) # 10 new grid height
     UpdateIAAll()
 #
 # ================ Make IA Window ==========================
@@ -12626,12 +12651,12 @@ def DestroyNqPScreen():
     nqpwindow.destroy()
 #
 def NqPCaresize(event):
-    global NqPca, GRWNqP, XOLNqP, GRHNqP, Y0TNqP, CANVASwidthNqP, CANVASheightNqP
+    global NqPca, GRWNqP, XOLNqP, GRHNqP, Y0TNqP, CANVASwidthNqP, CANVASheightNqP, FontSize
     
     CANVASwidthNqP = event.width - 4
     CANVASheightNqP = event.height - 4
     GRWNqP = CANVASwidthNqP - (2 * X0LNqP) # new grid width
-    GRHNqP = CANVASheightNqP - Y0TNqP - 10  # new grid height
+    GRHNqP = CANVASheightNqP - Y0TNqP - int(1.25 * FontSize)  # 10 new grid height
     UpdateNqPAll()
 #
 def MakeNqPScreen():
@@ -12639,6 +12664,7 @@ def MakeNqPScreen():
     global COLORgrid, GridWidth, SmoothCurvesBP, SmoothBool, DBlevelBP, DBdivlist, DBdivindexBP
     global FSweepAdB, FSweepBdB, FSweepBPh, FSweepAPh, ShowMathBP, NqPline, Two_X_Sample, TRACEwidth
     global Vdiv, FBins, FStep
+    global FontSize
     
     de = NqPca.find_enclosed( -10000, -10000, CANVASwidthNqP+10000, CANVASheightNqP+10000 )
     # Delete all items on the canvas
@@ -12663,7 +12689,7 @@ def MakeNqPScreen():
         dBaxis_value = (DBlevelBP.get() - (i * DBdivlist[DBdivindexBP.get()]))
         NqPca.create_oval ( x0, y0, x1, y1, outline=COLORgrid, width=GridWidth.get())
         NqPca.create_line(xcenter, y0, xright, y0, fill=COLORgrid, width=GridWidth.get(), dash=(4,3))
-        NqPca.create_text(xright, y0, text=str(dBaxis_value), fill=COLORgrid, anchor="w", font=("arial", 10 ))
+        NqPca.create_text(xright, y0, text=str(dBaxis_value), fill=COLORgrid, anchor="w", font=("arial", FontSize+2 ))
         # 
         i = i + 1
     NqPca.create_line(xcenter, y0, xcenter, y1, fill=COLORgrid, width=2)
@@ -12673,10 +12699,10 @@ def MakeNqPScreen():
     x = TRadius*math.cos(RAngle)
     NqPca.create_line(xcenter-x, ycenter-y, xcenter+x, ycenter+y, fill=COLORgrid, width=GridWidth.get())
     NqPca.create_line(xcenter+x, ycenter-y, xcenter-x, ycenter+y, fill=COLORgrid, width=GridWidth.get())
-    NqPca.create_text(x0, ycenter, text="180", fill=COLORgrid, anchor="e", font=("arial", 10 ))
-    NqPca.create_text(x1, ycenter, text="0.0", fill=COLORgrid, anchor="w", font=("arial", 10 ))
-    NqPca.create_text(xcenter, y0, text="90", fill=COLORgrid, anchor="s", font=("arial", 10 ))
-    NqPca.create_text(xcenter, y1, text="-90", fill=COLORgrid, anchor="n", font=("arial", 10 ))
+    NqPca.create_text(x0, ycenter, text="180", fill=COLORgrid, anchor="e", font=("arial", FontSize+2 ))
+    NqPca.create_text(x1, ycenter, text="0.0", fill=COLORgrid, anchor="w", font=("arial", FontSize+2 ))
+    NqPca.create_text(xcenter, y0, text="90", fill=COLORgrid, anchor="s", font=("arial", FontSize+2 ))
+    NqPca.create_text(xcenter, y1, text="-90", fill=COLORgrid, anchor="n", font=("arial", FontSize+2 ))
     # xcenter = xcenter + (DBlevelBP.get()/dBperPixel)
 # Draw traces
     NqPline = []
@@ -12754,12 +12780,12 @@ def DestroyNiCScreen():
     nicwindow.destroy()
 #
 def NiCCaresize(event):
-    global NiCca, GRWNiC, XOLNiC, GRHNiC, Y0TNiC, CANVASwidthNic, CANVASheightNic
+    global NiCca, GRWNiC, XOLNiC, GRHNiC, Y0TNiC, CANVASwidthNic, CANVASheightNic, FontSize
     
     CANVASwidthNic = event.width - 4
     CANVASheightNic = event.height - 4
-    GRWNiC = CANVASwidthNic - 18 -X0LNiC # new grid width
-    GRHNiC = CANVASheightNic - 60  # new grid height
+    GRWNiC = CANVASwidthNic - int(2.25 * FontSize) - X0LNiC # 18 new grid width
+    GRHNiC = CANVASheightNic - int(7.5 * FontSize) # 60 new grid height
     UpdateNiCAll()
 #
 def MakeNiCScreen():
@@ -12767,6 +12793,7 @@ def MakeNiCScreen():
     global COLORzeroline, GridWidth, COLORgrid, FSweepAdB, FSweepBdB, Two_X_Sample, ShowMathBP
     global FSweepBPh, FSweepAPh, SmoothCurvesBP, SmoothBool, DBlevelBP, DBdivlist, DBdivindexBP
     global Vdiv, FBins, FStep, PhCenBodeEntry, RelPhaseCenter
+    global FontSize
     
     Ymin = Y0TNiC                  # Minimum position of XY grid (top)
     Ymax = Y0TNiC + GRHNiC            # Maximum position of XY grid (bottom)
@@ -12810,7 +12837,7 @@ def MakeNiCScreen():
         else:
             NiCca.create_line(Dline, fill=COLORgrid, width=GridWidth.get())
         dBaxis_label = str(dBaxis_value)
-        NiCca.create_text(x1-3, y, text=dBaxis_label, fill=COLORtrace1, anchor="e", font=("arial", 8 ))
+        NiCca.create_text(x1-3, y, text=dBaxis_label, fill=COLORtrace1, anchor="e", font=("arial", FontSize ))
         
         i = i + 1
     # Draw vertical grid lines (phase -180 to 180 10 div)
@@ -12837,7 +12864,7 @@ def MakeNiCScreen():
                 k = k + 1
         else:
             NiCca.create_line(Dline, fill=COLORgrid, width=GridWidth.get())
-        NiCca.create_text(x, y2+3, text=axis_label, fill=COLORtrace3, anchor="n", font=("arial", 8 ))
+        NiCca.create_text(x, y2+3, text=axis_label, fill=COLORtrace3, anchor="n", font=("arial", FontSize ))
         i = i + 1
     # Draw traces
     # Vertical conversion factors (level dBs) and border limits
@@ -13022,6 +13049,7 @@ def MakeFreqScreen():       # Update the screen with traces and text
     global Y0TF          # Left top Y value
     global GRWF          # Screenwidth
     global GRHF          # Screenheight
+    global FontSize
     global RUNstatus    # 0 stopped, 1 start, 2 running, 3 stop now, 4 stop and restart
     global AWGSAMPLErate, SAMPLErate, BaseSampleRate, SingleShot, HScale, HarmonicMarkers
     global SMPfft       # number of FFT samples
@@ -13073,12 +13101,12 @@ def MakeFreqScreen():       # Update the screen with traces and text
             Freqca.create_line(Dline, dash=(4,3), fill=COLORgrid, width=GridWidth.get())
         Vaxis_value = (DBlevel.get() - (i * DBdivlist[DBdivindex.get()]))
         Vaxis_label = str(Vaxis_value)
-        Freqca.create_text(x1-3, y, text=Vaxis_label, fill=COLORtrace1, anchor="e", font=("arial", 8 ))
+        Freqca.create_text(x1-3, y, text=Vaxis_label, fill=COLORtrace1, anchor="e", font=("arial", FontSize ))
         if ShowC1_P.get() == 1 or ShowC2_P.get() == 1:
             Vaxis_value = ( 180 - ( i * (360 / Vdiv.get())))
             Vaxis_value = Vaxis_value + Phasecenter
             Vaxis_label = str(Vaxis_value)
-            Freqca.create_text(x2+3, y, text=Vaxis_label, fill=COLORtrace3, anchor="w", font=("arial", 8 ))
+            Freqca.create_text(x2+3, y, text=Vaxis_label, fill=COLORtrace3, anchor="w", font=("arial", FontSize ))
         i = i + 1
     # Draw vertical grid lines
     i = 0
@@ -13104,7 +13132,7 @@ def MakeFreqScreen():       # Update the screen with traces and text
                 if F == 1 or F == 10 or F == 100 or F == 1000 or F == 10000 or F == 100000:
                     Freqca.create_line(Dline, fill=COLORgrid, width=GridWidth.get())
                     axis_label = str(F)
-                    Freqca.create_text(x, y2+3, text=axis_label, fill=COLORgrid, anchor="n", font=("arial", 8 ))
+                    Freqca.create_text(x, y2+3, text=axis_label, fill=COLORgrid, anchor="n", font=("arial", FontSize ))
                 else:
                     Freqca.create_line(Dline, dash=(4,3), fill=COLORgrid, width=GridWidth.get())
                 
@@ -13133,7 +13161,7 @@ def MakeFreqScreen():       # Update the screen with traces and text
                 Freqca.create_line(Dline, dash=(4,3), fill=COLORgrid, width=GridWidth.get())
             axis_value = (StartFrequency + (i * Freqdiv))
             axis_label = str(axis_value)
-            Freqca.create_text(x, y2+3, text=axis_label, fill=COLORgrid, anchor="n", font=("arial", 8 ))
+            Freqca.create_text(x, y2+3, text=axis_label, fill=COLORgrid, anchor="n", font=("arial", FontSize ))
             i = i + 1
     # Draw X - Y cursors if needed
     Yconv = float(GRHF) / (Vdiv.get() * DBdivlist[DBdivindex.get()]) # Conversion factors, Yconv is the number of screenpoints per dB
@@ -13156,7 +13184,7 @@ def MakeFreqScreen():       # Update the screen with traces and text
             xfreq = ((FCursor-X0LF)*Fpixel)+StartFrequency
         XFString = ' {0:.2f} '.format(xfreq)
         V_label = XFString + " Hz"
-        Freqca.create_text(FCursor+1, dBCursor-5, text=V_label, fill=COLORtext, anchor="w", font=("arial", 8 ))
+        Freqca.create_text(FCursor+1, dBCursor-5, text=V_label, fill=COLORtext, anchor="w", font=("arial", FontSize ))
 #
     if ShowdBCur.get() > 0:
         Dline = [X0LF, dBCursor, X0LF+GRWF, dBCursor]
@@ -13167,7 +13195,7 @@ def MakeFreqScreen():       # Update the screen with traces and text
         yvdB = ((Yc-dBCursor)/Yconv)
         VdBString = ' {0:.1f} '.format(yvdB)
         V_label = VdBString + " dBV"
-        Freqca.create_text(FCursor+1, dBCursor+5, text=V_label, fill=COLORtext, anchor="w", font=("arial", 8 ))
+        Freqca.create_text(FCursor+1, dBCursor+5, text=V_label, fill=COLORtext, anchor="w", font=("arial", FontSize ))
     #
     SmoothBool = SmoothCurvesSA.get()
     # Draw traces
@@ -13196,7 +13224,7 @@ def MakeFreqScreen():       # Update the screen with traces and text
                     else:
                         xA = X0LF+int((FreqA - StartFrequency)/Fpixel)# +StartFrequency
                     yA = Yc - Yconv * dbA
-                    Freqca.create_text(xA, yA, text=Peak_label, fill=COLORtrace1, anchor="s", font=("arial", 8 ))
+                    Freqca.create_text(xA, yA, text=Peak_label, fill=COLORtrace1, anchor="s", font=("arial", FontSize ))
                     k = k + 1
                 except:
                     k = k + 1
@@ -13225,7 +13253,7 @@ def MakeFreqScreen():       # Update the screen with traces and text
                     else:
                         xB = X0LF+int((FreqB - StartFrequency)/Fpixel)# +StartFrequency
                     yB = Yc - Yconv * dbB
-                    Freqca.create_text(xB, yB, text=Peak_label, fill=COLORtrace2, anchor="s", font=("arial", 8 ))
+                    Freqca.create_text(xB, yB, text=Peak_label, fill=COLORtrace2, anchor="s", font=("arial", FontSize ))
                     k = k + 1
                 except:
                     k = k + 1
@@ -13239,12 +13267,12 @@ def MakeFreqScreen():       # Update the screen with traces and text
         Freqca.create_line(T1FRline, fill=COLORtraceR1, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
         if ShowMarker.get() == 1:
             Peak_label = ' {0:.2f} '.format(PeakdbRA) + ',' + ' {0:.1f} '.format(PeakfreqRA)
-            Freqca.create_text(PeakxRA, PeakyRA, text=Peak_label, fill=COLORtraceR1, anchor="s", font=("arial", 8 ))
+            Freqca.create_text(PeakxRA, PeakyRA, text=Peak_label, fill=COLORtraceR1, anchor="s", font=("arial", FontSize ))
     if ShowRB_VdB.get() == 1 and len(T2FRline) > 4:   # Write the ref trace B if active
         Freqca.create_line(T2FRline, fill=COLORtraceR2, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
         if ShowMarker.get() == 1:
             Peak_label = ' {0:.2f} '.format(PeakdbRB) + ',' + ' {0:.1f} '.format(PeakfreqRB)
-            Freqca.create_text(PeakxRB, PeakyRB, text=Peak_label, fill=COLORtraceR2, anchor="s", font=("arial", 8 ))
+            Freqca.create_text(PeakxRB, PeakyRB, text=Peak_label, fill=COLORtraceR2, anchor="s", font=("arial", FontSize ))
     if ShowRA_P.get() == 1 and len(T1PRline) > 4:   # Write the ref trace A if active
         Freqca.create_line(T1PRline, fill=COLORtraceR3, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
     if ShowRB_P.get() == 1 and len(T2PRline) > 4:   # Write the ref trace A if active
@@ -13253,12 +13281,12 @@ def MakeFreqScreen():       # Update the screen with traces and text
         Freqca.create_line(TFMline, fill=COLORtrace5, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
         if ShowMarker.get() ==1:
             Peak_label = ' {0:.2f} '.format(PeakMdb) + ',' + ' {0:.1f} '.format(PeakfreqM)
-            Freqca.create_text(PeakxM, PeakyM, text=Peak_label, fill=COLORtrace5, anchor="s", font=("arial", 8 ))
+            Freqca.create_text(PeakxM, PeakyM, text=Peak_label, fill=COLORtrace5, anchor="s", font=("arial", FontSize ))
     if ShowRMath.get() == 1 and len(TFRMline) > 4:   # Write the ref math trace if active
         Freqca.create_line(TFRMline, fill=COLORtraceR5, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
         if ShowMarker.get() ==1:
             Peak_label = ' {0:.2f} '.format(PeakRMdb) + ',' + ' {0:.1f} '.format(PeakfreqRM)
-            Freqca.create_text(PeakxRM, PeakyRM, text=Peak_label, fill=COLORtraceR5, anchor="s", font=("arial", 8 ))
+            Freqca.create_text(PeakxRM, PeakyRM, text=Peak_label, fill=COLORtraceR5, anchor="s", font=("arial", FontSize ))
     # General information on top of the grid
 
     txt = "    Sample rate: " + str(SAMPLErate)
@@ -13469,6 +13497,7 @@ def onCanvasFreqLeftClick(event):
     global Y0TF          # Left top Y value
     global GRWF          # Screenwidth
     global GRHF          # Screenheight
+    global FontSize
     global Freqca, MarkerLoc, SAMPLErate, BaseSampleRate
     global COLORgrid, COLORtext, HScale, ShowC1_VdB, ShowC2_VdB
     global COLORtrace1, COLORtrace2, StartFreqEntry, StopFreqEntry
@@ -13496,7 +13525,7 @@ def onCanvasFreqLeftClick(event):
         # draw X at marker point and number
         Freqca.create_line(event.x-4, event.y-4,event.x+4, event.y+5, fill=COLORmarker)
         Freqca.create_line(event.x+4, event.y-4,event.x-4, event.y+5, fill=COLORmarker)
-        Freqca.create_text(event.x+4, event.y, text=str(MarkerFreqNum), fill=COLORmarker, anchor="w", font=("arial", 8 ))
+        Freqca.create_text(event.x+4, event.y, text=str(MarkerFreqNum), fill=COLORmarker, anchor="w", font=("arial", FontSize ))
         # Vertical conversion factors (level dBs) and border limits
         Yconv = float(GRHF) / (Vdiv.get() * DBdivlist[DBdivindex.get()]) # Conversion factors, Yconv is the number of screenpoints per dB
         Yc = float(Y0TF) + Yconv * (DBlevel.get()) # Yc is the 0 dBm position, can be outside the screen!
@@ -13538,7 +13567,7 @@ def onCanvasFreqLeftClick(event):
             x = X0LF + GRWF - 5
             y = Y0TF + GRHF + 3 - (MarkerFreqNum*10)
             Justify = 'e'
-        Freqca.create_text(x, y, text=V_label, fill=COLORmarker, anchor=Justify, font=("arial", 8 ))
+        Freqca.create_text(x, y, text=V_label, fill=COLORmarker, anchor=Justify, font=("arial", FontSize ))
         PrevdBV = yvdB
         PrevF = xfreq
 #
@@ -13665,6 +13694,7 @@ def onCanvasBodeLeftClick(event):
     global Y0TBP         # Left top Y value
     global GRWBP          # Screenwidth
     global GRHBP          # Screenheight
+    global FontSize
     global Bodeca, MarkerLoc, SAMPLErate
     global COLORgrid, COLORtext, HScaleBP, ShowCA_VdB, ShowCB_VdB, DBdivindexBP
     global COLORtrace1, COLORtrace2, COLORtrace6, StartBodeEntry, StopBodeEntry, DBlevelBP
@@ -13692,7 +13722,7 @@ def onCanvasBodeLeftClick(event):
         # draw X at marker point and number
         Bodeca.create_line(event.x-4, event.y-4,event.x+4, event.y+5, fill=COLORmarker)
         Bodeca.create_line(event.x+4, event.y-4,event.x-4, event.y+5, fill=COLORmarker)
-        Bodeca.create_text(event.x+4, event.y, text=str(MarkerFreqNum), fill=COLORmarker, anchor="w", font=("arial", 8 ))
+        Bodeca.create_text(event.x+4, event.y, text=str(MarkerFreqNum), fill=COLORmarker, anchor="w", font=("arial", FontSize ))
         # Vertical conversion factors (level dBs) and border limits
         Yconv = float(GRHBP) / (Vdiv.get() * DBdivlist[DBdivindexBP.get()]) # Conversion factors, Yconv is the number of screenpoints per dB
         Yc = float(Y0TBP) + Yconv * (DBlevelBP.get()) # Yc is the 0 dBm position, can be outside the screen!
@@ -13736,7 +13766,7 @@ def onCanvasBodeLeftClick(event):
             x = x2 - 5
             y = Y0TBP + GRHBP + 3 - (MarkerFreqNum*10)
             Justify = 'e'
-        Bodeca.create_text(x, y, text=V_label, fill=COLORmarker, anchor=Justify, font=("arial", 8 ))
+        Bodeca.create_text(x, y, text=V_label, fill=COLORmarker, anchor=Justify, font=("arial", FontSize ))
         PrevdBV = yvdB
         PrevF = xfreq
 #
@@ -14474,12 +14504,12 @@ def DestroyMuxScreen():
     muxwindow.destroy()
 #
 def BodeCaresize(event):
-    global Bodeca, GRWBP, XOLBP, GRHBP, Y0TBP, CANVASwidthBP, CANVASheightBP
+    global Bodeca, GRWBP, XOLBP, GRHBP, Y0TBP, CANVASwidthBP, CANVASheightBP, FontSize
     
     CANVASwidthBP = event.width - 4
     CANVASheightBP = event.height - 4 
     GRWBP = CANVASwidthBP - (2 * X0LBP) # new grid width
-    GRHBP = CANVASheightBP - 80     # new grid height
+    GRHBP = CANVASheightBP - int(10 * FontSize)     # new grid height
     UpdateBodeAll()
 #
 def BStepSync():
@@ -14838,12 +14868,12 @@ def DestroyBodeScreen():
     ca.bind_all('<MouseWheel>', onCanvasClickScroll)
 #
 def FreqCaresize(event):
-    global Freqca, GRWF, XOLF, GRHF, Y0TF, CANVASwidthF, CANVASheightF
+    global Freqca, GRWF, XOLF, GRHF, Y0TF, CANVASwidthF, CANVASheightF, FontSize
     
     CANVASwidthF = event.width - 4
     CANVASheightF = event.height - 4
     GRWF = CANVASwidthF - (2 * X0LF) # new grid width
-    GRHF = CANVASheightF - 80     # new grid height
+    GRHF = CANVASheightF - int(10 * FontSize)     # new grid height
     UpdateFreqAll()
 #
 # ================ Make spectrum sub window ==========================
@@ -14853,14 +14883,14 @@ def MakeSpectrumWindow():
     global ShowRA_VdB, ShowRA_P, ShowRB_VdB, ShowRB_P, ShowMathSA, SWRev
     global ShowRMath, FSweepMode, FSweepCont, Freqca, SpectrumScreenStatus, RevDate
     global HScale, StopFreqEntry, StartFreqEntry, ShowFCur, ShowdBCur, FCursor, dBCursor
-    global CANVASwidthF, GRWF, X0LF, CANVASheightF, GRHF, PhCenFreqEntry, RelPhaseCenter
+    global CANVASwidthF, GRWF, X0LF, CANVASheightF, GRHF, FontSize, PhCenFreqEntry, RelPhaseCenter
     
     if SpectrumScreenStatus.get() == 0:
         SpectrumScreenStatus.set(1)
         FreqDisp.set(1)
         FreqCheckBox()
         CANVASwidthF = GRWF + 2 * X0LF     # The spectrum canvas width
-        CANVASheightF = GRHF + 80         # The spectrum canvas height
+        CANVASheightF = GRHF + int(10 * FontSize) # 80 The spectrum canvas height
         freqwindow = Toplevel()
         freqwindow.title("Spectrum Analyzer " + SWRev + RevDate)
         freqwindow.protocol("WM_DELETE_WINDOW", DestroySpectrumScreen)
@@ -15087,6 +15117,7 @@ def MakeSpectrumWindow():
             b7_tip = CreateToolTip(b7, 'Increase Ref Level by 1 dB')
             b8_tip = CreateToolTip(b8, 'Decrease Ref Level by 1 dB')
             sadismiss1button_tip = CreateToolTip(sadismiss1button, 'Dismiss Spectrum Analyzer window')
+
 def DestroySpectrumScreen():
     global freqwindow, SpectrumScreenStatus, ca
     
@@ -15097,13 +15128,13 @@ def DestroySpectrumScreen():
     ca.bind_all('<MouseWheel>', onCanvasClickScroll)
 #
 def XYcaresize(event):
-    global XYca, GRWXY, XOLXY, GRHXY, Y0TXY, CANVASwidthXY, CANVASheightXY
+    global XYca, GRWXY, XOLXY, GRHXY, Y0TXY, CANVASwidthXY, CANVASheightXY, FontSize
     global YminXY, YmaxXY, XminXY, XmaxXY
     
     CANVASwidthXY = event.width - 4
     CANVASheightXY = event.height - 4
-    GRWXY = CANVASwidthXY - 18 - X0LXY # new grid width
-    GRHXY = CANVASheightXY - 80     # new grid height
+    GRWXY = CANVASwidthXY - int(2.25 * FontSize) - X0LXY # 18 new grid width
+    GRHXY = CANVASheightXY - int(10 * FontSize)     # new grid height
     YminXY = Y0TXY                  # Minimum position of time grid (top)
     YmaxXY = Y0TXY + GRHXY            # Maximum position of time grid (bottom)
     XminXY = X0LXY                  # Minimum position of time grid (left)
@@ -16696,12 +16727,13 @@ def BExecuteFromString(): # global VBuffA,AWGAwaveform;VBuffA=AWGAwaveform
         return()
 #
 def CAresize(event):
-    global ca, GRW, XOL, GRH, Y0T, CANVASwidth, CANVASheight
+    global ca, GRW, XOL, GRH, Y0T, CANVASwidth, CANVASheight, FontSize
     
+    XOL = FontSize * 7
     CANVASwidth = event.width - 4
     CANVASheight = event.height - 4
     GRW = CANVASwidth - (2 * X0L) # new grid width
-    GRH = CANVASheight - 80     # new grid height
+    GRH = CANVASheight - (Y0T + (FontSize * 7))   # new grid height
     UpdateTimeAll()
 #
 def UpdateMeasureScreen():
