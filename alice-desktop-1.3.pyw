@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
-# ADALM1000 alice-desktop 1.3.py(w) (9-23-2019)
+# ADALM1000 alice-desktop 1.3.py(w) (10-10-2019)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -38,7 +38,7 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(23 Sept 2019)"
+RevDate = "(10 Oct 2019)"
 SWRev = "1.3 "
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.1/alice-desktop-1.3-setup.exe'
 # samll bit map of ADI logo for window icon
@@ -1264,6 +1264,10 @@ def ReMakeAWGwaves(): # re make awg waveforms ib case something changed
         AWGAMakeSinc()
     elif AWGAShape.get()==20:
         AWGAMakePulse()
+    elif AWGAShape.get()==21:
+        AWGAMakeFMSine()
+    elif AWGAShape.get()==22:
+        AWGAMakeAMSine()
     elif AWGAShape.get()==7:
         AWGAMakeUUNoise()
     elif AWGAShape.get()==8:
@@ -2982,6 +2986,7 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
         else: # running in continuous mode
             if session.continuous:
                 if MuxScreenStatus.get() > 0:
+                    devx.flush(-1, True)
                     DummySamples = SHOWsamples*2
                     if DummySamples < 20000:
                         DummySamples = 20000
@@ -8343,7 +8348,7 @@ def AWGAMakeMath():
 def AWGAMakeBodeSine():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
     global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay, AWGAMode
-    global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate, phasealab
     
     BAWGAAmpl(0)
     BAWGAOffset(0)
@@ -8393,6 +8398,139 @@ def AWGAMakeBodeSine():
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
     BAWGAPhaseDelay()
     duty1lab.config(text="%")
+    phasealab.config(text="Delay")
+    UpdateAwgCont()
+#
+def AWGAMakeFMSine():
+    global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
+    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay, AWGAMode
+    global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate, phasealab
+    
+    BAWGAAmpl(0)
+    BAWGAOffset(0)
+    BAWGAFreq(0)
+# uses dyty cycle entry for Modulation index and phase entry for Modulation frequency
+    duty1lab.config(text = "M Index")
+    phasealab.config(text = "M Freq")
+
+    if AWGAFreqvalue > 0.0:
+        if AWG_2X.get() == 1:
+            AWGAperiodvalue = (BaseSampleRate*2)/AWGAFreqvalue
+        else:
+            AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
+    else:
+        AWGAperiodvalue = 10.0
+        
+    try:
+        ModFreq = float(eval(AWGAPhaseEntry.get()))
+    except:
+        ModFreq = 10
+        AWGAPhaseEntry.delete(0,"end")
+        AWGAPhaseEntry.insert(0, ModFreq)
+        
+    if ModFreq < 10:
+        ModFreq = 10
+        AWGAPhaseEntry.delete(0,"end")
+        AWGAPhaseEntry.insert(0, ModFreq)
+        
+    if AWG_2X.get() == 1:
+        MODperiodvalue = (BaseSampleRate*2)/ModFreq
+    else:
+        MODperiodvalue = BaseSampleRate/ModFreq
+
+    try:
+        ModIndex = float(eval(AWGADutyCycleEntry.get()))
+    except:
+        ModIndex = 1.0
+        AWGADutyCycleEntry.delete(0,"end")
+        AWGADutyCycleEntry.insert(0, ModIndex)
+        
+    ModCycles = int(32768/MODperiodvalue) # find a whole number of cycles 
+    if ModCycles < 1:
+        ModCycles = 1
+    RecLength = int(ModCycles * MODperiodvalue)
+    if RecLength % 2 != 0: # make sure record length is even so 2X mode works for all Freq
+        RecLength = RecLength + 1
+    CarCycles = int(RecLength/AWGAperiodvalue) # insure a whole number of carrier cycles in record
+    AWGAwaveform = []
+    AWGAwaveform = numpy.sin( (numpy.linspace(0, CarCycles*2*numpy.pi, RecLength)) - ModIndex*numpy.cos(numpy.linspace(0, ModCycles*2*numpy.pi, RecLength)) )
+    if AWGAMode.get() == 1: # convert to mA
+        amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2000.0
+        offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2000.0
+    else:
+        amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2.0
+        offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2.0
+    AWGAwaveform = (AWGAwaveform * amplitude) + offset # scale and offset the waveform
+    AWGAwaveform = numpy.roll(AWGAwaveform, int(AWGAdelayvalue))
+#
+    SplitAWGAwaveform() # if needed
+    AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
+    UpdateAwgCont()
+#
+def AWGAMakeAMSine():
+    global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
+    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay, AWGAMode
+    global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate, phasealab
+    
+    BAWGAAmpl(0)
+    BAWGAOffset(0)
+    BAWGAFreq(0)
+# uses dyty cycle entry for Modulation index and phase entry for Modulation frequency
+    duty1lab.config(text = "M Index")
+    phasealab.config(text = "M Freq")
+
+    if AWGAFreqvalue > 0.0:
+        if AWG_2X.get() == 1:
+            AWGAperiodvalue = (BaseSampleRate*2)/AWGAFreqvalue
+        else:
+            AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
+    else:
+        AWGAperiodvalue = 10.0
+        
+    try:
+        ModFreq = float(eval(AWGAPhaseEntry.get()))
+    except:
+        ModFreq = 10
+        AWGAPhaseEntry.delete(0,"end")
+        AWGAPhaseEntry.insert(0, ModFreq)
+        
+    if ModFreq < 10:
+        ModFreq = 10
+        AWGAPhaseEntry.delete(0,"end")
+        AWGAPhaseEntry.insert(0, ModFreq)
+        
+    if AWG_2X.get() == 1:
+        MODperiodvalue = (BaseSampleRate*2)/ModFreq
+    else:
+        MODperiodvalue = BaseSampleRate/ModFreq
+
+    try:
+        ModIndex = float(eval(AWGADutyCycleEntry.get()))/200
+    except:
+        ModIndex = 50.0
+        AWGADutyCycleEntry.delete(0,"end")
+        AWGADutyCycleEntry.insert(0, ModIndex)
+        
+    ModCycles = int(32768/MODperiodvalue) # find a whole number of cycles 
+    if ModCycles < 1:
+        ModCycles = 1
+    RecLength = int(ModCycles * MODperiodvalue)
+    if RecLength % 2 != 0: # make sure record length is even so 2X mode works for all Freq
+        RecLength = RecLength + 1
+    CarCycles = int(RecLength/AWGAperiodvalue) # insure a whole number of carrier cycles in record
+    AWGAwaveform = []
+    AWGAwaveform = numpy.sin(numpy.linspace(0, CarCycles*2*numpy.pi, RecLength)) * (0.5+(ModIndex*(numpy.cos(numpy.linspace(0, ModCycles*2*numpy.pi, RecLength)))))
+    if AWGAMode.get() == 1: # convert to mA
+        amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2000.0
+        offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2000.0
+    else:
+        amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2.0
+        offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2.0
+    AWGAwaveform = (AWGAwaveform * amplitude) + offset # scale and offset the waveform
+    AWGAwaveform = numpy.roll(AWGAwaveform, int(AWGAdelayvalue))
+#
+    SplitAWGAwaveform() # if needed
+    AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
     UpdateAwgCont()
 #
 def AWGAMakePWMSine():
@@ -14061,7 +14199,8 @@ def MakeAWGWindow():
         ShapeAMenu.menu.add_radiobutton(label="Fourier Series", variable=AWGAShape, value=14, command=AWGAMakeFourier)
         ShapeAMenu.menu.add_radiobutton(label="Sin X/X", variable=AWGAShape, value=19, command=ReMakeAWGwaves)
         ShapeAMenu.menu.add_radiobutton(label="PWM Sine", variable=AWGAShape, value=17, command=ReMakeAWGwaves)
-        # ShapeAMenu.menu.add_radiobutton(label="Bode Sine", variable=AWGAShape, value=18, command=AWGAMakeBodeSine)
+        ShapeAMenu.menu.add_radiobutton(label="FM Sine", variable=AWGAShape, value=21, command=AWGAMakeFMSine)
+        ShapeAMenu.menu.add_radiobutton(label="AM Sine", variable=AWGAShape, value=22, command=AWGAMakeAMSine)
         ShapeAMenu.menu.add_radiobutton(label="UU Noise", variable=AWGAShape, value=7, command=ReMakeAWGwaves)
         ShapeAMenu.menu.add_radiobutton(label="UG Noise", variable=AWGAShape, value=8, command=ReMakeAWGwaves)
         ShapeAMenu.menu.add_radiobutton(label="Math", variable=AWGAShape, value=10, command=AWGAMakeMath)
@@ -16904,7 +17043,7 @@ def ConnectDevice():
     if DevID == "No Device" or DevID == "m1k":
         #print("Request sample rate: " + str(SAMPLErate))
         session = Session(ignore_dataflow=True, sample_rate=SAMPLErate, queue_size=MaxSamples)
-        session.add_all()
+        # session.add_all()
         # SAMPLErate = 200000 #AWGSAMPLErate # Scope sample rate
         if not session.devices:
             print 'No Device plugged IN!'
