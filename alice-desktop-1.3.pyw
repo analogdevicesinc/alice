@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
-# ADALM1000 alice-desktop 1.3.py(w) (10-10-2019)
+# ADALM1000 alice-desktop 1.3.py(w) (12-15-2019)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -38,7 +38,7 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(10 Oct 2019)"
+RevDate = "(15 Dec 2019)"
 SWRev = "1.3 "
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.1/alice-desktop-1.3-setup.exe'
 # samll bit map of ADI logo for window icon
@@ -672,7 +672,7 @@ class CreateToolTip(object):
 #
 # =========== Start widgets routines =============================
 def BSaveConfig(filename):
-    global TgInput, TgEdge, SingleShot, AutoLevel
+    global TgInput, TgEdge, ManualTrigger, SingleShot, AutoLevel, SingleShotSA
     global root, freqwindow, awgwindow, iawindow, xywindow, win1, win2
     global TRIGGERentry, TMsb, Xsignal, Ysignal, AutoCenterA, AutoCenterB
     global CHAsb, CHAIsb, CHBsb, CHBIsb, HScale, FreqTraceMode
@@ -701,7 +701,7 @@ def BSaveConfig(filename):
     global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MuxScreenStatus, MuxEnb
     global CHB_Asb, CHB_APosEntry, CHB_Bsb, CHB_BPosEntry, muxwindow
     global CHB_Csb, CHB_CPosEntry, CHB_Dsb, CHB_DPosEntry, HozPossentry
-    global SmoothCurvesBP, SingleShotBP, bodewindow, AWG_Amp_Mode
+    global SmoothCurvesBP, bodewindow, AWG_Amp_Mode
     global ShowCA_VdB, ShowCA_P, ShowCB_VdB, ShowCB_P, ShowMarkerBP, BodeDisp
     global ShowCA_RdB, ShowCA_RP, ShowCB_RdB, ShowCB_RP, ShowMathBP, ShowRMathBP
     global BPSweepMode, BPSweepCont, BodeScreenStatus, RevDate, SweepStepBodeEntry
@@ -801,6 +801,7 @@ def BSaveConfig(filename):
         ConfgFile.write('StopFreqEntry.insert(5, ' + StopFreqEntry.get() + ')\n')
         ConfgFile.write('HScale.set(' + str(HScale.get()) + ')\n')
         ConfgFile.write('FreqTraceMode.set(' + str(FreqTraceMode.get()) + ')\n')
+        ConfgFile.write('SingleShotSA.set(' + str(SingleShotSA.get()) + ')\n')
     else:
         ConfgFile.write('DestroySpectrumScreen()\n')
     if DacScreenStatus.get() > 0:
@@ -939,6 +940,7 @@ def BSaveConfig(filename):
     ConfgFile.write('TMsb.insert(0, ' + TMsb.get() + ')\n')
     ConfgFile.write('TgInput.set(' + str(TgInput.get()) + ')\n')
     ConfgFile.write('AutoLevel.set(' + str(AutoLevel.get()) + ')\n')
+    ConfgFile.write('ManualTrigger.set(' + str(ManualTrigger.get()) + ')\n')
     ConfgFile.write('SingleShot.set(' + str(SingleShot.get()) + ')\n')
     ConfgFile.write('TgEdge.set(' + str(TgEdge.get()) + ')\n')
     ConfgFile.write('Xsignal.set(' + str(Xsignal.get()) + ')\n')
@@ -1169,7 +1171,7 @@ def BSaveConfigTime():
     BSaveConfig(filename)
 #    
 def BLoadConfig(filename):
-    global TgInput, TgEdge, SingleShot, AutoLevel
+    global TgInput, TgEdge, SingleShot, AutoLevel, SingleShotSA, ManualTrigger
     global root, freqwindow, awgwindow, iawindow, xywindow, win1, win2
     global TRIGGERentry, TMsb, Xsignal, Ysignal, AutoCenterA, AutoCenterB
     global CHAsb, CHAIsb, CHBsb, CHBIsb, HScale, FreqTraceMode
@@ -2534,7 +2536,7 @@ def ETSCheckBox():
             donothing()
 # ========================= Main routine ====================================
 def Analog_In():
-    global RUNstatus, SingleShot, TimeDisp, XYDisp, FreqDisp, SpectrumScreenStatus, HWRevOne
+    global RUNstatus, SingleShot, ManualTrigger, TimeDisp, XYDisp, FreqDisp, SpectrumScreenStatus, HWRevOne
     global IADisp, IAScreenStatus, CutDC, DevOne, AWGBMode, MuxEnb, BodeScreenStatus, BodeDisp
     global MuxScreenStatus, VBuffA, VBuffB, MuxSync, AWGBIOMode
     global VmemoryMuxA, VmemoryMuxB, VmemoryMuxC, VmemoryMuxD, MuxChan
@@ -2810,8 +2812,8 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
     global TRACEresetTime, TRACEmodeTime, TRACEaverage, TRIGGERsample, TgInput, LShift
     global CHA, CHB, session, devx, discontloop, contloop
     global TRACES, TRACESread, TRACEsize
-    global RUNstatus, SingleShot, TimeDisp, XYDisp, FreqDisp
-    global TIMEdiv1x, TIMEdiv, hldn
+    global RUNstatus, SingleShot, ManualTrigger, TimeDisp, XYDisp, FreqDisp
+    global TIMEdiv1x, TIMEdiv, hldn, Is_Triggered
     global SAMPLErate, SHOWsamples, MinSamples, MaxSamples, AWGSAMPLErate
     global TRACErefresh, AWGScreenStatus, XYScreenStatus, MeasureStatus
     global SCREENrefresh, DCrefresh
@@ -3426,8 +3428,11 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
         UpdateTimeAll()         # Update Data, trace and time screen
     if XYDisp.get() > 0 and XYScreenStatus.get() > 0:
         UpdateXYAll()         # Update Data, trace and XY screen
-    if SingleShot.get() == 1: # Single shot manual trigger is on
-        RUNstatus.set(0)
+    if SingleShot.get() > 0 and Is_Triggered == 1: # Singel Shot trigger is on
+        BStop() # RUNstatus.set(0)
+        SingleShot.set(0)
+    if ManualTrigger.get() == 1: # Manual trigger is on
+        BStop() # RUNstatus.set(0)
     if MeasureStatus.get() > 0:
         UpdateMeasureScreen()
     # RUNstatus = 3: Stop
@@ -3489,7 +3494,7 @@ def Analog_Freq_In():   # Read from the stream and store the data into the array
     global NSteps, LoopNum, FSweepMode, FStep, FBins
     global StartFreqEntry, StopFreqEntry, HoldOffentry
     global session, CHA, CHB, devx, MaxSamples, discontloop
-    global RUNstatus, SingleShot, FSweepCont, Two_X_Sample, ADC_Mux_Mode
+    global RUNstatus, SingleShotSA, FSweepCont, Two_X_Sample, ADC_Mux_Mode
     global AWGSAMPLErate, IAScreenStatus, SpectrumScreenStatus, BodeScreenStatus
     global NiCScreenStatus, NiCDisp, NqPScreenStatus, NqPDisp
     global OverRangeFlagA, OverRangeFlagB, BodeDisp, FreqDisp, IADisp
@@ -3762,7 +3767,7 @@ def Analog_Freq_In():   # Read from the stream and store the data into the array
         UpdateNqPAll()
     if NiCScreenStatus.get() > 0 and NiCDisp.get() > 0:
         UpdateNiCAll()
-    if SingleShot.get() == 1: # Single shot sweep is on
+    if SingleShotSA.get() == 1: # Single shot sweep is on
         RUNstatus.set(0)
 # RUNstatus = 3: Stop
 # RUNstatus = 4: Stop and restart
@@ -5719,7 +5724,7 @@ def MakeTimeScreen():     # Update the screen with traces and text
     global ShowRA_V, ShowRA_I, ShowRB_V, ShowRB_I, ShowMath
     global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MathUnits, MathXUnits, MathYUnits
     global Xsignal, Ysignal, MathTrace, MathAxis, MathXAxis, MathYAxis
-    global RUNstatus, SingleShot, session    # 0 stopped, 1 start, 2 running, 3 stop now, 4 stop and restart
+    global RUNstatus, SingleShot, ManualTrigger, session    # 0 stopped, 1 start, 2 running, 3 stop now, 4 stop and restart
     global CHAsb        # spinbox Index for channel 1 V
     global CHBsb        # spinbox Index for channel 2 V
     global CHAOffset    # Offset value for channel 1 V
@@ -6058,6 +6063,8 @@ def MakeTimeScreen():     # Update the screen with traces and text
             TgLabel = TgLabel + " Triggered"
         else:
             TgLabel = TgLabel + " Not Triggered"
+            if SingleShot.get() > 0:
+                TgLabel = TgLabel + " Armed"
         x = X0L + (GRW/2) + 12
         ca.create_text(x, Ymin-FontSize, text=TgLabel, fill=COLORtrigger, anchor="w", font=("arial", FontSize ))
     # Draw T - V Cursor lines if required
@@ -6207,8 +6214,8 @@ def MakeTimeScreen():     # Update the screen with traces and text
         sttxt = "Running Discontinuous"
     if TRACEmodeTime.get() == 1:
         sttxt = sttxt + " Averaging"
-    if SingleShot.get() == 1:
-        sttxt = "Single Shot"
+    if ManualTrigger.get() == 1:
+        sttxt = "Manual Trigger"
     if (RUNstatus.get() == 0) or (RUNstatus.get() == 3):
         sttxt = "Stopped"
     if ScreenTrefresh.get() == 1:
@@ -6492,7 +6499,7 @@ def MakeXYScreen():
     global SHOWsamples  # Number of samples in data record
     global ShowRXY, ShowMath, MathUnits, MathXUnits, MathYUnits
     global Xsignal, Ysignal, MathXAxis, MathYAxis
-    global RUNstatus, SingleShot    # 0 stopped, 1 start, 2 running, 3 stop now, 4 stop and restart
+    global RUNstatus, SingleShot, ManualTrigger    # 0 stopped, 1 start, 2 running, 3 stop now, 4 stop and restart
     global CHAsbxy        # spinbox Index for channel 1 V
     global CHBsbxy        # spinbox Index for channel 2 V
     global CHAOffset    # Offset value for channel 1 V
@@ -6967,8 +6974,8 @@ def MakeXYScreen():
     sttxt = "Running"
     if TRACEmodeTime.get() == 1:
         sttxt = sttxt + " Averaging"
-    if SingleShot.get() == 1:
-        sttxt = "Single Shot"
+    if ManualTrigger.get() == 1:
+        sttxt = "Manual Trigger"
     if (RUNstatus.get() == 0) or (RUNstatus.get() == 3):
         sttxt = "Stopped"
     if ScreenXYrefresh.get() == 1:
@@ -8505,7 +8512,7 @@ def AWGAMakeAMSine():
         MODperiodvalue = BaseSampleRate/ModFreq
 
     try:
-        ModIndex = float(eval(AWGADutyCycleEntry.get()))/200
+        ModIndex = float(eval(AWGADutyCycleEntry.get()))/200.0
     except:
         ModIndex = 50.0
         AWGADutyCycleEntry.delete(0,"end")
@@ -11806,7 +11813,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
     global GRHBP          # Screenheight
     global FontSize
     global RUNstatus    # 0 stopped, 1 start, 2 running, 3 stop now, 4 stop and restart
-    global AWGSAMPLErate, SingleShot, HScaleBP, SAMPLErate, BaseSampleRate
+    global AWGSAMPLErate, HScaleBP, SAMPLErate, BaseSampleRate
     global SMPfft       # number of FFT samples
     global StartBodeEntry, StopBodeEntry
     global ShowCA_P, ShowCB_P, ShowRA_VdB, ShowRB_VdB, ShowMarkerBP
@@ -12083,10 +12090,8 @@ def MakeBodeScreen():       # Update the screen with traces and text
     if ZEROstuffing.get() > 0:
         txt = txt + "Zero Stuffing = " + str(ZEROstuffing.get())
     # Runstatus and level information
-    if (RUNstatus.get() == 0) and (SingleShot.get() == 0):
+    if (RUNstatus.get() == 0):
         txt = txt + "  Stopped "
-    elif SingleShot.get() == 1:
-        txt = txt + "  Single Shot Trace "
     else:
         if BodeDisp.get() == 1:
             txt = txt + "  Running "
@@ -13189,7 +13194,7 @@ def MakeFreqScreen():       # Update the screen with traces and text
     global GRHF          # Screenheight
     global FontSize
     global RUNstatus    # 0 stopped, 1 start, 2 running, 3 stop now, 4 stop and restart
-    global AWGSAMPLErate, SAMPLErate, BaseSampleRate, SingleShot, HScale, HarmonicMarkers
+    global AWGSAMPLErate, SAMPLErate, BaseSampleRate, SingleShotSA, HScale, HarmonicMarkers
     global SMPfft       # number of FFT samples
     global StartFreqEntry, StopFreqEntry, PhCenFreqEntry, RelPhaseCenter
     global ShowC1_P, ShowC2_P, ShowRA_VdB, ShowRB_VdB, ShowMarker
@@ -13461,9 +13466,9 @@ def MakeFreqScreen():       # Update the screen with traces and text
     if ZEROstuffing.get() > 0:
         txt = txt + "Zero Stuffing = " + str(ZEROstuffing.get())
     # Runstatus and level information
-    if (RUNstatus.get() == 0) and (SingleShot.get() == 0):
+    if (RUNstatus.get() == 0) and (SingleShotSA.get() == 0):
         txt = txt + "  Stopped "
-    elif SingleShot.get() == 1:
+    elif SingleShotSA.get() == 1:
         txt = txt + "  Single Shot Trace "
     else:
         if FreqDisp.get() == 1:
@@ -14717,7 +14722,7 @@ def BDSweepFromFile():
 #
 # ========== Make Bode Plot Window =============
 def MakeBodeWindow():
-    global logo, SmoothCurvesBP, CutDC, SingleShotBP, bodewindow, SWRev
+    global logo, SmoothCurvesBP, CutDC, bodewindow, SWRev
     global CANVASwidthBP, CANVASheightBP, FFTwindow, CutDC, AWGAMode, AWGAShape, AWGBMode 
     global ShowCA_VdB, ShowCA_P, ShowCB_VdB, ShowCB_P, ShowMarkerBP, BodeDisp, RelPhaseCenter
     global ShowCA_RdB, ShowCA_RP, ShowCB_RdB, ShowCB_RP, ShowMathBP, ShowRMathBP, PhCenBodeEntry
@@ -15017,7 +15022,7 @@ def FreqCaresize(event):
 #
 # ================ Make spectrum sub window ==========================
 def MakeSpectrumWindow():
-    global logo, SmoothCurvesSA, CutDC, SingleShot, FFTwindow, freqwindow, SmoothCurvesSA
+    global logo, SmoothCurvesSA, CutDC, SingleShotSA, FFTwindow, freqwindow, SmoothCurvesSA
     global ShowC1_VdB, ShowC1_P, ShowC2_VdB, ShowC2_P, ShowMarker, FreqDisp
     global ShowRA_VdB, ShowRA_P, ShowRB_VdB, ShowRB_P, ShowMathSA, SWRev
     global ShowRMath, FSweepMode, FSweepCont, Freqca, SpectrumScreenStatus, RevDate
@@ -15099,7 +15104,7 @@ def MakeSpectrumWindow():
         rb = Button(RUNframe, text="Run", style="Run.TButton", command=BStartSA)
         rb.pack(side=LEFT)
         #
-        SingleShot = IntVar(0) # variable for Single Shot sweeps
+        SingleShotSA = IntVar(0) # variable for Single Shot sweeps
         Modeframe = Frame( frame2fr )
         Modeframe.pack(side=TOP)
         Modemenu = Menubutton(Modeframe, text="Mode", style="W5.TButton")
@@ -15109,7 +15114,7 @@ def MakeSpectrumWindow():
         Modemenu.menu.add_command(label="Peak hold   [p]", command=BPeakholdmode)
         Modemenu.menu.add_command(label="Average     [a]", command=BAveragemode)
         Modemenu.menu.add_command(label="Reset Average [r]", command=BResetFreqAvg)
-        Modemenu.menu.add_checkbutton(label='SingleShot', variable=SingleShot)
+        Modemenu.menu.add_checkbutton(label='SingleShot', variable=SingleShotSA)
         Modemenu.pack(side=LEFT)
         #
         SAFFTwindmenu = Menubutton(Modeframe, text="FFTwindow", style="W11.TButton")
@@ -17398,22 +17403,26 @@ def UpdateFirmware():
             print "Put board in Samba mode and flash firmware."
             session.flash_firmware(filename)
         except:
-            if askyesno("Flash Failed", "Failed to update firmware.\n Try again?"):
-                try:
-                    session.flash_firmware(filename)
-                except:
-                    showwarning("Flash Failed","Failed to update firmware.")
-            else:
-                return
+            showwarning("Complete","Flash Firmware Complete: \n Un-plug board to cycle power.")
+##            if askyesno("Flash Failed", "Failed to update firmware.\n Try again?"):
+##                try:
+##                    session.flash_firmware(filename)
+##                except:
+##                    showwarning("Complete","Flash Firmware Complete: \n Un-plug board to cycle power.")
+##                    # showwarning("Flash Failed","Failed to update firmware.")
+##            else:
+##            return
         showwarning("Complete","Flash Firmware Complete: \n Un-plug board to cycle power.")
-        print "doing session add all..."
-        session = Session(ignore_dataflow=True, sample_rate=SAMPLErate, queue_size=MaxSamples)
-        #session.scan()
-        session.add_all()
-        print session.devices
-        time.sleep(5)
-        print "trying to reconnect device..."
-        ConnectDevice()
+        showwarning("Exit ALICE","Must Exit Program: \n Restart ALICE to continue.")
+        Bcloseexit()
+##        print "doing session add all..."
+##        session = Session(ignore_dataflow=True, sample_rate=SAMPLErate, queue_size=MaxSamples)
+##        #session.scan()
+##        #session.add_all()
+##        print session.devices
+##        time.sleep(5)
+##        print "trying to reconnect device..."
+##        ConnectDevice()
 #
 def MakeOhmWindow():
     global OhmDisp, OhmStatus, ohmwindow, RevDate, RMode, OhmA0, OhmA1, OhmRunStatus
@@ -17993,7 +18002,8 @@ def onCanvasMouse_xy(event):
 #
 # ================ Make main Screen ==========================
 TgInput = IntVar(0)   # Trigger Input variable
-SingleShot = IntVar(0) # variable for Single Shot manual trigger
+SingleShot = IntVar(0) # variable for single shot triger
+ManualTrigger = IntVar(0) # variable for Manual trigger
 AutoLevel = IntVar(0) # variable for Auto Level trigger at mid point
 ShowC1_V = IntVar(0)   # curves to display variables
 TgEdge = IntVar(0)   # Trigger edge variable
@@ -18172,6 +18182,7 @@ Triggermenu.menu.add_radiobutton(label='CA-I', variable=TgInput, value=2)
 Triggermenu.menu.add_radiobutton(label='CB-V', variable=TgInput, value=3)
 Triggermenu.menu.add_radiobutton(label='CB-I', variable=TgInput, value=4)
 Triggermenu.menu.add_checkbutton(label='Auto Level', variable=AutoLevel)
+Triggermenu.menu.add_checkbutton(label='Manual Trgger', variable=ManualTrigger)
 Triggermenu.menu.add_checkbutton(label='SingleShot', variable=SingleShot)
 Triggermenu.pack(side=LEFT)
 #
