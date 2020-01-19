@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
 ## @package alice-desktop 1.3.py(w)
-# ADALM1000 alice-desktop 1.3.py(w) (1-7-2020)
+# ADALM1000 alice-desktop 1.3.py(w) (1-19-2020)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -39,7 +39,7 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(7 Jan 2020)"
+RevDate = "(19 Jan 2020)"
 SWRev = "1.3 "
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.1/alice-desktop-1.3-setup.exe'
 # samll bit map of ADI logo for window icon
@@ -371,7 +371,7 @@ ImemoryB = numpy.ones(1)
 TRACEresetTime = True           # True for first new trace, false for averageing
 TRACEresetFreq = True           # True for first new trace, false for averageing
 AWGScreenStatus = IntVar(0)
-## Array Variables used
+## Trace line Array Variables used
 T1Vline = []                # Voltage Trace line channel A
 T2Vline = []                # Voltage Trace line channel B
 T1Iline = []                # Current Trace line channel A
@@ -431,6 +431,7 @@ ShowCB_RdB = IntVar(0)
 ShowCB_RP = IntVar(0)
 ShowMathBP = IntVar(0)
 ShowRMathBP = IntVar(0)
+SingleShotSA = IntVar(0) # variable for Single Shot sweeps
 FSweepAdB = []
 FSweepBdB = []
 FSweepAPh = []
@@ -489,14 +490,24 @@ Show_Rseries = IntVar(0)
 Show_Xseries = IntVar(0)
 Show_Magnitude = IntVar(0)
 Show_Angle = IntVar(0)
+Show_RseriesRef = IntVar(0)
+Show_XseriesRef = IntVar(0)
+Show_MagnitudeRef = IntVar(0)
+Show_AngleRef = IntVar(0)
+## Impedance Analyzer sweep bode plot and reference line variables
 TIARline = []
 TIAXline = []
 TIAMagline = []
 TIAAngline = []
 TIAMline = []
 TIAMRline = []
+RefIARline = []
+RefIAXline = []
+RefIAMagline = []
+RefIAAngline = []
 IASource = IntVar(0)
-DisplaySeries = IntVar(0) # in IA display series or parallel values
+## In IA display series or parallel values
+DisplaySeries = IntVar(0) 
 IA_Ext_Conf = IntVar(0)
 IASweepSaved = IntVar(0)
 OverRangeFlagA = 0
@@ -10589,8 +10600,11 @@ def BSTOREtraceSA():
 #
 def BSTOREtraceBP():
     global ShowCA_VdB, ShowCA_P, ShowCB_VdB, ShowCB_P, ShowMathBP
+    global Show_Rseries, Show_Xseries, Show_Magnitude, Show_Angle
     global TAFline, TBFline, TAFRline, TBFRline, TBPRMline, TBPMline
     global TAPline, TBPline, TAPRline, TBPRline
+    global TIARline, TIAXline, TIAMagline, TIAAngline
+    global RefIARline, RefIAXline, RefIAMagline, RefIAAngline
     global PeakxA, PeakyA, PeakxB, PeakyB, PeakdbA, PeakdbB
     global PeakxM, PeakyM, PeakMdb, PeakfreqM
     global PeakfreqA, PeakfreqB, PeakfreqRA, PeakfreqRB
@@ -10619,7 +10633,14 @@ def BSTOREtraceBP():
         PeakyRM = PeakyM
         PeakRMdb = PeakMdb
         PeakfreqRM = PeakfreqM
-
+    if Show_Rseries.get() > 0:
+        RefIARline = TIARline
+    if Show_Xseries.get() > 0:
+        RefIAXline = TIAXline
+    if Show_Magnitude.get() > 0:
+        RefIAMagline = TIAMagline
+    if Show_Angle.get() > 0:
+        RefIAAngline = TIAAngline
     UpdateBodeTrace()           # Always Update
 #
 def BCSVfile(): # Store the trace as CSV file [frequency, magnitude or dB value]
@@ -11835,12 +11856,14 @@ def MakeBodeScreen():       # Update the screen with traces and text
     global ShowMathBP, BodeDisp, RelPhaseCenter, PhCenBodeEntry, ImCenBodeEntry, ImpedanceCenter, Impedcenter
     global ShowBPCur, ShowBdBCur, BPCursor, BdBCursor
     global Show_Rseries, Show_Xseries, Show_Magnitude, Show_Angle, NetworkScreenStatus
+    global Show_RseriesRef, Show_XseriesRef, Show_MagnitudeRef, Show_AngleRef
     global TAFline, TBFline, TAPline, TAFRline, TBFRline, TBPMline, TBPRMline
     global TAPRline, TBPRline
     global TRACEaverage # Number of traces for averageing
     global FreqTraceMode    # 1 normal 2 max 3 average
     global Vdiv, ResScale # Number of vertical divisions
     global TIARline, TIAXline, TIAMagline, TIAAngline, CurrentFreqX
+    global RefIARline, RefIAXline, RefIAMagline, RefIAAngline
 
     # Delete all items on the screen
     de = Bodeca.find_enclosed( -1000, -1000, CANVASwidthBP+1000, CANVASheightBP+1000 )
@@ -12061,6 +12084,14 @@ def MakeBodeScreen():       # Update the screen with traces and text
         Bodeca.create_line(TIAMagline, fill=COLORtrace7, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
     if Show_Angle.get() == 1 and len(TIAAngline) > 4:
         Bodeca.create_line(TIAAngline, fill=COLORtraceR3, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
+    if Show_RseriesRef.get() == 1 and len(RefIARline) > 4:
+        Bodeca.create_line(RefIARline, fill=COLORtraceR5, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
+    if Show_XseriesRef.get() == 1 and len(RefIAXline) > 4:
+        Bodeca.create_line(RefIAXline, fill=COLORtraceR6, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
+    if Show_MagnitudeRef.get() == 1 and len(RefIAMagline) > 4:
+        Bodeca.create_line(RefIAMagline, fill=COLORtraceR7, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
+    if Show_AngleRef.get() == 1 and len(RefIAAngline) > 4:
+        Bodeca.create_line(RefIAAngline, fill=COLORtraceR3, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
 
     Dline = [CurrentFreqX, Y0TBP, CurrentFreqX, Y0TBP+GRHBP]
     Bodeca.create_line(Dline, dash=(2,2), fill=COLORgrid, width=GridWidth.get())
@@ -14744,6 +14775,7 @@ def MakeBodeWindow():
     global HScaleBP, StopBodeEntry, StartBodeEntry, ShowBPCur, ShowBdBCur, BPCursor, BdBCursor
     global GRWBP, GRHBP, X0LBP, FStepSync, FSweepSync, BDSweepFile, MinigenScreenStatus
     global Show_Rseries, Show_Xseries, Show_Magnitude, Show_Angle, ImpedanceCenter, ImCenBodeEntry
+    global Show_RseriesRef, Show_XseriesRef, Show_MagnitudeRef, Show_AngleRef
     
     if BodeScreenStatus.get() == 0:
         BodeScreenStatus.set(1)
@@ -14872,6 +14904,10 @@ def MakeBodeWindow():
         BodeShowmenu.menu.add_checkbutton(label='RPhase A-B', variable=ShowCA_RP, command=UpdateBodeAll)
         BodeShowmenu.menu.add_checkbutton(label='RPhase B-A', variable=ShowCB_RP, command=UpdateBodeAll)
         BodeShowmenu.menu.add_checkbutton(label='Math', variable=ShowRMathBP, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_checkbutton(label='Ref Series R', variable=Show_RseriesRef, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_checkbutton(label='Ref Series X', variable=Show_XseriesRef, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_checkbutton(label='Ref Series Mag', variable=Show_MagnitudeRef, command=UpdateBodeAll)
+        BodeShowmenu.menu.add_checkbutton(label='Ref Series Ang', variable=Show_AngleRef, command=UpdateBodeAll)
         BodeShowmenu.pack(side=LEFT, anchor=W)
         #
         BodeMarkmenu = Menubutton(tracemenu, text="Cursors", style="W7.TButton")
@@ -15038,7 +15074,7 @@ def FreqCaresize(event):
 def MakeSpectrumWindow():
     global logo, SmoothCurvesSA, CutDC, SingleShotSA, FFTwindow, freqwindow, SmoothCurvesSA
     global ShowC1_VdB, ShowC1_P, ShowC2_VdB, ShowC2_P, ShowMarker, FreqDisp
-    global ShowRA_VdB, ShowRA_P, ShowRB_VdB, ShowRB_P, ShowMathSA, SWRev
+    global ShowRA_VdB, ShowRA_P, ShowRB_VdB, ShowRB_P, ShowMathSA, SWRev, SingleShotSA
     global ShowRMath, FSweepMode, FSweepCont, Freqca, SpectrumScreenStatus, RevDate
     global HScale, StopFreqEntry, StartFreqEntry, ShowFCur, ShowdBCur, FCursor, dBCursor
     global CANVASwidthF, GRWF, X0LF, CANVASheightF, GRHF, FontSize, PhCenFreqEntry, RelPhaseCenter
@@ -15118,7 +15154,6 @@ def MakeSpectrumWindow():
         rb = Button(RUNframe, text="Run", style="Run.TButton", command=BStartSA)
         rb.pack(side=LEFT)
         #
-        SingleShotSA = IntVar(0) # variable for Single Shot sweeps
         Modeframe = Frame( frame2fr )
         Modeframe.pack(side=TOP)
         Modemenu = Menubutton(Modeframe, text="Mode", style="W5.TButton")

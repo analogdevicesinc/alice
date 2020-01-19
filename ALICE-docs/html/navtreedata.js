@@ -58,10 +58,10 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "alice-desktop-1_83_8pyw.html",
-"alice-desktop-1_83_8pyw.html#a38b893325224a049136d9988707e5254",
-"alice-desktop-1_83_8pyw.html#a762bacc504befba254dbe715723de1b6",
-"alice-desktop-1_83_8pyw.html#aacc773164949a4a66f21a1e8a9be25b9",
-"alice-desktop-1_83_8pyw.html#ae7bb97f01bb245a791e2888be897cec1"
+"alice-desktop-1_83_8pyw.html#a385442952cd61c71af073f871badb7e3",
+"alice-desktop-1_83_8pyw.html#a75f7d07852d9effa031596975ce9e8cf",
+"alice-desktop-1_83_8pyw.html#aabf4f9e899c52d4cc6bf0a66de9b8078",
+"alice-desktop-1_83_8pyw.html#ae6511607035c0c0b61676cce9622de9d"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
