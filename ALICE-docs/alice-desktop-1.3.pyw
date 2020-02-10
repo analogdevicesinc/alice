@@ -1,13 +1,15 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
 ## @package alice-desktop 1.3.py(w)
-# ADALM1000 alice-desktop 1.3.py(w) (1-19-2020)
+# ADALM1000 alice-desktop 1.3.py(w) (2-10-2020)
 # For Python version > = 2.7.8
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
 # Uses new firmware (2.17 or >) that support control of ADC mux configure
 # Created by D Mercer ()
 #
+#
+import __future__
 import math
 import time
 try:
@@ -39,7 +41,7 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(19 Jan 2020)"
+RevDate = "(10 Feb 2020)"
 SWRev = "1.3 "
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.1/alice-desktop-1.3-setup.exe'
 # samll bit map of ADI logo for window icon
@@ -257,10 +259,10 @@ try:
         try:
             exec( line.rstrip() )
         except:
-            print "Skiping " + line.rstrip()
+            print("Skiping " + line.rstrip()) 
     InitFile.close()
 except:
-    print "No Init File Read"
+    print( "No Init File Read")
 #
 X0L = FontSize * 7
 XOLF = XOLBP = XOLXY = XOLIA = int(FontSize * 4.625)
@@ -594,6 +596,11 @@ PIO_4 = 4
 PIO_5 = 5
 PIO_6 = 6
 PIO_7 = 7
+#
+SCLKPort = IntVar(0)
+SDATAPort = IntVar(0)
+SLATCHPort = IntVar(0)
+
 ## 25x25 bit map of high going pulse in .gif
 hipulse = """
 R0lGODlhGQAYAPcAAAAAAIAAAACAAICAAAAAgIAAgACAgICAgMDAwP8AAAD/AP//AAAA//8A/wD/
@@ -739,6 +746,7 @@ def BSaveConfig(filename):
     global Show_Rseries, Show_Xseries, Show_Magnitude, Show_Angle
     global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
+    global SCLKPort, SDATAPort, SLATCHPort
     
     # open Config file for Write
     ConfgFile = open(filename, "w")
@@ -840,6 +848,9 @@ def BSaveConfig(filename):
         ConfgFile.write('MinigenFout.insert(4, ' + MinigenFout.get() + ')\n')
         ConfgFile.write('MinigenFclk.delete(0,END)\n')
         ConfgFile.write('MinigenFclk.insert(4, ' + MinigenFclk.get() + ')\n')
+        ConfgFile.write('SCLKPort.set(' + str(SCLKPort.get()) + ')\n')
+        ConfgFile.write('SDATAPort.set(' + str(SDATAPort.get()) + ')\n')
+        ConfgFile.write('SLATCHPort.set(' + str(SLATCHPort.get()) + ')\n')
     else:
         ConfgFile.write('DestroyMinigenScreen()\n')
     if MuxScreenStatus.get() == 1:
@@ -1233,6 +1244,7 @@ def BLoadConfig(filename):
     global Show_Rseries, Show_Xseries, Show_Magnitude, Show_Angle
     global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
+    global SCLKPort, SDATAPort, SLATCHPort
     
     # Read configuration values from file
     try:
@@ -1241,7 +1253,7 @@ def BLoadConfig(filename):
             try:
                 exec( line.rstrip() )
             except:
-                print "Skipping " + line.rstrip()
+                print( "Skipping " + line.rstrip())
         ConfgFile.close()
         if DevID != "No Device":
             BAWGAModeLabel()
@@ -1259,7 +1271,7 @@ def BLoadConfig(filename):
         ReMakeAWGwaves()
         BTime()
     except:
-        print "Config File Not Found."
+        print( "Config File Not Found.")
 ## Re Make the current selected AWG waveform buffers 
 def ReMakeAWGwaves(): # re make awg waveforms ib case something changed
     global AWGAShape, AWGBShape, BisCompA
@@ -1507,7 +1519,7 @@ def BReadData():
                 IBuffB.append(float(row[4]))
                 SHOWsamples = SHOWsamples + 1
             except:
-                print 'skipping non-numeric row'
+                print( 'skipping non-numeric row')
         VBuffA = numpy.array(VBuffA)
         IBuffA = numpy.array(IBuffA)
         VBuffB = numpy.array(VBuffB)
@@ -1532,7 +1544,7 @@ def BAbout():
         time_string = str(meta.getheaders("Last-Modified"))
     except:
         time_string = "Unavailable"
-    print time_string
+    print(time_string)
     showinfo("About ALICE", "ALICE DeskTop" + SWRev + RevDate + "\n" +
              "Latest Version: " + time_string[7:18] + "\n" +
              "ADALM1000 Hardware Rev " + str(HWRevOne) + "\n" +
@@ -1659,7 +1671,7 @@ def BLoadCal():
             exec( line.rstrip() )
         CalFile.close()
     except:
-        print "Cal file for this device not found"
+        print( "Cal file for this device not found")
 ## Ask user for channel A Measurement Label and Formula 
 def BUserAMeas():
     global UserAString, UserALabel, MeasUserA
@@ -4013,6 +4025,8 @@ def FindTriggerSample(TrgBuff): # find trigger time sample point of passed wavef
     TRACEsize = SHOWsamples               # Set the trace length
     DX = 0
     Is_Triggered = 0
+    if len(TrgBuff) == 0:
+        return
     try:
         TrgMin = numpy.amin(TrgBuff)
     except:
@@ -5058,12 +5072,17 @@ def MakeTimeTrace():
         yhi = 0.0                       # ymax position of trace 1 line
 
         t = int(SCstart + TRIGGERsample) # - (TriggerPos * SAMPLErate) # t = Start sample in trace
+        if t > len(VBuffA)-1:
+            t = 0
         if t < 0:
             t = 0
         x = 0               # Horizontal screen pixel
         ft = t              # time point with fractions
         while (x <= GRW):
             if (t < TRACEsize):
+                if (t >= len(VBuffA)):
+                    t = len(VBuffA)-2
+                    x = GRW
                 x1 = x + X0L
                 ylo = VBuffA[t] - CHAOffset
                 ilo = IBuffA[t] - CHAIOffset
@@ -5431,6 +5450,9 @@ def MakeTimeTrace():
                 MouseCBV = ypv2
                 MouseCBI = ypi2
             t = int(ft)
+            if (t > len(VBuffA)):
+                t = len(VBuffA)-2
+                x = GRW
             x = x + Xstep
 
     # Make trigger triangle pointer
@@ -5947,10 +5969,8 @@ def MakeTimeScreen():
     vt = HoldOff + HozPoss # invert sign and scale to mSec
     if ScreenTrefresh.get() == 0:
         # Delete all items on the screen
-        de = ca.find_enclosed( -1000, -1000, CANVASwidth+1000, CANVASheight+1000)
+        ca.delete(ALL) # remove all items
         MarkerNum = 0
-        for n in de: 
-            ca.delete(n)
         # Draw horizontal grid lines
         i = 0
         x1 = X0L
@@ -6646,10 +6666,8 @@ def MakeXYScreen():
         CHBIOffset = 5 * CH2IpdvRange
     if ScreenXYrefresh.get() == 0:
         # Delete all items on the screen
-        de = XYca.find_enclosed( -1000, -1000, CANVASwidthXY+1000, CANVASheightXY+1000)
         MarkerNum = 0
-        for n in de: 
-            XYca.delete(n)
+        XYca.delete(ALL) # remove all items
         # Draw horizontal grid lines
         i = 0
         x1 = X0LXY
@@ -8059,11 +8077,11 @@ def Write_WAV(data, repeat, filename):
         mul = int(s * amplitude)
         # print "s: %f mul: %d" % (s, mul)
         frames.append(struct.pack('h', mul))
-    print len(frames)
+    print( len(frames))
     frames = ''.join(frames)
-    print len(frames)
+    print( len(frames))
     for x in xrange(0, repeat):
-        print x
+        print( x )
         wavfile.writeframes(frames)
     wavfile.close()
     
@@ -8277,7 +8295,7 @@ def AWGAReadFile():
                     AWGAwaveform.append(float(col))
                 colnum += 1
         except:
-            print 'skipping non-numeric row', RowNum
+            print( 'skipping non-numeric row', RowNum)
         RowNum += 1
     AWGAwaveform = numpy.array(AWGAwaveform)
     SplitAWGAwaveform()
@@ -9569,7 +9587,7 @@ def AWGBReadFile():
                     AWGBwaveform.append(float(col))
                 colnum += 1
         except:
-            print 'skipping non-numeric row', RowNum
+            print( 'skipping non-numeric row', RowNum)
         RowNum += 1
     AWGBwaveform = numpy.array(AWGBwaveform)
     SplitAWGBwaveform()
@@ -10511,7 +10529,7 @@ def BSaveScreenSA():
         UpdateFreqScreen()
 #
 def Bnot():
-    print "Routine not made yet"
+    print( "Routine not made yet")
 
 def BShowCurvesAllSA():
     global ShowC1_VdB, ShowC1_P, ShowC2_VdB, ShowC2_P
@@ -11866,10 +11884,8 @@ def MakeBodeScreen():       # Update the screen with traces and text
     global RefIARline, RefIAXline, RefIAMagline, RefIAAngline
 
     # Delete all items on the screen
-    de = Bodeca.find_enclosed( -1000, -1000, CANVASwidthBP+1000, CANVASheightBP+1000 )
     MarkerFreqNum = 0
-    for n in de: 
-        Bodeca.delete(n)
+    Bodeca.delete(ALL) # remove all items
 
     try:
         EndFreq = float(StopBodeEntry.get())
@@ -12332,7 +12348,8 @@ def MakeIATrace():        # Update the grid and trace
         PeakRelPhase = PeakRelPhase + PhaseCorrection
     PeakdbB = PeakdbB + GainCorrection
     DoImpedance()
-
+##
+# Draw the impedance Analyzer screen
 def MakeIAScreen():       # Update the screen with traces and text
     global CANVASheightIA, CANVASwidthIA, IAca, TIAMline, TIAMRline
     global PeakxA, PeakyA, PeakxB, PeakyB, PeakdbA, PeakdbB
@@ -12368,10 +12385,8 @@ def MakeIAScreen():       # Update the screen with traces and text
             NSweepSeriesX.append(ImpedanceXseries)
             NSweepSeriesMag.append(ImpedanceMagnitude) # in ohms 
             NSweepSeriesAng.append(ImpedanceAngle) # in degrees
-    de = IAca.find_enclosed( -10000, -10000, CANVASwidthIA+10000, CANVASheightIA+10000 )
     # Delete all items on the screen
-    for n in de: 
-        IAca.delete(n)
+    IAca.delete(ALL) # remove all items
     SmoothBool = SmoothCurvesBP.get()
     # Draw circular grid lines
     i = 1
@@ -12846,7 +12861,8 @@ def NqPCaresize(event):
     GRWNqP = CANVASwidthNqP - (2 * X0LNqP) # new grid width
     GRHNqP = CANVASheightNqP - Y0TNqP - int(1.25 * FontSize)  # 10 new grid height
     UpdateNqPAll()
-#
+##
+# Draw the Nyquist plot screen
 def MakeNqPScreen():
     global NqPca, GRWNqP, XOLNqP, GRHNqP, Y0TNqP, CANVASwidthNqP, CANVASheightNqP, COLORtrace1
     global COLORgrid, GridWidth, SmoothCurvesBP, SmoothBool, DBlevelBP, DBdivlist, DBdivindexBP
@@ -12854,10 +12870,8 @@ def MakeNqPScreen():
     global Vdiv, FBins, FStep
     global FontSize
     
-    de = NqPca.find_enclosed( -10000, -10000, CANVASwidthNqP+10000, CANVASheightNqP+10000 )
     # Delete all items on the canvas
-    for n in de: 
-        NqPca.delete(n)
+    NqPca.delete(ALL) # remove all items
     SmoothBool = SmoothCurvesBP.get()
     # Draw circular grid lines
     i = 1
@@ -12975,7 +12989,8 @@ def NiCCaresize(event):
     GRWNiC = CANVASwidthNic - int(2.25 * FontSize) - X0LNiC # 18 new grid width
     GRHNiC = CANVASheightNic - int(7.5 * FontSize) # 60 new grid height
     UpdateNiCAll()
-#
+##
+# Make the Nichols Plot screen
 def MakeNiCScreen():
     global NiCline, NiCca, CANVASwidthNic, CANVASheightNic, X0LNiC, GRWNiC, Y0TNiC, GRHNiC, X0TNiC
     global COLORzeroline, GridWidth, COLORgrid, FSweepAdB, FSweepBdB, Two_X_Sample, ShowMathBP
@@ -12996,11 +13011,9 @@ def MakeNiCScreen():
         RelPhaseCenter.set(0)
         Phasecenter = 0
     # Delete all items on the screen
-    de = NiCca.find_enclosed( -1000, -1000, CANVASwidthNic+1000, CANVASheightNic+1000)
     MarkerNum = 0
     SmoothBool = SmoothCurvesBP.get()
-    for n in de: 
-        NiCca.delete(n)
+    NiCca.delete(ALL) # remove all items
     # Draw horizontal grid lines Rel Gain Magnitude
     i = 0
     x1 = X0LNiC
@@ -13217,7 +13230,8 @@ def STOREcsvfile():     # Store the trace as CSV file [frequency, magnitude or d
         n = n + 1    
 
     DataFile.close()                           # Close the file
-
+##
+# Make Spectrum Analyzer Screen
 def MakeFreqScreen():       # Update the screen with traces and text
     global CANVASheightF, CANVASwidthF, SmoothCurvesSA
     global PeakxA, PeakyA, PeakxB, PeakyB, PeakdbA, PeakdbB
@@ -13252,10 +13266,8 @@ def MakeFreqScreen():       # Update the screen with traces and text
     global Vdiv         # Number of vertical divisions
 
     # Delete all items on the screen
-    de = Freqca.find_enclosed( -1000, -1000, CANVASwidthF+1000, CANVASheightF+1000 )
     MarkerFreqNum = 0
-    for n in de: 
-        Freqca.delete(n)
+    Freqca.delete(ALL) # remove all items
     try:
         StartFrequency = float(StartFreqEntry.get())
     except:
@@ -13591,7 +13603,7 @@ def CALCFFTwindowshape():           # Make the FFTwindowshape for the windowing 
             FFTwindowshape = eval(FFTUserWindowString)
         except:
             FFTwindowshape = numpy.ones(SMPfft)         # Initialize with ones
-            print "Filling FFT window with Ones"
+            print( "Filling FFT window with Ones")
     elif FFTwindow.get() == 8: # window shape array read from csv file
         FFTwindowname = "Window Shape From file"
         FFTbw = 0.0
@@ -13650,13 +13662,13 @@ def BFileFFTwindow():
             try:
                 FFTwindowshape.append(float(row[0]))
             except:
-                print 'skipping non-numeric row'
+                print( 'skipping non-numeric row')
         FFTwindowshape = numpy.array(FFTwindowshape)
         CSVFile.close()
         SMPfft = len(FFTwindowshape)
         LastSMPfft = SMPfft
         LastWindow = FFTwindow.get()
-        print SMPfft
+        print( SMPfft)
     except:
         showwarning("WARNING","No such file found or wrong format!")
 #
@@ -14737,7 +14749,7 @@ def BDSweepFromFile():
                     FileSweepFreq.append(float(row[0]))
                     FileSweepAmpl.append(float(row[1]))
                 except:
-                    print 'skipping non-numeric row'
+                    print( 'skipping non-numeric row')
             FileSweepFreq = numpy.array(FileSweepFreq)
             FileSweepAmpl = numpy.array(FileSweepAmpl)
             MaxAmpl = numpy.amax(FileSweepAmpl)
@@ -15613,7 +15625,7 @@ def SelfCalibration():
     AWGSync.set(1)
     BAWGSync()
     if session.continuous:
-        print "ending session"
+        print( "ending session")
         session.end()
     # Setup ADALM1000
     if askyesno("Reset Calibration", "Do You Need To Reset Default Calibration?", parent=calwindow):
@@ -16111,8 +16123,9 @@ def Save_Cal_file():
     #
     CalFile.close()
 ## ========== MiniGen routines ==========
+# SPI shift output routine
 def SPIShiftOut(DValue):
-    global devx, PIO_0, PIO_1, PIO_2, PIO_3
+    global devx, PIO_0, PIO_1, PIO_2, PIO_3, SCLKPort, SDATAPort, SLATCHPort
     
     binstr = bin(DValue)
     binlen = len(binstr)
@@ -16122,20 +16135,21 @@ def SPIShiftOut(DValue):
        datastr = str.rjust(datastr , 16 , '0')
        datalen = len(datastr)
     i = 1
-    devx.ctrl_transfer(0x40, 0x50, PIO_0, 0, 0, 0, 100) # fsync to 0
+    devx.ctrl_transfer(0x40, 0x50, SLATCHPort.get(), 0, 0, 0, 100) # fsync to 0
     while i < datalen+1:
     # sending 0x50 = set to 0, 0x51 = set to 1
         D1code = 0x50 + int(datastr[i-1])
-        devx.ctrl_transfer(0x40, D1code, PIO_1, 0, 0, 0, 100) # data bit
-        devx.ctrl_transfer(0x40, 0x51, PIO_3, 0, 0, 0, 100) # sclk to 1
-        devx.ctrl_transfer(0x40, 0x50, PIO_3, 0, 0, 0, 100) # sclk to 0
-        devx.ctrl_transfer(0x40, 0x51, PIO_3, 0, 0, 0, 100) # sclk to 1
+        devx.ctrl_transfer(0x40, D1code, SDATAPort.get(), 0, 0, 0, 100) # data bit
+        devx.ctrl_transfer(0x40, 0x51, SCLKPort.get(), 0, 0, 0, 100) # sclk to 1
+        devx.ctrl_transfer(0x40, 0x50, SCLKPort.get(), 0, 0, 0, 100) # sclk to 0
+        devx.ctrl_transfer(0x40, 0x51, SCLKPort.get(), 0, 0, 0, 100) # sclk to 1
         i = i + 1
-    devx.ctrl_transfer(0x40, 0x51, PIO_0, 0, 0, 0, 100) # fsync to 1
-#
+    devx.ctrl_transfer(0x40, 0x51, SLATCHPort.get(), 0, 0, 0, 100) # fsync to 1
+##
+# Send serial data to DDS board
 def BSendMG():
     global MinigenFclk, MinigenFout, MinigenMode
-    global Two28
+    global Two28, SCLKPort, SDATAPort, SLATCHPort
 
     DValue = 8192 + MinigenMode.get()
     SPIShiftOut(DValue)
@@ -16163,14 +16177,21 @@ def BSendMG():
     SPIShiftOut(FValue)
     FValue = int(eval(Fmsb))
     SPIShiftOut(FValue)
-    
+##
+# Make AD983x based DDS generator screen
 def MakeMinigenWindow():
-    global  RevDate, minigenwindow, MinigenMode, MinigenScreenStatus, MinigenFclk, MinigenFout, SWRev
+    global RevDate, minigenwindow, MinigenMode, MinigenScreenStatus, MinigenFclk, MinigenFout, SWRev
+    global SCLKPort, SDATAPort, SLATCHPort
+    global GenericSerialStatus
+    global PIO_0, PIO_1, PIO_2, PIO_3
 
+    if GenericSerialStatus.get() == 1:
+        GenericSerialStatus.set(0)
+        DestroyGenericSerialScreen()
     if MinigenScreenStatus.get() == 0:
         MinigenScreenStatus.set(1)
         minigenwindow = Toplevel()
-        minigenwindow.title("-MiniGen-   " + SWRev + RevDate)
+        minigenwindow.title("-AD983x DDS-   " + SWRev + RevDate)
         minigenwindow.resizable(FALSE,FALSE)
         minigenwindow.protocol("WM_DELETE_WINDOW", DestroyMinigenScreen)
         # 
@@ -16178,29 +16199,64 @@ def MakeMinigenWindow():
         mgb1 = Radiobutton(minigenwindow, text="Sine", variable=MinigenMode, value=0, command=BSendMG )
         mgb1.grid(row=1, column=0, sticky=W)
         mgb2 = Radiobutton(minigenwindow, text="Triangle", variable=MinigenMode, value=2, command=BSendMG )
-        mgb2.grid(row=1, column=1, sticky=W)
+        mgb2.grid(row=1, column=1, columnspan=2, sticky=W)
         mgb3 = Radiobutton(minigenwindow, text="Square", variable=MinigenMode, value=40, command=BSendMG )
         mgb3.grid(row=2, column=0, sticky=W)
         mgb4 = Radiobutton(minigenwindow, text="Square/2", variable=MinigenMode, value=32, command=BSendMG )
-        mgb4.grid(row=2, column=1, sticky=W)
+        mgb4.grid(row=2, column=1, columnspan=2, sticky=W)
         f0lab = Label(minigenwindow, text="Mclk in MHz")
-        f0lab.grid(row=3, column=0, columnspan=1, sticky=W)
+        f0lab.grid(row=3, column=0, columnspan=2, sticky=W)
         MinigenFclk = Entry(minigenwindow, width=5)
-        MinigenFclk.grid(row=3, column=1, sticky=W, padx=6)
+        MinigenFclk.grid(row=3, column=1, columnspan=2, sticky=W, padx=6)
         MinigenFclk.delete(0,"end")
         MinigenFclk.insert(0,16)
         f1lab = Label(minigenwindow, text="Output Freq")
-        f1lab.grid(row=4, column=0, columnspan=1, sticky=W)
+        f1lab.grid(row=4, column=0, columnspan=2, sticky=W)
         MinigenFout = Entry(minigenwindow, width=8)
         MinigenFout.bind('<MouseWheel>', onMiniGenScroll)
-        MinigenFout.grid(row=4, column=1, sticky=W)
+        MinigenFout.grid(row=4, column=1, columnspan=2, sticky=W)
         MinigenFout.delete(0,"end")
         MinigenFout.insert(0,100)
         bsn1 = Button(minigenwindow, text='UpDate', style="W7.TButton", command=BSendMG)
         bsn1.grid(row=5, column=0, sticky=W, pady=4)
         dismissmgbutton = Button(minigenwindow, text="Dismiss", style="W8.TButton", command=DestroyMinigenScreen)
-        dismissmgbutton.grid(row=5, column=1, sticky=W, pady=4)
-#
+        dismissmgbutton.grid(row=5, column=1, columnspan=2, sticky=W, pady=4)
+        #
+        label3 = Label(minigenwindow,text="SCLK PI/O Port ")
+        label3.grid(row=6, column=0, sticky=W)
+        sclk1 = Radiobutton(minigenwindow, text="0", variable=SCLKPort, value=PIO_0)
+        sclk1.grid(row=6, column=1, sticky=W)
+        sclk2 = Radiobutton(minigenwindow, text="1", variable=SCLKPort, value=PIO_1)
+        sclk2.grid(row=6, column=2, sticky=W)
+        sclk3 = Radiobutton(minigenwindow, text="2", variable=SCLKPort, value=PIO_2)
+        sclk3.grid(row=6, column=3, sticky=W)
+        sclk4 = Radiobutton(minigenwindow, text="3", variable=SCLKPort, value=PIO_3)
+        sclk4.grid(row=6, column=4, sticky=W)
+        #
+        label4 = Label(minigenwindow,text="SData PI/O Port ")
+        label4.grid(row=7, column=0, sticky=W)
+        sdat1 = Radiobutton(minigenwindow, text="0", variable=SDATAPort, value=PIO_0)
+        sdat1.grid(row=7, column=1, sticky=W)
+        sdat2 = Radiobutton(minigenwindow, text="1", variable=SDATAPort, value=PIO_1)
+        sdat2.grid(row=7, column=2, sticky=W)
+        sdat3 = Radiobutton(minigenwindow, text="2", variable=SDATAPort, value=PIO_2)
+        sdat3.grid(row=7, column=3, sticky=W)
+        sdat4 = Radiobutton(minigenwindow, text="3", variable=SDATAPort, value=PIO_3)
+        sdat4.grid(row=7, column=4, sticky=W)
+        #
+        label5 = Label(minigenwindow,text="FSync PI/O Port ")
+        label5.grid(row=8, column=0, sticky=W)
+        slth1 = Radiobutton(minigenwindow, text="0", variable=SLATCHPort, value=PIO_0)
+        slth1.grid(row=8, column=1, sticky=W)
+        slth2 = Radiobutton(minigenwindow, text="1", variable=SLATCHPort, value=PIO_1)
+        slth2.grid(row=8, column=2, sticky=W)
+        slth3 = Radiobutton(minigenwindow, text="2", variable=SLATCHPort, value=PIO_2)
+        slth3.grid(row=8, column=3, sticky=W)
+        slth4 = Radiobutton(minigenwindow, text="3", variable=SLATCHPort, value=PIO_3)
+        slth4.grid(row=8, column=4, sticky=W)
+        #
+##
+# Destroy DDS board sacrren
 def DestroyMinigenScreen():
     global minigenwindow, MinigenScreenStatus
     
@@ -16294,7 +16350,8 @@ def BSendDA1():
     #
     DA1ShiftOut(D1Code, D3Code)
     DA1ShiftOut(D2Code, D4Code)
-
+##
+# Make window to control PMOD DA1 board
 def MakeDA1Window():
     global da1window, DA1ScreenStatus, DAC1Entry, DAC2Entry, DAC3Entry, DAC4Entry
     global REFEntry, RevDate, SWRev
@@ -16344,7 +16401,8 @@ def MakeDA1Window():
         bsn1.grid(row=5, column=0, sticky=W)
         dismissdabutton = Button(da1window, text="Dismiss", style="W8.TButton", command=DestroyDA1Screen)
         dismissdabutton.grid(row=5, column=1, sticky=W, pady=4)
-
+##
+# Destroy PMOD DA1 screen
 def DestroyDA1Screen():
     global da1window, DA1ScreenStatus
     
@@ -16442,8 +16500,9 @@ def UpdatePotSlider():
         DigPot2.config(from_=0, to=63, length=64)
         DigPot3.config(from_=0, to=63, length=64)
         DigPot4.config(from_=0, to=63, length=64)
-    
-def MakeDigPotWindow(): # set up for single, dual or quad, digital pots
+##
+# set up controls for single, dual or quad, digital pots
+def MakeDigPotWindow(): 
     global digpotwindow, DigPotScreenStatus, DigPot1, DigPot2, DigPot3, DigPot4, RevDate
     global SendPot1, SendPot2, SendPot3, SendPot4, SingleDualPot, SWRev
     global DPotlabel, DigPot1, DigPot2, DigPot3, DigPot4
@@ -16572,7 +16631,8 @@ def BSendGS():
     devx.ctrl_transfer(0x40, LatchEnd, SLATCHPort.get(), 0, 0, 0, 100) # CS to end value
     devx.ctrl_transfer(0x40, LatchInt, SLATCHPort.get(), 0, 0, 0, 100) # CS to start value
     devx.ctrl_transfer(0x40, LatchEnd, SLATCHPort.get(), 0, 0, 0, 100) # CS to end value
-#
+##
+# Make Controls for AD5626 serial DAC
 def MakeAD5626Window():
     global ad5626window, AD5626SerialStatus, SCLKPort, SDATAPort, SLATCHPort, SLatchPhase, SClockPhase
     global GenericSerialStatus, AD5626Entry, SerDirection, SWRev
@@ -16587,13 +16647,7 @@ def MakeAD5626Window():
         ad5626window.title("AD5626 Output " + SWRev + RevDate)
         ad5626window.resizable(FALSE,FALSE)
         ad5626window.protocol("WM_DELETE_WINDOW", DestroyAD5626Screen)
-        #
-        SCLKPort = IntVar(0)
-        SCLKPort.set(PIO_2)
-        SDATAPort = IntVar(0)
-        SDATAPort.set(PIO_1)
-        SLATCHPort = IntVar(0)
-        SLATCHPort.set(PIO_0)
+#
         SLatchPhase = IntVar(0)
         SLatchPhase.set(0)
         SClockPhase = IntVar(0)
@@ -16754,7 +16808,8 @@ def DestroyGenericSerialScreen():
     
     GenericSerialStatus.set(0)
     serialwindow.destroy()
-
+##
+# Make screen for applying digital filters
 def MakeDigFiltWindow():
     global digfltwindow, DigFiltStatus, RevDate, SWRev
     global DigFiltA, DigFiltB, DifFiltALength, DifFiltBLength, DifFiltAFile, DifFiltBFile
@@ -16814,7 +16869,7 @@ def BLoadDFiltA():
         try:
             DFiltACoef.append(float(row[0]))
         except:
-            print 'skipping non-numeric row'
+            print( 'skipping non-numeric row')
     DFiltACoef = numpy.array(DFiltACoef)
     DifFiltALength.config(text = "Length = " + str(int(len(DFiltACoef)))) # change displayed length value
     DifFiltAFile.config(text = "File Name, " + os.path.basename(filename)) # change displayed file name
@@ -16852,7 +16907,7 @@ def BLoadDFiltB():
         try:
             DFiltBCoef.append(float(row[0]))
         except:
-            print 'skipping non-numeric row'
+            print( 'skipping non-numeric row')
     DFiltBCoef = numpy.array(DFiltBCoef)
     DifFiltBLength.config(text = "Length = " + str(int(len(DFiltBCoef)))) # change displayed length value
     DifFiltBFile.config(text = "File Name, " + os.path.basename(filename)) # change displayed file name
@@ -17100,7 +17155,7 @@ def ConnectDevice():
         # session.add_all()
         # SAMPLErate = 200000 #AWGSAMPLErate # Scope sample rate
         if not session.devices:
-            print 'No Device plugged IN!'
+            print( 'No Device plugged IN!')
             DevID = "No Device"
             FWRevOne = 0.0
             bcon.configure(text="Recon", style="RConn.TButton")
@@ -17120,47 +17175,49 @@ def ConnectDevice():
         session.start(0)
 #
 def SelectBoard():
-    global devx, dev0, dev1, dev2, session, BrdSel, CHA, CHB, DevID, RUNstatus, FWRevOne
+    global devx, dev0, dev1, dev2, session, BrdSel, CHA, CHB, DevID, RUNstatus, FWRevOne, HWRevOne
     global PIO_0, PIO_1, PIO_2, PIO_3, PIO_4, PIO_5, PIO_6, PIO_7, cal, SAMPLErate, MaxSamples
-    global IgnoreFirmwareCheck
+    global IgnoreFirmwareCheck, SDATAPort, SCLKPort, SLATCHPort
 
     if RUNstatus.get() == 1:
         BStop()
-        print "STOP"
+        print( "STOP")
 
     if BrdSel.get() == 0:
         try:
             session.remove(dev1)
-            print "Removing dev1"
+            print( "Removing dev1")
         except:
-            print "Skipping dev1"
+            print( "Skipping dev1")
         try:
             session.remove(dev2)
-            print "Removing dev2"
+            print( "Removing dev2")
         except:
-            print "Skipping dev2"
+            print( "Skipping dev2")
         session.add(dev0)
         devx = dev0
         #session.add(devx)
     if BrdSel.get() == 1:
         try:
             session.remove(dev0)
-            print "Removing dev0"
+            print( "Removing dev0")
         except:
-            print "Skipping dev0"
+            print( "Skipping dev0")
         try:
             session.remove(dev2)
-            print "Removing dev2"
+            print( "Removing dev2")
         except:
-            print "Skipping dev2"
+            print( "Skipping dev2")
         session.add(dev1)
         devx = dev1
     #session.add(devx)
     DevID = devx.serial
-    print DevID
-    print devx.fwver, devx.hwver
-    print("Session sample rate: " + str(session.sample_rate))
+    print( DevID)
     FWRevOne = float(devx.fwver)
+    HWRevOne = str(devx.hwver)
+    print( FWRevOne, HWRevOne)
+    print("Session sample rate: " + str(session.sample_rate))
+    
     if IgnoreFirmwareCheck == 0:
         if FWRevOne < 2.17:
             showwarning("WARNING","This ALICE version Requires Firmware version > 2.16")
@@ -17184,7 +17241,7 @@ def SelectBoard():
     #
     devx.set_adc_mux(0)
     if devx.hwver == "F":
-        print "Rev F Board I/O ports set"
+        print( "Rev F Board I/O ports set")
         PIO_0 = 28
         PIO_1 = 29
         PIO_2 = 47
@@ -17203,6 +17260,10 @@ def SelectBoard():
         PIO_6 = 6
         PIO_7 = 7
 #
+    SDATAPort.set(PIO_1)
+    SCLKPort.set(PIO_2)
+    SLATCHPort.set(PIO_0)
+    
 def MakeSampleRateMenu():
     global SAMPLErate, AWGSAMPLErate, BaseSampleRate, session, ETSStatus, etssrlab, RevDate
     global Two_X_Sample, ADC_Mux_Mode, SampleRatewindow, SampleRateStatus, BaseRateEntry
@@ -17441,17 +17502,17 @@ def UpdateFirmware():
     RUNstatus.set(0)
     if askyesno("Update current firmware","Flash new firmware to current device:\n(Yes) or (No)?"):
         filename = askopenfilename(defaultextension = ".bin", filetypes=[("Binary", "*.bin")])
-        print filename
+        print( filename)
         #print DevID
         #print FWRevOne, HWRevOne # devx.fwver, devx.hwver
         try:
-            print "Cancel current session."
+            print( "Cancel current session.")
             session.cancel()
-            print session.cancelled
+            print( session.cancelled)
             session.end()
-            print "Waiting 5..."
+            print( "Waiting 5...")
             time.sleep(5)
-            print "Put board in Samba mode and flash firmware."
+            print( "Put board in Samba mode and flash firmware.")
             session.flash_firmware(filename)
         except:
             showwarning("Complete","Flash Firmware Complete: \n Un-plug board to cycle power.")
@@ -18550,7 +18611,7 @@ if EnableMuxMode > 0:
     BuildMuxScreen = Button(frame2r, text="Analog In Mux Screen", style="W17.TButton", command=MakeMuxModeWindow)
     BuildMuxScreen.pack(side=TOP)
 if EnableMinigenMode > 0:
-    BuildMinigenScreen = Button(frame2r, text="MiniGen Screen", style="W17.TButton", command=MakeMinigenWindow)
+    BuildMinigenScreen = Button(frame2r, text="AD983x DDS Screen", style="W17.TButton", command=MakeMinigenWindow)
     BuildMinigenScreen.pack(side=TOP)
 if EnablePmodDA1Mode > 0:
     BuildDA1Screen = Button(frame2r, text="PMOD DA1 Screen", style="W17.TButton", command=MakeDA1Window)
