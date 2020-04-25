@@ -3,9 +3,9 @@
 Active Learning Interface (for) Circuits (and) Electronics:
 
 The ALICE Desktop software interface is a collection of software instruments written for use with the active learning hardware modules ADALM1000 (M1K) and ADALM2000 (M2K).
-### [ALICE 1.1 User Guide for M1K]:
+### [ALICE 1.3 User Guide for M1K]:
 ### [ALICE 2.0 User Guide for M2K]:
-[ALICE 1.1 User Guide for M1K]:https://wiki.analog.com/university/tools/m1k/alice/desk-top-users-guide
+[ALICE 1.3 User Guide for M1K]:https://wiki.analog.com/university/tools/m1k/alice/desk-top-users-guide
 [ALICE 2.0 User Guide for M2K]:https://wiki.analog.com/university/tools/m2k/alice/users-guide-m2k
 
 ## Background:
@@ -33,8 +33,8 @@ The ALICE Desktop software provides the following functions:
 
 ## Required files:
 
-The ALICE Desktop programs are written in Python and if run from the source code requires version 2.7.8 or 
-greater of Python be installed on the user’s computer. The program only imports modules generally included 
+The ALICE Desktop programs are written in Python. The source code is compatable with version 2.7 and 3.7 
+Python with the numpy numerical library package installed on the user’s computer. The program only imports modules generally included 
 with standard Python installation packages.
 
 ### Windows:
@@ -42,15 +42,15 @@ with standard Python installation packages.
 Windows users who do not wish to install Python and the other required software packages can install the 
 standalone executable under Releases.   
 
-Run the alice-desktop-1.2-setup.exe or alice-desktop-2.0-setup.exe installer program. 
+The Libsmu support library for the ADALM1000, for X86 (32 bit) must be installed first.
+Run the alice-desktop-1.3-setup.exe or alice-desktop-2.0-setup.exe installer program. 
 ALICE desktop opens and saves info and data to various files in the installation directory. Because of user 
 permission issues with some installations of Windows you may need to install the software in a directory 
 other than the default “Program Files”. C:\ALM Software\ would be a good second choice. The installer adds 
 desktop icons for each tool in the suite. Alternatively, under the properties for the icons, you can change 
 the directory the program(s) start in.
 
-Or run ALICE Desktop from the Python 2.7 compatible source code with the following packages installed:
+Or run ALICE Desktop from the Python 2.7 / 3.7 compatible source code with the following packages installed:
 
-Python 2.7.11 (or higher, 32 bit version recommended)
 numpy numerical package extension
-libsmu/pysmu for M1K or libiio/iio.py for M2K
+libsmu/pysmu for M1K

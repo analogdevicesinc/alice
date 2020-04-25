@@ -196,10 +196,16 @@ def \mbox{\hyperlink{namespacealice-desktop-1_a9d89b189c64ca2b1e9032c1ea251904a}
 \begin{DoxyCompactList}\small\item\em Ohmmeter loop. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a59f52a1ef5d1ade76bdacaee8fb3d3ad}{Analog\+\_\+\+Time\+\_\+\+In}} ()
 \begin{DoxyCompactList}\small\item\em Scope time main loop Read the analog data and store the data into the arrays. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a5b0c9517662fadcdd3c2c1cd03231cad}{Analog\+\_\+\+Slow\+\_\+time}} ()
+\begin{DoxyCompactList}\small\item\em Right now this is a failed attempt to plot slow sweeps. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_ab943ab2074de8f51139ccd79cced0905}{Analog\+\_\+\+Fast\+\_\+time}} ()
+\begin{DoxyCompactList}\small\item\em routine for time scales faster than 500 m\+Sec/\+Div \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a932770f19be63458d10faed3aac22fe9}{Digital\+\_\+\+R\+C\+\_\+\+High\+\_\+\+Pass}} (In\+Buff, T\+C1, Gain)
 \begin{DoxyCompactList}\small\item\em Digital filter function for input divider frequency compensation T\+C1 is in micro seconds. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_aa32c3bdf884a2b3544e5591ce5824572}{Digital\+\_\+\+R\+C\+\_\+\+Low\+\_\+\+Pass}} (In\+Buff, T\+C1, Gain)
 \begin{DoxyCompactList}\small\item\em Digital filter function for input divider frequency compensation T\+C1 is in micro seconds. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a68435c78ee22a4ff750e824e486790b0}{shift\+\_\+buffer}} (arr, num, fill\+\_\+value=numpy.\+nan)
+\begin{DoxyCompactList}\small\item\em Function to left (-\/num) or right (+num) shift buffer and fill with a value returns same length buffer preallocate empty array and assign slice. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a1898de8959f0588e52ce02144f42e573}{Analog\+\_\+\+Freq\+\_\+\+In}} ()
 \begin{DoxyCompactList}\small\item\em Main SA and Bode loop Read from the stream and store the data into the arrays. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_af03ce48d3e52769840f794ec4b345e32}{Make\+Histogram}} ()
@@ -726,6 +732,8 @@ def \mbox{\hyperlink{namespacealice-desktop-1_ad964a40caf47f73cc402398cbabecea5}
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a2d96beb7c26506c5850adafb6e9ac8b5}{S\+P\+I\+Shift\+Out}} (D\+Value)
 \begin{DoxyCompactList}\small\item\em ========== Mini\+Gen routines ========== S\+PI shift output routine \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_aef45701f4b6b2c2d2fd76da269294635}{Set\+A\+D9833}} (temp)
+\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a8b0162792a0fbacde5f55504b70e0526}{B\+Send\+MG}} ()
 \begin{DoxyCompactList}\small\item\em Send serial data to D\+DS board. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a05615de68f486938985ddb643bc4f019}{Make\+Minigen\+Window}} ()
@@ -766,6 +774,18 @@ def \mbox{\hyperlink{namespacealice-desktop-1_a5b5b32df63b0c2e0dc5c622bbd88f94f}
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a03f733a3d4cf7a88d4df1fbcf86f39ae}{Make\+Dig\+Filt\+Window}} ()
 \begin{DoxyCompactList}\small\item\em Make screen for applying digital filters. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_ad7ae49814cfd7c57d71fa3e73331c33f}{on\+Ret\+Dig\+FiltA}} (event)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a9614ede569054098e14216167fa271c8}{on\+Dig\+Filt\+A\+Scroll}} (event)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_acfd0ef05e140e83700f7e6a04a1b7a98}{Build\+Box\+CarA}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a252b051bcb797210fb817ffd034f679e}{on\+Ret\+Dig\+FiltB}} (event)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_aea83c765bb016e343e53749295495f18}{on\+Dig\+Filt\+B\+Scroll}} (event)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_aa1451606eba54b79510799779daa6d5c}{Build\+Box\+CarB}} ()
+\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a5afb9bb6fa90b9573ec2b5347329b8a5}{Destroy\+Dig\+Filt\+Screen}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a2151096ef2f18370a8de2b74b1425fb2}{B\+Load\+D\+FiltA}} ()
@@ -804,13 +824,15 @@ def \mbox{\hyperlink{namespacealice-desktop-1_a8c42a2c0773f2d0bd0567da13a69558e}
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_ad118ff7d909fd3be5c17f5621b6b4348}{Destroy\+Sample\+Rate}} ()
 \item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a086412db73d9b101a4793125d95dc95b}{on\+Srate\+Scroll}} (event)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a55be58ba7d924ffe81ef60d849ad1afa}{on\+Ret\+Srate}} (event)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a336a787021dbfbcaf26638d01388ee04}{Set\+Sample\+Rate}} ()
+\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a038f2ac11a72482fe6b2aa2574bc35d1}{on\+Stopfreq\+Scroll}} (event)
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_aead64175a0a743d54610d514dabd8c34}{on\+Stop\+Bode\+Scroll}} (event)
-\item 
-def \mbox{\hyperlink{namespacealice-desktop-1_a086412db73d9b101a4793125d95dc95b}{on\+Srate\+Scroll}} (event)
-\item 
-def \mbox{\hyperlink{namespacealice-desktop-1_a336a787021dbfbcaf26638d01388ee04}{Set\+Sample\+Rate}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a4e05a88ee6eaa18e67df7f6a67110332}{Set\+A\+D\+C\+\_\+\+Mux}} ()
 \item 
@@ -830,11 +852,17 @@ def \mbox{\hyperlink{namespacealice-desktop-1_a527a4dd55f52a7736b0fd0ef887f683b}
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_af27a6fafbd82acd8544ce6b99d02ed67}{E\+T\+Sscroll}} (event)
 \item 
+def \mbox{\hyperlink{namespacealice-desktop-1_af5df72e14ac6587da568fe9e8a4c8b5a}{on\+Fmin\+Scroll}} (event)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a0d36cc835620267c713fc48e13d1eacd}{on\+Mul\+X\+Scroll}} (event)
+\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a01a01b17280f308c11df7dc440b98c83}{E\+T\+S\+Update}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_ad8909d4f4251f96c81d327e75c0a818b}{Settingsscroll}} (event)
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a8a96cb27ff67cdd92e2440aef0391145}{Make\+Settings\+Menu}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a3bd659203bad14be7edb3d16a73573a7}{Set\+E\+T\+S\+Comp}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_ac9a72aa4f57f847e754e378a1bfc92f6}{Update\+A\+W\+G\+Win}} ()
 \item 
@@ -851,11 +879,11 @@ bool \mbox{\hyperlink{namespacealice-desktop-1_a5c9735e26d5274d7035c88034fa8c534
 \item 
 bool \mbox{\hyperlink{namespacealice-desktop-1_ab8e08090e16c7cdf9941025cd2048fad}{pysmu\+\_\+found}} = True
 \item 
-string \mbox{\hyperlink{namespacealice-desktop-1_ae0c8ae67d76fdcc9ac130ff1f9aee267}{Rev\+Date}} = \char`\"{}(10 Feb 2020)\char`\"{}
+string \mbox{\hyperlink{namespacealice-desktop-1_ae0c8ae67d76fdcc9ac130ff1f9aee267}{Rev\+Date}} = \char`\"{}(25 April 2020)\char`\"{}
 \item 
 string \mbox{\hyperlink{namespacealice-desktop-1_a74a32b436fbe54b17b6fff4496aab869}{S\+W\+Rev}} = \char`\"{}1.\+3 \char`\"{}
 \item 
-string \mbox{\hyperlink{namespacealice-desktop-1_a76cd5721b0043b4b6758ba6cd84ba29d}{Version\+\_\+url}} = \textquotesingle{}https\+://github.\+com/analogdevicesinc/alice/releases/download/1.\+3.\+1/alice-\/desktop-\/1.\+3-\/setup.\+exe\textquotesingle{}
+string \mbox{\hyperlink{namespacealice-desktop-1_a76cd5721b0043b4b6758ba6cd84ba29d}{Version\+\_\+url}} = \textquotesingle{}https\+://github.\+com/analogdevicesinc/alice/releases/download/1.\+3.\+5/alice-\/desktop-\/1.\+3-\/setup.\+exe\textquotesingle{}
 \item 
 string \mbox{\hyperlink{namespacealice-desktop-1_a5dac667b2c0310f9108b5330bbc53277}{T\+Bicon}}
 \item 
@@ -985,6 +1013,10 @@ int \mbox{\hyperlink{namespacealice-desktop-1_a2bf374e10cd52f3dde2412240d750bd2}
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_aadaa89cf0c4771361d1130da1101e247}{Max\+Samples}} = 200000
 \item 
+int \mbox{\hyperlink{namespacealice-desktop-1_ae82210e4c1891b7a545f418f14b476da}{E\+T\+Srecord}} = 2000
+\item 
+int \mbox{\hyperlink{namespacealice-desktop-1_a21147ac41e5fdf908af6555d5da79983}{D\+I\+Ssamples}} = G\+RW
+\item 
 float \mbox{\hyperlink{namespacealice-desktop-1_a8514a4815524c3cbc99c36f097c8cbc6}{T\+R\+I\+G\+G\+E\+Rlevel}} = 2.\+5
 \item 
 string \mbox{\hyperlink{namespacealice-desktop-1_ac6b9b8fe81fc99ea1d20f167a0a1f0d4}{Math\+String}} = \char`\"{}V\+BuffA\mbox{[}t\mbox{]} + V\+BuffB\mbox{[}t\mbox{]}\char`\"{}
@@ -1079,6 +1111,10 @@ string \mbox{\hyperlink{namespacealice-desktop-1_a26985237ba1522226abf1d9100a981
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_ae5b97d9457aed97a095a59eeaad031d3}{Vdiv}} = Int\+Var(0)
 \item 
+\mbox{\hyperlink{namespacealice-desktop-1_ade66aac10cddd9e99249dc012e2c64c0}{L\+P\+F\+Trigger}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ac8f50687784cd28571ec6f17262012c7}{Trigger\+\_\+\+L\+P\+F\+\_\+length}} = Int\+Var(0)
+\item 
 \mbox{\hyperlink{namespacealice-desktop-1_adbec1d92ad0ed72830d19817f6ab54a9}{Harmonic\+Markers}} = Int\+Var(0)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_ad3120d05adde617fb1491d900b369560}{A\+W\+G\+\_\+\+Amp\+\_\+\+Mode}} = Int\+Var(0)
@@ -1129,6 +1165,8 @@ int \mbox{\hyperlink{namespacealice-desktop-1_aafffe5103a9760382b6350bd7f0fcd1a}
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_a1f3f94f279e427f202b71677e96253a5}{Enable\+E\+T\+S\+Screen}} = 0
 \item 
+int \mbox{\hyperlink{namespacealice-desktop-1_a26d51504a13db5597b1ad9ebd1590d14}{Enable\+H\+Ssampling}} = 0
+\item 
 int \mbox{\hyperlink{namespacealice-desktop-1_a9a0c0aeb30674b07765fbfbd8bfc4453}{Allow\+Flash\+Firmware}} = 0
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_a28c49e0488626871eca6ee9ee8b2f35e}{De\+Bug\+Mode}} = 0
@@ -1173,6 +1211,16 @@ string \mbox{\hyperlink{namespacealice-desktop-1_a466a944091b1b48851b495b6b3418c
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_abd326f272e1fe6abfd90fa53fa3a47f8}{C\+H\+B\+\_\+\+A2}} = Double\+Var(0)
 \item 
+\mbox{\hyperlink{namespacealice-desktop-1_a4233c8f1f4ff22ab655f83825d9c075f}{Auto\+\_\+\+E\+T\+S\+\_\+\+Comp}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ab848f8e96eb9afc7a1a26b2ffec0f133}{E\+T\+S\+\_\+\+T\+C1}} = Double\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ad0c31654160d7c4d92ae998a8ee02992}{E\+T\+S\+\_\+\+A1}} = Double\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a1b7a857a1e97043ada7e7e998d460935}{E\+T\+S\+\_\+\+T\+C2}} = Double\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a2cfae4bae2e3d043846cc77971753331}{E\+T\+S\+\_\+\+A2}} = Double\+Var(0)
+\item 
 int \mbox{\hyperlink{namespacealice-desktop-1_a56798f1554382256e2df530f1ddd2ca4}{Phase\+Offset1x}} = 37
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_a900c62af2500a84c6f9eb922431ebfae}{Phase\+Offset2x}} = 37
@@ -1198,6 +1246,8 @@ tuple \mbox{\hyperlink{namespacealice-desktop-1_a4dcc2cb8e96d10a8601014b869892c3
 tuple \mbox{\hyperlink{namespacealice-desktop-1_af4f6a682a44974f5bc81b18e8fe14df2}{T\+Mpdiv}} = (0.\+01, 0.\+02, 0.\+05, 0.\+1, 0.\+2, 0.\+5, 1.\+0, 2.\+0, 5.\+0, 10.\+0, 20.\+0, 50.\+0, 100.\+0, 200.\+0)
 \begin{DoxyCompactList}\small\item\em Time list in ms/div. \end{DoxyCompactList}\item 
 tuple \mbox{\hyperlink{namespacealice-desktop-1_a0db753784bc5ddbdef3d2887075d43c3}{Res\+Scalediv}} = (1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000)
+\item 
+tuple \mbox{\hyperlink{namespacealice-desktop-1_af4b0c26abe6bce711409da9c61c209c8}{Samp\+Rate\+List}}
 \item 
 float \mbox{\hyperlink{namespacealice-desktop-1_a6f7b43cd140854a1554817a07db242df}{A\+W\+G\+A\+Amplvalue}} = 0.\+0
 \begin{DoxyCompactList}\small\item\em A\+WG variables. \end{DoxyCompactList}\item 
@@ -1255,9 +1305,11 @@ int \mbox{\hyperlink{namespacealice-desktop-1_a073ee61febe740d90ba768ef3e896f1d}
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_a9ceec6b55614575d1ab09ed2cd52ef6f}{D\+C\+V\+MuxD}} = 0
 \item 
+int \mbox{\hyperlink{namespacealice-desktop-1_ae79ac1990450925549a8677df6f46b14}{C\+H\+A\+D\+Cy}} = 0
+\item 
 int \mbox{\hyperlink{namespacealice-desktop-1_a0db412229ba6a89908d85da6109cdde0}{D\+C\+I1}} = 0
 \item 
-int \mbox{\hyperlink{namespacealice-desktop-1_adbccc377ba6f07aa8e9ef3a4828baa2e}{C\+H\+Aperiod}} = 0
+int \mbox{\hyperlink{namespacealice-desktop-1_a41524a161798c58feff9a9e6a45be998}{C\+H\+Aperiod}} = 0
 \item 
 float \mbox{\hyperlink{namespacealice-desktop-1_a769d0f45c0588066602abb54d3fa4813}{C\+H\+A\+V\+Gain}} = 1.\+0
 \item 
@@ -1302,6 +1354,10 @@ list \mbox{\hyperlink{namespacealice-desktop-1_aeea850f66e02dca97f7261747fa3759e
 list \mbox{\hyperlink{namespacealice-desktop-1_a415ab19e741dbec8ab38d3335e693271}{D\+Filt\+B\+Coef}} = \mbox{[}1\mbox{]}
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a2a5e19d99fc30ea93e98d7c372c4d2aa}{Dig\+FiltA}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ad3e371603774cd626971d77948f0b46d}{Dig\+Filt\+A\+Box\+Car}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a1e63a88b97cc0a308457393d5e05ccc5}{Dig\+Filt\+B\+Box\+Car}} = Int\+Var(0)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a6824830c334a49834961b1174311ffbb}{Dig\+FiltB}} = Int\+Var(0)
 \item 
@@ -1751,6 +1807,62 @@ string \mbox{\hyperlink{namespacealice-desktop-1_a09d13e80b5df4d5cba78ea4f25f4cd
 \begin{DoxyCompactList}\small\item\em 25x25 bit map of low going pulse in .gif \end{DoxyCompactList}\item 
 \mbox{\hyperlink{namespacealice-desktop-1_aa7d88540a08adb5cbe9b3a30b9b7387e}{lowpulseimg}} = Photo\+Image(data=lowpulse)
 \item 
+int \mbox{\hyperlink{namespacealice-desktop-1_adbeabddcd7a120829e741ab9419e9fe8}{First\+\_\+\+Slow\+\_\+sweep}} = 0
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a15959083558bee87267292c1857afef1}{Arising}} = \mbox{[}i for (i, val) in enumerate(Trace1) if val $>$= Mid\+V1 and Trace1\mbox{[}i-\/1\mbox{]} $<$ Mid\+V1\mbox{]}
+\begin{DoxyCompactList}\small\item\em if E\+T\+S\+Disp.\+get() $>$ 0\+: \end{DoxyCompactList}\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a0ec61068783891022e63c81696e49ae5}{Afalling}} = \mbox{[}i for (i, val) in enumerate(Trace1) if val $<$= Mid\+V1 and Trace1\mbox{[}i-\/1\mbox{]} $>$ Mid\+V1\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_ab559b1a628ecf452df4b2611889e37a1}{A\+Irising}} = \mbox{[}i -\/ (Trace1\mbox{[}i\mbox{]} -\/ Mid\+V1)/(Trace1\mbox{[}i\mbox{]} -\/ Trace1\mbox{[}i-\/1\mbox{]}) for i in Arising\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_ace1668aae3b2af6419938a52697bdaa9}{A\+Ifalling}} = \mbox{[}i -\/ (Mid\+V1 -\/ Trace1\mbox{[}i\mbox{]})/(Trace1\mbox{[}i-\/1\mbox{]} -\/ Trace1\mbox{[}i\mbox{]}) for i in Afalling\mbox{]}
+\item 
+int \mbox{\hyperlink{namespacealice-desktop-1_a202b847464c9f5f0fd8276fef56838e9}{C\+H\+Afreq}} = S\+A\+M\+P\+L\+Erate / numpy.\+mean(numpy.\+diff(A\+Irising))
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_aa7b89ae8c8a0e18ce87bab5d2a949a93}{Dummy\+\_\+read}} = Arising\mbox{[}0\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a93b9f77f9306d67dbbe4569ca3fa6756}{anr1}} = A\+Irising\mbox{[}0\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a649898677fa7b0fd760deffa1e84ae22}{anr2}} = A\+Irising\mbox{[}1\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_aa6500deaddb616846b9a54b49a0c8acf}{anf1}} = A\+Ifalling\mbox{[}1\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a6156c632ade232eb4b3e4350765bff8e}{Brising}} = \mbox{[}i for (i, val) in enumerate(Trace2) if val $>$= Mid\+V2 and Trace2\mbox{[}i-\/1\mbox{]} $<$ Mid\+V2\mbox{]}
+\begin{DoxyCompactList}\small\item\em if E\+T\+S\+Disp.\+get() $>$ 0\+: \#endsample = E\+T\+Srecord Brising = \mbox{[}i for (i, val) in enumerate(\+Trace2\mbox{[}\+:\+E\+T\+Srecord\mbox{]}) if val $>$= Mid\+V2 and Trace2\mbox{[}i-\/1\mbox{]} $<$ Mid\+V2\mbox{]} Bfalling = \mbox{[}i for (i, val) in enumerate(\+Trace2\mbox{[}\+:\+E\+T\+Srecord\mbox{]}) if val $<$= Mid\+V2 and Trace2\mbox{[}i-\/1\mbox{]} $>$ Mid\+V2\mbox{]} B\+Irising = \mbox{[}i -\/ (Trace2\mbox{[}i\mbox{]} -\/ Mid\+V2)/(Trace2\mbox{[}i\mbox{]} -\/ Trace2\mbox{[}i-\/1\mbox{]}) for i in Brising\mbox{]} B\+Ifalling = \mbox{[}i -\/ (Mid\+V2 -\/ Trace2\mbox{[}i\mbox{]})/(Trace2\mbox{[}i-\/1\mbox{]} -\/ Trace2\mbox{[}i\mbox{]}) for i in Bfalling\mbox{]} else\+: \end{DoxyCompactList}\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a8ddf34e7834db8da54feb33152108f15}{Bfalling}} = \mbox{[}i for (i, val) in enumerate(Trace2) if val $<$= Mid\+V2 and Trace2\mbox{[}i-\/1\mbox{]} $>$ Mid\+V2\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a4b86ab8d854f28b6d5714937604acaaf}{B\+Irising}} = \mbox{[}i -\/ (Trace2\mbox{[}i\mbox{]} -\/ Mid\+V2)/(Trace2\mbox{[}i\mbox{]} -\/ Trace2\mbox{[}i-\/1\mbox{]}) for i in Brising\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_aa206496956dcdcfbc77e30935075a062}{B\+Ifalling}} = \mbox{[}i -\/ (Mid\+V2 -\/ Trace2\mbox{[}i\mbox{]})/(Trace2\mbox{[}i-\/1\mbox{]} -\/ Trace2\mbox{[}i\mbox{]}) for i in Bfalling\mbox{]}
+\item 
+int \mbox{\hyperlink{namespacealice-desktop-1_a9bd26244349e53436467ab6cdd6d270b}{C\+H\+Bfreq}} = S\+A\+M\+P\+L\+Erate / numpy.\+mean(numpy.\+diff(B\+Irising))
+\item 
+tuple \mbox{\hyperlink{namespacealice-desktop-1_a5b567e7421218bccf1fdc09b264d43c3}{C\+H\+Bperiod}} = (numpy.\+mean(numpy.\+diff(B\+Irising)) $\ast$ 1000.\+0) / S\+A\+M\+P\+L\+Erate
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_aeb22f0c9dfe854d77deb66feb5bf83db}{bnr1}} = B\+Irising\mbox{[}0\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_afd45cff4779fd0058bb63d75c64c21a4}{bnr2}} = B\+Irising\mbox{[}1\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a58851e8351f6ef236e69e8d5c6482d42}{bnf1}} = B\+Ifalling\mbox{[}1\mbox{]}
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a68ab07a6a0e610e43c9ba480e006ebe0}{C\+H\+A\+HW}} = float(((anf1 -\/ anr1) $\ast$ 1000.\+0) / S\+A\+M\+P\+L\+Erate)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a9620e18d93722e1db4bf95b3e064f130}{C\+H\+A\+LW}} = float(((anr2 -\/ anf1) $\ast$ 1000.\+0) / S\+A\+M\+P\+L\+Erate)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a0bdb6f930bad3fde3aa8ac6d356dd31e}{C\+H\+B\+HW}} = float(((bnf1 -\/ bnr1) $\ast$ 1000.\+0) / S\+A\+M\+P\+L\+Erate)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a0ebe1ace4ca77dfffe71226c989c199e}{C\+H\+B\+LW}} = float(((bnr2 -\/ bnf1) $\ast$ 1000.\+0) / S\+A\+M\+P\+L\+Erate)
+\item 
+float \mbox{\hyperlink{namespacealice-desktop-1_a88133475b28b2d853a868eaa06ca92fb}{C\+H\+B\+D\+Cy}} = float(bnf1 -\/ bnr1) / float(bnr2 -\/ bnr1) $\ast$ 100.\+0
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a4987ec11f3783077136be8c049edc06c}{C\+H\+B\+A\+Delay\+R1}} = float((bnr1 -\/ anr1) $\ast$ 1000.\+0 / S\+A\+M\+P\+L\+Erate)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a5a92296c48dc14f4b4f7165b7e0a857b}{C\+H\+B\+A\+Delay\+R2}} = float((bnr2 -\/ anr2) $\ast$ 1000.\+0 / S\+A\+M\+P\+L\+Erate)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ade60a94ffff7f46cb52d70be88e18c78}{C\+H\+B\+A\+DelayF}} = float((bnf1 -\/ anf1) $\ast$ 1000.\+0 / S\+A\+M\+P\+L\+Erate)
+\item 
+float \mbox{\hyperlink{namespacealice-desktop-1_a1f597b81365ab40520f0bfaef2e50214}{C\+H\+A\+Bphase}} = 360.\+0$\ast$(float((bnr1 -\/ anr1) $\ast$ 1000.\+0 / S\+A\+M\+P\+L\+Erate))/C\+H\+Aperiod
+\item 
 \mbox{\hyperlink{namespacealice-desktop-1_a594189a8d36a9aa3312c8d29e823c4ec}{Tg\+Input}} = Int\+Var(0)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a19a39b5cf5625d9ad5d6c12b19ba7c80}{Single\+Shot}} = Int\+Var(0)
@@ -1939,6 +2051,10 @@ string \mbox{\hyperlink{namespacealice-desktop-1_a09d13e80b5df4d5cba78ea4f25f4cd
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_aa6d590b2fc8c510822d724a287e74f72}{C\+H\+B\+\_\+\+R\+C\+\_\+\+HP}} = Int\+Var(0)
 \item 
+\mbox{\hyperlink{namespacealice-desktop-1_a65afe56169e5fb44fe45f4d53c399a6c}{C\+H\+A\+I\+\_\+\+R\+C\+\_\+\+HP}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a57317c8118f3456cd1fee11582413636}{C\+H\+B\+I\+\_\+\+R\+C\+\_\+\+HP}} = Int\+Var(0)
+\item 
 \mbox{\hyperlink{namespacealice-desktop-1_a18c3b46dc2e6639679e0546ee24f90f9}{frame2r}} = Frame(root, borderwidth=5, relief=R\+I\+D\+GE)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_afc015eff6557e84151d2e53b94375445}{side}}
@@ -2032,6 +2148,16 @@ string \mbox{\hyperlink{namespacealice-desktop-1_a09d13e80b5df4d5cba78ea4f25f4cd
 \mbox{\hyperlink{namespacealice-desktop-1_a88187d36cb5077b90516995c3a836aa9}{pwrbt\+\_\+tip}} = Create\+Tool\+Tip(Pwr\+Bt, \textquotesingle{}Toggle ext power supply\textquotesingle{})
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a8a468ccbeea09414c900e0d504b6ca42}{Showmenu\+\_\+tip}} = Create\+Tool\+Tip(Showmenu, \textquotesingle{}Select which traces to display\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a6596d838f3adbc3b9f7bdef25b6c52fc}{fminlab2}} = Label(frame1, text=\char`\"{}K\+Hz\char`\"{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a60a71cdc1865166224aa3025a054a654}{Fmin\+Entry}} = Entry(frame1, width=5)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a9e05acaf90517ecac550296b3d11a6d3}{fminlab}} = Label(frame1, text=\char`\"{}Fmin\char`\"{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ae58ec49ae9539fc551e62aab1878b567}{Ht\+Mul\+Entry}} = Entry(frame1, width=4)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_aead71ba022329402c6c27d3664fa4973}{mulxlab}} = Label( frame1, text = \char`\"{}Mul X\char`\"{})
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a5afdc0f672d87b44966ddfce844cfb18}{T\+Msb}} = Spinbox(frame1, width=5, values= T\+Mpdiv, command=B\+Time)
 \item 

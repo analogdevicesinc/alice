@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
 ## @package alice-desktop 1.3.py(w)
-# ADALM1000 alice-desktop 1.3.py(w) (2-10-2020)
-# For Python version > = 2.7.8
+# ADALM1000 alice-desktop 1.3.py(w) (4-25-2020)
+# For Python version 2.7 or 3.7
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
 # Uses new firmware (2.17 or >) that support control of ADC mux configure
@@ -20,17 +20,32 @@ except:
 import csv
 import wave
 import os
-import urllib2
+#import requests
+import sys
 import struct
 import subprocess
 from time import gmtime, strftime
-import tkFont
-from Tkinter import *
-from ttk import *
-from tkFileDialog import askopenfilename
-from tkFileDialog import asksaveasfilename
-from tkSimpleDialog import askstring
-from tkMessageBox import *
+if sys.version_info[0] == 2:
+    print ("Python 2.x")
+    import urllib2
+    import tkFont
+    from Tkinter import *
+    from ttk import *
+    from tkFileDialog import askopenfilename
+    from tkFileDialog import asksaveasfilename
+    from tkSimpleDialog import askstring
+    from tkMessageBox import *
+if sys.version_info[0] == 3:
+    print ("Python 3.x")    
+    import urllib.request, urllib.error, urllib.parse
+    from tkinter.font import *
+    from tkinter import *
+    from tkinter.ttk import *
+    from tkinter.filedialog import askopenfilename
+    from tkinter.filedialog import asksaveasfilename
+    from tkinter.simpledialog import askstring
+    from tkinter.messagebox import *
+#
 import webbrowser
 try:
     from pysmu import *
@@ -41,9 +56,9 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(10 Feb 2020)"
+RevDate = "(25 April 2020)"
 SWRev = "1.3 "
-Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.1/alice-desktop-1.3-setup.exe'
+Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.5/alice-desktop-1.3-setup.exe'
 # samll bit map of ADI logo for window icon
 TBicon = """
 R0lGODlhIAAgAHAAACH5BAEAAAIALAAAAAAgACAAgQAAAP///wAAAAAAAAJJhI+py+0PYwtBWkDp
@@ -127,6 +142,8 @@ AWGSAMPLErate = BaseSampleRate # Sample rate of the AWG channels
 SAMPLErate = BaseSampleRate # Scope sample rate can be decimated
 MinSamples = 2000
 MaxSamples = 200000
+ETSrecord = 2000
+DISsamples = GRW
 # set initial trigger conditions
 TRIGGERlevel = 2.5          # Triggerlevel in volts
 ## default math equations
@@ -181,6 +198,9 @@ TRACEaverage = IntVar(0) # Number of average sweeps for average mode
 TRACEaverage.set(8)
 Vdiv = IntVar(0)
 Vdiv.set(10)            # Number of vertical divisions for spectrum / Bode
+LPFTrigger = IntVar(0) # trigger lpf on/off
+Trigger_LPF_length  = IntVar(0)
+Trigger_LPF_length.set(10) # Length of Trigger box car LPF in samples
 HarmonicMarkers = IntVar(0)
 HarmonicMarkers.set(3)
 AWG_Amp_Mode = IntVar(0)
@@ -218,6 +238,7 @@ EnableAD5626SerialMode = 0
 EnableDigitalFilter = 0
 EnableMeasureScreen = 0
 EnableETSScreen = 0
+EnableHSsampling = 0
 AllowFlashFirmware = 0
 DeBugMode = 0
 # ADC Mux defaults
@@ -250,6 +271,15 @@ CHB_A1 = DoubleVar(0)
 CHB_A1.set(1)
 CHB_A2 = DoubleVar(0)
 CHB_A2.set(1)
+Auto_ETS_Comp = IntVar(0)
+ETS_TC1 = DoubleVar(0)
+ETS_TC1.set(0.18333) 
+ETS_A1 = DoubleVar(0)
+ETS_A1.set(5.0)
+ETS_TC2 = DoubleVar(0)
+ETS_TC2.set(0.03)
+ETS_A2 = DoubleVar(0)
+ETS_A2.set(5.0)
 PhaseOffset1x = 37
 PhaseOffset2x = 37
 # Check if there is an alice_init.ini file to read in
@@ -278,7 +308,10 @@ if MouseFocus == 1:
 #
 DevID = "m1k"
 #
-default_font = tkFont.nametofont("TkDefaultFont")
+if sys.version_info[0] == 2:
+    default_font = tkFont.nametofont("TkDefaultFont")
+if sys.version_info[0] == 3:
+    default_font = tkinter.font.nametofont("TkDefaultFont")
 default_font.configure(size=FontSize)
 ## Vertical Sensitivity list in v/div
 CHvpdiv = (0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0)
@@ -287,6 +320,8 @@ CHipdiv = (0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0)
 ## Time list in ms/div
 TMpdiv = (0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0)
 ResScalediv = (1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000)
+SampRateList = (1024, 2048, 4096, 8192, 16384, 32765, 64000, 93023, 93385, 93750, 94118,
+                96385, 96774, 97166, 97561, 97959, 98361, 98765, 99174, 99585, 100000)
 ## AWG variables
 AWGAAmplvalue = 0.0
 AWGAOffsetvalue = 0.0
@@ -319,6 +354,7 @@ DCVMuxA = MinVMuxA = MaxVMuxA = MidVMuxA = PPVMuxA = SVMuxA = 0
 DCVMuxB = MinVMuxB = MaxVMuxB = MidVMuxB = PPVMuxB = SVMuxB = 0
 DCVMuxC = MinVMuxC = MaxVMuxC = MidVMuxC = PPVMuxC = SVMuxC = 0
 DCVMuxD = MinVMuxD = MaxVMuxD = MidVMuxD = PPVMuxD = SVMuxD = 0
+CHADCy = CHBDCy = 0
 DCI1 = DCI2 = MinI1 = MaxI1 = MinI2 = MaxI2 = MidI1 = PPI1 = MidI2 = PPI2 = SV2 = SI2 = 0
 CHAperiod = CHAfreq = CHBperiod = CHBfreq = 0
 # Calibration coefficients
@@ -349,6 +385,8 @@ DFiltACoef = [1]
 DFiltBCoef = [1]
 DigFiltA = IntVar(0)
 DigFiltA.set(0)
+DigFiltABoxCar = IntVar(0)
+DigFiltBBoxCar = IntVar(0)
 DigFiltB = IntVar(0)
 DigFiltB.set(0)
 DigBuffA = IntVar(0)
@@ -739,14 +777,17 @@ def BSaveConfig(filename):
     global ChbLableSrring1, ChbLableSrring2, ChbLableSrring3, ChbLableSrring4, ChbLableSrring5, ChbLableSrring6
     global ChaMeasString1, ChaMeasString2, ChaMeasString3, ChaMeasString4, ChaMeasString5, ChaMeasString6
     global ChbMeasString1, ChbMeasString2, ChbMeasString3, ChbMeasString4, ChbMeasString5, ChbMeasString6
-    global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
+    global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2, CHAI_RC_HP, CHBI_RC_HP
     global CHA_A1, CHA_A2, CHB_A1, CHB_A2, RelPhaseCenter, ImpedanceCenter, NetworkScreenStatus
     global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
     global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
     global Show_Rseries, Show_Xseries, Show_Magnitude, Show_Angle
     global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
-    global SCLKPort, SDATAPort, SLATCHPort
+    global SCLKPort, SDATAPort, SLATCHPort, EnableHSsampling, FminEntry, HtMulEntry
+    global Auto_ETS_Comp, ETS_TC1, ETS_A1, ETS_TC2, ETS_A2
+    global ets_TC1Entry, ets_A1Entry, ets_TC2Entry, ets_A2Entry
+    global DigFiltStatus, DigFiltABoxCar, DigFiltBBoxCar, BCALenEntry, BCBLenEntry
     
     # open Config file for Write
     ConfgFile = open(filename, "w")
@@ -840,6 +881,42 @@ def BSaveConfig(filename):
         ConfgFile.write("win2.geometry('+" + str(win2.winfo_x()) + '+' + str(win2.winfo_y()) + "')\n")
     else:
         ConfgFile.write('DestroyDigScreen()\n')
+    if EnableHSsampling > 0:
+        ConfgFile.write('FminEntry.delete(0,"end")\n')
+        ConfgFile.write('FminEntry.insert(0, ' + FminEntry.get() + ')\n')
+        ConfgFile.write('HtMulEntry.delete(0,"end")\n')
+        ConfgFile.write('HtMulEntry.insert(0, ' + HtMulEntry.get() + ')\n')
+        ConfgFile.write('Auto_ETS_Comp.set(' + str(Auto_ETS_Comp.get()) + ')\n')
+        try:
+            ConfgFile.write('ets_TC1Entry.delete(0,"end")\n')
+            ConfgFile.write('ets_TC1Entry.insert(0, ' + ets_TC1Entry.get() + ')\n')
+            ConfgFile.write('ETS_TC1.set(' + ets_TC1Entry.get() + ')\n')
+            ConfgFile.write('ets_A1Entry.delete(0,"end")\n')
+            ConfgFile.write('ets_A1Entry.insert(0, ' + ets_A1Entry.get() + ')\n')
+            ConfgFile.write('ETS_A1.set(' + ets_A1Entry.get() + ')\n')
+            ConfgFile.write('ets_TC2Entry.delete(0,"end")\n')
+            ConfgFile.write('ets_TC2Entry.insert(0, ' + ets_TC2Entry.get() + ')\n')
+            ConfgFile.write('ETS_TC2.set(' + ets_TC2Entry.get() + ')\n')
+            ConfgFile.write('ets_A2Entry.delete(0,"end")\n')
+            ConfgFile.write('ets_A2Entry.insert(0, ' + ets_A2Entry.get() + ')\n')
+            ConfgFile.write('ETS_A2.set(' + ets_A2Entry.get() + ')\n')
+        except:
+            ConfgFile.write('ETS_TC1.set(' + str(ETS_TC1.get()) + ')\n')
+            ConfgFile.write('ETS_A1.set(' + str(ETS_A1.get()) + ')\n')
+            ConfgFile.write('ETS_TC2.set(' + str(ETS_TC2.get()) + ')\n')
+            ConfgFile.write('ETS_A2.set(' + str(ETS_A2.get()) + ')\n')
+    if DigFiltStatus.get() == 1:
+        ConfgFile.write('MakeDigFiltWindow()\n')
+        ConfgFile.write('DigFiltABoxCar.set(' + str(DigFiltABoxCar.get()) + ')\n')
+        ConfgFile.write('DigFiltBBoxCar.set(' + str(DigFiltBBoxCar.get()) + ')\n')
+        ConfgFile.write('BCALenEntry.delete(0,"end")\n')
+        ConfgFile.write('BCALenEntry.insert(0, ' + BCALenEntry.get() + ')\n')
+        ConfgFile.write('BCBLenEntry.delete(0,"end")\n')
+        ConfgFile.write('BCBLenEntry.insert(0, ' + BCBLenEntry.get() + ')\n')
+        ConfgFile.write('BuildBoxCarA()\n')
+        ConfgFile.write('BuildBoxCarB()\n')
+    else:
+        ConfgFile.write('DestroyDigFiltScreen()\n')
     if MinigenScreenStatus.get() == 1:
         ConfgFile.write('MakeMinigenWindow()\n')
         ConfgFile.write("minigenwindow.geometry('+" + str(minigenwindow.winfo_x()) + '+' + str(minigenwindow.winfo_y()) + "')\n")
@@ -950,8 +1027,8 @@ def BSaveConfig(filename):
         ConfgFile.write("etswindow.geometry('+" + str(etswindow.winfo_x()) + '+' + str(etswindow.winfo_y()) + "')\n")
         ConfgFile.write('ETSDisp.set(' + str(ETSDisp.get()) + ')\n')
         ConfgFile.write('ETSDir.set(' + str(ETSDir.get()) + ')\n')
-        ConfgFile.write('FminEntry.delete(0,END)\n')
-        ConfgFile.write('FminEntry.insert(6, ' + FminEntry.get() + ')\n')
+        ConfgFile.write('FMulXEntry.delete(0,END)\n')
+        ConfgFile.write('FMulXEntry.insert(6, ' + FMulXEntry.get() + ')\n')
         ConfgFile.write('DivXEntry.delete(0,END)\n')
         ConfgFile.write('DivXEntry.insert(4, ' + DivXEntry.get() + ')\n')
         ConfgFile.write('ETSts.delete(0,END)\n')
@@ -1137,6 +1214,8 @@ def BSaveConfig(filename):
         donothing()   
     ConfgFile.write('CHA_RC_HP.set(' + str(CHA_RC_HP.get()) + ')\n')
     ConfgFile.write('CHB_RC_HP.set(' + str(CHB_RC_HP.get()) + ')\n')
+    ConfgFile.write('CHAI_RC_HP.set(' + str(CHAI_RC_HP.get()) + ')\n')
+    ConfgFile.write('CHBI_RC_HP.set(' + str(CHBI_RC_HP.get()) + ')\n')
     ConfgFile.write('CHA_TC1.set(' + str(CHA_TC1.get()) + ')\n')
     ConfgFile.write('CHA_TC2.set(' + str(CHA_TC2.get()) + ')\n')
     ConfgFile.write('CHB_TC1.set(' + str(CHB_TC1.get()) + ')\n')
@@ -1237,14 +1316,14 @@ def BLoadConfig(filename):
     global ChbLableSrring1, ChbLableSrring2, ChbLableSrring3, ChbLableSrring4, ChbLableSrring5, ChbLableSrring6
     global ChaMeasString1, ChaMeasString2, ChaMeasString3, ChaMeasString4, ChaMeasString5, ChaMeasString6
     global ChbMeasString1, ChbMeasString2, ChbMeasString3, ChbMeasString4, ChbMeasString5, ChbMeasString6
-    global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
+    global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2, CHAI_RC_HP, CHBI_RC_HP
     global CHA_A1, CHA_A2, CHB_A1, CHB_A2, RelPhaseCenter, ImpedanceCenter
     global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
     global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
     global Show_Rseries, Show_Xseries, Show_Magnitude, Show_Angle
     global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
-    global SCLKPort, SDATAPort, SLATCHPort
+    global SCLKPort, SDATAPort, SLATCHPort, EnableHSsampling, FminEntry, HtMulEntry
     
     # Read configuration values from file
     try:
@@ -1537,16 +1616,18 @@ def BHelp():
 ## Show info on software / firmware / hardware
 def BAbout():
     global RevDate, SWRev, FWRevOne, HWRevOne, DevID, Version_url
-    
+#Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.4/alice-desktop-1.3-setup.exe'
     try:
-        u = urllib2.urlopen(Version_url)
+        if sys.version_info[0] == 2:
+            u = urllib2.urlopen(Version_url)
+        if sys.version_info[0] == 3:
+            u = urllib.request.urlopen(Version_url)
         meta = u.info()
         time_string = str(meta.getheaders("Last-Modified"))
     except:
         time_string = "Unavailable"
-    print(time_string)
     showinfo("About ALICE", "ALICE DeskTop" + SWRev + RevDate + "\n" +
-             "Latest Version: " + time_string[7:18] + "\n" +
+             "Last Released Version: " + time_string[7:18] + "\n" +
              "ADALM1000 Hardware Rev " + str(HWRevOne) + "\n" +
              "Firmware Rev " + str(FWRevOne) + "\n" +
              "Board Serial Number " + DevID + "\n" +
@@ -1765,78 +1846,62 @@ def NewEnterMathControls():
         #
         sframe2a = Frame( frame2 )
         sframe2a.pack(side=TOP)
-        formlab = Label(sframe2a, text="Formula ", style= "A10B.TLabel")
-        formlab.grid(row=0, column=0, sticky=W)
+        formlab = Label(sframe2a, text="  Formula ", style= "A10B.TLabel")
         formlab.pack(side=LEFT)
         formentry = Entry(sframe2a, width=23)
-        formentry.grid(row=0, column=1, sticky=W)
         formentry.pack(side=LEFT)
         formentry.delete(0,"end")
         formentry.insert(0,MathString)
         sframe2b = Frame( frame2 )
         sframe2b.pack(side=TOP)
         unitslab = Label(sframe2b, text="Units ", style= "A10B.TLabel")
-        unitslab.grid(row=0, column=0, sticky=W)
         unitslab.pack(side=LEFT)
         unitsentry = Entry(sframe2b, width=6)
-        unitsentry.grid(row=0, column=1, sticky=W)
         unitsentry.pack(side=LEFT)
         unitsentry.delete(0,"end")
         unitsentry.insert(0,MathUnits)
         checkbt = Button(sframe2b, text="Check", command=CheckMathString )
-        checkbt.grid(row=0, column=2, sticky=W)
         checkbt.pack(side=LEFT)
         sframe2c = Frame( frame2 )
         sframe2c.pack(side=TOP)
         axislab = Label(sframe2c, text="Axis ", style= "A10B.TLabel")
-        axislab.grid(row=0, column=0, sticky=W)
         axislab.pack(side=LEFT)
         axisentry = Entry(sframe2c, width=3)
-        axisentry.grid(row=0, column=1, sticky=W)
         axisentry.pack(side=LEFT)
         axisentry.delete(0,"end")
         axisentry.insert(0,MathAxis)
         applybt = Button(sframe2c, text="Apply", command=ApplyMathString )
-        applybt.grid(row=0, column=2, sticky=W)
         applybt.pack(side=LEFT)
         # 
         # X Math trace formula sub frame3
         #
         sframe3a = Frame( frame3 )
         sframe3a.pack(side=TOP)
-        xformlab = Label(sframe3a, text=" X Formula ", style= "A10B.TLabel")
-        xformlab.grid(row=0, column=0, sticky=W)
+        xformlab = Label(sframe3a, text="X Formula ", style= "A10B.TLabel")
         xformlab.pack(side=LEFT)
-        xformentry = Entry(sframe3a, width=20)
-        xformentry.grid(row=0, column=1, sticky=W)
+        xformentry = Entry(sframe3a, width=23)
         xformentry.pack(side=LEFT)
         xformentry.delete(0,"end")
         xformentry.insert(0, MathXString)
         sframe3b = Frame( frame3 )
         sframe3b.pack(side=TOP)
         xunitslab = Label(sframe3b, text="X Units ", style= "A10B.TLabel")
-        xunitslab.grid(row=0, column=0, sticky=W)
         xunitslab.pack(side=LEFT)
         xunitsentry = Entry(sframe3b, width=6)
-        xunitsentry.grid(row=0, column=1, sticky=W)
         xunitsentry.pack(side=LEFT)
         xunitsentry.delete(0,"end")
         xunitsentry.insert(0, MathXUnits)
         xcheckbt = Button(sframe3b, text="Check", command=CheckMathXString )
-        xcheckbt.grid(row=0, column=2, sticky=W)
         xcheckbt.pack(side=LEFT)
         sframe3c = Frame( frame3 )
         sframe3c.pack(side=TOP)
         xaxislab = Label(sframe3c, text="X Axis ", style= "A10B.TLabel")
-        xaxislab.grid(row=0, column=0, sticky=W)
         xaxislab.pack(side=LEFT)
         xaxisentry = Entry(sframe3c, width=3)
-        xaxisentry.grid(row=0, column=1, sticky=W)
         xaxisentry.pack(side=LEFT)
         xaxisentry.delete(0,"end")
         xaxisentry.insert(0, MathXAxis)
         xapplybt = Button(sframe3c, text="Apply", command=ApplyMathXString )
-        xapplybt.grid(row=0, column=3, sticky=W)
         xapplybt.pack(side=LEFT)
         # 
         # Math trace formula sub frame4
@@ -1844,38 +1909,30 @@ def NewEnterMathControls():
         sframe4a = Frame( frame4 )
         sframe4a.pack(side=TOP)
         yformlab = Label(sframe4a, text="Y Formula ", style= "A10B.TLabel")
-        yformlab.grid(row=0, column=0, sticky=W)
         yformlab.pack(side=LEFT)
-        yformentry = Entry(sframe4a, width=20)
-        yformentry.grid(row=0, column=1, sticky=W)
+        yformentry = Entry(sframe4a, width=23)
         yformentry.pack(side=LEFT)
         yformentry.delete(0,"end")
         yformentry.insert(0,MathYString)
         sframe4b = Frame( frame4 )
         sframe4b.pack(side=TOP)
         yunitslab = Label(sframe4b, text="Y Units ", style= "A10B.TLabel")
-        yunitslab.grid(row=0, column=0, sticky=W)
         yunitslab.pack(side=LEFT)
         yunitsentry = Entry(sframe4b, width=6)
-        yunitsentry.grid(row=0, column=1, sticky=W)
         yunitsentry.pack(side=LEFT)
         yunitsentry.delete(0,"end")
         yunitsentry.insert(0,MathYUnits)
         ycheckbt = Button(sframe4b, text="Check", command=CheckMathYString )
-        ycheckbt.grid(row=0, column=2, sticky=W)
         ycheckbt.pack(side=LEFT)
         sframe4c = Frame( frame4 )
         sframe4c.pack(side=TOP)
         yaxislab = Label(sframe4c, text="Y Axis ", style= "A10B.TLabel")
-        yaxislab.grid(row=0, column=0, sticky=W)
         yaxislab.pack(side=LEFT)
         yaxisentry = Entry(sframe4c, width=3)
-        yaxisentry.grid(row=0, column=1, sticky=W)
         yaxisentry.pack(side=LEFT)
         yaxisentry.delete(0,"end")
         yaxisentry.insert(0,MathYAxis)
         yapplybt = Button(sframe4c, text="Apply", command=ApplyMathYString )
-        yapplybt.grid(row=0, column=3, sticky=W)
         yapplybt.pack(side=LEFT)
 
         dismissbutton = Button(MathWindow, text="Dismiss", command=DestroyMathScreen)
@@ -2255,7 +2312,8 @@ def Bcloseexit():
 ## Start aquaring scope time data
 def BStart():
     global RUNstatus, PowerStatus, devx, PwrBt, DevID, FWRevOne, session, AWGSync
-    global contloop, discontloop
+    global contloop, discontloop, TIMEdiv, First_Slow_sweep
+    
     if DevID == "No Device":
         showwarning("WARNING","No Device Plugged In!")
     elif FWRevOne == 0.0:
@@ -2300,6 +2358,10 @@ def BStart():
                     session.end() # end continuous session mode
                     
     # UpdateTimeScreen()          # Always Update
+    if TIMEdiv >= 100:
+        First_Slow_sweep = 0
+    else:
+        First_Slow_sweep = 1
 #$ Start running Ohmmeter tool
 def BStartOhm():
     global session, AWGSync
@@ -2837,43 +2899,12 @@ def Ohm_Analog_In():
     devx.ctrl_transfer(0x40, 0x51, 38, 0, 0, 0, 100) # set CHB GND switch to open
 ## Scope time main loop
 # Read the analog data and store the data into the arrays
-def Analog_Time_In():   
-    global ADsignal1, VBuffA, VBuffB, IBuffA, IBuffB, VFilterA, VFilterB
-    global VmemoryA, VmemoryB, ImemoryA, ImemoryB
-    global AWGSync, AWGAMode, AWGBMode, TMsb, HoldOff, HoldOffentry, HozPoss, HozPossentry
-    global AWGAIOMode, AWGBIOMode, DecimateOption, DualMuxMode, MuxChan
-    global TRACEresetTime, TRACEmodeTime, TRACEaverage, TRIGGERsample, TgInput, LShift
-    global CHA, CHB, session, devx, discontloop, contloop
-    global TRACES, TRACESread, TRACEsize
-    global RUNstatus, SingleShot, ManualTrigger, TimeDisp, XYDisp, FreqDisp
-    global TIMEdiv1x, TIMEdiv, hldn, Is_Triggered
-    global SAMPLErate, SHOWsamples, MinSamples, MaxSamples, AWGSAMPLErate
-    global TRACErefresh, AWGScreenStatus, XYScreenStatus, MeasureStatus
-    global SCREENrefresh, DCrefresh
-    global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
-    global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2
-    global SV1, SI1, SV2, SI2, SVA_B
-    global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry
-    global CHAVPosEntry, CHAIPosEntry, CHBVPosEntry, CHBIPosEntry
-    global CHAIGainEntry, CHBIGainEntry, CHAIOffsetEntry, CHBIOffsetEntry
+def Analog_Time_In():
+    global TIMEdiv, TMsb
+    global CHAVOffsetEntry, CHAVGainEntry, CHBVOffsetEntry, CHBVGainEntry
+    global CHAIOffsetEntry, CHBIOffsetEntry, CHAIGainEntry, CHBIGainEntry
     global InOffA, InGainA, InOffB, InGainB
-    global DigFiltA, DigFiltB, DFiltACoef, DFiltBCoef, DigBuffA, DigBuffB
-    global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
-    global CHA_A1, CHA_A2, CHB_A1, CHB_A2
-    global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
-    global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
-    global VAets, VBets, Samples_Cycle, MulX, ETSDisp, ETSDir, ETSts, Fmin, FminE, eqivsamplerate
-    global DivXEntry, FOffEntry, FminDisp, FOff, DivX, FminEntry, FBase, MaxETSrecord
-    global cal, Two_X_Sample, ADC_Mux_Mode, Alternate_Sweep_Mode, Last_ADC_Mux_Mode
-    global MeasGateLeft, MeasGateRight, MeasGateNum, MeasGateStatus
-    global VBuffMA, VBuffMB, VBuffMC, VBuffMD, DualMuxMode
-    global VmemoryMuxA, VmemoryMuxB, VmemoryMuxC, VmemoryMuxD
-    global Show_CBA, Show_CBB, Show_CBC, Show_CBD
-    global DCVMuxA, MinVMuxA, MaxVMuxA, MidVMuxA, PPVMuxA, SVMuxA
-    global DCVMuxB, MinVMuxB, MaxVMuxB, MidVMuxB, PPVMuxB, SVMuxB
-    global DCVMuxC, MinVMuxC, MaxVMuxC, MidVMuxC, PPVMuxC, SVMuxC
-    global DCVMuxD, MinVMuxD, MaxVMuxD, MidVMuxD, PPVMuxD, SVMuxD
-    global PIO_0, PIO_1, PIO_2, PIO_3, PIO_4, PIO_5, PIO_6, PIO_7
+    global CurOffA, CurOffB, CurGainA, CurGainB
 
     # get time scale
     try:
@@ -2885,17 +2916,6 @@ def Analog_Time_In():
     if TIMEdiv < 0.0002:
         TIMEdiv = 0.01
     #
-    if TRACEmodeTime.get() == 0 and TRACEresetTime == False:
-        TRACEresetTime = True               # Clear the memory for averaging
-    elif TRACEmodeTime.get() == 1:
-        if TRACEresetTime == True:
-            TRACEresetTime = False
-        # Save previous trace in memory for average trace
-        VmemoryA = VBuffA
-        VmemoryB = VBuffB
-        ImemoryA = IBuffA
-        ImemoryB = IBuffB
-
 # Do input divider Calibration CH1VGain, CH2VGain, CH1VOffset, CH2VOffset
     try:
         InOffA = float(eval(CHAVOffsetEntry.get()))
@@ -2933,7 +2953,199 @@ def Analog_Time_In():
         CurGainB = float(CHBIGainEntry.get())
     except:
         CurGainB = 1.0
+# Dedecide which Fast or Slow sweep routine to call
+    if TIMEdiv > 500:
+        Analog_Slow_time()
+    else:
+        Analog_Fast_time()
+##
+# Right now this is a failed attempt to plot slow sweeps.
+def Analog_Slow_time():
+    global ADsignal1, VBuffA, VBuffB, IBuffA, IBuffB, VFilterA, VFilterB
+    global VmemoryA, VmemoryB, ImemoryA, ImemoryB
+    global AWGSync, AWGAMode, AWGBMode, TMsb, HoldOff, HoldOffentry, HozPoss, HozPossentry
+    global AWGAIOMode, AWGBIOMode, DecimateOption, DualMuxMode, MuxChan
+    global TRACEresetTime, TRACEmodeTime, TRACEaverage, TRIGGERsample, TgInput, LShift
+    global CHA, CHB, session, devx, discontloop, contloop
+    global TRACES, TRACESread, TRACEsize, First_Slow_sweep, ShiftPointer
+    global RUNstatus, SingleShot, ManualTrigger, TimeDisp, XYDisp, FreqDisp
+    global TIMEdiv1x, TIMEdiv, hldn, Is_Triggered
+    global SAMPLErate, SHOWsamples, MinSamples, MaxSamples, AWGSAMPLErate
+    global TRACErefresh, AWGScreenStatus, XYScreenStatus, MeasureStatus
+    global SCREENrefresh, DCrefresh
+    global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
+    global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2
+    global SV1, SI1, SV2, SI2, SVA_B
+    global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry
+    global CHAVPosEntry, CHAIPosEntry, CHBVPosEntry, CHBIPosEntry
+    global CHAIGainEntry, CHBIGainEntry, CHAIOffsetEntry, CHBIOffsetEntry
+    global InOffA, InGainA, InOffB, InGainB, CurOffA, CurOffB, CurGainA, CurGainB
+    global DigFiltA, DigFiltB, DFiltACoef, DFiltBCoef, DigBuffA, DigBuffB
+    global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
+    global CHA_A1, CHA_A2, CHB_A1, CHB_A2
+    global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
+    global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
+    global VAets, VBets, Samples_Cycle, MulX, ETSDisp, ETSDir, ETSts, Fmin, FminE, eqivsamplerate
+    global DivXEntry, FOffEntry, FminDisp, FOff, DivX, FMulXEntry, FBase, MaxETSrecord
+    global cal, Two_X_Sample, ADC_Mux_Mode, Alternate_Sweep_Mode, Last_ADC_Mux_Mode
+    global MeasGateLeft, MeasGateRight, MeasGateNum, MeasGateStatus
+    global VBuffMA, VBuffMB, VBuffMC, VBuffMD, DualMuxMode
+    global VmemoryMuxA, VmemoryMuxB, VmemoryMuxC, VmemoryMuxD
+    global Show_CBA, Show_CBB, Show_CBC, Show_CBD
+    global DCVMuxA, MinVMuxA, MaxVMuxA, MidVMuxA, PPVMuxA, SVMuxA
+    global DCVMuxB, MinVMuxB, MaxVMuxB, MidVMuxB, PPVMuxB, SVMuxB
+    global DCVMuxC, MinVMuxC, MaxVMuxC, MidVMuxC, PPVMuxC, SVMuxC
+    global DCVMuxD, MinVMuxD, MaxVMuxD, MidVMuxD, PPVMuxD, SVMuxD
+    global PIO_0, PIO_1, PIO_2, PIO_3, PIO_4, PIO_5, PIO_6, PIO_7
+
+    # Starting acquisition
+    DCVA0 = DCVB0 = DCIA0 = DCIB0= 0.0 # initalize measurment variable
+    #
+    NumSamples = 1 # int(SAMPLErate/TIMEdiv)
+    if First_Slow_sweep == 0:
+        BufferLen = TIMEdiv*12.0
+        VBuffA = numpy.ones(BufferLen)       
+        VBuffB = numpy.ones(BufferLen)
+        IBuffA = numpy.ones(BufferLen)       
+        IBuffB = numpy.ones(BufferLen)
+        First_Slow_sweep = 1
+    #
+    if AWGScreenStatus.get() == 1: # don't try to start AWG is AWG screen is closed
+        if AWGSync.get() > 0: # awg syn flag set so run in discontinuous mode
+            if discontloop > 0:
+                session.flush()
+            else:
+                discontloop = 1
+            BAWGEnab()
+            ADsignal1 = devx.get_samples(NumSamples) # get samples for both channel A and B
+            # waite to finish then return to open termination
+            devx.ctrl_transfer( 0x40, 0x51, 32, 0, 0, 0, 100) # set CHA 2.5 V switch to open
+            devx.ctrl_transfer( 0x40, 0x51, 33, 0, 0, 0, 100) # set CHA GND switch to open
+            devx.ctrl_transfer( 0x40, 0x51, 37, 0, 0, 0, 100) # set CHB 2.5 V switch to open
+            devx.ctrl_transfer( 0x40, 0x51, 38, 0, 0, 0, 100) # set CHB GND switch to open
+
+        else: # running in continuous mode
+            if session.continuous:
+                if MuxScreenStatus.get() > 0:
+                    devx.flush(-1, True)
+                    DummySamples = NumSamples*2
+                    if DummySamples < 10000:
+                        DummySamples = 10000
+                    ADsignal1 = devx.read(DummySamples, -1, True) # do dummy read if in analog mux mode
+                ADsignal1 = devx.read(NumSamples, -1, True) # get samples for both channel A and B
+    #
+    else:
+        ADsignal1 = devx.get_samples(NumSamples) # , True) # get samples for both channel A and B
+
+    # get_samples returns a list of values for voltage [0] and current [1]
+    for index in range(NumSamples): # calculate average
+        DCVA0 += ADsignal1[index][0][0] # Sum for average CA voltage 
+        DCVB0 += ADsignal1[index][1][0] # Sum for average CB voltage
+        DCIA0 += ADsignal1[index][0][1] # Sum for average CA current 
+        DCIB0 += ADsignal1[index][1][1] # Sum for average CB current
+    DCVA0 = DCVA0/(NumSamples) # calculate V average
+    DCVB0 = DCVB0/(NumSamples) # calculate V average
+    DCVA0 = (DCVA0 - InOffA) * InGainA
+    DCVB0 = (DCVB0 - InOffB) * InGainB
+    DCIA0 = DCIA0/(NumSamples) # calculate I average
+    DCIB0 = DCIB0/(NumSamples) # calculate I average
+    DCIA0 = DCIA0 * 1000 # convert to mA
+    DCIB0 = DCIB0 * 1000 # convert to mA
+    DCIA0 = (DCIA0 - CurOffA) * CurGainA
+    DCIB0 = (DCIB0 - CurOffB) * CurGainB
+# Shift in next new sample
+    VBuffA = shift_buffer(VBuffA, -1, DCVA0)
+    VBuffB = shift_buffer(VBuffB, -1, DCVB0)
+    IBuffA = shift_buffer(IBuffA, -1, DCIA0)
+    IBuffB = shift_buffer(IBuffB, -1, DCIB0)
+# Calculate measurement values
+    DCV1 = numpy.mean(VBuffA)
+    DCV2 = numpy.mean(VBuffB)
+    DCI1 = numpy.mean(IBuffA)
+    DCI2 = numpy.mean(IBuffB)
+# find min and max values
+    MinV1 = numpy.amin(VBuffA)
+    MaxV1 = numpy.amax(VBuffA)
+    MinV2 = numpy.amin(VBuffB)
+    MaxV2 = numpy.amax(VBuffB)
+    MinI1 = numpy.amin(IBuffA)
+    MaxI1 = numpy.amax(IBuffA)
+    MinI2 = numpy.amin(IBuffB)
+    MaxI2 = numpy.amax(IBuffB)
+# RMS value = square root of average of the data record squared
+    SV1 = numpy.sqrt(numpy.mean(numpy.square(VBuffA)))
+    SI1 = numpy.sqrt(numpy.mean(numpy.square(IBuffA)))
+    SV2 = numpy.sqrt(numpy.mean(numpy.square(VBuffB)))
+    SI2 = numpy.sqrt(numpy.mean(numpy.square(IBuffB)))
+    SVA_B = numpy.sqrt(numpy.mean(numpy.square(VBuffA-VBuffB)))
 #
+    if TimeDisp.get() > 0:
+        UpdateTimeAll()         # Update Data, trace and time screen
+    if XYDisp.get() > 0 and XYScreenStatus.get() > 0:
+        UpdateXYAll()         # Update Data, trace and XY screen
+    if MeasureStatus.get() > 0:
+        UpdateMeasureScreen()
+    if (RUNstatus.get() == 3) or (RUNstatus.get() == 4):
+        if RUNstatus.get() == 3:
+            RUNstatus.set(0)
+        if RUNstatus.get() == 4:          
+            RUNstatus.set(1)
+        if TimeDisp.get() > 0:
+            UpdateTimeScreen()
+        if XYDisp.get() > 0 and XYScreenStatus.get() > 0:
+            UpdateXYScreen()
+        # update screens
+##
+# routine for time scales faster than 500 mSec/Div
+def Analog_Fast_time():
+    global ADsignal1, VBuffA, VBuffB, IBuffA, IBuffB, VFilterA, VFilterB
+    global VmemoryA, VmemoryB, ImemoryA, ImemoryB
+    global AWGSync, AWGAMode, AWGBMode, TMsb, HoldOff, HoldOffentry, HozPoss, HozPossentry
+    global AWGAIOMode, AWGBIOMode, DecimateOption, DualMuxMode, MuxChan
+    global TRACEresetTime, TRACEmodeTime, TRACEaverage, TRIGGERsample, TgInput, LShift
+    global CHA, CHB, session, devx, discontloop, contloop, DeBugMode
+    global TRACES, TRACESread, TRACEsize
+    global RUNstatus, SingleShot, ManualTrigger, TimeDisp, XYDisp, FreqDisp
+    global TIMEdiv1x, TIMEdiv, hldn, Is_Triggered, Trigger_LPF_length, LPFTrigger
+    global SAMPLErate, SHOWsamples, MinSamples, MaxSamples, AWGSAMPLErate
+    global TRACErefresh, AWGScreenStatus, XYScreenStatus, MeasureStatus
+    global SCREENrefresh, DCrefresh, ETSrecord
+    global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
+    global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2
+    global SV1, SI1, SV2, SI2, SVA_B
+    global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry
+    global CHAVPosEntry, CHAIPosEntry, CHBVPosEntry, CHBIPosEntry
+    global CHAIGainEntry, CHBIGainEntry, CHAIOffsetEntry, CHBIOffsetEntry
+    global InOffA, InGainA, InOffB, InGainB, CurOffA, CurOffB, CurGainA, CurGainB
+    global DigFiltA, DigFiltB, DFiltACoef, DFiltBCoef, DigBuffA, DigBuffB
+    global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2, CHAI_RC_HP, CHBI_RC_HP
+    global CHA_A1, CHA_A2, CHB_A1, CHB_A2
+    global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
+    global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
+    global VAets, VBets, Samples_Cycle, MulX, ETSDisp, ETSDir, ETSts, Fmin, FminE, eqivsamplerate
+    global DivXEntry, FOffEntry, FminDisp, FOff, DivX, FMulXEntry, FBase, MaxETSrecord
+    global cal, Two_X_Sample, ADC_Mux_Mode, Alternate_Sweep_Mode, Last_ADC_Mux_Mode
+    global MeasGateLeft, MeasGateRight, MeasGateNum, MeasGateStatus
+    global VBuffMA, VBuffMB, VBuffMC, VBuffMD, DualMuxMode
+    global VmemoryMuxA, VmemoryMuxB, VmemoryMuxC, VmemoryMuxD
+    global Show_CBA, Show_CBB, Show_CBC, Show_CBD
+    global DCVMuxA, MinVMuxA, MaxVMuxA, MidVMuxA, PPVMuxA, SVMuxA
+    global DCVMuxB, MinVMuxB, MaxVMuxB, MidVMuxB, PPVMuxB, SVMuxB
+    global DCVMuxC, MinVMuxC, MaxVMuxC, MidVMuxC, PPVMuxC, SVMuxC
+    global DCVMuxD, MinVMuxD, MaxVMuxD, MidVMuxD, PPVMuxD, SVMuxD
+    global PIO_0, PIO_1, PIO_2, PIO_3, PIO_4, PIO_5, PIO_6, PIO_7
+
+    if TRACEmodeTime.get() == 0 and TRACEresetTime == False:
+        TRACEresetTime = True               # Clear the memory for averaging
+    elif TRACEmodeTime.get() == 1:
+        if TRACEresetTime == True:
+            TRACEresetTime = False
+        # Save previous trace in memory for average trace
+        VmemoryA = VBuffA
+        VmemoryB = VBuffB
+        ImemoryA = IBuffA
+        ImemoryB = IBuffB
+
     try:
         HoldOff = float(eval(HoldOffentry.get()))
         if HoldOff < 0:
@@ -2984,10 +3196,11 @@ def Analog_Time_In():
             FOff = FOff + 5
             MulX = (DivX*SAMPLErate)/(100*FOff)
         FOff = 0 - FOff
-        SRstring = "Rec Len Mul = "  + str(MulX) + " samples"
-        MulXEntry.config(text = SRstring) # change displayed value
-        SRstring = "Offset = "  + str(FOff) + " samples"
-        FOffEntry.config(text = SRstring) # change displayed value
+        if DeBugMode > 0:
+            SRstring = "Rec Len Mul = "  + str(MulX) + " samples"
+            MulXEntry.config(text = SRstring) # change displayed value
+            SRstring = "Offset = "  + str(FOff) + " samples"
+            FOffEntry.config(text = SRstring) # change displayed value
         SHOWsamples = int(MulX * 100)
     else:       
         SHOWsamples = twoscreens + hldn + hozpos
@@ -3008,16 +3221,13 @@ def Analog_Time_In():
             else:
                 discontloop = 1
             time.sleep(0.01)
-            # print "just before awg enable"
             BAWGEnab()
-            # print "just before get samples"
             ADsignal1 = devx.get_samples(SHOWsamples) # get samples for both channel A and B
             # waite to finish then return to open termination
             devx.ctrl_transfer( 0x40, 0x51, 32, 0, 0, 0, 100) # set CHA 2.5 V switch to open
             devx.ctrl_transfer( 0x40, 0x51, 33, 0, 0, 0, 100) # set CHA GND switch to open
             devx.ctrl_transfer( 0x40, 0x51, 37, 0, 0, 0, 100) # set CHB 2.5 V switch to open
             devx.ctrl_transfer( 0x40, 0x51, 38, 0, 0, 0, 100) # set CHB GND switch to open
-            # time.sleep(1000.0/SHOWsamples)
         else: # running in continuous mode
             if session.continuous:
                 if MuxScreenStatus.get() > 0:
@@ -3030,7 +3240,6 @@ def Analog_Time_In():
     #
     else:
         ADsignal1 = devx.get_samples(SHOWsamples) # , True) # get samples for both channel A and B
-        # time.sleep(0.01)
         # waite to finish then return to open termination
         devx.ctrl_transfer( 0x40, 0x51, 32, 0, 0, 0, 100) # set CHA 2.5 V switch to open
         devx.ctrl_transfer( 0x40, 0x51, 33, 0, 0, 0, 100) # set CHA GND switch to open
@@ -3193,30 +3402,24 @@ def Analog_Time_In():
             FMul = float(eval(FminEntry.get()))
             if FMul < 1:
                 FMul = 1
-                FminEntry.delete(0,END)
-                FminEntry.insert(0, int(FMul))
+                FMulXEntry.delete(0,END)
+                FMulXEntry.insert(0, int(FMul))
             if FMul > 75:
                 FMul = 75
-                FminEntry.delete(0,END)
-                FminEntry.insert(0, int(FMul))
+                FMulXEntry.delete(0,END)
+                FMulXEntry.insert(0, int(FMul))
         except:
-            FminEntry.delete(0,END)
-            FminEntry.insert(0, int(FMul))
+            FMulXEntry.delete(0,END)
+            FMulXEntry.insert(0, int(FMul))
         Fmin = baseFreq * FMul
         FminE = float(SAMPLErate + FOff)
         Samples_Cycle = SAMPLErate/FminE # calculate number of samples per cycle
         # length of record set my Multiplcation factor
         tot_cycles = int((MulX*100)/Samples_Cycle)
         tot_cycles = tot_cycles + 0.1 # number of cycles in record length
+        ETSrecord = int((MulX*50)/Samples_Cycle)
         if tot_cycles > SHOWsamples:
             tot_cycles = SHOWsamples-1
-        #
-        SRstring = "Multiplied Freq = "  + ' {0:.1f} '.format(Fmin) + " Hz"
-        #
-        FminDisp.config(text = SRstring) # change displayed value
-        #
-        SRstring = "Base Frequency = "  + ' {0:.2f} '.format(baseFreq) + " Hz"
-        eqivsamplerate.config(text = SRstring) # change displayed value
         # now sort RT data into ETS sample buffers
         while index < SHOWsamples:
             Ipart, Dpart = divmod( index*Samples_Cycle, 1)
@@ -3258,7 +3461,7 @@ def Analog_Time_In():
             IBuffB = numpy.roll(IBuffB, TimeCorrection)
         SHOWsamples = twoscreens + hldn + hozpos
 # Check if Input channel RC high pass compensation checked
-    if CHA_RC_HP.get() == 1:
+    if CHA_RC_HP.get() == 1 or CHAI_RC_HP.get() == 1:
         try:
             TC1A = float(cha_TC1Entry.get())
             if TC1A < 0:
@@ -3285,9 +3488,13 @@ def Analog_Time_In():
         except:
             Gain2A = CHA_A2.get()
         #
-        VBuffA = Digital_RC_High_Pass( VBuffA, TC1A, Gain1A )
-        VBuffA = Digital_RC_High_Pass( VBuffA, TC2A, Gain2A )
-    if CHB_RC_HP.get() == 1:
+        if len(VBuffA) > 4:
+            VBuffA = Digital_RC_High_Pass( VBuffA, TC1A, Gain1A )
+            VBuffA = Digital_RC_High_Pass( VBuffA, TC2A, Gain2A )
+            if CHAI_RC_HP.get() == 1:
+                IBuffA = Digital_RC_High_Pass( IBuffA, TC1A, Gain1A )
+                #IBuffA = Digital_RC_High_Pass( IBuffA, TC2A, Gain2A )
+    if CHB_RC_HP.get() == 1 or CHBI_RC_HP.get() == 1:
         try:
             TC1B = float(chb_TC1Entry.get())
             if TC1B < 0:
@@ -3314,8 +3521,12 @@ def Analog_Time_In():
         except:
             Gain2B = CHB_A2.get()
         #
-        VBuffB = Digital_RC_High_Pass( VBuffB, TC1B, Gain1B )
-        VBuffB = Digital_RC_High_Pass( VBuffB, TC2B, Gain2B )
+        if len(VBuffB) > 4:
+            VBuffB = Digital_RC_High_Pass( VBuffB, TC1B, Gain1B )
+            VBuffB = Digital_RC_High_Pass( VBuffB, TC2B, Gain2B )
+            if CHBI_RC_HP.get() == 1:
+                IBuffB = Digital_RC_High_Pass( IBuffB, TC1B, Gain1B )
+                #IBuffB = Digital_RC_High_Pass( IBuffB, TC2B, Gain2B )
 # check if digital filter box checked
     if DigFiltA.get() == 1:
         if len(DFiltACoef) > 1:
@@ -3373,6 +3584,8 @@ def Analog_Time_In():
         if (MeasGateRight-MeasGateLeft) > 0:
             hldn = int(MeasGateLeft * SAMPLErate/1000) + TRIGGERsample
             Endsample = int(MeasGateRight * SAMPLErate/1000) + TRIGGERsample
+            if Endsample <= hldn:
+                Endsample = hldn + 2
     DCV1 = numpy.mean(VBuffA[hldn:Endsample])
     DCV2 = numpy.mean(VBuffB[hldn:Endsample])
     # convert current values to mA
@@ -3405,7 +3618,6 @@ def Analog_Time_In():
     if MuxChan > -1:
         Dval0 = devx.ctrl_transfer( 0xc0, 0x91, PIO_4, 0, 0, 1, 100)
         Dval1 = devx.ctrl_transfer( 0xc0, 0x91, PIO_5, 0, 0, 1, 100)
-        #print Dval0[0], Dval1[0], MuxChan
         if Show_CBA.get() == 1 and Dval0[0] == 0 and Dval1[0] == 0:
             DCVMuxA = DCV2
             MinVMuxA = MinV2
@@ -3462,14 +3674,12 @@ def Analog_Time_In():
     if XYDisp.get() > 0 and XYScreenStatus.get() > 0:
         UpdateXYAll()         # Update Data, trace and XY screen
     if SingleShot.get() > 0 and Is_Triggered == 1: # Singel Shot trigger is on
-        BStop() # RUNstatus.set(0)
+        BStop() # 
         SingleShot.set(0)
     if ManualTrigger.get() == 1: # Manual trigger is on
-        BStop() # RUNstatus.set(0)
+        BStop() # 
     if MeasureStatus.get() > 0:
         UpdateMeasureScreen()
-    # RUNstatus = 3: Stop
-    # RUNstatus = 4: Stop and restart
     if (RUNstatus.get() == 3) or (RUNstatus.get() == 4):
         if RUNstatus.get() == 3:
             RUNstatus.set(0)
@@ -3479,13 +3689,13 @@ def Analog_Time_In():
             UpdateTimeScreen()
         if XYDisp.get() > 0 and XYScreenStatus.get() > 0:
             UpdateXYScreen()
-        # Update tasks and screens by TKinter
         # update screens
 #
 # High Pass y[n] = alpha * (y[n-1] + x[n] - x[n-1])
 #  Low Pass y[n] = y[n-1] + (alpha * ((x[n] - x[n-1]))
 #  All Pass y[n] = alpha * y[n-1] - alpha * (x[n] + x[n-1])
 #  All Pass y[n] = alpha * (y[n-1] - x[n] - x[n-1])
+
 ## Digital filter function for input divider frequency compensation
 # TC1 is in micro seconds
 def Digital_RC_High_Pass( InBuff, TC1, Gain ): 
@@ -3522,6 +3732,22 @@ def Digital_RC_Low_Pass( InBuff, TC1, Gain ): # TC1 is in micro seconds
     OutBuff = numpy.array(OutBuff)
     OutBuff = (OutBuff * Gain)
     return OutBuff
+##
+# Function to left (-num) or right (+num) shift buffer and fill with a value
+# returns same length buffer
+# preallocate empty array and assign slice
+def shift_buffer(arr, num, fill_value=numpy.nan):
+    result = numpy.empty_like(arr)
+    if num > 0:
+        result[:num] = fill_value
+        result[num:] = arr[:-num]
+    elif num < 0:
+        result[num:] = fill_value
+        result[:num] = arr[-num:]
+    else:
+        result[:] = arr
+    return result
+
 ## Main SA and Bode loop
 # Read from the stream and store the data into the arrays
 def Analog_Freq_In():   
@@ -3882,7 +4108,7 @@ def BHistAsPercent():
 ## Routine to find rising edge of traces
 def FindRisingEdge(Trace1, Trace2):
     global MinV1, MaxV1, MinV2, MaxV2, HoldOff, TRIGGERsample, TgInput, LShift
-    # global VBuffA, VBuffB
+    global ETSrecord, DISsamples
     global SHOWsamples, SAMPLErate, CHAperiod, CHAfreq, CHBperiod, CHBfreq
     global CHAHW, CHALW, CHADCy, CHBHW, CHBLW, CHBDCy, ShowC1_V, ShowC2_V
     global CHABphase, CHBADelayR1, CHBADelayR2, CHBADelayF
@@ -3891,6 +4117,7 @@ def FindRisingEdge(Trace1, Trace2):
     anf1 = bnf1 = 1
     anr2 = bnr2 = 2
     hldn = int(HoldOff * SAMPLErate/1000)
+    # print(DISsamples, len(Trace1))
     if TgInput.get() > 0: # if triggering right shift arrays to undo trigger left shift
         Trace1 = numpy.roll(Trace1, -LShift)
         Trace2 = numpy.roll(Trace2, -LShift)
@@ -3904,6 +4131,13 @@ def FindRisingEdge(Trace1, Trace2):
         MidV1 = (MinV1+MaxV1)/2
         MidV2 = (MinV2+MaxV2)/2
 # search Trace 1
+##    if ETSDisp.get() > 0:
+##        # print(ETSrecord, len(Trace1))
+##        Arising = [i for (i, val) in enumerate(Trace1[:ETSrecord]) if val >= MidV1 and Trace1[i-1] < MidV1]
+##        Afalling = [i for (i, val) in enumerate(Trace1[:ETSrecord]) if val <= MidV1 and Trace1[i-1] > MidV1]
+##        AIrising = [i - (Trace1[i] - MidV1)/(Trace1[i] - Trace1[i-1]) for i in Arising]
+##        AIfalling = [i - (MidV1 - Trace1[i])/(Trace1[i-1] - Trace1[i]) for i in Afalling]
+##    else:
     Arising = [i for (i, val) in enumerate(Trace1) if val >= MidV1 and Trace1[i-1] < MidV1]
     Afalling = [i for (i, val) in enumerate(Trace1) if val <= MidV1 and Trace1[i-1] > MidV1]
     AIrising = [i - (Trace1[i] - MidV1)/(Trace1[i] - Trace1[i-1]) for i in Arising]
@@ -3911,6 +4145,11 @@ def FindRisingEdge(Trace1, Trace2):
     
     CHAfreq = SAMPLErate / numpy.mean(numpy.diff(AIrising))
     CHAperiod = (numpy.mean(numpy.diff(AIrising)) * 1000.0) / SAMPLErate # time in mSec
+# Catch zero length array?
+    try:
+        Dummy_read = Arising[0]
+    except:
+        return
     if len(Arising) > 0 or len(Afalling) > 0:
         if Arising[0] > 0:
             try:
@@ -3945,13 +4184,25 @@ def FindRisingEdge(Trace1, Trace2):
             except:
                 anf1 = 1
 # search Trace 2
+##    if ETSDisp.get() > 0:
+##        #endsample = ETSrecord
+##        Brising = [i for (i, val) in enumerate(Trace2[:ETSrecord]) if val >= MidV2 and Trace2[i-1] < MidV2]
+##        Bfalling = [i for (i, val) in enumerate(Trace2[:ETSrecord]) if val <= MidV2 and Trace2[i-1] > MidV2]
+##        BIrising = [i - (Trace2[i] - MidV2)/(Trace2[i] - Trace2[i-1]) for i in Brising]
+##        BIfalling = [i - (MidV2 - Trace2[i])/(Trace2[i-1] - Trace2[i]) for i in Bfalling]
+##    else:
     Brising = [i for (i, val) in enumerate(Trace2) if val >= MidV2 and Trace2[i-1] < MidV2]
     Bfalling = [i for (i, val) in enumerate(Trace2) if val <= MidV2 and Trace2[i-1] > MidV2]
     BIrising = [i - (Trace2[i] - MidV2)/(Trace2[i] - Trace2[i-1]) for i in Brising]
     BIfalling = [i - (MidV2 - Trace2[i])/(Trace2[i-1] - Trace2[i]) for i in Bfalling]
-    
+
     CHBfreq = SAMPLErate / numpy.mean(numpy.diff(BIrising))
     CHBperiod = (numpy.mean(numpy.diff(BIrising)) * 1000.0) / SAMPLErate # time in mSec
+# Catch zero length array?
+    try:
+        Dummy_read = Brising[0]
+    except:
+        return
     if len(Brising) > 0 or len(Bfalling) > 0:
         if Brising[0] > 0:
             try:
@@ -4020,11 +4271,19 @@ def ReInterploateTrigger(TrgBuff):
 def FindTriggerSample(TrgBuff): # find trigger time sample point of passed waveform array
     global AutoLevel, TgInput, TRIGGERlevel, TRIGGERentry, DX, SAMPLErate, Is_Triggered
     global HoldOffentry, HozPossentry, TRIGGERsample, TRACEsize, HozPoss, hozpos
+    global Trigger_LPF_length, LPFTrigger
     
     # Set the TRACEsize variable
     TRACEsize = SHOWsamples               # Set the trace length
     DX = 0
     Is_Triggered = 0
+    if LPFTrigger.get() > 0:
+        TFiltCoef = [] # empty coef array
+        for n in range(Trigger_LPF_length.get()):
+            TFiltCoef.append(float(1.0/Trigger_LPF_length.get()))
+        TFiltCoef = numpy.array(TFiltCoef)
+        TrgBuff = numpy.convolve(TrgBuff, TFiltCoef)
+        
     if len(TrgBuff) == 0:
         return
     try:
@@ -4425,7 +4684,7 @@ def UpdateXYScreen():
     MakeXYScreen()        # Update the screen
     root.update()       # Activate updated screens
 ## Make the scope time traces
-def MakeTimeTrace():    
+def MakeTimeTrace():
     global VBuffA, VBuffB, IBuffA, IBuffB
     global VBuffMA, VBuffMB, VBuffMC, VBuffMD, MuxScreenStatus
     global VmemoryA, VmemoryB, ImemoryA, ImemoryB
@@ -4449,10 +4708,11 @@ def MakeTimeTrace():
     global TMpdiv       # Array with time / div values in ms
     global TMsb         # Time per div spin box variable
     global TIMEdiv      # current spin box value
-    global SAMPLErate, SCstart, Two_X_Sample
+    global SAMPLErate, SCstart, Two_X_Sample, DISsamples
     global TRIGGERsample, TRACEsize, DX
     global TRIGGERlevel, TRIGGERentry, AutoLevel
     global InOffA, InGainA, InOffB, InGainB
+    global CurOffA, CurOffB, CurGainA, CurGainB
     global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
     global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2
     global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry
@@ -4473,13 +4733,7 @@ def MakeTimeTrace():
     Ymax = Y0T + GRH            # Maximum position of time grid (bottom)
     Xmin = X0L                  # Minimum position of time grid (left)
     Xmax = X0L + GRW            # Maximum position of time grid (right)
-    # get time scale
-    try:
-        TIMEdiv = float(eval(TMsb.get()))
-    except:
-        TIMEdiv = 0.5
-        TMsb.delete(0,"end")
-        TMsb.insert(0,TIMEdiv)
+
     # prevent divide by zero error
     if TIMEdiv < 0.0002:
         TIMEdiv = 0.01
@@ -4576,44 +4830,6 @@ def MakeTimeTrace():
         TMDVline = []                   # V Trace line Mux channel D
         Tmathline = []                  # math trce line
         return() 
-
-    try:
-        InOffA = float(eval(CHAVOffsetEntry.get()))
-    except:
-        CHAVOffsetEntry.delete(0,END)
-        CHAVOffsetEntry.insert(0, InOffA)
-    try:
-        InGainA = float(eval(CHAVGainEntry.get()))
-    except:
-        CHAVGainEntry.delete(0,END)
-        CHAVGainEntry.insert(0, InGainA)
-    try:
-        InOffB = float(eval(CHBVOffsetEntry.get()))
-    except:
-        CHBVOffsetEntry.delete(0,END)
-        CHBVOffsetEntry.insert(0, InOffB)
-    try:
-        InGainB = float(eval(CHBVGainEntry.get()))
-    except:
-        CHBVGainEntry.delete(0,END)
-        CHBVGainEntry.insert(0, InGainB)
-# 
-    try:
-        CurOffA = float(CHAIOffsetEntry.get()) # leave in mA
-    except:
-        CurOffA = 0.0
-    try:
-        CurOffB = float(CHBIOffsetEntry.get()) # leave in mA
-    except:
-        CurOffB = 0.0
-    try:
-        CurGainA = float(CHAIGainEntry.get())
-    except:
-        CurGainA = 1.0
-    try:
-        CurGainB = float(CHBIGainEntry.get())
-    except:
-        CurGainB = 1.0
 
     # set and/or corrected for in range
     if TgInput.get() > 0:
@@ -5762,7 +5978,7 @@ def MakeTimeScreen():
     global Y0T          # Left top Y value
     global GRW          # Screenwidth
     global GRH          # Screenheight
-    global FontSize
+    global FontSize, EnableHSsampling, ETSDisp, MinigenScreenStatus
     global MouseX, MouseY, MouseWidget, MouseCAV, MouseCAI, MouseCBV, MouseCBI
     global MouseMuxA, MouseMuxB, MouseMuxC, MouseMuxD
     global ShowXCur, ShowYCur, TCursor, VCursor
@@ -5772,18 +5988,18 @@ def MakeTimeScreen():
     global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MathUnits, MathXUnits, MathYUnits
     global Xsignal, Ysignal, MathTrace, MathAxis, MathXAxis, MathYAxis
     global RUNstatus, SingleShot, ManualTrigger, session    # 0 stopped, 1 start, 2 running, 3 stop now, 4 stop and restart
-    global CHAsb        # spinbox Index for channel 1 V
-    global CHBsb        # spinbox Index for channel 2 V
-    global CHAOffset    # Offset value for channel 1 V
-    global CHBOffset    # Offset value for channel 2 V
-    global CHAIsb       # spinbox Index for channel 1 I
-    global CHBIsb       # spinbox Index for channel 2 I
-    global CHAIOffset   # Offset value for channel 1 I
-    global CHBIOffset   # Offset value for channel 2 I     
+    global CHAsb        # V range spinbox Index for channel 1
+    global CHBsb        # V range spinbox Index for channel 2
+    global CHAOffset    # Position value for channel 1 V
+    global CHBOffset    # Position value for channel 2 V
+    global CHAIsb       # I range spinbox Index for channel 1
+    global CHBIsb       # I range spinbox Index for channel 2
+    global CHAIOffset   # Postion value for channel 1 I
+    global CHBIOffset   # position value for channel 2 I     
     global TMpdiv       # Array with time / div values in ms
     global TMsb         # Time per div spin box variable
-    global TIMEdiv      # current spin box value
-    global SAMPLErate, contloop, discontloop
+    global TIMEdiv, Mulx, DISsamples      # current spin box value
+    global SAMPLErate, contloop, discontloop, HtMulEntry
     global TRIGGERsample, TRIGGERlevel, HoldOff, HoldOffentry, TgInput
     global COLORgrid, COLORzeroline, COLORtext, COLORtrigger, COLORtrace7, COLORtraceR7 # The colors
     global COLORtrace1, COLORtrace2, COLORtrace3, COLORtrace4, COLORtrace5, COLORtrace6
@@ -5793,7 +6009,9 @@ def MakeTimeScreen():
     global ScreenTrefresh, SmoothCurves, Is_Triggered
     global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2, CHAHW, CHALW, CHADCy, CHAperiod, CHAfreq
     global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2, CHBHW, CHBLW, CHBDCy, CHBperiod, CHBfreq
-        # Analog Mux channel measurement variables
+    global InOffA, InGainA, InOffB, InGainB
+    global CurOffA, CurOffB, CurGainA, CurGainB
+    # Analog Mux channel measurement variables
     global DCVMuxA, MinVMuxA, MaxVMuxA, MidVMuxA, PPVMuxA, SVMuxA
     global DCVMuxB, MinVMuxB, MaxVMuxB, MidVMuxB, PPVMuxB, SVMuxB
     global DCVMuxC, MinVMuxC, MaxVMuxC, MidVMuxC, PPVMuxC, SVMuxC
@@ -5822,37 +6040,9 @@ def MakeTimeScreen():
     #
     Ymin = Y0T                  # Minimum position of time grid (top)
     Ymax = Y0T + GRH            # Maximum position of time grid (bottom)
-    try:
-        InOffA = float(eval(CHAVOffsetEntry.get()))
-    except:
-        CHAVOffsetEntry.delete(0,END)
-        CHAVOffsetEntry.insert(0, InOffA)
-    try:
-        InGainA = float(eval(CHAVGainEntry.get()))
-    except:
-        CHAVGainEntry.delete(0,END)
-        CHAVGainEntry.insert(0, InGainA)
-    try:
-        InOffB = float(eval(CHBVOffsetEntry.get()))
-    except:
-        CHBVOffsetEntry.delete(0,END)
-        CHBVOffsetEntry.insert(0, InOffB)
-    try:
-        InGainB = float(eval(CHBVGainEntry.get()))
-    except:
-        CHBVGainEntry.delete(0,END)
-        CHBVGainEntry.insert(0, InGainB)
-    # get time scale
-    try:
-        TIMEdiv = eval(TMsb.get())
-    except:
-        TIMEdiv = 0.5
-        TMsb.delete(0,"end")
-        TMsb.insert(0,TIMEdiv)
-    if TIMEdiv < 0.0002:
-        TIMEdiv = 0.1
-    DISsamples = (10.0 * TIMEdiv) # grid width in time 
-    Tstep = DISsamples / GRW # time in mS per pixel
+
+    # DISsamples = (10.0 * TIMEdiv) # grid width in time 
+    Tstep = (10.0 * TIMEdiv) / GRW # time in mS per pixel
     # get the vertical ranges
     try:
         CH1pdvRange = float(eval(CHAsb.get()))
@@ -5902,6 +6092,18 @@ def MakeTimeScreen():
     except:
         HoldOffentry.delete(0,END)
         HoldOffentry.insert(0, HoldOff)
+    if ETSDisp.get() > 0 or MinigenScreenStatus.get() > 0:
+        try:
+            Mulx = float(eval(HtMulEntry.get()))
+            if Mulx < 1:
+                Mulx = 1
+        except:
+            Mulx = 1
+            if EnableHSsampling > 0:
+                HtMulEntry.delete(0,END)
+                HtMulEntry.insert(0, 1)
+    else:
+        Mulx = 1
     # slide trace left right by HozPoss
     try:
         HozPoss = float(eval(HozPossentry.get()))
@@ -6053,7 +6255,9 @@ def MakeTimeScreen():
         y2 = Y0T + GRH
         mg_siz = GRH/10.0
         mg_inc = mg_siz/5.0
-        vx = TIMEdiv
+        vx = TIMEdiv/Mulx
+        vt = HoldOff/Mulx # invert sign and scale to mSec
+        # vx = TIMEdiv
         while (i < 11):
             x = X0L + i * GRW/10.0
             Dline = [x,y1,x,y2]
@@ -6070,25 +6274,25 @@ def MakeTimeScreen():
     #
                 if vx >= 1000:
                     axis_value = ((i * vx)+ vt) / 1000.0
-                    axis_label = str(int(axis_value)) + " S"
+                    axis_label = ' {0:.1f} '.format(axis_value) + " S"
                 if vx < 1000 and vx >= 1:
                     axis_value = (i * vx) + vt
-                    axis_label = str(int(axis_value)) + " mS"
+                    axis_label = ' {0:.1f} '.format(axis_value) + " mS"
                 if vx < 1:
                     axis_value = ((i * vx) + vt) * 1000.0
-                    axis_label = str(int(axis_value)) + " uS"
+                    axis_label = ' {0:.1f} '.format(axis_value) + " uS"
                 ca.create_text(x, y2+3, text=axis_label, fill=COLORgrid, anchor="n", font=("arial", FontSize ))
             else:
                 ca.create_line(Dline, fill=COLORgrid, width=GridWidth.get())
                 if vx >= 1000:
                     axis_value = ((i * vx)+ vt) / 1000.0
-                    axis_label = str(int(axis_value)) + " S"
+                    axis_label = ' {0:.1f} '.format(axis_value) + " S"
                 if vx < 1000 and vx >= 1:
                     axis_value = (i * vx) + vt
-                    axis_label = str(int(axis_value)) + " mS"
+                    axis_label = ' {0:.1f} '.format(axis_value) + " mS"
                 if vx < 1:
                     axis_value = ((i * vx) + vt) * 1000.0
-                    axis_label = str(int(axis_value)) + " uS"
+                    axis_label = ' {0:.1f} '.format(axis_value) + " uS"
                 ca.create_text(x, y2+3, text=axis_label, fill=COLORgrid, anchor="n", font=("arial", FontSize ))
                         
             i = i + 1
@@ -6172,11 +6376,16 @@ def MakeTimeScreen():
         Dline = [TCursor, Y0T, TCursor, Y0T+GRH]
         ca.create_line(Dline, dash=(4,3), fill=COLORgrid, width=GridWidth.get())
         Tpoint = ((TCursor-X0L) * Tstep) + vt
-        if TIMEdiv < 0.1:
-            TString = ' {0:.3f} '.format(Tpoint)
-        else:
-            TString = ' {0:.2f} '.format(Tpoint)
-        V_label = TString + " mS"
+        Tpoint = Tpoint/Mulx
+        if Tpoint >= 1000:
+            axis_value = Tpoint / 1000.0
+            V_label = ' {0:.2f} '.format(axis_value) + " S"
+        if Tpoint < 1000 and Tpoint >= 1:
+            axis_value = Tpoint
+            V_label = ' {0:.2f} '.format(axis_value) + " mS"
+        if Tpoint < 1:
+            axis_value = Tpoint * 1000.0
+            V_label = ' {0:.2f} '.format(axis_value) + " uS"
         ca.create_text(TCursor+1, VCursor-5, text=V_label, fill=COLORtext, anchor="w", font=("arial", FontSize ))
     if ShowVCur.get() > 0:
         Dline = [X0L, VCursor, X0L+GRW, VCursor]
@@ -6191,11 +6400,16 @@ def MakeTimeScreen():
             Dline = [MouseX, Y0T, MouseX, Y0T+GRH]
             ca.create_line(Dline, dash=(4,3), fill=COLORgrid, width=GridWidth.get())
             Tpoint = ((MouseX-X0L) * Tstep) + vt
-            if TIMEdiv < 0.1:
-                TString = ' {0:.3f} '.format(Tpoint)
-            else:
-                TString = ' {0:.2f} '.format(Tpoint)
-            V_label = TString + " mS"
+            Tpoint = Tpoint/Mulx
+            if Tpoint >= 1000:
+                axis_value = Tpoint / 1000.0
+                V_label = ' {0:.2f} '.format(axis_value) + " S"
+            if Tpoint < 1000 and Tpoint >= 1:
+                axis_value = Tpoint
+                V_label = ' {0:.2f} '.format(axis_value) + " mS"
+            if Tpoint < 1:
+                axis_value = Tpoint * 1000.0
+                V_label = ' {0:.2f} '.format(axis_value) + " uS"
             ca.create_text(MouseX+1, MouseY-5, text=V_label, fill=COLORtext, anchor="w", font=("arial", FontSize ))
             Dline = [X0L, MouseY, X0L+GRW, MouseY]
             ca.create_line(Dline, dash=(4,3), fill=COLORgrid, width=GridWidth.get())
@@ -6210,6 +6424,43 @@ def MakeTimeScreen():
         RightGate = X0L + MeasGateRight / Tstep
         ca.create_line(LeftGate, Y0T, LeftGate, Y0T+GRH, dash=(5,3), fill=COLORtrace5)
         ca.create_line(RightGate, Y0T, RightGate, Y0T+GRH, dash=(5,3), fill=COLORtrace7)
+        #
+        # TString = ' {0:.2f} '.format(Tpoint)
+        DT = (MeasGateRight-MeasGateLeft)/Mulx
+        if DT == 0.0:
+            DT = 1.0
+        if DT >= 1000:
+            axis_value = DT / 1000.0
+            DeltaT = ' {0:.2f} '.format(axis_value) + " S "
+        if DT < 1000 and DT >= 1:
+            axis_value = DT
+            DeltaT = ' {0:.2f} '.format(axis_value) + " mS "
+        if DT < 1:
+            axis_value = DT * 1000.0
+            DeltaT = ' {0:.2f} '.format(axis_value) + " uS "
+        # DeltaT = ' {0:.3f} '.format(Tpoint-PrevT)
+        DFreq = ' {0:.3f} '.format(1.0/DT)
+        V_label = " Delta T" + DeltaT
+        #V_label = V_label + Units
+        V_label = V_label + ", Freq " + DFreq + " KHz"
+        # place in upper left unless specified otherwise
+        x = X0L + 5
+        y = Y0T + 7
+        Justify = 'w'
+        if MarkerLoc == 'UR' or MarkerLoc == 'ur':
+            x = X0L + GRW - 5
+            y = Y0T + 7
+            Justify = 'e'
+        if MarkerLoc == 'LL' or MarkerLoc == 'll':
+            x = X0L + 5
+            y = Y0T + GRH + 7 - (MarkerNum*10)
+            Justify = 'w'
+        if MarkerLoc == 'LR' or MarkerLoc == 'lr':
+            x = X0L + GRW - 5
+            y = Y0T + GRH + 7
+            Justify = 'e'
+        ca.create_text(x, y, text=V_label, fill=COLORtrace5, anchor=Justify, font=("arial", FontSize ))
+        #
 #
     SmoothBool = SmoothCurves.get()
     # Write the traces if available
@@ -6319,48 +6570,73 @@ def MakeTimeScreen():
             ca.create_rectangle(x2-54, 6, x2-42, 18, fill="yellow")
         ca.create_text(x2-56, 12, text="Digital Inputs", anchor=E, fill=COLORtext)
     # Time sweep information and view at information
-    vx = TIMEdiv
+    vx = TIMEdiv/Mulx
     if vx >= 1000:
-        txt = str(int(vx/1000.0)) + " S/div"
+        txt = ' {0:.2f} '.format(vx / 1000.0) + " S/div"
     if vx < 1000 and vx >= 1:
-        txt = str(int(vx)) + " mS/div"
+        txt = ' {0:.2f} '.format(vx) + " mS/div"
     if vx < 1:
-        txt = str(int(vx * 1000.0)) + " uS/div"
+        txt = ' {0:.2f} '.format(vx * 1000.0) + " uS/div"
 
     txt = txt + "  "
     #
     txt = txt + "View at "
     if abs(vt) >= 1000:
-        txt = txt + str(vt / 1000.0) + " S "
+        txt = txt + str(int(vt / 1000.0)) + " S "
     if abs(vt) < 1000 and abs(vt) >= 1:
-        txt = txt + str(vt) + " mS "
+        txt = txt + str(int(vt)) + " mS "
     if abs(vt) < 1:
-        txt = txt + str(vt * 1000.0) + " uS "
+        txt = txt + str(int(vt * 1000.0)) + " uS "
     # print period and frequency of displayed channels
     if ShowC1_V.get() == 1 or ShowC2_V.get() == 1:
-        FindRisingEdge(VBuffA,VBuffB)
+        if ETSDisp.get() > 0:
+            FindRisingEdge(VBuffA[:int(DISsamples)],VBuffB[:int(DISsamples)])
+        else:
+            FindRisingEdge(VBuffA,VBuffB)
         if ShowC1_V.get() == 1:
             if MeasAHW.get() == 1:
-                txt = txt + " CA Hi Width = " + ' {0:.3f} '.format(CHAHW) + " mS "
+                txt = txt + " CA Hi Width = " + ' {0:.3f} '.format(CHAHW/Mulx) + " mS "
             if MeasALW.get() == 1:
-                txt = txt + " CA Lo Width = " + ' {0:.3f} '.format(CHALW) + " mS "
+                txt = txt + " CA Lo Width = " + ' {0:.3f} '.format(CHALW/Mulx) + " mS "
             if MeasADCy.get() == 1:
                 txt = txt + " CA DutyCycle = " + ' {0:.1f} '.format(CHADCy) + " % "
             if MeasAPER.get() == 1:
-                txt = txt + " CA Period = " + ' {0:.3f} '.format(CHAperiod) + " mS "
+                txt = txt + " CA Period = " + ' {0:.3f} '.format(CHAperiod/Mulx) + " mS "
             if MeasAFREQ.get() == 1:
-                txt = txt + " CA Freq = " + ' {0:.1f} '.format(CHAfreq) + " Hz "
+                txt = txt + " CA Freq = "
+                ChaF = CHAfreq*Mulx
+                if ChaF < 1000:
+                    V1String = ' {0:.1f} '.format(ChaF)
+                    txt = txt + str(V1String) + " Hz "
+                if ChaF > 1000 and ChaF < 1000000:
+                    V1String = ' {0:.1f} '.format(ChaF/1000)
+                    txt = txt + str(V1String) + " KHz "
+                if ChaF > 1000000:
+                    V1String = ' {0:.1f} '.format(ChaF/1000000)
+                    txt = txt + str(V1String) + " MHz "
+                #txt = txt + " CA Freq = " + ' {0:.1f} '.format(CHAfreq) + " Hz "
         if ShowC2_V.get() == 1:
             if MeasBHW.get() == 1:
-                txt = txt + " CB Hi Width = " + ' {0:.3f} '.format(CHBHW) + " mS "
+                txt = txt + " CB Hi Width = " + ' {0:.3f} '.format(CHBHW/Mulx) + " mS "
             if MeasBLW.get() == 1:
-                txt = txt + " CB Lo Width = " + ' {0:.3f} '.format(CHBLW) + " mS "
+                txt = txt + " CB Lo Width = " + ' {0:.3f} '.format(CHBLW/Mulx) + " mS "
             if MeasBDCy.get() == 1:
                 txt = txt + " CB DutyCycle = " + ' {0:.1f} '.format(CHBDCy) + " % "
             if MeasBPER.get() == 1:
-                txt = txt + " CB Period = " + ' {0:.3f} '.format(CHBperiod) + " mS "
+                txt = txt + " CB Period = " + ' {0:.3f} '.format(CHBperiod/Mulx) + " mS "
             if MeasBFREQ.get() == 1:
-                txt = txt + " CB Freq = " + ' {0:.1f} '.format(CHBfreq) + " Hz "
+                txt = txt + " CB Freq = "
+                ChaF = CHBfreq*Mulx
+                if ChaF < 1000:
+                    V1String = ' {0:.1f} '.format(ChaF)
+                    txt = txt + str(V1String) + " Hz "
+                if ChaF > 1000 and ChaF < 1000000:
+                    V1String = ' {0:.1f} '.format(ChaF/1000)
+                    txt = txt + str(V1String) + " KHz "
+                if ChaF > 1000000:
+                    V1String = ' {0:.1f} '.format(ChaF/1000000)
+                    txt = txt + str(V1String) + " MHz "
+                #txt = txt + " CB Freq = " + ' {0:.1f} '.format(CHBfreq) + " Hz "
         if MuxScreenStatus.get() == 0:
             if MeasPhase.get() == 1:
                 txt = txt + " CA-B Phase = " + ' {0:.1f} '.format(CHABphase) + " deg "
@@ -7536,7 +7812,7 @@ def onCanvasClickLeft(event):
     global GRW          # Screenwidth
     global GRH          # Screenheight
     global FontSize
-    global ca, MarkerLoc
+    global ca, MarkerLoc, Mulx
     global HoldOffentry, Xsignal, Ysignal, COLORgrid, COLORtext
     global TMsb, CHAsb, CHBsb, CHAIsb, CHBIsb, MarkerScale
     global CHAVPosEntry, CHAIPosEntry, CHBVPosEntry, CHBIPosEntry
@@ -7719,25 +7995,46 @@ def onCanvasClickLeft(event):
         # draw X at marker point and number
         ca.create_line(event.x-4, event.y-4,event.x+4, event.y+5, fill=COLORtext)
         ca.create_line(event.x+4, event.y-4,event.x-4, event.y+5, fill=COLORtext)
-        DISsamples = (10.0 * TIMEdiv) # grid width in time 
-        Tstep = DISsamples / GRW # time in mS per pixel
+        # DISsamples = (10.0 * TIMEdiv) # grid width in time 
+        Tstep = (10.0 * TIMEdiv) / GRW # time in mS per pixel
         Tpoint = ((event.x-X0L) * Tstep) + HoldOff
-        TString = ' {0:.2f} '.format(Tpoint)
+        #
+        Tpoint = Tpoint/Mulx
+        if Tpoint >= 1000:
+            axis_value = Tpoint / 1000.0
+            TString = ' {0:.2f} '.format(axis_value) + " S "
+        if Tpoint < 1000 and Tpoint >= 1:
+            axis_value = Tpoint
+            TString = ' {0:.2f} '.format(axis_value) + " mS "
+        if Tpoint < 1:
+            axis_value = Tpoint * 1000.0
+            TString = ' {0:.2f} '.format(axis_value) + " uS "
+        # TString = ' {0:.2f} '.format(Tpoint)
         yvolts = ((event.y-c1)/Yconv1) - Yoffset1
         if MarkerScale.get() == 1 or MarkerScale.get() == 2:
             V1String = ' {0:.3f} '.format(-yvolts)
         else:
             V1String = ' {0:.1f} '.format(-yvolts)
-        V_label = str(MarkerNum) + " " + TString + " mS, " + V1String
+        V_label = str(MarkerNum) + " " + TString + V1String
         V_label = V_label + Units
         if MarkerNum > 1:
             if MarkerScale.get() == 1 or MarkerScale.get() == 2:
                 DeltaV = ' {0:.3f} '.format(PrevV-yvolts)
             else:
                 DeltaV = ' {0:.1f} '.format(PrevV-yvolts)
-            DeltaT = ' {0:.3f} '.format(Tpoint-PrevT)
+            DT = (Tpoint-PrevT)
+            if Tpoint >= 1000:
+                axis_value = DT / 1000.0
+                DeltaT = ' {0:.2f} '.format(axis_value) + " S "
+            if Tpoint < 1000 and Tpoint >= 1:
+                axis_value = DT
+                DeltaT = ' {0:.2f} '.format(axis_value) + " mS "
+            if Tpoint < 1:
+                axis_value = DT * 1000.0
+                DeltaT = ' {0:.2f} '.format(axis_value) + " uS "
+            # DeltaT = ' {0:.3f} '.format(Tpoint-PrevT)
             DFreq = ' {0:.3f} '.format(1.0/(Tpoint-PrevT))
-            V_label = V_label + " Delta " + DeltaT + " mS, " + DeltaV
+            V_label = V_label + " Delta " + DeltaT + DeltaV
             V_label = V_label + Units
             V_label = V_label + ", Freq " + DFreq + " KHz"
         # place in upper left unless specified otherwise
@@ -7762,8 +8059,8 @@ def onCanvasClickLeft(event):
         PrevT = Tpoint
     else:
         if MeasGateStatus.get() == 1:
-            DISsamples = (10.0 * TIMEdiv) # grid width in time 
-            Tstep = DISsamples / GRW # time in mS per pixel
+            #DISsamples = (10.0 * TIMEdiv) # grid width in time 
+            Tstep = (10.0 * TIMEdiv) / GRW # time in mS per pixel
             if MeasGateNum == 0:
                 MeasGateLeft = ((event.x-X0L) * Tstep) #+ HoldOff
                 MeasGateNum = 1
@@ -14536,6 +14833,7 @@ def DestroyAWGScreen():
     
     # AWGScreenStatus.set(0)
     awgwindow.iconify()
+#
 # ===== Channel B Mux Mode sub Window =======
 def MakeMuxModeWindow():
     global MuxScreenStatus, muxwindow, RevDate, DacScreenStatus, DigScreenStatus
@@ -15346,7 +15644,7 @@ def XYcaresize(event):
     XmaxXY = X0LXY + GRWXY            # Maximum position of time grid (right)
     UpdateXYAll()
 #    
-# ================ Make spectrum sub window ==========================
+# ================ Make XY Plot sub window ==========================
 def MakeXYWindow():
     global logo, CANVASwidthXY, CANVASheightXY, Xsignal, Ysignal, ShowRXY
     global XYScreenStatus, MarkerXYScale, XYca, xywindow, RevDate, SWRev, XYDisp
@@ -16145,6 +16443,35 @@ def SPIShiftOut(DValue):
         devx.ctrl_transfer(0x40, 0x51, SCLKPort.get(), 0, 0, 0, 100) # sclk to 1
         i = i + 1
     devx.ctrl_transfer(0x40, 0x51, SLATCHPort.get(), 0, 0, 0, 100) # fsync to 1
+#
+def SetAD9833(temp):
+    global FminEntry, HtMulEntry, MinigenFout, MinigenMode, etssrlab, EnableMinigenMode # , Fclk, Fout
+    global Two28, mclk, EnableHSsampling, MinigenScreenStatus, ETSts, Two_X_Sample
+
+    #
+    if MinigenScreenStatus.get() == 0:
+        #SRstring = "ET Sample Rate = " + str(SAMPLErate*MulX)
+        #etssrlab.config(text=SRstring)
+        return
+    #
+    if EnableMinigenMode == 2:
+        MinigenMode.set(40)
+        #
+        try:
+            FminE = float(eval(FminEntry.get()))*1000
+        except:
+            if EnableHSsampling > 0:
+                FminEntry.delete(0,END)
+                FminEntry.insert(0, FminE/1000)
+        if MulX == 1:
+            Fmin = FminE
+        else:
+            Fmin = FminE - (FminE/MulX)
+         #
+        MinigenFout.delete(0,"end")
+        MinigenFout.insert(0,Fmin)
+    #
+    BSendMG()
 ##
 # Send serial data to DDS board
 def BSendMG():
@@ -16813,6 +17140,7 @@ def DestroyGenericSerialScreen():
 def MakeDigFiltWindow():
     global digfltwindow, DigFiltStatus, RevDate, SWRev
     global DigFiltA, DigFiltB, DifFiltALength, DifFiltBLength, DifFiltAFile, DifFiltBFile
+    global DigFiltABoxCar, DigFiltBBoxCar, BCALenEntry, BCBLenEntry
 
     if DigFiltStatus.get() == 0:
         DigFiltStatus.set(1)
@@ -16820,32 +17148,113 @@ def MakeDigFiltWindow():
         digfltwindow.title("Digital Filter " + SWRev + RevDate)
         digfltwindow.resizable(FALSE,FALSE)
         digfltwindow.protocol("WM_DELETE_WINDOW", DestroyDigFiltScreen)
-        titlab = Label(digfltwindow,text="Apply Digital Filters ", style="A12B.TLabel")
-        titlab.grid(row=0, column=0, sticky=W)
-        lab1 = Checkbutton(digfltwindow,text="Filter CH A", variable=DigFiltA)
-        lab1.grid(row=1, column=0, sticky=W)
-        DifFiltALength = Label(digfltwindow,text="Length = 0 ")
-        DifFiltALength.grid(row=2, column=0, sticky=W)
-        DifFiltAFile = Label(digfltwindow,text="File Name, none ")
-        DifFiltAFile.grid(row=3, column=0, sticky=W)
-        lab2 = Checkbutton(digfltwindow,text="Filter CH B", variable=DigFiltB)
-        lab2.grid(row=4, column=0, sticky=W)
-        DifFiltBLength = Label(digfltwindow,text="Length = 0 ")
-        DifFiltBLength.grid(row=5, column=0, sticky=W)
-        DifFiltBFile = Label(digfltwindow,text="File Name, none ")
-        DifFiltBFile.grid(row=6, column=0, sticky=W)
-        cald = Button(digfltwindow, text='Load CH A Filter Coef', command=BLoadDFiltA)
-        cald.grid(row=7, column=0, sticky=W)
-        camath = Button(digfltwindow, text='CH A Filter formula', command=BDFiltAMath)
-        camath.grid(row=8, column=0, sticky=W)
-        cbld = Button(digfltwindow, text='Load CH B Filter Coef', command=BLoadDFiltB)
-        cbld.grid(row=9, column=0, sticky=W)
-        cbmath = Button(digfltwindow, text='CH B Filter formula', command=BDFiltBMath)
-        cbmath.grid(row=10, column=0, sticky=W)
         #
-        dismissdfbutton = Button(digfltwindow, text="Dismiss", style="W8.TButton", command=DestroyDigFiltScreen)
-        dismissdfbutton.grid(row=11, column=0, columnspan=1, sticky=W, pady=4)
+        frame2 = LabelFrame(digfltwindow, text="CH A Filter", style="A10R1.TLabelframe")
+        frame3 = LabelFrame(digfltwindow, text="CH B Filter", style="A10R2.TLabelframe")
+        frame2.pack(side=LEFT, expand=1, fill=X)
+        frame3.pack(side=LEFT, expand=1, fill=X)
+        #
+        digfilta = Frame( frame2 )
+        digfilta.pack(side=TOP)
+        #titlab = Label(digfltwindow,text="Apply Digital Filters ", style="A12B.TLabel")
+        #titlab.grid(row=0, column=0, sticky=W)
+        lab1 = Checkbutton(digfilta,text="Filter CH A", variable=DigFiltA)
+        lab1.grid(row=0, column=0, columnspan=2, sticky=W)
+        lab3 = Checkbutton(digfilta,text="Box Car", variable=DigFiltABoxCar, command=BuildBoxCarA)
+        lab3.grid(row=1, column=0, sticky=W)
+        BCALenEntry = Entry(digfilta, width=3)
+        BCALenEntry.bind("<Return>", onRetDigFiltA)
+        BCALenEntry.bind('<MouseWheel>', onDigFiltAScroll)
+        # BCALenEntry.bind('<Key>', onTextKey)
+        BCALenEntry.grid(row=1, column=1, sticky=W)
+        BCALenEntry.delete(0,"end")
+        BCALenEntry.insert(0,2)
+        bcalab = Label(digfilta, text="Length")
+        bcalab.grid(row=1, column=2, sticky=W)
+        DifFiltALength = Label(digfilta, text="Length = 0 ")
+        DifFiltALength.grid(row=2, column=0, sticky=W)
+        DifFiltAFile = Label(digfilta, text="File Name, none ")
+        DifFiltAFile.grid(row=3, column=0, sticky=W)
+        cald = Button(digfilta, text='Load CH A Filter Coef', command=BLoadDFiltA)
+        cald.grid(row=4, column=0, columnspan=2, sticky=W)
+        camath = Button(digfilta, text='CH A Filter formula', command=BDFiltAMath)
+        camath.grid(row=5, column=0, columnspan=2, sticky=W)
+        #
+        digfiltb = Frame( frame3 )
+        digfiltb.pack(side=TOP)
+        lab2 = Checkbutton(digfiltb,text="Filter CH B", variable=DigFiltB)
+        lab2.grid(row=0, column=0, columnspan=2, sticky=W)
+        lab4 = Checkbutton(digfiltb,text="Box Car", variable=DigFiltBBoxCar, command=BuildBoxCarB)
+        lab4.grid(row=1, column=0, sticky=W)
+        BCBLenEntry = Entry(digfiltb, width=3)
+        BCBLenEntry.bind("<Return>", onRetDigFiltB)
+        BCBLenEntry.bind('<MouseWheel>', onDigFiltBScroll)
+        # BCALenEntry.bind('<Key>', onTextKey)
+        BCBLenEntry.grid(row=1, column=1, sticky=W)
+        BCBLenEntry.delete(0,"end")
+        BCBLenEntry.insert(0,2)
+        DifFiltBLength = Label(digfiltb,text="Length = 0 ")
+        DifFiltBLength.grid(row=2, column=0, sticky=W)
+        DifFiltBFile = Label(digfiltb,text="File Name, none ")
+        DifFiltBFile.grid(row=3, column=0, sticky=W)
+        camath.grid(row=8, column=0, sticky=W)
+        cbld = Button(digfiltb, text='Load CH B Filter Coef', command=BLoadDFiltB)
+        cbld.grid(row=4, column=0, sticky=W)
+        cbmath = Button(digfiltb, text='CH B Filter formula', command=BDFiltBMath)
+        cbmath.grid(row=5, column=0, sticky=W)
+        dismissdfbutton = Button(digfiltb, text="Dismiss", style="W8.TButton", command=DestroyDigFiltScreen)
+        dismissdfbutton.grid(row=6, column=0, columnspan=1, sticky=W)
+        #
+def onRetDigFiltA(event):
+    BuildBoxCarA()
 
+def onDigFiltAScroll(event):
+    onTextScroll(event)
+    BuildBoxCarA()
+    
+def BuildBoxCarA():
+    global BCALenEntry, DFiltACoef, DigFiltABoxCar, DifFiltALength
+
+    if DigFiltABoxCar.get() == 0:
+        return
+
+    FLength = int(BCALenEntry.get())
+    if FLength < 2:
+        return
+
+    DFiltACoef = [] # empty coef array
+
+    for n in range(FLength):
+        DFiltACoef.append(float(1.0/FLength))
+
+    DFiltACoef = numpy.array(DFiltACoef)
+    DifFiltALength.config(text = "Length = " + str(int(len(DFiltACoef)))) # change displayed length value
+
+def onRetDigFiltB(event):
+    BuildBoxCarB()
+
+def onDigFiltBScroll(event):
+    onTextScroll(event)
+    BuildBoxCarB()
+    
+def BuildBoxCarB():
+    global BCBLenEntry, DFiltBCoef, DigFiltBBoxCar, DifFiltBLength
+
+    if DigFiltBBoxCar.get() == 0:
+        return
+
+    FLength = int(BCBLenEntry.get())
+    if FLength < 2:
+        return
+    
+    DFiltBCoef = [] # empty coef array
+
+    for n in range(FLength):
+        DFiltBCoef.append(float(1.0/FLength))
+
+    DFiltBCoef = numpy.array(DFiltBCoef)
+    DifFiltBLength.config(text = "Length = " + str(int(len(DFiltBCoef)))) # change displayed length value
+        
 def DestroyDigFiltScreen():
     global digfltwindow, DigFiltStatus
     
@@ -17161,7 +17570,7 @@ def ConnectDevice():
             bcon.configure(text="Recon", style="RConn.TButton")
             return
         session.configure(sample_rate=SAMPLErate)
-        #print("Session sample rate: " + str(session.sample_rate))
+        # print("Session sample rate: " + str(session.sample_rate))
         MakeBoardScreen()
         SelectBoard()
         bcon.configure(text="Conn", style="GConn.TButton")
@@ -17216,7 +17625,7 @@ def SelectBoard():
     FWRevOne = float(devx.fwver)
     HWRevOne = str(devx.hwver)
     print( FWRevOne, HWRevOne)
-    print("Session sample rate: " + str(session.sample_rate))
+    # print("Session sample rate: " + str(session.sample_rate))
     
     if IgnoreFirmwareCheck == 0:
         if FWRevOne < 2.17:
@@ -17266,8 +17675,8 @@ def SelectBoard():
     
 def MakeSampleRateMenu():
     global SAMPLErate, AWGSAMPLErate, BaseSampleRate, session, ETSStatus, etssrlab, RevDate
-    global Two_X_Sample, ADC_Mux_Mode, SampleRatewindow, SampleRateStatus, BaseRateEntry
-    global Alternate_Sweep_Mode, DeBugMode, FWRevOne, SWRev
+    global Two_X_Sample, ADC_Mux_Mode, SampleRatewindow, SampleRateStatus, BaseRatesb
+    global Alternate_Sweep_Mode, DeBugMode, FWRevOne, SWRev, SampRateList
 
     if SampleRateStatus.get() == 0:
         SampleRateStatus.set(1)
@@ -17282,12 +17691,12 @@ def MakeSampleRateMenu():
         BaseRATE.grid(row=0, column=0, sticky=W)
         baseratelab = Label(BaseRATE, text="Base Sample Rate", style="A10B.TLabel") #, font = "Arial 10 bold")
         baseratelab.pack(side=LEFT)
-        BaseRateEntry = Entry(BaseRATE, width=6) #
-        BaseRateEntry.pack(side=LEFT)
-        BaseRateEntry.bind('<MouseWheel>', onSrateScroll)
-        BaseRateEntry.bind("<Return>", SetSampleRate)
-        BaseRateEntry.delete(0,"end")
-        BaseRateEntry.insert(0,BaseSampleRate)
+        BaseRatesb = Spinbox(BaseRATE, width=6, values=SampRateList, command=SetSampleRate)
+        BaseRatesb.bind('<MouseWheel>', onSrateScroll)
+        BaseRatesb.bind("<Return>", onRetSrate)
+        BaseRatesb.pack(side=LEFT)
+        BaseRatesb.delete(0,"end")
+        BaseRatesb.insert(0,BaseSampleRate)
         #
         nextrow = 2
         if FWRevOne > 2.16:
@@ -17328,6 +17737,54 @@ def DestroySampleRate():
     SampleRateStatus.set(0)
     SampleRatewindow.destroy()
 #
+#
+def onSrateScroll(event):
+
+    #onTextScroll
+    onSpinBoxScroll(event)
+    SetSampleRate()
+#
+def onRetSrate(event):
+
+    SetSampleRate()
+#
+def SetSampleRate():
+    global SAMPLErate, BaseSampleRate, AWGSAMPLErate, session, ETSStatus, etssrlab, BaseRatesb
+    global Two_X_Sample, ADC_Mux_Mode, rtsrlab, RUNstatus
+
+    #
+    WasRunning = 0
+    if (RUNstatus.get() == 1):
+        WasRunning = 1
+        BStop() # Force Stop loop if running
+    try:
+        NewRate = int(BaseRatesb.get())
+        if NewRate <= 100000: # rate has to be less than or equal to 100,000
+            BaseSampleRate = NewRate
+        else:
+            BaseSampleRate = 100000
+            BaseRatesb.delete(0,"end")
+            BaseRatesb.insert(0,BaseSampleRate)
+        SAMPLErate = BaseSampleRate # Scope sample rate
+    except:
+        donothing()
+    session.configure(sample_rate=BaseSampleRate)
+    BaseSampleRate = session.sample_rate
+    #print("Session sample rate: " + str(session.sample_rate), BaseSampleRate)
+    SAMPLErate = BaseSampleRate # Scope sample rate
+    #print("Session sample rate: " + str(session.sample_rate), SAMPLErate)
+    AWGSAMPLErate = BaseSampleRate
+    if ETSStatus.get() > 0:
+        SRstring = "RT Sample Rate = " + str(BaseSampleRate)
+        rtsrlab.config(text=SRstring)
+        ETSUpdate()
+    BaseRatesb.delete(0,"end")
+    BaseRatesb.insert(0,BaseSampleRate)
+    ReMakeAWGwaves() # remake AWG waveforms for new rate
+    if (WasRunning == 1):
+        WasRunning = 0
+        BStart() # restart loop if was running
+#
 def onStopfreqScroll(event):
     global StopFreqEntry, Two_X_Sample, ADC_Mux_Mode, FWRevOne
 
@@ -17367,54 +17824,6 @@ def onStopBodeScroll(event):
             Two_X_Sample.set(0)
             ADC_Mux_Mode.set(0)
             SetADC_Mux()
-#
-def onSrateScroll(event):
-
-    onTextScroll(event)
-    SetSampleRate()
-#
-def SetSampleRate():
-    global SAMPLErate, BaseSampleRate, AWGSAMPLErate, session, ETSStatus, etssrlab, BaseRateEntry
-    global Two_X_Sample, ADC_Mux_Mode
-
-    # ask user for channel to save
-    BStop() # Force Stop loop if running
-    try:
-        NewRate = int(BaseRateEntry.get())
-        if NewRate <= 100000: # rate has to be less than or equal to 100,000
-            BaseSampleRate = NewRate
-        else:
-            BaseSampleRate = 100000
-            BaseRateEntry.delete(0,"end")
-            BaseRateEntry.insert(0,BaseSampleRate)
-        SAMPLErate = BaseSampleRate # Scope sample rate
-    except:
-        donothing()
-    session.configure(sample_rate=BaseSampleRate)
-    # calculate actual sample rate
-    # minimum clock cycles per sample (100ksps)
-    m_min_per = 240
-    # maximum clock cycles per sample (~1024 samples/s)
-    m_max_per = 24000
-    sample_time = 1.0 / BaseSampleRate
-    M1K_timer_clock = 48e6
-    m_sam_per = round(sample_time * M1K_timer_clock) / 2
-    if (m_sam_per < m_min_per):
-        m_sam_per = m_min_per
-    elif (m_sam_per > m_max_per):
-        m_sam_per = m_max_per;
-    # convert back to the actual sample time
-    sample_time = m_sam_per / M1K_timer_clock
-    # convert back to the actual sample rate
-    BaseSampleRate = int(round((1.0 / sample_time) / 2.0))
-    AWGSAMPLErate = BaseSampleRate
-    if ETSStatus.get() > 0:
-        SRstring = "RT Sample Rate = " + str(BaseSampleRate)
-        etssrlab.config(text=SRstring)
-        ETSUpdate()
-    BaseRateEntry.delete(0,"end")
-    BaseRateEntry.insert(0,BaseSampleRate)
-    ReMakeAWGwaves() # remake AWG waveforms for new rate
 #
 def SetADC_Mux():
     global devx, SAMPLErate, BaseSampleRate, Two_X_Sample, ADC_Mux_Mode, CHA, CHB
@@ -17610,8 +18019,9 @@ def DestroyOhmScreen():
     ohmwindow.destroy()
 #
 def MakeETSWindow():
-    global FminEntry, MulXEntry, etswindow, ETSStatus, ETSDisp, ETSDir, ETSts, eqivsamplerate
-    global SAMPLErate, DivXEntry, FOffEntry, FminDisp, enb1, etssrlab, RevDate, SWRev
+    global FMulXEntry, MulXEntry, etswindow, ETSStatus, ETSDisp, ETSDir, ETSts, eqivsamplerate
+    global SAMPLErate, DivXEntry, FOffEntry, FminDisp, enb1, rtsrlab, etssrlab, RevDate, SWRev
+    global MinigenScreenStatus, DeBugMode
 
     #
     if ETSStatus.get() == 0:
@@ -17626,59 +18036,67 @@ def MakeETSWindow():
         frame1.grid(row=0, column=0, sticky=W)
         # Sampling controls Widgets
         SRstring = "RT Sample Rate = " + str(SAMPLErate)
+        rtsrlab = Label(frame1, text=SRstring, style= "A10B.TLabel")
+        rtsrlab.grid(row=1, column=0, sticky=W)
+        ESRstring = "ET Sample Rate = " + str(SAMPLErate)
         etssrlab = Label(frame1, text=SRstring, style= "A10B.TLabel")
-        etssrlab.grid(row=1, column=0, sticky=W)
+        etssrlab.grid(row=2, column=0, sticky=W)
         etssrbutton = Button(frame1, text="Set RT Sample Rate", command=MakeSampleRateMenu) #, style= "W8.TButton"
-        etssrbutton.grid(row=2, column=0, sticky=W, pady=7)
+        etssrbutton.grid(row=3, column=0, sticky=W, pady=7)
         enb1 = Checkbutton(frame1,text="Enable ETS", variable=ETSDisp, command=ETSCheckBox)
-        enb1.grid(row=3, column=0, sticky=W)
+        enb1.grid(row=4, column=0, sticky=W)
         #
         Divx = Frame( frame1 )
-        Divx.grid(row=4, column=0, sticky=W)
+        Divx.grid(row=5, column=0, sticky=W)
         DivXEntry = Entry(Divx, width=6)
         DivXEntry.bind('<MouseWheel>', ETSscroll)
         DivXEntry.pack(side=RIGHT)
         DivXEntry.delete(0,"end")
-        DivXEntry.insert(0,1)
+        DivXEntry.insert(0,2)
         divxlab = Label( Divx, text = "Divide Factor")
         divxlab.pack(side=RIGHT)
+        GridRow = 5
         #
-        FOffEntry = Label(frame1, text="Samples")
-        FOffEntry.grid(row=5, column=0, sticky=W)
-        MulXEntry = Label( frame1, text = "Rec Len Mul")
-        MulXEntry.grid(row=6, column=0, sticky=W)
+        if DeBugMode > 0:
+            FOffEntry = Label(frame1, text="Samples")
+            FOffEntry.grid(row=GridRow+1, column=0, sticky=W)
+            MulXEntry = Label( frame1, text = "Rec Len Mul")
+            MulXEntry.grid(row=GridRow+2, column=0, sticky=W)
+            GridRow = GridRow + 2
         #
         eqivsamplerate = Label(frame1, text="MHz", style= "A10B.TLabel")
-        eqivsamplerate.grid(row=7, column=0, sticky=W)
+        eqivsamplerate.grid(row=GridRow+1, column=0, sticky=W)
         #
         FConv = Frame( frame1 )
-        FConv.grid(row=8, column=0, sticky=W)
-        FminEntry = Entry(FConv, width=3)
-        FminEntry.bind('<MouseWheel>', ETSscroll)
-        FminEntry.pack(side=RIGHT)
-        FminEntry.delete(0,"end")
-        FminEntry.insert(0,7)
+        FConv.grid(row=GridRow+2, column=0, sticky=W)
+        FMulXEntry = Entry(FConv, width=3)
+        FMulXEntry.bind('<MouseWheel>', ETSscroll)
+        FMulXEntry.pack(side=RIGHT)
+        FMulXEntry.delete(0,"end")
+        FMulXEntry.insert(0,1)
         fminlab = Label( FConv, text = "Freq Multiplier")
         fminlab.pack(side=RIGHT)
         #
         FminDisp = Label(frame1, text="32768 Hz", style= "A10B.TLabel")
-        FminDisp.grid(row=9, column=0, sticky=W)
+        FminDisp.grid(row=GridRow+3, column=0, sticky=W)
         #
-        mgloadbutton = Button(frame1, text="Load to MinGen", command=MGLoad)
-        mgloadbutton.grid(row=10, column=0, sticky=W)
+        if MinigenScreenStatus.get() > 0:
+            mgloadbutton = Button(frame1, text="Load to MinGen", command=MGLoad)
+            mgloadbutton.grid(row=GridRow+4, column=0, sticky=W)
+            GridRow = GridRow + 1
         #
         dirlab = Label(frame1, text="Sample Data Order", style= "A10B.TLabel")
-        dirlab.grid(row=11, column=0, sticky=W)
+        dirlab.grid(row=GridRow+5, column=0, sticky=W)
         DataMode = Frame( frame1 )
-        DataMode.grid(row=12, column=0, sticky=W)
+        DataMode.grid(row=GridRow+6, column=0, sticky=W)
         dm3 = Radiobutton(DataMode, text="Forward", variable=ETSDir, value=0)
         dm3.pack(side=LEFT)
         dm4 = Radiobutton(DataMode, text="Reverse", variable=ETSDir, value=1)
         dm4.pack(side=LEFT)
         tclab = Label(frame1, text="CH B Time Shift", style= "A10B.TLabel")
-        tclab.grid(row=13, column=0, sticky=W)
+        tclab.grid(row=GridRow+7, column=0, sticky=W)
         TSMode = Frame( frame1 )
-        TSMode.grid(row=14, column=0, sticky=W)
+        TSMode.grid(row=GridRow+8, column=0, sticky=W)
         ETSts = Entry(TSMode, width=6)
         ETSts.bind('<MouseWheel>', ETSscroll)
         ETSts.pack(side=RIGHT)
@@ -17688,7 +18106,7 @@ def MakeETSWindow():
         ETStslab.pack(side=RIGHT)
         #
         etsdismissclbutton = Button(frame1, text="Dismiss", style= "W8.TButton", command=DestroyETSScreen)
-        etsdismissclbutton.grid(row=15, column=0, sticky=W, pady=7)
+        etsdismissclbutton.grid(row=GridRow+9, column=0, sticky=W, pady=7)
         ETSDisp.set(0)
         ETSCheckBox()
 #
@@ -17714,14 +18132,43 @@ def ETSscroll(event):
     onTextScroll(event)
     ETSUpdate()
 #
+def onFminScroll(event):
+    onTextScroll(event)
+    ETSUpdate()
+    SetETSComp()
+    SetAD9833(event)
+    
+def onMulXScroll(event):
+    global Two_X_Sample, HtMulEntry, ETSts, etssrlab, SAMPLErate
+    
+    onTextScroll(event)
+    # ETSUpdate()
+    try:
+        TscaleX = float(HtMulEntry.get())
+    except:
+        HtMulEntry.delete(0,END)
+        HtMulEntry.insert(0, 1)
+    if Two_X_Sample.get() == 0:
+        ToffsetX = TscaleX/10.0 # set channel B offset to 1/10 the time scale only for 1X sampeling
+    else:
+        ToffsetX = 0
+    ETSts.delete(0,"end")
+    ETSts.insert(0,ToffsetX)
+    SRstring = "ET Sample Rate = " + str(SAMPLErate*TscaleX)
+    etssrlab.config(text=SRstring)
+    #
+    SetETSComp()
+    SetAD9833(event)
+#
 def ETSUpdate():
-    global FminEntry, MulXEntry, ETSStatus, ETSDisp, ETSDir, ETSts, eqivsamplerate, MaxETSrecord
-    global SAMPLErate, DivXEntry, FOffEntry, FminDisp, DivX, FOff, MulX, Fmin, FMul, AWGSAMPLErate, TIMEdiv
+    global FMulXEntry, MulXEntry, ETSStatus, ETSDisp, ETSDir, ETSts, eqivsamplerate, MaxETSrecord
+    global SAMPLErate, DivXEntry, FOffEntry, FminDisp, DivX, FOff, MulX, Fmin, FMul, SAMPLErate, TIMEdiv
+    global FminEntry, HtMulEntry, Two_X_Sample, DeBugMode
 
     if TIMEdiv > 0.2:
-        MaxETSrecord = int(AWGSAMPLErate * 10 * TIMEdiv / 1000.0)
+        MaxETSrecord = int(SAMPLErate * 10 * TIMEdiv / 1000.0)
     else:
-        MaxETSrecord = int(AWGSAMPLErate * 20 * TIMEdiv / 1000.0)
+        MaxETSrecord = int(SAMPLErate * 20 * TIMEdiv / 1000.0)
     if (MaxETSrecord*100) > MaxSamples:
         MaxETSrecord = MaxSamples / 100
     try:
@@ -17735,35 +18182,67 @@ def ETSUpdate():
     except:
         DivXEntry.delete(0,END)
         DivXEntry.insert(0, DivX)
+    #
     FOff = 25
     MulX = (DivX*SAMPLErate)/(100*FOff)
     while MulX > MaxETSrecord:
         FOff = FOff + 5
         MulX = (DivX*SAMPLErate)/(100*FOff)
     FOff = 0 - FOff
-    SRstring = "Rec Len Mul = "  + str(MulX) + " samples"
-    MulXEntry.config(text = SRstring) # change displayed value
-    SRstring = "Offset = "  + str(FOff) + " samples"
-    FOffEntry.config(text = SRstring) # change displayed value
+    if DeBugMode > 0:
+        SRstring = "Rec Len Mul = "  + str(MulX) + " samples"
+        MulXEntry.config(text = SRstring) # change displayed value
+        SRstring = "Offset = "  + str(FOff) + " samples"
+        FOffEntry.config(text = SRstring) # change displayed value
     baseFreq = SAMPLErate/DivX
     try:
-        FMul = float(eval(FminEntry.get()))
+        FMul = float(eval(FMulXEntry.get()))
         if FMul < 1:
             FMul = 1
-            FminEntry.delete(0,END)
-            FminEntry.insert(0, int(FMul))
+            FMulXEntry.delete(0,END)
+            FMulXEntry.insert(0, int(FMul))
         if FMul > 75:
             FMul = 75
-            FminEntry.delete(0,END)
-            FminEntry.insert(0, int(FMul))
+            FMulXEntry.delete(0,END)
+            FMulXEntry.insert(0, int(FMul))
     except:
-        FminEntry.delete(0,END)
-        FminEntry.insert(0, int(FMul))
-    Fmin = baseFreq * FMul
-    SRstring = "Multiplied Freq = "  + ' {0:.1f} '.format(Fmin) + " Hz"
+        FMulXEntry.delete(0,END)
+        FMulXEntry.insert(0, int(FMul))
+    FreqMin = baseFreq * FMul
+    SRstring = "Multiplied Freq = "  + ' {0:.1f} '.format(FreqMin) + " Hz"
     FminDisp.config(text = SRstring) # change displayed value
     SRstring = "Base Frequency = "  + ' {0:.2f} '.format(baseFreq) + " Hz"
     eqivsamplerate.config(text = SRstring) # change displayed value
+    # calculate time scale multiplication factor
+    try:
+        MinFreq = eval(FminEntry.get()) * 1000 # convert KHz to Hz
+    except:
+        FminEntry.delete(0,END)
+        FminEntry.insert(0, 25)
+    #
+    try: # catch for divide by zero
+        TscaleX = int((MinFreq)/(DivX * (MinFreq - FreqMin)))
+    except:
+        TscaleX = 1
+    
+    if TscaleX > 0:
+        ETSDir.set(0) # set sample direction to forward if positive
+    else:
+        ETSDir.set(1) # set sample direction to reverse if negative
+    TscaleX = abs(TscaleX)
+    if Two_X_Sample.get() == 0:
+        ToffsetX = TscaleX/10.0 # set channel B offset to 1/10 the time scale only for 1X sampeling
+    else:
+        ToffsetX = 0
+    ETSts.delete(0,"end")
+    ETSts.insert(0,ToffsetX)
+    
+    HtMulEntry.delete(0,END)
+    HtMulEntry.insert(0, TscaleX)
+    SRstring = "RT Sample Rate = " + str(SAMPLErate)
+    rtsrlab.config(text=SRstring)
+    SRstring = "ET Sample Rate = " + str(SAMPLErate*TscaleX)
+    etssrlab.config(text=SRstring)
 #
 def Settingsscroll(event):
     onTextScroll(event)
@@ -17772,7 +18251,8 @@ def Settingsscroll(event):
 def MakeSettingsMenu():
     global GridWidth, TRACEwidth, TRACEaverage, Vdiv, HarmonicMarkers, ZEROstuffing, RevDate
     global Settingswindow, SettingsStatus, SettingsDisp, ZSTuff, TAvg, VDivE, TwdthE, GwdthE, HarMon
-    global AWG_Amp_Mode, SWRev
+    global AWG_Amp_Mode, SWRev, EnableHSsampling, Auto_ETS_Comp, ETS_TC1, ETS_A1, ETS_TC2, ETS_A2
+    global ets_TC1Entry, ets_A1Entry, ets_TC2Entry, ets_A2Entry, TrgLPFEntry, Trigger_LPF_length
     global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
     global CHA_A1, CHA_A2, CHB_A1, CHB_A2
     global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
@@ -17852,15 +18332,26 @@ def MakeSettingsMenu():
         GwdthE.delete(0,"end")
         GwdthE.insert(0,GridWidth.get())
         #
+        trglpflab = Label(frame1, text="Trigger LPF Length", style= "A10B.TLabel")
+        trglpflab.grid(row=6, column=0, sticky=W)
+        TrgLPFMode = Frame( frame1 )
+        TrgLPFMode.grid(row=6, column=1, sticky=W)
+        TrgLPFEntry = Entry(TrgLPFMode, width=4)
+        TrgLPFEntry.bind('<MouseWheel>', Settingsscroll)
+        TrgLPFEntry.bind('<Key>', onTextKey)
+        TrgLPFEntry.pack(side=RIGHT)
+        TrgLPFEntry.delete(0,"end")
+        TrgLPFEntry.insert(0,Trigger_LPF_length.get())
+        #
         AwgAmplrb1 = Radiobutton(frame1, text="AWG Min/Max", variable=AWG_Amp_Mode, value=0, command=UpdateAWGWin)
-        AwgAmplrb1.grid(row=6, column=0, sticky=W)
+        AwgAmplrb1.grid(row=7, column=0, sticky=W)
         AwgAmplrb2 = Radiobutton(frame1, text="AWG Amp/Off ", variable=AWG_Amp_Mode, value=1, command=UpdateAWGWin)
-        AwgAmplrb2.grid(row=6, column=1, sticky=W)
+        AwgAmplrb2.grid(row=7, column=1, sticky=W)
         #
         cha_Rcomplab = Label(frame1, text="CHA Comp, TC1 (uSec), A1", style= "A10B.TLabel") # in micro seconds
-        cha_Rcomplab.grid(row=7, column=0, sticky=W)
+        cha_Rcomplab.grid(row=8, column=0, sticky=W)
         cha_RcomplabMode = Frame( frame1 )
-        cha_RcomplabMode.grid(row=7, column=1, sticky=W)
+        cha_RcomplabMode.grid(row=8, column=1, sticky=W)
         cha_TC1Entry = Entry(cha_RcomplabMode, width=5)
         cha_TC1Entry.bind('<MouseWheel>', Settingsscroll)
         cha_TC1Entry.bind('<Key>', onTextKey)
@@ -17875,9 +18366,9 @@ def MakeSettingsMenu():
         cha_A1Entry.insert(0,CHA_A1.get())
         #
         cha_Ccomplab = Label(frame1, text="CHA Comp, TC2 (uSec), A2", style= "A10B.TLabel") # in micro seconds
-        cha_Ccomplab.grid(row=8, column=0, sticky=W)
+        cha_Ccomplab.grid(row=9, column=0, sticky=W)
         cha_CcomplabMode = Frame( frame1 )
-        cha_CcomplabMode.grid(row=8, column=1, sticky=W)
+        cha_CcomplabMode.grid(row=9, column=1, sticky=W)
         cha_TC2Entry = Entry(cha_CcomplabMode, width=5)
         cha_TC2Entry.bind('<MouseWheel>', Settingsscroll)
         cha_TC2Entry.bind('<Key>', onTextKey)
@@ -17892,9 +18383,9 @@ def MakeSettingsMenu():
         cha_A2Entry.insert(0,CHA_A2.get())
         #
         chb_Rcomplab = Label(frame1, text="CHB Comp, TC1 (uSec), A1", style= "A10B.TLabel") # in micro seconds
-        chb_Rcomplab.grid(row=9, column=0, sticky=W)
+        chb_Rcomplab.grid(row=10, column=0, sticky=W)
         chb_RcomplabMode = Frame( frame1 )
-        chb_RcomplabMode.grid(row=9, column=1, sticky=W)
+        chb_RcomplabMode.grid(row=10, column=1, sticky=W)
         chb_TC1Entry = Entry(chb_RcomplabMode, width=5)
         chb_TC1Entry.bind('<MouseWheel>', Settingsscroll)
         chb_TC1Entry.bind('<Key>', onTextKey)
@@ -17909,9 +18400,9 @@ def MakeSettingsMenu():
         chb_A1Entry.insert(0,CHB_A1.get())
         #
         chb_Ccomplab = Label(frame1, text="CHB Comp, TC2 (uSec), A2", style= "A10B.TLabel") # in micro seconds
-        chb_Ccomplab.grid(row=10, column=0, sticky=W)
+        chb_Ccomplab.grid(row=11, column=0, sticky=W)
         chb_CcomplabMode = Frame( frame1 )
-        chb_CcomplabMode.grid(row=10, column=1, sticky=W)
+        chb_CcomplabMode.grid(row=11, column=1, sticky=W)
         chb_TC2Entry = Entry(chb_CcomplabMode, width=5)
         chb_TC2Entry.bind('<MouseWheel>', Settingsscroll)
         chb_TC2Entry.bind('<Key>', onTextKey)
@@ -17925,9 +18416,83 @@ def MakeSettingsMenu():
         chb_A2Entry.delete(0,"end")
         chb_A2Entry.insert(0,CHB_A2.get())
         #
-        Settingsdismissbutton = Button(frame1, text="Dismiss", style= "W8.TButton", command=DestroySettings)
-        Settingsdismissbutton.grid(row=11, column=0, sticky=W, pady=7)
+        if EnableHSsampling > 0:
+            hs_ckb1 = Checkbutton(frame1, text="Auto Set ETS Comp", variable=Auto_ETS_Comp, command=SetETSComp)
+            hs_ckb1.grid(row=12, column=0, sticky=W)
+            hs1_Complab = Label(frame1, text="ETS Comp, TC1 (uSec), A1", style= "A10B.TLabel") # in micro seconds
+            hs1_Complab.grid(row=13, column=0, sticky=W)
+            hs1_ComplabMode = Frame( frame1 )
+            hs1_ComplabMode.grid(row=13, column=1, sticky=W)
+            ets_TC1Entry = Entry(hs1_ComplabMode, width=5)
+            ets_TC1Entry.bind('<MouseWheel>', Settingsscroll)
+            ets_TC1Entry.bind('<Key>', onTextKey)
+            ets_TC1Entry.pack(side=LEFT)
+            ets_TC1Entry.delete(0,"end")
+            ets_TC1Entry.insert(0,ETS_TC1.get())
+            ets_A1Entry = Entry(hs1_ComplabMode, width=5)
+            ets_A1Entry.bind('<MouseWheel>', Settingsscroll)
+            ets_A1Entry.bind('<Key>', onTextKey)
+            ets_A1Entry.pack(side=LEFT)
+            ets_A1Entry.delete(0,"end")
+            ets_A1Entry.insert(0,ETS_A1.get())
+        #
+            hs2_Complab = Label(frame1, text="ETS Comp, TC2 (uSec), A2", style= "A10B.TLabel") # in micro seconds
+            hs2_Complab.grid(row=14, column=0, sticky=W)
+            hs2_ComplabMode = Frame( frame1 )
+            hs2_ComplabMode.grid(row=14, column=1, sticky=W)
+            ets_TC2Entry = Entry(hs2_ComplabMode, width=5)
+            ets_TC2Entry.bind('<MouseWheel>', Settingsscroll)
+            ets_TC2Entry.bind('<Key>', onTextKey)
+            ets_TC2Entry.pack(side=LEFT)
+            ets_TC2Entry.delete(0,"end")
+            ets_TC2Entry.insert(0,ETS_TC2.get())
+            ets_A2Entry = Entry(hs2_ComplabMode, width=5)
+            ets_A2Entry.bind('<MouseWheel>', Settingsscroll)
+            ets_A2Entry.bind('<Key>', onTextKey)
+            ets_A2Entry.pack(side=LEFT)
+            ets_A2Entry.delete(0,"end")
+            ets_A2Entry.insert(0,ETS_A2.get())
+        #
+            Settingsdismissbutton = Button(frame1, text="Dismiss", style= "W8.TButton", command=DestroySettings)
+            Settingsdismissbutton.grid(row=15, column=0, sticky=W, pady=7)
+        else:
+            Settingsdismissbutton = Button(frame1, text="Dismiss", style= "W8.TButton", command=DestroySettings)
+            Settingsdismissbutton.grid(row=12, column=0, sticky=W, pady=7)
 #
+def SetETSComp():
+    global Auto_ETS_Comp, ETS_TC1, ETS_A1, ETS_TC2, ETS_A2
+    global ets_TC1Entry, ets_A1Entry, ets_TC2Entry, ets_A2Entry
+    global CHA_RC_HP, CHB_RC_HP, CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
+    global CHA_A1, CHA_A2, CHB_A1, CHB_A2
+    global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
+    global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
+
+    if Auto_ETS_Comp.get() == 1:
+        try:
+            MulX = float(HtMulEntry.get())
+            #
+            Value = float(ets_TC1Entry.get()) * MulX
+            cha_TC1Entry.delete(0,"end")
+            cha_TC1Entry.insert(0, Value)
+            cha_A1Entry.delete(0,"end")
+            cha_A1Entry.insert(0, ets_A1Entry.get())
+            chb_TC1Entry.delete(0,"end")
+            chb_TC1Entry.insert(0, Value)
+            chb_A1Entry.delete(0,"end")
+            chb_A1Entry.insert(0, ets_A1Entry.get())
+            #
+            Value = float(ets_TC2Entry.get()) * MulX
+            cha_TC2Entry.delete(0,"end")
+            cha_TC2Entry.insert(0, Value)
+            cha_A2Entry.delete(0,"end")
+            cha_A2Entry.insert(0, ets_A2Entry.get())
+            chb_TC2Entry.delete(0,"end")
+            chb_TC2Entry.insert(0, Value)
+            chb_A2Entry.delete(0,"end")
+            chb_A2Entry.insert(0, ets_A2Entry.get())
+        except:
+            MulX = 1.0
+        
 def UpdateAWGWin():
 
     UpdateAWGA()
@@ -17937,7 +18502,7 @@ def SettingsUpdate():
     global GridWidth, TRACEwidth, TRACEaverage, Vdiv, HarmonicMarkers, ZEROstuffing, RevDate
     global Settingswindow, SettingsStatus, SettingsDisp, ZSTuff, TAvg, VDivE, TwdthE, GwdthE, HarMon
     global CHA_TC1, CHA_TC2, CHB_TC1, CHB_TC2
-    global CHA_A1, CHA_A2, CHB_A1, CHB_A2
+    global CHA_A1, CHA_A2, CHB_A1, CHB_A2, TrgLPFEntry, Trigger_LPF_length
     global cha_TC1Entry, cha_TC2Entry, chb_TC1Entry, chb_TC2Entry
     global cha_A1Entry, cha_A2Entry, chb_A1Entry, chb_A2Entry
     
@@ -17955,6 +18520,22 @@ def SettingsUpdate():
         GwdthE.delete(0,END)
         GwdthE.insert(0, GridWidth.get())
     GridWidth.set(GW)
+    #
+    try:
+        T_length = int(eval(TrgLPFEntry.get()))
+        if T_length < 1:
+            T_length = 1
+            TrgLPFEntry.delete(0,END)
+            TrgLPFEntry.insert(0, int(GW))
+        if T_length > 100:
+            T_length = 100
+            TrgLPFEntry.delete(0,END)
+            TrgLPFEntry.insert(0, int(GW))
+    except:
+        TrgLPFEntry.delete(0,END)
+        TrgLPFEntry.insert(0, Trigger_LPF_length.get())
+    Trigger_LPF_length.set(T_length)
+    #
     try:
         TW = int(eval(TwdthE.get()))
         if TW < 1:
@@ -18097,7 +18678,10 @@ def SettingsUpdate():
     except:
         chb_A2Entry.delete(0,END)
         chb_A2Entry.insert(0, CHB_A2.get())
+    # set ETS base comp
     #
+    SetETSComp()
+#
 def DestroySettings():
     global Settingswindow, SettingsStatus, SettingsDisp
     
@@ -18225,6 +18809,8 @@ MarkerScale.set(1)
 SettingsStatus = IntVar(0)
 CHA_RC_HP = IntVar(0)
 CHB_RC_HP = IntVar(0)
+CHAI_RC_HP = IntVar(0)
+CHBI_RC_HP = IntVar(0)
 #
 frame2r = Frame(root, borderwidth=5, relief=RIDGE)
 frame2r.pack(side=RIGHT, fill=BOTH, expand=NO)
@@ -18294,6 +18880,7 @@ Triggermenu.menu.add_radiobutton(label='CA-I', variable=TgInput, value=2)
 Triggermenu.menu.add_radiobutton(label='CB-V', variable=TgInput, value=3)
 Triggermenu.menu.add_radiobutton(label='CB-I', variable=TgInput, value=4)
 Triggermenu.menu.add_checkbutton(label='Auto Level', variable=AutoLevel)
+Triggermenu.menu.add_checkbutton(label='Low Pass Filter', variable=LPFTrigger)
 Triggermenu.menu.add_checkbutton(label='Manual Trgger', variable=ManualTrigger)
 Triggermenu.menu.add_checkbutton(label='SingleShot', variable=SingleShot)
 Triggermenu.pack(side=LEFT)
@@ -18365,6 +18952,9 @@ Showmenu.menu.add_checkbutton(label='Center CB-V', variable=AutoCenterB)
 Showmenu.menu.add_command(label="-Input HP Comp-", foreground="blue", command=donothing)
 Showmenu.menu.add_checkbutton(label='Comp CA-V', variable=CHA_RC_HP)
 Showmenu.menu.add_checkbutton(label='Comp CB-V', variable=CHB_RC_HP)
+if EnableHSsampling > 0:
+    Showmenu.menu.add_checkbutton(label='Comp CA-I', variable=CHAI_RC_HP)
+    Showmenu.menu.add_checkbutton(label='Comp CB-I', variable=CHBI_RC_HP)
 Showmenu.menu.add_separator()  
 Showmenu.menu.add_checkbutton(label='RA-V', variable=ShowRA_V, command=UpdateTimeTrace)
 Showmenu.menu.add_checkbutton(label='RA-I', variable=ShowRA_I, command=UpdateTimeTrace)
@@ -18387,6 +18977,29 @@ if ShowBallonHelp > 0:
     brun_tip = CreateToolTip(brun, 'Start acquiring data')
     pwrbt_tip = CreateToolTip(PwrBt, 'Toggle ext power supply')
     Showmenu_tip = CreateToolTip(Showmenu, 'Select which traces to display')
+
+# Sampling controls Widgets
+if EnableHSsampling > 0:
+    fminlab2 = Label(frame1, text="KHz")
+    fminlab2.pack(side=RIGHT)
+    FminEntry = Entry(frame1, width=5)
+    FminEntry.bind('<MouseWheel>', onFminScroll)
+    FminEntry.bind("<Return>", SetAD9833)
+    FminEntry.pack(side=RIGHT)
+    FminEntry.delete(0,"end")
+    FminEntry.insert(0,25)
+    fminlab = Label(frame1, text="Fmin")
+    fminlab.pack(side=RIGHT)
+    #
+    HtMulEntry = Entry(frame1, width=4)
+    HtMulEntry.bind('<MouseWheel>', onMulXScroll)
+    HtMulEntry.bind("<Return>", SetAD9833)
+    HtMulEntry.pack(side=RIGHT)
+    HtMulEntry.delete(0,"end")
+    HtMulEntry.insert(0,1)
+    mulxlab = Label( frame1, text = "Mul X")
+    mulxlab.pack(side=RIGHT)
+#
 # Time per Div
 TMsb = Spinbox(frame1, width=5, values= TMpdiv, command=BTime)
 TMsb.bind('<MouseWheel>', onSpinBoxScroll)
