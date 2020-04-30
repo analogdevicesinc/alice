@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
 ## @package alice-desktop 1.3.py(w)
-# ADALM1000 alice-desktop 1.3.py(w) (4-25-2020)
+# ADALM1000 alice-desktop 1.3.py(w) (4-28-2020)
 # For Python version 2.7 or 3.7
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -56,7 +56,7 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(25 April 2020)"
+RevDate = "(28 April 2020)"
 SWRev = "1.3 "
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.5/alice-desktop-1.3-setup.exe'
 # samll bit map of ADI logo for window icon
@@ -7579,24 +7579,32 @@ def onCanvasClickRight(event):
     if RUNstatus.get() == 0:
         UpdateTimeScreen()
     ca.bind_all('<MouseWheel>', onCanvasClickScroll)
-#
+## Shift Time or vertical cursors if on or shift gated measurement cursors if enabled
 def onCanvasClickScroll(event):
     global ShowTCur, ShowVCur, TCursor, VCursor, RUNstatus, ca
+    global MeasGateStatus, MeasGateLeft, MeasGateRight, TIMEdiv, GRW
+
+    ShiftKeyDwn = event.state & 1
     if event.widget == ca:
         if ShowTCur.get() > 0 or ShowVCur.get() > 0: # move cursors if shown
-            ShiftKeyDwn = event.state & 1
             if ShowTCur.get() > 0 and ShiftKeyDwn == 0:
                 TCursor = TCursor + event.delta/100
             elif ShowVCur.get() > 0 or ShiftKeyDwn == 1:
                 VCursor = VCursor - event.delta/100
         else:
+            if MeasGateStatus.get() == 1:
+                Tstep = (TIMEdiv / GRW) / 10 # time in mS per pixel
+                if ShiftKeyDwn == 0:
+                    MeasGateLeft = MeasGateLeft + (event.delta * Tstep) #+ HoldOff
+                if ShiftKeyDwn == 1:
+                    MeasGateRight = MeasGateRight + (event.delta * Tstep) #+ HoldOff
             try:
                 onSpinBoxScroll(event) # if cursor are not showing scroll the Horx time base
             except:
                 donothing()
         if RUNstatus.get() == 0:
             UpdateTimeScreen()
-#
+## Move Vertical cursors up 1 or 5
 def onCanvasUpArrow(event):
     global ShowVCur, VCursor, YCursor, dBCursor, BdBCursor, RUNstatus, ca, XYca, Freqca, Bodeca
 
@@ -7638,7 +7646,7 @@ def onCanvasUpArrow(event):
                 UpdateBodeScreen()
     except:
         donothing()
-#
+## Move Vertical cursors down 1 or 5
 def onCanvasDownArrow(event):
     global ShowVCur, VCursor, YCursor, dBCursor, BdBCursor, RUNstatus, ca, XYca, Freqca
 
@@ -7680,7 +7688,7 @@ def onCanvasDownArrow(event):
                 UpdateBodeScreen()
     except:
         donothing()
-#
+## Move Time curcors left 1 or 5
 def onCanvasLeftArrow(event):
     global ShowTCur, TCursor, XCursor, FCursor, BPCursor, RUNstatus, ca, XYca, Freqca
 
@@ -7722,7 +7730,7 @@ def onCanvasLeftArrow(event):
                 UpdateBodeScreen()
     except:
         donothing()
-#
+## Move Time curcors right 1 or 5
 def onCanvasRightArrow(event):
     global ShowTCur, TCursor, XCursor, FCursor, BPCursor, RUNstatus, ca, XYca, Freqca
 
@@ -7764,7 +7772,7 @@ def onCanvasRightArrow(event):
                 UpdateBodeScreen()
     except:
         donothing()
-#
+## Pause / start on space bar
 def onCanvasSpaceBar(event):
     global RUNstatus, ca, XYca, Freqca, Bodeca, IAca
 
@@ -18696,6 +18704,14 @@ def onCanvasMouse_xy(event):
     MouseWidget = event.widget
     MouseX, MouseY = event.x, event.y
 #
+def BSetFmin():
+    global FminEntry, CHAfreq
+    
+    if CHAfreq > 0:
+        String = '{0:.3f}'.format(CHAfreq/1000)
+        FminEntry.delete(0,"end")
+        FminEntry.insert(0,String)
+#
 # ================ Make main Screen ==========================
 TgInput = IntVar(0)   # Trigger Input variable
 SingleShot = IntVar(0) # variable for single shot triger
@@ -18982,13 +18998,13 @@ if ShowBallonHelp > 0:
 if EnableHSsampling > 0:
     fminlab2 = Label(frame1, text="KHz")
     fminlab2.pack(side=RIGHT)
-    FminEntry = Entry(frame1, width=5)
+    FminEntry = Entry(frame1, width=6)
     FminEntry.bind('<MouseWheel>', onFminScroll)
     FminEntry.bind("<Return>", SetAD9833)
     FminEntry.pack(side=RIGHT)
     FminEntry.delete(0,"end")
     FminEntry.insert(0,25)
-    fminlab = Label(frame1, text="Fmin")
+    fminlab = Button(frame1, text="Fmin", style="W5.TButton", command=BSetFmin)
     fminlab.pack(side=RIGHT)
     #
     HtMulEntry = Entry(frame1, width=4)
@@ -19036,7 +19052,7 @@ ca.bind("v", onCanvasShowVcur)
 ca.bind("s", onCanvasSnap)
 ca.bind("+", onCanvasTrising)
 ca.bind("-", onCanvasTfalling)
-# ca.bind('<MouseWheel>', onCanvasClickScroll)
+ca.bind('<MouseWheel>', onCanvasClickScroll)
 ca.pack(side=TOP, fill=BOTH, expand=YES)
 MouseWidget = ca
 # right side menu buttons
