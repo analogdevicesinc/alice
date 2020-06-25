@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
 ## @package alice-desktop 1.3.py(w)
-# ADALM1000 alice-desktop 1.3.py(w) (4-28-2020)
+# ADALM1000 alice-desktop 1.3.py(w) (6-25-2020)
 # For Python version 2.7 or 3.7
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -56,10 +56,10 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(28 April 2020)"
+RevDate = "(25 June 2020)"
 SWRev = "1.3 "
-Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.5/alice-desktop-1.3-setup.exe'
-# samll bit map of ADI logo for window icon
+Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.6/alice-desktop-1.3-setup.exe'
+# small bit map of ADI logo for window icon
 TBicon = """
 R0lGODlhIAAgAHAAACH5BAEAAAIALAAAAAAgACAAgQAAAP///wAAAAAAAAJJhI+py+0PYwtBWkDp
 hTnv2XlfEobjUZZnmn4se72vJMtcbYN4ruz44uORgiodsfI4Im++2M5VW81OmBbVULxiRVrUsgsO
@@ -205,6 +205,14 @@ HarmonicMarkers = IntVar(0)
 HarmonicMarkers.set(3)
 AWG_Amp_Mode = IntVar(0)
 AWG_Amp_Mode.set(0) # 0 = Min/Max mode, 1 = Amp/Offset
+AWGA_Ext_Gain = DoubleVar(0)
+AWGA_Ext_Gain.set(1.0)
+AWGA_Ext_Offset = DoubleVar(0)
+AWGA_Ext_Offset.set(0.0)
+AWGB_Ext_Gain = DoubleVar(0)
+AWGB_Ext_Gain.set(1.0)
+AWGB_Ext_Offset = DoubleVar(0)
+AWGB_Ext_Offset.set(0.0)
 AWG_2X = IntVar(0) # selection variable to set AWG DAC channes for 2X samplerate modes
 Two_X_Sample = IntVar(0) # selection variable to set ADC channes for 2X samplerate mode
 Two_X_Sample.set(0)
@@ -789,8 +797,11 @@ def BSaveConfig(filename):
     global ets_TC1Entry, ets_A1Entry, ets_TC2Entry, ets_A2Entry
     global DigFiltStatus, DigFiltABoxCar, DigFiltBBoxCar, BCALenEntry, BCBLenEntry
     
-    # open Config file for Write
-    ConfgFile = open(filename, "w")
+    # open Config file for Write?
+    try:
+        ConfgFile = open(filename, "w")
+    except: # didn't work? then just return
+        return
     # Save Window placements
     ConfgFile.write("root.geometry('+" + str(root.winfo_x()) + '+' + str(root.winfo_y()) + "')\n")
     ConfgFile.write("awgwindow.geometry('+" + str(awgwindow.winfo_x()) + '+' + str(awgwindow.winfo_y()) + "')\n")
@@ -1339,6 +1350,7 @@ def BLoadConfig(filename):
             BAWGBModeLabel()
             BAWGAPhaseDelay()
             BAWGBPhaseDelay()
+        UpdateAWGWin()
         TimeCheckBox()
         XYCheckBox()
         FreqCheckBox()
@@ -2292,9 +2304,11 @@ def Bcloseexit():
     global RUNstatus, session, CHA, CHB, devx, AWG_2X
     
     RUNstatus.set(0)
-    BSaveConfig("alice-last-config.cfg")
-    # Put channels in Hi-Z and exit
+    # BSaveConfig("alice-last-config.cfg")
     try:
+        # try to write last config file
+        BSaveConfig("alice-last-config.cfg")
+        # Put channels in Hi-Z and exit
         CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z split mode
         CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z split mode
         devx.set_adc_mux(0) # set ADC mux conf to default
@@ -2788,6 +2802,7 @@ def Analog_In():
 def Ohm_Analog_In():
     global RMode, CHATestVEntry, CHATestREntry, CHA, CHB, devx, OhmA0, OhmA1, discontloop
     global AWGAMode, AWGBMode, AWGAShape, AWGSync, AWGBTerm, AWGAOffsetEntry
+    global AWGAIOMode, AWGBIOMode, Two_X_Sample
 
 # Do input probe Calibration CH1VGain, CH2VGain, CH1VOffset, CH2VOffset
     try:
@@ -2843,12 +2858,19 @@ def Ohm_Analog_In():
     # 
     DCVA0 = DCVB0 = DCIA0 = DCIB0 = 0.0 # initalize measurment variable
     RIN = 1000000 # nominal ALM1000 input resistance is 1 Mohm
+    Two_X_Sample.set(0) # make sure we are in 1V sample rate mode
+    SetADC_Mux()
     # set A and B channels
     AWGAMode.set(0) # Set AWG A to SVMI
     AWGAShape.set(0) # DC
     AWGBMode.set(2) # Set AWG B to Hi-Z
+    AWGAIOMode.set(0) # turn off Split I/O mode
+    AWGBIOMode.set(0) # turn off Split I/O mode
     AWGAOffsetEntry.delete(0,"end")
     AWGAOffsetEntry.insert(0, chatestv)
+    BAWGAModeLabel()
+    BAWGBModeLabel() # update AWG labels
+    
     if RMode.get() == 0:
         AWGBTerm.set(0)
     else:
@@ -8393,7 +8415,8 @@ def Write_WAV(data, repeat, filename):
 # =========== Awg functions ==================
 def BAWGAAmpl(temp):
     global AWGAAmplEntry, AWGAAmplvalue, AWGAMode, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
-
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
+    
     try:
         AWGAAmplvalue = float(eval(AWGAAmplEntry.get()))
     except:
@@ -8412,12 +8435,12 @@ def BAWGAAmpl(temp):
                 AWGAAmplEntry.insert(0, AWGAAmplvalue)
     elif AWG_Amp_Mode.get() == 1: # 1 = Amp/Offset
         if AWGAMode.get() == 0: # Source Voltage measure current mode
-            if AWGAAmplvalue > 2.5:
-                AWGAAmplvalue = 2.5
+            if AWGAAmplvalue > (2.5 / AWGA_Ext_Gain.get()):
+                AWGAAmplvalue = 2.5 / AWGA_Ext_Gain.get()
                 AWGAAmplEntry.delete(0,"end")
                 AWGAAmplEntry.insert(0, AWGAAmplvalue)
-            if AWGAAmplvalue < -2.50:
-                AWGAAmplvalue = -2.50
+            if AWGAAmplvalue < (-2.50 / AWGA_Ext_Gain.get()):
+                AWGAAmplvalue = -2.50 / AWGA_Ext_Gain.get() 
                 AWGAAmplEntry.delete(0,"end")
                 AWGAAmplEntry.insert(0, AWGAAmplvalue)
     if AWGAMode.get() == 1: # Source current measure voltage mode
@@ -8432,21 +8455,32 @@ def BAWGAAmpl(temp):
 #
 def BAWGAOffset(temp):
     global AWGAOffsetEntry, AWGAOffsetvalue, AWGAMode, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
-
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
+    
     try:
         AWGAOffsetvalue = float(eval(AWGAOffsetEntry.get()))
     except:
         AWGAOffsetEntry.delete(0,"end")
         AWGAOffsetEntry.insert(0, AWGAOffsetvalue)
-    if AWGAMode.get() == 0: # Source Voltage measure current mode
-        if AWGAOffsetvalue > 5.00:
-            AWGAOffsetvalue = 5.00
-            AWGAOffsetEntry.delete(0,"end")
-            AWGAOffsetEntry.insert(0, AWGAOffsetvalue)
-        if AWGAOffsetvalue < 0.00:
-            AWGAOffsetvalue = 0.00
-            AWGAOffsetEntry.delete(0,"end")
-            AWGAOffsetEntry.insert(0, AWGAOffsetvalue)
+    if AWG_Amp_Mode.get() == 0: # 0 = Min/Max mode
+        if AWGAMode.get() == 0: # Source Voltage measure current mode
+            if AWGAOffsetvalue > 5.00:
+                AWGAOffsetvalue = 5.00
+                AWGAOffsetEntry.delete(0,"end")
+                AWGAOffsetEntry.insert(0, AWGAOffsetvalue)
+            if AWGAOffsetvalue < 0.00:
+                AWGAOffsetvalue = 0.00
+                AWGAOffsetEntry.delete(0,"end")
+                AWGAOffsetEntry.insert(0, AWGAOffsetvalue)
+        elif AWG_Amp_Mode.get() == 1: # 1 = Amp/Offset
+            if AWGAOffsetvalue > (2.50-AWGA_Ext_Offset.get()):
+                AWGAOffsetvalue = 2.50-AWGA_Ext_Offset.get()
+                AWGAOffsetEntry.delete(0,"end")
+                AWGAOffsetEntry.insert(0, AWGAOffsetvalue)
+            if AWGAOffsetvalue < (-2.50-AWGA_Ext_Offset.get()):
+                AWGAOffsetvalue = -2.50-AWGA_Ext_Offset.get()
+                AWGAOffsetEntry.delete(0,"end")
+                AWGAOffsetEntry.insert(0, AWGAOffsetvalue)
     if AWGAMode.get() == 1: # Source current measure voltage mode
         if AWGAOffsetvalue > 200.00:
             AWGAOffsetvalue = 200.00
@@ -8703,7 +8737,8 @@ def AWGAMakeMath():
 def AWGAMakeBodeSine():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
     global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay, AWGAMode
-    global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate, phasealab
+    global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate, phasealab, AWG_Amp_Mode
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
     
     BAWGAAmpl(0)
     BAWGAOffset(0)
@@ -8740,12 +8775,21 @@ def AWGAMakeBodeSine():
         RecLength = RecLength + 1
     AWGAwaveform = []
     AWGAwaveform = numpy.cos(numpy.linspace(0, 2*Cycles*numpy.pi, RecLength))
-    if AWGAMode.get() == 1: # convert to mA
-        amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2000.0
-        offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2000.0
+    
+    if AWG_Amp_Mode.get() == 0:
+        if AWGAMode.get() == 1: # convert to mA
+            amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2000.0
+            offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2000.0
+        else:
+            amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2.0
+            offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2.0
     else:
-        amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2.0
-        offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2.0
+        if AWGAMode.get() == 1: # convert to mA
+            amplitude = AWGAAmplvalue/1000.0
+            offset = AWGAOffsetvalue/1000.0
+        else:
+            amplitude = AWGAAmplvalue*AWGA_Ext_Gain.get()
+            offset = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get()
     AWGAwaveform = (AWGAwaveform * amplitude) + offset # scale and offset the waveform
     AWGAwaveform = numpy.roll(AWGAwaveform, int(AWGAdelayvalue))
 #
@@ -8759,7 +8803,8 @@ def AWGAMakeBodeSine():
 def AWGAMakeFMSine():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
     global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay, AWGAMode
-    global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate, phasealab
+    global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate, phasealab, AWG_Amp_Mode
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
     
     BAWGAAmpl(0)
     BAWGAOffset(0)
@@ -8809,12 +8854,20 @@ def AWGAMakeFMSine():
     CarCycles = int(RecLength/AWGAperiodvalue) # insure a whole number of carrier cycles in record
     AWGAwaveform = []
     AWGAwaveform = numpy.sin( (numpy.linspace(0, CarCycles*2*numpy.pi, RecLength)) - ModIndex*numpy.cos(numpy.linspace(0, ModCycles*2*numpy.pi, RecLength)) )
-    if AWGAMode.get() == 1: # convert to mA
-        amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2000.0
-        offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2000.0
+    if AWG_Amp_Mode.get() == 0:
+        if AWGAMode.get() == 1: # convert to mA
+            amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2000.0
+            offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2000.0
+        else:
+            amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2.0
+            offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2.0
     else:
-        amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2.0
-        offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2.0
+        if AWGAMode.get() == 1: # convert to mA
+            amplitude = AWGAAmplvalue/1000.0
+            offset = AWGAOffsetvalue/1000.0
+        else:
+            amplitude = AWGAAmplvalue*AWGA_Ext_Gain.get()
+            offset = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get()
     AWGAwaveform = (AWGAwaveform * amplitude) + offset # scale and offset the waveform
     AWGAwaveform = numpy.roll(AWGAwaveform, int(AWGAdelayvalue))
 #
@@ -8825,7 +8878,8 @@ def AWGAMakeFMSine():
 def AWGAMakeAMSine():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
     global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay, AWGAMode
-    global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate, phasealab
+    global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate, phasealab, AWG_Amp_Mode
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
     
     BAWGAAmpl(0)
     BAWGAOffset(0)
@@ -8875,12 +8929,20 @@ def AWGAMakeAMSine():
     CarCycles = int(RecLength/AWGAperiodvalue) # insure a whole number of carrier cycles in record
     AWGAwaveform = []
     AWGAwaveform = numpy.sin(numpy.linspace(0, CarCycles*2*numpy.pi, RecLength)) * (0.5+(ModIndex*(numpy.cos(numpy.linspace(0, ModCycles*2*numpy.pi, RecLength)))))
-    if AWGAMode.get() == 1: # convert to mA
-        amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2000.0
-        offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2000.0
+    if AWG_Amp_Mode.get() == 0:
+        if AWGAMode.get() == 1: # convert to mA
+            amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2000.0
+            offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2000.0
+        else:
+            amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2.0
+            offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2.0
     else:
-        amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2.0
-        offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2.0
+        if AWGAMode.get() == 1: # convert to mA
+            amplitude = AWGAAmplvalue/1000.0
+            offset = AWGAOffsetvalue/1000.0
+        else:
+            amplitude = AWGAAmplvalue*AWGA_Ext_Gain.get()
+            offset = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get()
     AWGAwaveform = (AWGAwaveform * amplitude) + offset # scale and offset the waveform
     AWGAwaveform = numpy.roll(AWGAwaveform, int(AWGAdelayvalue))
 #
@@ -8892,6 +8954,7 @@ def AWGAMakePWMSine():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength
     global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGAAmpl(0)
     BAWGAOffset(0)
@@ -8907,8 +8970,8 @@ def AWGAMakePWMSine():
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
-        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+        MaxV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() + (AWGAAmplvalue * AWGA_Ext_Gain.get())
+        MinV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() - (AWGAAmplvalue * AWGA_Ext_Gain.get())
     else:
         MaxV = AWGAOffsetvalue
         MinV = AWGAAmplvalue
@@ -8933,6 +8996,7 @@ def AWGAMakeFourier():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength
     global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGAAmpl(0)
     BAWGAOffset(0)
@@ -8956,8 +9020,8 @@ def AWGAMakeFourier():
         amplitude = (AWGAOffsetvalue-AWGAAmplvalue)/2.0
         offset = (AWGAOffsetvalue+AWGAAmplvalue)/2.0
     else:
-        amplitude = AWGAAmplvalue
-        offset = AWGAOffsetvalue
+        amplitude = AWGAAmplvalue*AWGA_Ext_Gain.get()
+        offset = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get()
     AWGAwaveform = (AWGAwaveform * amplitude) + offset # scale and offset the waveform
     SplitAWGAwaveform()
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
@@ -8968,6 +9032,7 @@ def AWGAMakeSinc():
     global AWGAwaveform, AWGSampleRate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
     global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
     
     BAWGAAmpl(0)
     BAWGAOffset(0)
@@ -8987,8 +9052,8 @@ def AWGAMakeSinc():
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
-        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+        MaxV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() + (AWGAAmplvalue * AWGA_Ext_Gain.get())
+        MinV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() - (AWGAAmplvalue * AWGA_Ext_Gain.get())
     else:
         MaxV = AWGAOffsetvalue
         MinV = AWGAAmplvalue
@@ -9026,6 +9091,7 @@ def AWGAMakeSSQ():
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGAAmpl(0)
     BAWGAOffset(0)
@@ -9045,8 +9111,8 @@ def AWGAMakeSSQ():
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
-        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+        MaxV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() + (AWGAAmplvalue * AWGA_Ext_Gain.get())
+        MinV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() - (AWGAAmplvalue * AWGA_Ext_Gain.get())
     else:
         MaxV = AWGAOffsetvalue
         MinV = AWGAAmplvalue
@@ -9086,6 +9152,7 @@ def AWGAMakeTrapazoid():
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGAAmpl(0)
     BAWGAOffset(0)
@@ -9105,8 +9172,8 @@ def AWGAMakeTrapazoid():
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
-        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+        MaxV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() + (AWGAAmplvalue * AWGA_Ext_Gain.get())
+        MinV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() - (AWGAAmplvalue * AWGA_Ext_Gain.get())
     else:
         MaxV = AWGAOffsetvalue
         MinV = AWGAAmplvalue
@@ -9152,6 +9219,7 @@ def AWGAMakePulse():
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGAAmpl(0)
     BAWGAOffset(0)
@@ -9176,8 +9244,8 @@ def AWGAMakePulse():
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
-        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+        MaxV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() + (AWGAAmplvalue * AWGA_Ext_Gain.get())
+        MinV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() - (AWGAAmplvalue * AWGA_Ext_Gain.get())
     else:
         MaxV = AWGAOffsetvalue
         MinV = AWGAAmplvalue
@@ -9223,6 +9291,7 @@ def AWGAMakeRamp():
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGAAmpl(0)
     BAWGAOffset(0)
@@ -9242,8 +9311,8 @@ def AWGAMakeRamp():
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
-        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+        MaxV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() + (AWGAAmplvalue * AWGA_Ext_Gain.get())
+        MinV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() - (AWGAAmplvalue * AWGA_Ext_Gain.get())
     else:
         MaxV = AWGAOffsetvalue
         MinV = AWGAAmplvalue
@@ -9286,6 +9355,7 @@ def AWGAMakeUpDownRamp():
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGAAmpl(0)
     BAWGAOffset(0)
@@ -9305,8 +9375,8 @@ def AWGAMakeUpDownRamp():
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
-        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+        MaxV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() + (AWGAAmplvalue * AWGA_Ext_Gain.get())
+        MinV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() - (AWGAAmplvalue * AWGA_Ext_Gain.get())
     else:
         MaxV = AWGAOffsetvalue
         MinV = AWGAAmplvalue
@@ -9353,6 +9423,7 @@ def AWGAMakeImpulse():
     global AWGAFreqvalue, AWGAperiodvalue, AWGSAMPLErate, AWGADutyCyclevalue, AWGAPhasevalue
     global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGAAmpl(0)
     BAWGAOffset(0)
@@ -9372,8 +9443,8 @@ def AWGAMakeImpulse():
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
-        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+        MaxV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() + (AWGAAmplvalue * AWGA_Ext_Gain.get())
+        MinV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() - (AWGAAmplvalue * AWGA_Ext_Gain.get())
     else:
         MaxV = AWGAOffsetvalue
         MinV = AWGAAmplvalue
@@ -9407,6 +9478,7 @@ def AWGAMakeUUNoise():
     global AWGALength, AWGAperiodvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGAAmpl(0)
     BAWGAOffset(0)
@@ -9424,8 +9496,8 @@ def AWGAMakeUUNoise():
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
-        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+        MaxV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() + (AWGAAmplvalue * AWGA_Ext_Gain.get())
+        MinV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() - (AWGAAmplvalue * AWGA_Ext_Gain.get())
     else:
         if AWGAAmplvalue > AWGAOffsetvalue:
             MinV = AWGAOffsetvalue
@@ -9451,6 +9523,7 @@ def AWGAMakeUGNoise():
     global AWGALength, AWGAperiodvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGAAmpl(0)
     BAWGAOffset(0)
@@ -9468,8 +9541,8 @@ def AWGAMakeUGNoise():
     else:
         AWGAperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
-        MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+        MaxV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() + (AWGAAmplvalue * AWGA_Ext_Gain.get())
+        MinV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() - (AWGAAmplvalue * AWGA_Ext_Gain.get())
     else:
         if AWGAAmplvalue > AWGAOffsetvalue:
             MinV = AWGAOffsetvalue
@@ -9519,6 +9592,7 @@ def UpdateAWGA():
     global AWGAWave, AWGAMode, AWGATerm, AWGAwaveform, AWGAIOMode
     global CHA, CHB, AWGSAMPLErate, DevID, devx, HWRevOne, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global amp1lab, off1lab, AWGA2X, AWGA2X, AWGBWave, AWGBRepeatFlag
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
     
     BAWGAAmpl(0)
     BAWGAOffset(0)
@@ -9611,8 +9685,8 @@ def UpdateAWGA():
                 CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z split mode
         else:
             if AWG_Amp_Mode.get() == 1:
-                MaxV = (AWGAOffsetvalue+AWGAAmplvalue)
-                MinV = (AWGAOffsetvalue-AWGAAmplvalue)
+                MaxV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() + (AWGAAmplvalue * AWGA_Ext_Gain.get())
+                MinV = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get() - (AWGAAmplvalue * AWGA_Ext_Gain.get())
             else:
                 MaxV = AWGAOffsetvalue
                 MinV = AWGAAmplvalue
@@ -9686,46 +9760,53 @@ def AWGBNumCycles():
 #    
 def BAWGBAmpl(temp):
     global AWGBAmplEntry, AWGBAmplvalue, AWGBMode, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
-
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
+    
     try:
         AWGBAmplvalue = float(eval(AWGBAmplEntry.get()))
-        if AWGBMode.get() == 0: # Source Voltage measure current mode
-            if AWG_Amp_Mode.get() == 0: # 0 = Min/Max
-                if AWGBAmplvalue > 5.00:
-                    AWGBAmplvalue = 5.00
-                    AWGBAmplEntry.delete(0,"end")
-                    AWGBAmplEntry.insert(0, AWGBAmplvalue)
-                if AWGBAmplvalue < 0.00:
-                    AWGBAmplvalue = 0.00
-                    AWGBAmplEntry.delete(0,"end")
-                    AWGBAmplEntry.insert(0, AWGBAmplvalue)
-            elif AWG_Amp_Mode.get() == 1: # 1 = Amp/Offset
-                if AWGBAmplvalue > 2.5:
-                    AWGBAmplvalue = 2.5
-                    AWGBAmplEntry.delete(0,"end")
-                    AWGBAmplEntry.insert(0, AWGBAmplvalue)
-                if AWGBAmplvalue < -2.50:
-                    AWGBAmplvalue = -2.50
-                    AWGBAmplEntry.delete(0,"end")
-                    AWGBAmplEntry.insert(0, AWGBAmplvalue)
-        elif AWGBMode.get() == 1: # Source current measure voltage mode
-            if AWGBAmplvalue > 200.00:
-                AWGBAmplvalue = 200.00
-                AWGBAmplEntry.delete(0,"end")
-                AWGBAmplEntry.insert(0, AWGBAmplvalue)
-            if AWGBAmplvalue < -200.00:
-                AWGBAmplvalue = -200.00
-                AWGBAmplEntry.delete(0,"end")
-                AWGBAmplEntry.insert(0, AWGBAmplvalue)
     except:
         AWGBAmplEntry.delete(0,"end")
         AWGBAmplEntry.insert(0, AWGBAmplvalue)
+    #
+    if AWGBMode.get() == 0: # Source Voltage measure current mode
+        if AWG_Amp_Mode.get() == 0: # 0 = Min/Max
+            if AWGBAmplvalue > 5.00:
+                AWGBAmplvalue = 5.00
+                AWGBAmplEntry.delete(0,"end")
+                AWGBAmplEntry.insert(0, AWGBAmplvalue)
+            if AWGBAmplvalue < 0.00:
+                AWGBAmplvalue = 0.00
+                AWGBAmplEntry.delete(0,"end")
+                AWGBAmplEntry.insert(0, AWGBAmplvalue)
+        elif AWG_Amp_Mode.get() == 1: # 1 = Amp/Offset
+            if AWGBAmplvalue > (2.5 / AWGB_Ext_Gain.get()):
+                AWGBAmplvalue = 2.5 / AWGB_Ext_Gain.get()
+                AWGBAmplEntry.delete(0,"end")
+                AWGBAmplEntry.insert(0, AWGBAmplvalue)
+            if AWGBAmplvalue < (-2.50 / AWGB_Ext_Gain.get()):
+                AWGBAmplvalue = -2.50 / AWGB_Ext_Gain.get() 
+                AWGBAmplEntry.delete(0,"end")
+                AWGBAmplEntry.insert(0, AWGBAmplvalue)
+    elif AWGBMode.get() == 1: # Source current measure voltage mode
+        if AWGBAmplvalue > 200.00:
+            AWGBAmplvalue = 200.00
+            AWGBAmplEntry.delete(0,"end")
+            AWGBAmplEntry.insert(0, AWGBAmplvalue)
+        if AWGBAmplvalue < -200.00:
+            AWGBAmplvalue = -200.00
+            AWGBAmplEntry.delete(0,"end")
+            AWGBAmplEntry.insert(0, AWGBAmplvalue)
 #
 def BAWGBOffset(temp):
     global AWGBOffsetEntry, AWGBOffsetvalue, AWGBMode, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
-
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
+    
     try:
         AWGBOffsetvalue = float(eval(AWGBOffsetEntry.get()))
+    except:
+        AWGBOffsetEntry.delete(0,"end")
+        AWGBOffsetEntry.insert(0, AWGBOffsetvalue)
+    if AWG_Amp_Mode.get() == 0: # 0 = Min/Max mode
         if AWGBMode.get() == 0: # Source Voltage measure current mode
             if AWGBOffsetvalue > 5.00:
                 AWGBOffsetvalue = 5.00
@@ -9735,18 +9816,24 @@ def BAWGBOffset(temp):
                 AWGBOffsetvalue = 0.00
                 AWGBOffsetEntry.delete(0,"end")
                 AWGBOffsetEntry.insert(0, AWGBOffsetvalue)
-        elif AWGBMode.get() == 1: # Source current measure voltage mode
-            if AWGBOffsetvalue > 200.00:
-                AWGBOffsetvalue = 200.00
+        elif AWG_Amp_Mode.get() == 1: # 1 = Amp/Offset
+            if AWGBOffsetvalue > (2.50-AWGB_Ext_Offset.get()):
+                AWGBOffsetvalue = 2.50-AWGB_Ext_Offset.get()
                 AWGBOffsetEntry.delete(0,"end")
                 AWGBOffsetEntry.insert(0, AWGBOffsetvalue)
-            if AWGBOffsetvalue < -200.00:
-                AWGBOffsetvalue = -200.00
+            if AWGBOffsetvalue < (-2.50-AWGB_Ext_Offset.get()):
+                AWGBOffsetvalue = -2.50-AWGB_Ext_Offset.get()
                 AWGBOffsetEntry.delete(0,"end")
                 AWGBOffsetEntry.insert(0, AWGBOffsetvalue)
-    except:
-        AWGBOffsetEntry.delete(0,"end")
-        AWGBOffsetEntry.insert(0, AWGBOffsetvalue)
+    if AWGBMode.get() == 1: # Source current measure voltage mode
+        if AWGBOffsetvalue > 200.00:
+            AWGBOffsetvalue = 200.00
+            AWGBOffsetEntry.delete(0,"end")
+            AWGBOffsetEntry.insert(0, AWGBOffsetvalue)
+        if AWGBOffsetvalue < -200.00:
+            AWGBOffsetvalue = -200.00
+            AWGBOffsetEntry.delete(0,"end")
+            AWGBOffsetEntry.insert(0, AWGBOffsetvalue)
 #
 def BAWGBFreq(temp):
     global AWGBFreqEntry, AWGBFreqvalue, AWG_2X
@@ -9968,12 +10055,10 @@ def AWGBMakeFourier():
     global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBFreqvalue, awgwindow
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
     
-    Max_termStr = askstring("AWG B Fourier", "\nEnter Max Harmonic:\n", parent=awgwindow)
-    if (Max_termStr == None):         # If Cancel pressed, then None
-        return
-    Max_term = int(Max_termStr)
-
+    Max_term = int(AWGBDutyCyclevalue*100)
+    
     BAWGBAmpl(0)
     BAWGBOffset(0)
     BAWGBFreq(0)
@@ -9993,8 +10078,8 @@ def AWGBMakeFourier():
         amplitude = (AWGBOffsetvalue-AWGBAmplvalue)/2
         offset = (AWGBOffsetvalue+AWGBAmplvalue)/2
     else:
-        amplitude = AWGBAmplvalue
-        offset = AWGBOffsetvalue
+        amplitude = AWGBAmplvalue*AWGB_Ext_Gain.get()
+        offset = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get()
     AWGBwaveform = (AWGBwaveform * amplitude) + offset # scale and offset the waveform
     SplitAWGBwaveform()
     AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
@@ -10004,7 +10089,8 @@ def AWGBMakeFourier():
 def AWGBMakeBodeSine():
     global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBperiodvalue
     global AWGBDutyCyclevalue, AWGBFreqvalue, duty2lab, AWGBgain, AWGBoffset, AWGBPhaseDelay, AWGBMode
-    global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate, AWG_Amp_Mode
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGBAmpl(0)
     BAWGBOffset(0)
@@ -10041,12 +10127,21 @@ def AWGBMakeBodeSine():
         RecLength = RecLength + 1
     AWGBwaveform = []
     AWGBwaveform = numpy.cos(numpy.linspace(0, 2*Cycles*numpy.pi, RecLength))
-    if AWGBMode.get() == 1: # convert to mA
-        amplitude = (AWGBOffsetvalue-AWGBAmplvalue) / -2000.0
-        offset = (AWGBOffsetvalue+AWGBAmplvalue) / 2000.0
+
+    if AWG_Amp_Mode.get() == 0:
+        if AWGBMode.get() == 1: # convert to mA
+            amplitude = (AWGBOffsetvalue-AWGBAmplvalue) / -2000.0
+            offset = (AWGBOffsetvalue+AWGBAmplvalue) / 2000.0
+        else:
+            amplitude = (AWGBOffsetvalue-AWGBAmplvalue) / -2.0
+            offset = (AWGBOffsetvalue+AWGBAmplvalue) / 2.0
     else:
-        amplitude = (AWGBOffsetvalue-AWGBAmplvalue) / -2.0
-        offset = (AWGBOffsetvalue+AWGBAmplvalue) / 2.0
+        if AWGBMode.get() == 1: # convert to mA
+            amplitude = AWGBAmplvalue/1000.0
+            offset = AWGBOffsetvalue/1000.0
+        else:
+            amplitude = AWGBAmplvalue*AWGB_Ext_Gain.get()
+            offset = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get()
     AWGBwaveform = (AWGBwaveform * amplitude) + offset # scale and offset the waveform
     AWGBwaveform = numpy.roll(AWGBwaveform, int(AWGBdelayvalue))
     #
@@ -10065,6 +10160,7 @@ def AWGBMakePWMSine():
     global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength
     global AWGBDutyCyclevalue, AWGBFreqvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGBAmpl(0)
     BAWGBOffset(0)
@@ -10080,8 +10176,8 @@ def AWGBMakePWMSine():
     else:
         AWGBperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
-        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+        MaxV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() + (AWGBAmplvalue * AWGB_Ext_Gain.get())
+        MinV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() - (AWGBAmplvalue * AWGB_Ext_Gain.get())
     else:
         MaxV = AWGBOffsetvalue
         MinV = AWGBAmplvalue
@@ -10106,6 +10202,7 @@ def AWGBMakeSinc():
     global AWGBwaveform, AWGSampleRate, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBperiodvalue
     global AWGBDutyCyclevalue, AWGBFreqvalue, duty2lab, AWGBgain, AWGBoffset, AWGBPhaseDelay
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
     
     BAWGBAmpl(0)
     BAWGBOffset(0)
@@ -10123,8 +10220,8 @@ def AWGBMakeSinc():
     else:
         AWGBperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
-        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+        MaxV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() + (AWGBAmplvalue * AWGB_Ext_Gain.get())
+        MinV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() - (AWGBAmplvalue * AWGB_Ext_Gain.get())
     else:
         MaxV = AWGBOffsetvalue
         MinV = AWGBAmplvalue
@@ -10163,6 +10260,7 @@ def AWGBMakeSSQ():
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGBAmpl(0)
     BAWGBOffset(0)
@@ -10180,8 +10278,8 @@ def AWGBMakeSSQ():
     else:
         AWGBperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
-        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+        MaxV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() + (AWGBAmplvalue * AWGB_Ext_Gain.get())
+        MinV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() - (AWGBAmplvalue * AWGB_Ext_Gain.get())
     else:
         MaxV = AWGBOffsetvalue
         MinV = AWGBAmplvalue
@@ -10222,6 +10320,7 @@ def AWGBMakeTrapazoid():
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGBAmpl(0)
     BAWGBOffset(0)
@@ -10239,8 +10338,8 @@ def AWGBMakeTrapazoid():
     else:
         AWGBperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
-        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+        MaxV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() + (AWGBAmplvalue * AWGB_Ext_Gain.get())
+        MinV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() - (AWGBAmplvalue * AWGB_Ext_Gain.get())
     else:
         MaxV = AWGBOffsetvalue
         MinV = AWGBAmplvalue
@@ -10287,6 +10386,7 @@ def AWGBMakePulse():
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGBAmpl(0)
     BAWGBOffset(0)
@@ -10309,8 +10409,8 @@ def AWGBMakePulse():
     else:
         AWGBperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
-        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+        MaxV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() + (AWGBAmplvalue * AWGB_Ext_Gain.get())
+        MinV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() - (AWGBAmplvalue * AWGB_Ext_Gain.get())
     else:
         MaxV = AWGBOffsetvalue
         MinV = AWGBAmplvalue
@@ -10357,6 +10457,7 @@ def AWGBMakeRamp():
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGBAmpl(0)
     BAWGBOffset(0)
@@ -10374,8 +10475,8 @@ def AWGBMakeRamp():
     else:
         AWGBperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
-        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+        MaxV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() + (AWGBAmplvalue * AWGB_Ext_Gain.get())
+        MinV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() - (AWGBAmplvalue * AWGB_Ext_Gain.get())
     else:
         MaxV = AWGBOffsetvalue
         MinV = AWGBAmplvalue
@@ -10419,6 +10520,7 @@ def AWGBMakeUpDownRamp():
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGBAmpl(0)
     BAWGBOffset(0)
@@ -10436,8 +10538,8 @@ def AWGBMakeUpDownRamp():
     else:
         AWGBperiodvalue = 0.0
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
-        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+        MaxV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() + (AWGBAmplvalue * AWGB_Ext_Gain.get())
+        MinV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() - (AWGBAmplvalue * AWGB_Ext_Gain.get())
     else:
         MaxV = AWGBOffsetvalue
         MinV = AWGBAmplvalue
@@ -10485,6 +10587,7 @@ def AWGBMakeImpulse():
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGBAmpl(0)
     BAWGBOffset(0)
@@ -10501,11 +10604,9 @@ def AWGBMakeImpulse():
             SamplesPermS = int(BaseSampleRate/1000) # 100
     else:
         AWGBperiodvalue = 0.0
-    MaxV = AWGBOffsetvalue
-    MinV = AWGBAmplvalue
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
-        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+        MaxV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() + (AWGBAmplvalue * AWGB_Ext_Gain.get())
+        MinV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() - (AWGBAmplvalue * AWGB_Ext_Gain.get())
     else:
         MaxV = AWGBOffsetvalue
         MinV = AWGBAmplvalue
@@ -10539,6 +10640,7 @@ def AWGBMakeUUNoise():
     global AWGBLength, AWGBperiodvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGBAmpl(0)
     BAWGBOffset(0)
@@ -10561,8 +10663,8 @@ def AWGBMakeUUNoise():
         MaxV = AWGBOffsetvalue
         MinV = AWGBAmplvalue
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
-        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+        MaxV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() + (AWGBAmplvalue * AWGB_Ext_Gain.get())
+        MinV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() - (AWGBAmplvalue * AWGB_Ext_Gain.get())
     AWGBwaveform = []
     AWGBwaveform = numpy.random.uniform(MinV, MaxV, int(AWGBperiodvalue))
     Mid = (MaxV+MinV)/2
@@ -10581,6 +10683,7 @@ def AWGBMakeUGNoise():
     global AWGBLength, AWGBperiodvalue, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
 
     BAWGBAmpl(0)
     BAWGBOffset(0)
@@ -10602,8 +10705,8 @@ def AWGBMakeUGNoise():
         MaxV = AWGBOffsetvalue
         MinV = AWGBAmplvalue
     if AWG_Amp_Mode.get() == 1:
-        MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
-        MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+        MaxV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() + (AWGBAmplvalue * AWGB_Ext_Gain.get())
+        MinV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() - (AWGBAmplvalue * AWGB_Ext_Gain.get())
     AWGBwaveform = []
     AWGBwaveform = numpy.random.normal((MinV+MaxV)/2, (MaxV-MinV)/3, int(AWGBperiodvalue))
     Mid = (MaxV+MinV)/2
@@ -10646,6 +10749,7 @@ def UpdateAWGB():
     global CHA, CHB, AWGSAMPLErate, DevID, devx, HWRevOne
     global amp2lab, off2lab, AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
     global AWGA2X, AWGB2X, AWGAWave, AWGARepeatFlag
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
     
     if AWG_Amp_Mode.get() == 0: # 0 = Min/Max mode, 1 = Amp/Offset
         amp2lab.config(text = "Min Ch B" ) # change displayed value
@@ -10731,8 +10835,8 @@ def UpdateAWGB():
                 CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z split mode
         else:
             if AWG_Amp_Mode.get() == 1:
-                MaxV = (AWGBOffsetvalue+AWGBAmplvalue)
-                MinV = (AWGBOffsetvalue-AWGBAmplvalue)
+                MaxV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() + (AWGBAmplvalue * AWGB_Ext_Gain.get())
+                MinV = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get() - (AWGBAmplvalue * AWGB_Ext_Gain.get())
             else:
                 MaxV = AWGBOffsetvalue
                 MinV = AWGBAmplvalue
@@ -11309,6 +11413,8 @@ def BStartBP():
             SweepStepBodeEntry.insert(0, NSteps.get())
         #
         if FSweepMode.get() > 0:
+            BAWGAModeLabel() # make sure AWG screen labels reflect any changes to the modes
+            BAWGBModeLabel()
             LoopNum.set(1)
             NyquistFreq = SAMPLErate/2
             BeginIndex = int((BeginFreq/NyquistFreq)*16384)
@@ -12523,7 +12629,8 @@ def DoImpedance():
     Za = ResValue * VA / VI
     ImpedanceRseries = Za * costheta - ResValue
     ImpedanceMagnitude = ResValue * VZ / VI
-    ImpedanceXseries = math.sqrt(ImpedanceMagnitude**2 - ImpedanceRseries**2)
+    # don't try to take square root of a negative number)
+    ImpedanceXseries = math.sqrt(abs(ImpedanceMagnitude**2 - ImpedanceRseries**2))
     
     if(PeakRelPhase < 0.0):
         ImpedanceXseries = -ImpedanceXseries
@@ -12888,6 +12995,8 @@ def MakeIAScreen():       # Update the screen with traces and text
         except:
             Lseries = 0
         Qseries = (2*math.pi*PeakfreqA*Lseries)/ImpedanceRseries
+        if Qseries == 0.0: # Check if divide by zero
+            Qseries = 0.00001
         Lparallel = Lseries * ((1+Qseries**2) / Qseries**2)
         Lparallel = Lparallel * 1E3 # convert to millihenry
         Rparallel = ImpedanceRseries * (1+Qseries**2)
@@ -15173,10 +15282,10 @@ def MakeBodeWindow():
         #
         RUNframe = Frame( frame2bp )
         RUNframe.pack(side=TOP)
-        sbode = Button(RUNframe, text="Stop", style="Stop.TButton", command=BStopBP)
-        sbode.pack(side=LEFT)
         rbode = Button(RUNframe, text="Run", style="Run.TButton", command=BStartBP)
         rbode.pack(side=LEFT)
+        sbode = Button(RUNframe, text="Stop", style="Stop.TButton", command=BStopBP)
+        sbode.pack(side=LEFT)
         #
         BodeFFTwindmenu = Menubutton(frame2bp, text="FFTwindow", style="W11.TButton")
         BodeFFTwindmenu.menu = Menu(BodeFFTwindmenu, tearoff = 0 )
@@ -15467,10 +15576,10 @@ def MakeSpectrumWindow():
         #
         RUNframe = Frame( frame2fr )
         RUNframe.pack(side=TOP)
-        sb = Button(RUNframe, text="Stop", style="Stop.TButton", command=BStopSA)
-        sb.pack(side=LEFT)
         rb = Button(RUNframe, text="Run", style="Run.TButton", command=BStartSA)
         rb.pack(side=LEFT)
+        sb = Button(RUNframe, text="Stop", style="Stop.TButton", command=BStopSA)
+        sb.pack(side=LEFT)
         #
         Modeframe = Frame( frame2fr )
         Modeframe.pack(side=TOP)
@@ -15701,12 +15810,12 @@ def MakeXYWindow():
         #
         RUNframe = Frame( frame2xyr )
         RUNframe.pack(side=TOP)
-        sbxy = Button(RUNframe, text="Stop", style="Stop.TButton", command=BStop)
-        sbxy.pack(side=LEFT)
         rbxy = Button(RUNframe, text="Run", style="Run.TButton", command=BStart)
         rbxy.pack(side=LEFT)
+        sbxy = Button(RUNframe, text="Stop", style="Stop.TButton", command=BStop)
+        sbxy.pack(side=LEFT)
         # Open Math trace menu
-        mathbt = Button(frame2xyr, text="Math", style="W4.TButton", command = NewEnterMathControls)
+        mathbt = Button(frame2xyr, text="Math", style="W5.TButton", command = NewEnterMathControls)
         mathbt.pack(side=TOP) #, anchor=W)
         # Disply mode menu
         # X - Y mode signal select
@@ -15759,7 +15868,7 @@ def MakeXYWindow():
         cb4 = Checkbutton(frame2xyr, text='Persistance', variable=ScreenXYrefresh, command=UpdateXYTrace)
         cb4.pack(side=TOP)
         #
-        snapbutton = Button(frame2xyr, style="W8.TButton", text="SnapShot", command=BSnapShot)
+        snapbutton = Button(frame2xyr, style="W11.TButton", text="SnapShot", command=BSnapShot)
         snapbutton.pack(side=TOP)
         savebutton = Button(frame2xyr, style="W11.TButton", text="Save Screen", command=BSaveScreenXY)
         savebutton.pack(side=TOP)
@@ -17201,6 +17310,8 @@ def MakeDigFiltWindow():
         BCBLenEntry.grid(row=1, column=1, sticky=W)
         BCBLenEntry.delete(0,"end")
         BCBLenEntry.insert(0,2)
+        bcblab = Label(digfiltb, text="Length")
+        bcblab.grid(row=1, column=2, sticky=W)
         DifFiltBLength = Label(digfiltb,text="Length = 0 ")
         DifFiltBLength.grid(row=2, column=0, sticky=W)
         DifFiltBFile = Label(digfiltb,text="File Name, none ")
@@ -17955,7 +18066,7 @@ def UpdateFirmware():
 #
 def MakeOhmWindow():
     global OhmDisp, OhmStatus, ohmwindow, RevDate, RMode, OhmA0, OhmA1, OhmRunStatus
-    global CHATestVEntry, CHATestREntry, SWRev, AWGSync
+    global CHATestVEntry, CHATestREntry, SWRev, AWGSync, OnBoardRes
     
     if OhmStatus.get() == 0:
         AWGSync.set(1)
@@ -17971,10 +18082,10 @@ def MakeOhmWindow():
         #
         buttons = Frame( frame1 )
         buttons.grid(row=0, column=0, sticky=W)
-        rb1 = Radiobutton(buttons, text="Stop", style="Stop.TRadiobutton", variable=OhmRunStatus, value=0, command=BStop )
-        rb1.pack(side=LEFT)
         rb2 = Radiobutton(buttons, text="Run", style="Run.TRadiobutton", variable=OhmRunStatus, value=1, command=BStartOhm )
         rb2.pack(side=LEFT)
+        rb1 = Radiobutton(buttons, text="Stop", style="Stop.TRadiobutton", variable=OhmRunStatus, value=0, command=BStop )
+        rb1.pack(side=LEFT)
         #
         OhmA0 = Label(frame1, style="A16B.TLabel") # , font = "Arial 16 bold")
         OhmA0.grid(row=1, column=0, columnspan=2, sticky=W)
@@ -18013,7 +18124,7 @@ def MakeOhmWindow():
         CHATestREntry.pack(side=LEFT)
         CHATestREntry.bind('<MouseWheel>', onTextScroll)
         CHATestREntry.delete(0,"end")
-        CHATestREntry.insert(0,50.0)
+        CHATestREntry.insert(0,OnBoardRes)
         #
         ohmdismissclbutton = Button(frame1, text="Dismiss", style="W8.TButton", command=DestroyOhmScreen)
         ohmdismissclbutton.grid(row=6, column=0, sticky=W, pady=7)
@@ -18505,6 +18616,7 @@ def UpdateAWGWin():
 
     UpdateAWGA()
     UpdateAWGB()
+    ReMakeAWGwaves()
     
 def SettingsUpdate():
     global GridWidth, TRACEwidth, TRACEaverage, Vdiv, HarmonicMarkers, ZEROstuffing, RevDate
@@ -18949,19 +19061,19 @@ brun = Button(frame1, text="Run", style="Run.TButton", command=BStart)
 brun.pack(side=RIGHT)
 PwrBt = Button(frame1, text="PWR-ON", style="Pwr.TButton", command=BPower)
 PwrBt.pack(side=RIGHT)
-# Curves Menu
+# Curves Menu , background="#A0A0A0"
 Showmenu = Menubutton(frame1, text="Curves", style="W7.TButton")
 Showmenu.menu = Menu(Showmenu, tearoff = 0 )
 Showmenu["menu"] = Showmenu.menu
 Showmenu.menu.add_command(label="-Show-", foreground="blue", command=donothing)
 Showmenu.menu.add_command(label="All", command=BShowCurvesAll)
 Showmenu.menu.add_command(label="None", command=BShowCurvesNone)
-Showmenu.menu.add_checkbutton(label='CA-V [1]', variable=ShowC1_V, command=TraceSelectADC_Mux)
-Showmenu.menu.add_checkbutton(label='CA-I [3]', variable=ShowC1_I, command=TraceSelectADC_Mux)
-Showmenu.menu.add_checkbutton(label='CB-V [2]', variable=ShowC2_V, command=TraceSelectADC_Mux)
-Showmenu.menu.add_checkbutton(label='CB-I [4]', variable=ShowC2_I, command=TraceSelectADC_Mux)
-Showmenu.menu.add_checkbutton(label='Math-X', variable=Show_MathX, command=UpdateTimeTrace)
-Showmenu.menu.add_checkbutton(label='Math-Y', variable=Show_MathY, command=UpdateTimeTrace)
+Showmenu.menu.add_checkbutton(label='CA-V [1]', background=COLORtrace1, variable=ShowC1_V, command=TraceSelectADC_Mux)
+Showmenu.menu.add_checkbutton(label='CA-I [3]', background=COLORtrace3, variable=ShowC1_I, command=TraceSelectADC_Mux)
+Showmenu.menu.add_checkbutton(label='CB-V [2]', background=COLORtrace2, variable=ShowC2_V, command=TraceSelectADC_Mux)
+Showmenu.menu.add_checkbutton(label='CB-I [4]', background=COLORtrace4,variable=ShowC2_I, command=TraceSelectADC_Mux)
+Showmenu.menu.add_checkbutton(label='Math-X', background=COLORtrace6, variable=Show_MathX, command=UpdateTimeTrace)
+Showmenu.menu.add_checkbutton(label='Math-Y', background=COLORtrace7, variable=Show_MathY, command=UpdateTimeTrace)
 Showmenu.menu.add_command(label="-Auto Vert Center-", foreground="blue", command=donothing)
 Showmenu.menu.add_checkbutton(label='Center CA-V', variable=AutoCenterA)
 Showmenu.menu.add_checkbutton(label='Center CB-V', variable=AutoCenterB)
@@ -18972,11 +19084,11 @@ if EnableHSsampling > 0:
     Showmenu.menu.add_checkbutton(label='Comp CA-I', variable=CHAI_RC_HP)
     Showmenu.menu.add_checkbutton(label='Comp CB-I', variable=CHBI_RC_HP)
 Showmenu.menu.add_separator()  
-Showmenu.menu.add_checkbutton(label='RA-V', variable=ShowRA_V, command=UpdateTimeTrace)
-Showmenu.menu.add_checkbutton(label='RA-I', variable=ShowRA_I, command=UpdateTimeTrace)
-Showmenu.menu.add_checkbutton(label='RB-V', variable=ShowRB_V, command=UpdateTimeTrace)
-Showmenu.menu.add_checkbutton(label='RB-I', variable=ShowRB_I, command=UpdateTimeTrace)
-Showmenu.menu.add_checkbutton(label='RMath', variable=ShowMath, command=UpdateTimeTrace)
+Showmenu.menu.add_checkbutton(label='RA-V', background=COLORtraceR1, variable=ShowRA_V, command=UpdateTimeTrace)
+Showmenu.menu.add_checkbutton(label='RA-I', background=COLORtraceR3, variable=ShowRA_I, command=UpdateTimeTrace)
+Showmenu.menu.add_checkbutton(label='RB-V', background=COLORtraceR2, variable=ShowRB_V, command=UpdateTimeTrace)
+Showmenu.menu.add_checkbutton(label='RB-I', background=COLORtraceR4, variable=ShowRB_I, command=UpdateTimeTrace)
+Showmenu.menu.add_checkbutton(label='RMath', background=COLORtraceR5, variable=ShowMath, command=UpdateTimeTrace)
 Showmenu.menu.add_separator()
 Showmenu.menu.add_checkbutton(label='T Cursor [t]', variable=ShowTCur, command=UpdateTimeTrace)
 Showmenu.menu.add_checkbutton(label='V Cursor [v]', variable=ShowVCur, command=UpdateTimeTrace)
