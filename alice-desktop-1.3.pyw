@@ -1360,6 +1360,7 @@ def BLoadConfig(filename):
 #
         time.sleep(0.05)
         ReMakeAWGwaves()
+        session.end() # Add this to turn off outputs after first tiem loading a config? 
         BTime()
     except:
         print( "Config File Not Found.")
@@ -2431,29 +2432,25 @@ def BStop():
     global CHA, CHB, contloop, discontloop
     
     if (RUNstatus.get() == 1):
+        # print("Stoping")
         RUNstatus.set(0)
         CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z split mode
         CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z split mode
         if AWGSync.get() == 0: # running in continuous mode
             CHA.constant(0.0)
             CHB.constant(0.0)
-            # print "Stoping continuous mode"
+            # print("Stoping continuous mode")
             # session.cancel() # cancel continuous session mode while paused
             if session.continuous:
-                #print "Is Continuous? ", session.continuous
+                #print( "Is Continuous? ", session.continuous)
                 session.end()
                 #time.sleep(0.02)
-                #print "Is Continuous? ", session.continuous
+                #print( "Is Continuous? ", session.continuous)
         else:
             contloop = 0
             discontloop = 1
             session.cancel()
-    elif (RUNstatus.get() == 2):
-        RUNstatus.set(3)
-    elif (RUNstatus.get() == 3):
-        RUNstatus.set(3)
-    elif (RUNstatus.get() == 4):
-        RUNstatus.set(3)
+#
     if TimeDisp.get() > 0:
         UpdateTimeScreen()          # Always Update screens as necessary
     if XYDisp.get() > 0:
@@ -19600,6 +19597,7 @@ if pysmu_found:
 # ================ Call main routine ===============================
     root.update()               # Activate updated screens
 #
+    
 # Start sampling
     Analog_In()
 else:
