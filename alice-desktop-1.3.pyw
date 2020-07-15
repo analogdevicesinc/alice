@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
 ## @package alice-desktop 1.3.py(w)
-# ADALM1000 alice-desktop 1.3.py(w) (7-6-2020)
+# ADALM1000 alice-desktop 1.3.py(w) (7-14-2020)
 # For Python version 2.7 or 3.7
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -56,9 +56,9 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(6 July 2020)"
+RevDate = "(14 July 2020)"
 SWRev = "1.3 "
-Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.6/alice-desktop-1.3-setup.exe'
+Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.7/alice-desktop-1.3-setup.exe'
 # small bit map of ADI logo for window icon
 TBicon = """
 R0lGODlhIAAgAHAAACH5BAEAAAIALAAAAAAgACAAgQAAAP///wAAAAAAAAJJhI+py+0PYwtBWkDp
@@ -105,6 +105,11 @@ GRWNiC = 400                # Width of the Nichols plot grid 400 default
 GRHNiC = 400                # Height of the grid 400 default
 X0LNiC = 25                 # Left top X value of grid
 Y0TNiC = 25                 # Left top Y value of grid
+#
+GRWPhA = 400                  # Width of the grid 400 default
+GRHPhA = 400                  # Height of the grid 400 default
+X0LPhA = 37                   # Left top X value of grid
+Y0TPhA = 25                   # Left top Y value of grid
 #
 FontSize = 8
 MouseX = MouseY = -10
@@ -189,6 +194,8 @@ ChbLableSrring3 = "CHB-TRMS "
 ChbLableSrring4 = "CHB-VP-P "
 ChbLableSrring5 = "CHB-IP-P "
 ChbLableSrring6 = "CHB-ACRMS "
+LabelPlotText = IntVar(0)
+PlotLabelText = "Custom Plot Label"
 ## defaukt trace width in pixels / number of averages
 GridWidth = IntVar(0)
 GridWidth.set(1)
@@ -235,6 +242,13 @@ ImpedanceCenter.set(0) # Center line value for impedance plots
 MultipleBoards = IntVar(0)
 MultipleBoards.set(0) # Turn on access for multiple m1k boards
 IgnoreFirmwareCheck = 0
+EnableXYPlotter = 0
+EnablePhaseAnalizer = 0
+EnableSpectrumAnalizer = 0
+EnableBodePlotter = 0
+EnableImpedanceAnalizer = 0
+EnableOhmMeter = 0
+EnableDigIO = 0
 EnableCommandInterface = 0
 EnableMuxMode = 1
 EnablePIODACMode = 1
@@ -249,6 +263,7 @@ EnableETSScreen = 0
 EnableHSsampling = 0
 AllowFlashFirmware = 0
 DeBugMode = 0
+ShowTraceControls = 0
 # ADC Mux defaults
 v1_adc_conf = 0x20F1
 i1_adc_conf = 0x20F7
@@ -330,6 +345,9 @@ TMpdiv = (0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.
 ResScalediv = (1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000)
 SampRateList = (1024, 2048, 4096, 8192, 16384, 32765, 64000, 93023, 93385, 93750, 94118,
                 96385, 96774, 97166, 97561, 97959, 98361, 98765, 99174, 99585, 100000)
+TIMEdiv = 0.5
+RefPhase = ("CA-V", "CB-V", "CA-I", "CB-I")
+
 ## AWG variables
 AWGAAmplvalue = 0.0
 AWGAOffsetvalue = 0.0
@@ -362,6 +380,11 @@ DCVMuxA = MinVMuxA = MaxVMuxA = MidVMuxA = PPVMuxA = SVMuxA = 0
 DCVMuxB = MinVMuxB = MaxVMuxB = MidVMuxB = PPVMuxB = SVMuxB = 0
 DCVMuxC = MinVMuxC = MaxVMuxC = MidVMuxC = PPVMuxC = SVMuxC = 0
 DCVMuxD = MinVMuxD = MaxVMuxD = MidVMuxD = PPVMuxD = SVMuxD = 0
+PeakVA = PeakVB = PeakIA = PeakIB = 0.0
+PeakVMA = PeakVMB = PeakVMC = PeakVMD = 0.0
+PeakphaseVMA = PeakphaseVMB = PeakphaseVMC = PeakphaseVMD = 0.0
+PeakfreqVA = PeakfreqVB = PeakfreqIA = PeakfreqIB = 0.0
+PeakphaseVA = PeakphaseVB = PeakphaseIA = PeakphaseIB = PeakphaseVAB = 0.0
 CHADCy = CHBDCy = 0
 DCI1 = DCI2 = MinI1 = MaxI1 = MinI2 = MaxI2 = MidI1 = PPI1 = MidI2 = PPI2 = SV2 = SI2 = 0
 CHAperiod = CHAfreq = CHBperiod = CHBfreq = 0
@@ -389,6 +412,14 @@ VmemoryMuxB = []
 VmemoryMuxC = []
 VmemoryMuxD = []
 #
+VAresult = []
+VBresult = []
+IAresult = []
+IBresult = []
+PhaseIA = []
+PhaseIB = []
+PhaseVA = []
+PhaseVB = []
 DFiltACoef = [1]
 DFiltBCoef = [1]
 DigFiltA = IntVar(0)
@@ -796,6 +827,11 @@ def BSaveConfig(filename):
     global Auto_ETS_Comp, ETS_TC1, ETS_A1, ETS_TC2, ETS_A2
     global ets_TC1Entry, ets_A1Entry, ets_TC2Entry, ets_A2Entry
     global DigFiltStatus, DigFiltABoxCar, DigFiltBBoxCar, BCALenEntry, BCBLenEntry
+    global phawindow, PhAca, PhAScreenStatus, PhADisp
+    global GRWPhA, X0LPhA, GRHPhA, Y0TPhA
+    global VScale, IScale, RefphEntry
+    global vat_btn, vbt_btn, iat_btn, ibt_btn, vabt_btn
+    global ShowPB_A, ShowPB_B, ShowPB_C, ShowPB_D
     
     # open Config file for Write?
     try:
@@ -882,6 +918,7 @@ def BSaveConfig(filename):
         ConfgFile.write('SingleShotSA.set(' + str(SingleShotSA.get()) + ')\n')
     else:
         ConfgFile.write('DestroySpectrumScreen()\n')
+    #
     if DacScreenStatus.get() > 0:
         ConfgFile.write('MakeDacScreen()\n')
         ConfgFile.write("win1.geometry('+" + str(win1.winfo_x()) + '+' + str(win1.winfo_y()) + "')\n")
@@ -967,6 +1004,47 @@ def BSaveConfig(filename):
         ConfgFile.write('CHB_DPosEntry.insert(4, ' + CHB_DPosEntry.get() + ')\n')
     else:
         ConfgFile.write('DestroyMuxScreen()\n')
+    # Save Phase Anayzer stuff after Analog Mux in case they are both open
+    if PhAScreenStatus.get() > 0:
+        ConfgFile.write('global GRWPhA; GRWPhA = ' + str(GRWPhA) + '\n')
+        ConfgFile.write('global GRHPhA; GRHPhA = ' + str(GRHPhA) + '\n')
+        ConfgFile.write('MakePhAWindow()\n')
+        ConfgFile.write("phawindow.geometry('+" + str(phawindow.winfo_x()) + '+' + str(phawindow.winfo_y()) + "')\n")
+        ConfgFile.write('VScale.delete(0,END)\n')
+        ConfgFile.write('VScale.insert(0, ' + str(VScale.get()) + ')\n')
+        ConfgFile.write('IScale.delete(0,END)\n')
+        ConfgFile.write('IScale.insert(0, ' + str(IScale.get()) + ')\n')
+        ConfgFile.write('RefphEntry.delete(0,END)\n')
+        ConfgFile.write('RefphEntry.insert(0, "' + str(RefphEntry.get()) + '")\n')
+        if vat_btn.config('text')[-1] == 'OFF':
+            ConfgFile.write('vat_btn.config(text="OFF", style="Stop.TButton")\n')
+        else:
+            ConfgFile.write('vat_btn.config(text="ON", style="Run.TButton")\n')
+        if MuxScreenStatus.get() == 0: # these buttons do not exist if Mux screen open
+            if vbt_btn.config('text')[-1] == 'OFF':
+                ConfgFile.write('vbt_btn.config(text="OFF", style="Stop.TButton")\n')
+            else:
+                ConfgFile.write('vbt_btn.config(text="ON", style="Run.TButton")\n')
+            if vabt_btn.config('text')[-1] == 'OFF':
+                ConfgFile.write('vabt_btn.config(text="OFF", style="Stop.TButton")\n')
+            else:
+                ConfgFile.write('vabt_btn.config(text="ON", style="Run.TButton")\n')
+        else: # But these do 
+            ConfgFile.write('ShowPB_A.set(' + str(ShowPB_A.get()) + ')\n')
+            ConfgFile.write('ShowPB_B.set(' + str(ShowPB_B.get()) + ')\n')
+            ConfgFile.write('ShowPB_C.set(' + str(ShowPB_C.get()) + ')\n')
+            ConfgFile.write('ShowPB_D.set(' + str(ShowPB_D.get()) + ')\n')
+        if iat_btn.config('text')[-1] == 'OFF':
+            ConfgFile.write('iat_btn.config(text="OFF", style="Stop.TButton")\n')
+        else:
+            ConfgFile.write('iat_btn.config(text="ON", style="Run.TButton")\n')
+        if ibt_btn.config('text')[-1] == 'OFF':
+            ConfgFile.write('ibt_btn.config(text="OFF", style="Stop.TButton")\n')
+        else:
+            ConfgFile.write('ibt_btn.config(text="ON", style="Run.TButton")\n')
+        #
+    else:
+        ConfgFile.write('DestroyPhAScreen()\n')
     if BodeScreenStatus.get() == 1:
         ConfgFile.write('global GRWBP; GRWBP = ' + str(GRWBP) + '\n')
         ConfgFile.write('global GRHBP; GRHBP = ' + str(GRHBP) + '\n')
@@ -1335,6 +1413,11 @@ def BLoadConfig(filename):
     global AWGABurstFlag, AWGACycles, AWGABurstDelay
     global AWGBBurstFlag, AWGBCycles, AWGBBurstDelay
     global SCLKPort, SDATAPort, SLATCHPort, EnableHSsampling, FminEntry, HtMulEntry
+    global phawindow, PhAca, PhAScreenStatus, PhADisp
+    global GRWPhA, X0LPhA, GRHPhA, Y0TPhA
+    global VScale, IScale, RefphEntry
+    global vat_btn, vbt_btn, iat_btn, ibt_btn, vabt_btn
+    global ShowPB_A, ShowPB_B, ShowPB_C, ShowPB_D
     
     # Read configuration values from file
     try:
@@ -1453,7 +1536,7 @@ def BLoadConfigTime():
     UpdateTimeTrace()
 ## Toggle the Background and text colors based on ColorMode
 def BgColor():
-    global COLORtext, COLORcanvas, ColorMode, Bodeca, BodeScreenStatus
+    global COLORtext, COLORcanvas, ColorMode, Bodeca, BodeScreenStatus, PhAca, PhAScreenStatus
     global ca, Freqca, SpectrumScreenStatus, XYca, XYScreenStatus, IAca, IAScreenStatus
 
     if ColorMode.get() > 0:
@@ -1474,6 +1557,9 @@ def BgColor():
     if XYScreenStatus.get() > 0:
         XYca.config(background=COLORcanvas)
         UpdateXYScreen()
+    if PhAScreenStatus.get() > 0:
+        PhAca.config(background=COLORcanvas)
+        UpdatePhAScreen()
     if IAScreenStatus.get() > 0:
         IAca.config(background=COLORcanvas)
         UpdateIAScreen()
@@ -1800,6 +1886,18 @@ def BUserBMeas():
         UserBString = TempString
         return
     MeasUserB.set(1)
+#
+## Ask user to enter custom plot label string
+def BUserCustomPlotText():
+    global LabelPlotText, PlotLabelText # = "Custom Plot Label"
+
+    TempString = PlotLabelText
+    PlotLabelText = askstring("Custom Label", "Current Plot Label: " + PlotLabelText + "\n\nNew Label:\n", initialvalue=PlotLabelText)
+    if (PlotLabelText == None):         # If Cancel pressed, then None
+        LabelPlotText.set(0)
+        PlotLabelText = TempString
+        return
+    LabelPlotText.set(1)
 ## Make New Math waveform controls menu window
 def NewEnterMathControls():
     global RUNstatus, MathScreenStatus, MathWindow, SWRev, RevDate
@@ -2622,6 +2720,13 @@ def IACheckBox():
     else:
         ckb4.config(style="Disab.TCheckbutton")
 #
+def PhACheckBox():
+    global PhADisp, Phckb
+    if PhADisp.get() == 1:
+        phckb.config(style="Enab.TCheckbutton")
+    else:
+        phckb.config(style="Disab.TCheckbutton")
+#
 def OhmCheckBox():
     global OhmDisp, ckb6
     if OhmDisp.get() == 1:
@@ -2707,13 +2812,6 @@ def Analog_In():
                         time.sleep(0.002)
                         devx.ctrl_transfer(0x40, PIO3x, PIO_3, 0, 0, 0, 100) # set PIO 3 to return value
                         Analog_Time_In()
-                        # Average mode 1, add difference / TRACEaverage to arrayif :
-                        if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
-                            try:
-                                VBuffMA = VmemoryMuxA + (VBuffMA - VmemoryMuxA) / TRACEaverage.get()
-                            except:
-                            # buffer size mismatch so reset memory buffers
-                                VmemoryMuxA = VBuffMA
                     if Show_CBB.get() == 1:
                         MuxChan = 1
                         devx.ctrl_transfer(0x40, 0x51, PIO_0, 0, 0, 0, 100) # set PIO 0 to 1
@@ -2723,13 +2821,6 @@ def Analog_In():
                         time.sleep(0.002)
                         devx.ctrl_transfer(0x40, PIO3x, 3, 0, 0, 0, 100) # set PIO 3 to return value
                         Analog_Time_In()
-                        # Average mode 1, add difference / TRACEaverage to arrayif :
-                        if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
-                            try:
-                                VBuffMB = VmemoryMuxB + (VBuffMB - VmemoryMuxB) / TRACEaverage.get()
-                            except:
-                            # buffer size mismatch so reset memory buffers
-                                VmemoryMuxB = VBuffMB
                     if Show_CBC.get() == 1:
                         MuxChan = 2
                         if DualMuxMode.get() == 1:
@@ -2743,13 +2834,6 @@ def Analog_In():
                         time.sleep(0.002)
                         devx.ctrl_transfer(0x40, PIO3x, PIO_3, 0, 0, 0, 100) # set PIO 3 to return value
                         Analog_Time_In()
-                        # Average mode 1, add difference / TRACEaverage to arrayif :
-                        if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
-                            try:
-                                VBuffMC = VmemoryMuxC + (VBuffMC - VmemoryMuxC) / TRACEaverage.get()
-                            except:
-                            # buffer size mismatch so reset memory buffers
-                                VmemoryMuxC = VBuffMC
                     if Show_CBD.get() == 1:
                         MuxChan = 3
                         if DualMuxMode.get() == 1:
@@ -2763,13 +2847,6 @@ def Analog_In():
                         time.sleep(0.002)
                         devx.ctrl_transfer(0x40, PIO3x, PIO_3, 0, 0, 0, 100) # set PIO 3 to return value
                         Analog_Time_In()
-                        # Average mode 1, add difference / TRACEaverage to arrayif :
-                        if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
-                            try:
-                                VBuffMD = VmemoryMuxD + (VBuffMD - VmemoryMuxD) / TRACEaverage.get()
-                            except:
-                            # buffer size mismatch so reset memory buffers
-                                VmemoryMuxD = VBuffMD
                     if Show_CBA.get() == 0 and Show_CBB.get() == 0 and Show_CBC.get() == 0 and Show_CBD.get() == 0 and ShowC1_V.get() == 1:
                         Analog_Time_In()
             if (FreqDisp.get() > 0 and SpectrumScreenStatus.get() == 1) or (IADisp.get() > 0 and IAScreenStatus.get() == 1) or (BodeDisp.get() > 0 and BodeScreenStatus.get() == 1):
@@ -2919,11 +2996,14 @@ def Ohm_Analog_In():
 ## Scope time main loop
 # Read the analog data and store the data into the arrays
 def Analog_Time_In():
-    global TIMEdiv, TMsb
+    global TIMEdiv, TMsb, TRACEmodeTime, TRACEresetTime, TRACEaverage
+    global VBuffMA, VmemoryMuxA, VBuffMB, VmemoryMuxB, VBuffMC, VmemoryMuxC, VBuffMD, VmemoryMuxD
     global CHAVOffsetEntry, CHAVGainEntry, CHBVOffsetEntry, CHBVGainEntry
     global CHAIOffsetEntry, CHBIOffsetEntry, CHAIGainEntry, CHBIGainEntry
     global InOffA, InGainA, InOffB, InGainB
     global CurOffA, CurOffB, CurGainA, CurGainB
+    global PhADisp, PhAScreenStatus, MuxScreenStatus
+    global Show_CBA, Show_CBB, Show_CBC, Show_CBD
 
     # get time scale
     try:
@@ -2974,9 +3054,264 @@ def Analog_Time_In():
         CurGainB = 1.0
 # Dedecide which Fast or Slow sweep routine to call
     if TIMEdiv > 500:
-        Analog_Slow_time()
+        Analog_Slow_time() # failed attempt as rolling trace
     else:
         Analog_Fast_time()
+    if MuxScreenStatus.get() > 0:
+        if Show_CBA.get() == 1:
+            # Average mode 1, add difference / TRACEaverage to arrayif :
+            if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
+                try:
+                    VBuffMA = VmemoryMuxA + (VBuffMA - VmemoryMuxA) / TRACEaverage.get()
+                except:
+                # buffer size mismatch so reset memory buffers
+                    VmemoryMuxA = VBuffMA
+        if Show_CBB.get() == 1:
+           # Average mode 1, add difference / TRACEaverage to arrayif :
+            if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
+                try:
+                    VBuffMB = VmemoryMuxB + (VBuffMB - VmemoryMuxB) / TRACEaverage.get()
+                except:
+                # buffer size mismatch so reset memory buffers
+                    VmemoryMuxB = VBuffMB 
+        if Show_CBC.get() == 1:
+            # Average mode 1, add difference / TRACEaverage to arrayif :
+            if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
+                try:
+                    VBuffMC = VmemoryMuxC + (VBuffMC - VmemoryMuxC) / TRACEaverage.get()
+                except:
+                # buffer size mismatch so reset memory buffers
+                    VmemoryMuxC = VBuffMC
+        if Show_CBD.get() == 1:
+            # Average mode 1, add difference / TRACEaverage to arrayif :
+            if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
+                try:
+                    VBuffMD = VmemoryMuxD + (VBuffMD - VmemoryMuxD) / TRACEaverage.get()
+                except:
+                # buffer size mismatch so reset memory buffers
+                    VmemoryMuxD = VBuffMD
+    if PhADisp.get() > 0 and PhAScreenStatus.get() == 1:
+        Analog_Phase_In()
+#
+# Process captured time dmain signals to extract magnitude and phase data
+def Analog_Phase_In():
+    global ADsignal1, VBuffA, VBuffB, IBuffA, IBuffB
+    global VBuffMA, VBuffMB, VBuffMC, VBuffMD
+    global VAresult, VBresult, IAresult, IBresult, VABresult
+    global PhaseVA, PhaseVB, PhaseIA, PhaseIB, PhaseVAB
+    global VMAresult, VMBresult,VMCresult, VMDresult
+    global PhaseVMA, PhaseVMB, PhaseVMC, PhaseVMD
+    global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
+    global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2
+    global DCVMuxA, DCVMuxB, DCVMuxC, DCVMuxD
+    global SHOWsamples, SMPfft, hldn, MuxScreenStatus, MuxChan
+    global FFTwindowshape, ZEROstuffing
+
+    if len(VBuffA) < SMPfft: # put up warning to reduce number of FFT Samples or increase Time/Div time base
+        Analog_Fast_time()
+        #showwarning("WARNING","Redude Number of Samples \n Or Increas Time/Div time base.")
+        #BStop() # Force Stop loop if running
+        #return
+    # Do an FFT on captured voltage and current buffer
+    StartSmp = hldn
+    StopSmp = hldn + SMPfft
+    CALCFFTwindowshape()
+    REX = []
+    PhaseVA = []
+    PhaseIA = []
+    PhaseIB = []
+    # Convert list to numpy array REX for faster Numpy calculations
+    # Take the first SMPfft samples of VBuffA
+    REX = numpy.array(VBuffA[StartSmp:StopSmp]-DCV1)    # Make a numpy arry of the list
+
+    # Set Analog level display value MAX value is 5 volts for ALM1000
+    REX = REX / 5.0
+
+    # Do the FFT window function 
+    REX = REX * FFTwindowshape[0:len(REX)]      # The windowing shape function only over the samples
+    # Zero stuffing of array for better interpolation of peak level of signals
+    # ZEROstuffingvalue = int(2 ** ZEROstuffing.get())
+    # fftsamples = ZEROstuffingvalue * SMPfft      # Add zero's to the arrays
+    # FFT with numpy 
+    ALL = numpy.fft.fft(REX, n=SMPfft)  # Do FFT + zerostuffing till n=fftsamples with NUMPY  ALL = Real + Imaginary part
+    PhaseVA = numpy.angle(ALL, deg=True)     # calculate angle
+    ALL = numpy.absolute(ALL)               # Make absolute SQR(REX*REX + IMX*IMX) for VOLTAGE!
+ 
+    le = int(len(ALL) / 2)                       # Only half is used, other half is mirror
+    ALL = ALL[0:le]                          # So take only first half of the array
+    PhaseVA = PhaseVA[0:le]
+    Totalcorr = 7.07106 / SMPfft # RMS For VOLTAGE!
+    VAresult = Totalcorr * ALL
+    # check to see if analog Mux is being used?
+    if MuxScreenStatus.get() == 0:
+        PhaseVB = []
+        PhaseVAB = []
+        # Now VB array
+        REX = numpy.array(VBuffB[StartSmp:StopSmp]-DCV2)    # Make a numpy arry of the list
+
+        # Set Analog level display value MAX value is 5 volts for ALM1000
+        REX = REX / 5.0
+
+        # Do the FFT window function 
+        REX = REX * FFTwindowshape[0:len(REX)]      # The windowing shape function only over the samples
+
+        # FFT with numpy 
+        ALL = numpy.fft.fft(REX, n=SMPfft)  # Do FFT + zerostuffing till n=fftsamples with NUMPY  ALL = Real + Imaginary part
+        PhaseVB = numpy.angle(ALL, deg=True)     # calculate angle
+        ALL = numpy.absolute(ALL)               # Make absolute SQR(REX*REX + IMX*IMX) for VOLTAGE!
+
+        le = int(len(ALL) / 2)                       # Only half is used, other half is mirror
+        ALL = ALL[0:le]                          # So take only first half of the array
+        PhaseVB = PhaseVB[0:le]
+        Totalcorr = 7.07106 / SMPfft # For rMS VOLTAGE!
+        VBresult = Totalcorr * ALL
+
+        # Now VAB array
+        REX = numpy.array(VBuffA[StartSmp:StopSmp]-VBuffB[StartSmp:StopSmp])    # Make a numpy arry of the list
+        REX = REX - (DCV1-DCV2) # cut any remaining DC
+        # Set Analog level display value MAX value is 5 volts for ALM1000
+        REX = REX / 5.0
+
+        # Do the FFT window function 
+        REX = REX * FFTwindowshape[0:len(REX)]      # The windowing shape function only over the samples
+
+        # FFT with numpy 
+        ALL = numpy.fft.fft(REX, n=SMPfft)  # Do FFT + zerostuffing till n=fftsamples with NUMPY  ALL = Real + Imaginary part
+        PhaseVAB = numpy.angle(ALL, deg=True)     # calculate angle
+        ALL = numpy.absolute(ALL)               # Make absolute SQR(REX*REX + IMX*IMX) for VOLTAGE!
+
+        le = int(len(ALL) / 2)                       # Only half is used, other half is mirror
+        ALL = ALL[0:le]                          # So take only first half of the array
+        PhaseVAB = PhaseVAB[0:le]
+        Totalcorr = 7.07106 / SMPfft # For rms VOLTAGE!
+        VABresult = Totalcorr * ALL
+    else: # Do FFTs on Mux buffers as needed if MuxScreenStatus.get() == 0:
+        if MuxChan == 0: #
+            PhaseVMA = []
+            # Now VMuxA array
+            REX = numpy.array(VBuffMA[StartSmp:StopSmp]-DCVMuxA)    # Make a numpy arry of the list
+
+            # Set Analog level display value MAX value is 5 volts for ALM1000
+            REX = REX / 5.0
+
+            # Do the FFT window function 
+            REX = REX * FFTwindowshape[0:len(REX)]      # The windowing shape function only over the samples
+
+            # FFT with numpy 
+            ALL = numpy.fft.fft(REX, n=SMPfft)  # Do FFT + zerostuffing till n=fftsamples with NUMPY  ALL = Real + Imaginary part
+            PhaseVMA = numpy.angle(ALL, deg=True)     # calculate angle
+            ALL = numpy.absolute(ALL)               # Make absolute SQR(REX*REX + IMX*IMX) for VOLTAGE!
+
+            le = int(len(ALL) / 2)                       # Only half is used, other half is mirror
+            ALL = ALL[0:le]                          # So take only first half of the array
+            PhaseVMA = PhaseVMA[0:le]
+            Totalcorr = 7.07106 / SMPfft # For rms VOLTAGE!
+            VMAresult = Totalcorr * ALL
+        if MuxChan == 1: # MuxChan = 1
+            PhaseVMB = []
+            # Now VMuxA array
+            REX = numpy.array(VBuffMB[StartSmp:StopSmp]-DCVMuxB)    # Make a numpy arry of the list
+
+            # Set Analog level display value MAX value is 5 volts for ALM1000
+            REX = REX / 5.0
+
+            # Do the FFT window function 
+            REX = REX * FFTwindowshape[0:len(REX)]      # The windowing shape function only over the samples
+
+            # FFT with numpy 
+            ALL = numpy.fft.fft(REX, n=SMPfft)  # Do FFT + zerostuffing till n=fftsamples with NUMPY  ALL = Real + Imaginary part
+            PhaseVMB = numpy.angle(ALL, deg=True)     # calculate angle
+            ALL = numpy.absolute(ALL)               # Make absolute SQR(REX*REX + IMX*IMX) for VOLTAGE!
+
+            le = int(len(ALL) / 2)                       # Only half is used, other half is mirror
+            ALL = ALL[0:le]                          # So take only first half of the array
+            PhaseVMB = PhaseVMB[0:le]
+            Totalcorr = 7.07106 / SMPfft # For rms VOLTAGE!
+            VMBresult = Totalcorr * ALL
+        if MuxChan == 2: # MuxChan = 2
+            PhaseVMC = []
+            # Now VMuxA array
+            REX = numpy.array(VBuffMC[StartSmp:StopSmp]-DCVMuxC)    # Make a numpy arry of the list
+
+            # Set Analog level display value MAX value is 5 volts for ALM1000
+            REX = REX / 5.0
+
+            # Do the FFT window function 
+            REX = REX * FFTwindowshape[0:len(REX)]      # The windowing shape function only over the samples
+
+            # FFT with numpy 
+            ALL = numpy.fft.fft(REX, n=SMPfft)  # Do FFT + zerostuffing till n=fftsamples with NUMPY  ALL = Real + Imaginary part
+            PhaseVMC = numpy.angle(ALL, deg=True)     # calculate angle
+            ALL = numpy.absolute(ALL)               # Make absolute SQR(REX*REX + IMX*IMX) for VOLTAGE!
+
+            le = int(len(ALL) / 2)                       # Only half is used, other half is mirror
+            ALL = ALL[0:le]                          # So take only first half of the array
+            PhaseVMC = PhaseVMC[0:le]
+            Totalcorr = 7.07106 / SMPfft # For rms VOLTAGE!
+            VMCresult = Totalcorr * ALL
+        if MuxChan == 3: # MuxChan = 3
+            PhaseVMD = []
+            # Now VMuxA array
+            REX = numpy.array(VBuffMD[StartSmp:StopSmp]-DCVMuxD)    # Make a numpy arry of the list
+
+            # Set Analog level display value MAX value is 5 volts for ALM1000
+            REX = REX / 5.0
+
+            # Do the FFT window function 
+            REX = REX * FFTwindowshape[0:len(REX)]      # The windowing shape function only over the samples
+
+            # FFT with numpy 
+            ALL = numpy.fft.fft(REX, n=SMPfft)  # Do FFT + zerostuffing till n=fftsamples with NUMPY  ALL = Real + Imaginary part
+            PhaseVMD = numpy.angle(ALL, deg=True)     # calculate angle
+            ALL = numpy.absolute(ALL)               # Make absolute SQR(REX*REX + IMX*IMX) for VOLTAGE!
+
+            le = int(len(ALL) / 2)                       # Only half is used, other half is mirror
+            ALL = ALL[0:le]                          # So take only first half of the array
+            PhaseVMD = PhaseVMD[0:le]
+            Totalcorr = 7.07106 / SMPfft # For rms VOLTAGE!
+            VMDresult = Totalcorr * ALL
+    # Now IA array
+    REX = numpy.array(IBuffA[StartSmp:StopSmp])    # -DCI1 Make a numpy arry of the list
+
+    # Set Analog level display value MAX value is 0.2 amps for ALM1000
+    REX = REX / 0.5
+
+    # Do the FFT window function 
+    REX = REX * FFTwindowshape[0:len(REX)]      # The windowing shape function only over the samples
+
+    # FFT with numpy 
+    ALL = numpy.fft.fft(REX, n=SMPfft)  # Do FFT + zerostuffing till n=fftsamples with NUMPY  ALL = Real + Imaginary part
+    PhaseIA = numpy.angle(ALL, deg=True)     # calculate angle
+    ALL = numpy.absolute(ALL)               # Make absolute SQR(REX*REX + IMX*IMX) for VOLTAGE!
+
+    le = int(len(ALL) / 2)                       # Only half is used, other half is mirror
+    ALL = ALL[0:le]                          # So take only first half of the array
+    PhaseIA = PhaseIA[0:le]
+    Totalcorr = 0.707106 / SMPfft # RMS For current!
+    IAresult = Totalcorr * ALL
+    
+    # Now IB array
+    REX = numpy.array(IBuffB[StartSmp:StopSmp])    # -DCI2 Make a numpy arry of the list
+
+    # Set Analog level display value MAX value is 0.2 amps for ALM1000
+    REX = REX / 0.5
+
+    # Do the FFT window function 
+    REX = REX * FFTwindowshape[0:len(REX)]      # The windowing shape function only over the samples
+
+    # FFT with numpy 
+    ALL = numpy.fft.fft(REX, n=SMPfft)  # Do FFT + zerostuffing till n=fftsamples with NUMPY  ALL = Real + Imaginary part
+    PhaseIB = numpy.angle(ALL, deg=True)     # calculate angle
+    ALL = numpy.absolute(ALL)               # Make absolute SQR(REX*REX + IMX*IMX) for VOLTAGE!
+
+    le = int(len(ALL) / 2)                       # Only half is used, other half is mirror
+    ALL = ALL[0:le]                          # So take only first half of the array
+    PhaseIB = PhaseIB[0:le]
+    Totalcorr = 0.707106 / SMPfft # RMS For current!
+    IBresult = Totalcorr * ALL
+#
+    UpdatePhAAll()
+#
 ##
 # Right now this is a failed attempt to plot slow sweeps.
 def Analog_Slow_time():
@@ -3126,7 +3461,7 @@ def Analog_Fast_time():
     global TRACES, TRACESread, TRACEsize
     global RUNstatus, SingleShot, ManualTrigger, TimeDisp, XYDisp, FreqDisp
     global TIMEdiv1x, TIMEdiv, hldn, Is_Triggered, Trigger_LPF_length, LPFTrigger
-    global SAMPLErate, SHOWsamples, MinSamples, MaxSamples, AWGSAMPLErate
+    global SAMPLErate, SHOWsamples, SMPfft, MinSamples, MaxSamples, AWGSAMPLErate
     global TRACErefresh, AWGScreenStatus, XYScreenStatus, MeasureStatus
     global SCREENrefresh, DCrefresh, ETSrecord
     global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
@@ -3227,6 +3562,9 @@ def Analog_Fast_time():
             SHOWsamples = MaxSamples
         if SHOWsamples < MinSamples: # or a Min of 1000 samples
             SHOWsamples = MinSamples
+    if PhAScreenStatus.get() > 0:
+        if SHOWsamples < SMPfft:
+            SHOWsamples = SMPfft + hldn + hozpos
     if hozpos >= 0:
         TRIGGERsample = hldn
     else:
@@ -4075,6 +4413,7 @@ def Analog_Freq_In():
             LoopNum.set(1)
             if FSweepCont.get() == 0:
                 RUNstatus.set(0)
+#
 ## Make histogram of time signals
 def MakeHistogram():
     global VBuffA, VBuffB, IBuffA, IBuffB, HBuffA, HBuffB
@@ -5998,6 +6337,7 @@ def MakeTimeScreen():
     global GRW          # Screenwidth
     global GRH          # Screenheight
     global FontSize, EnableHSsampling, ETSDisp, MinigenScreenStatus
+    global LabelPlotText, PlotLabelText # plot custom label text flag
     global MouseX, MouseY, MouseWidget, MouseCAV, MouseCAI, MouseCBV, MouseCBI
     global MouseMuxA, MouseMuxB, MouseMuxC, MouseMuxD
     global ShowXCur, ShowYCur, TCursor, VCursor
@@ -6543,7 +6883,10 @@ def MakeTimeScreen():
         de = ca.find_enclosed( X0L-1, -1, CANVASwidth, 20)
         for n in de: 
             ca.delete(n)
-    txt = "Device ID " + DevID[17:31] + " Sample rate: " + str(SAMPLErate) + " " + sttxt
+    if LabelPlotText.get() > 0:
+        txt = PlotLabelText + " Sample rate: " + str(SAMPLErate) + " " + sttxt
+    else:
+        txt = "Device ID " + DevID[17:31] + " Sample rate: " + str(SAMPLErate) + " " + sttxt
     x = X0L+2
     y = 12
     ca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
@@ -6833,7 +7176,7 @@ def MakeXYScreen():
     global Y0TXY          # Left top Y value
     global GRWXY          # Screenwidth
     global GRHXY          # Screenheight
-    global FontSize
+    global FontSize, LabelPlotText, PlotLabelText
     global XYca, MouseX, MouseY, MouseWidget
     global ShowXCur, ShowYCur, XCursor, YCursor
     global SHOWsamples  # Number of samples in data record
@@ -7326,7 +7669,10 @@ def MakeXYScreen():
         de = XYca.find_enclosed( X0LXY-1, -1, CANVASwidthXY, 20)
         for n in de: 
             XYca.delete(n)
-    txt = "Device ID " + DevID[17:31] + " Sample rate: " + str(SAMPLErate) + " " + sttxt
+    if LabelPlotText.get() > 0:
+        txt = PlotLabelText + " Sample rate: " + str(SAMPLErate) + " " + sttxt
+    else:
+        txt = "Device ID " + DevID[17:31] + " Sample rate: " + str(SAMPLErate) + " " + sttxt
     x = X0LXY
     y = 12
     XYca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
@@ -11270,7 +11616,7 @@ def Blevel4():
 def Bsamples1():
     global RUNstatus, SpectrumScreenStatus, IAScreenStatus
     global SMPfftpwrTwo, SMPfft, FFTwindow
-    global TRACEresetFreq
+    global TRACEresetFreq, PhAScreenStatus
     
     if FFTwindow.get() != 8:
         if (SMPfftpwrTwo.get() > 6):  # Min 64
@@ -11283,13 +11629,15 @@ def Bsamples1():
             UpdateFreqScreen()
         if IAScreenStatus.get() > 0:
             UpdateIAScreen()
+        if PhAScreenStatus.get() > 0:
+            UpdatePhAScreen()
     if RUNstatus.get() == 2:      # Restart if running
         RUNstatus.set(4)
 
 def Bsamples2():
-    global RUNstatus
+    global RUNstatus, PhAScreenStatus
     global SMPfftpwrTwo, SMPfft, FFTwindow
-    global TRACEresetFreq
+    global TRACEresetFreq, SpectrumScreenStatus, IAScreenStatus
       
     if FFTwindow.get() != 8:
         if (SMPfftpwrTwo.get() < 16): # Max 65536
@@ -11302,6 +11650,8 @@ def Bsamples2():
             UpdateFreqScreen()
         if IAScreenStatus.get() > 0:
             UpdateIAScreen()
+        if PhAScreenStatus.get() > 0:
+            UpdatePhAScreen()
     if RUNstatus.get() == 2:      # Restart if running
         RUNstatus.set(4)
 
@@ -12839,7 +13189,7 @@ def MakeIAScreen():       # Update the screen with traces and text
         x1 = xright
     elif x1 < -500:
         x1 = xcenter - xright
-    IAca.create_line(xcenter, ycenter, x1, ycenter, fill=COLORtrace1, width=TRACEwidth.get())
+    IAca.create_line(xcenter, ycenter, x1, ycenter, fill=COLORtrace1, arrow="last", width=TRACEwidth.get())
     y1 = ycenter - ( ImpedanceXseries / OhmsperPixel )
     if y1 > 1500:
         y1 = xright
@@ -12847,7 +13197,7 @@ def MakeIAScreen():       # Update the screen with traces and text
         y1 = ycenter - xright
     xmag = x1
     ymag = y1
-    IAca.create_line(xcenter, ycenter, xcenter, y1, fill=COLORtrace6, width=TRACEwidth.get())
+    IAca.create_line(xcenter, ycenter, xcenter, y1, fill=COLORtrace6, arrow="last", width=TRACEwidth.get())
     MagRadius = ImpedanceMagnitude / OhmsperPixel
     y1 = ycenter - MagRadius*math.sin(math.radians(ImpedanceAngle))
     if y1 > 1500:
@@ -12859,7 +13209,7 @@ def MakeIAScreen():       # Update the screen with traces and text
         x1 = xright
     elif x1 < -500:
         x1 = xcenter - xright
-    IAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace2, width=TRACEwidth.get())
+    IAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace2, arrow="last", width=TRACEwidth.get())
 #
     TIAMline = []
     if len(NSweepSeriesMag) > 2:
@@ -13563,6 +13913,877 @@ def UpdateNiCScreen():     # Update screen with trace and text
     
     MakeNiCScreen()     # Update the screen
     root.update()       # Activate updated screens    
+#
+#
+def VAtoggle():
+    global vat_btn
+
+    if vat_btn.config('text')[-1] == 'ON':
+        vat_btn.config(text='OFF', style="Stop.TButton")
+    else:
+        vat_btn.config(text='ON', style="Run.TButton")
+#
+def VABtoggle():
+    global vabt_btn
+
+    if vabt_btn.config('text')[-1] == 'ON':
+        vabt_btn.config(text='OFF', style="Stop.TButton")
+    else:
+        vabt_btn.config(text='ON', style="Run.TButton")
+#
+def VBtoggle():
+    global vbt_btn
+
+    if vbt_btn.config('text')[-1] == 'ON':
+        vbt_btn.config(text='OFF', style="Stop.TButton")
+    else:
+        vbt_btn.config(text='ON', style="Run.TButton")
+#
+def IAtoggle():
+    global iat_btn
+
+    if iat_btn.config('text')[-1] == 'ON':
+        iat_btn.config(text='OFF', style="Stop.TButton")
+    else:
+        iat_btn.config(text='ON', style="Run.TButton")
+#
+def IBtoggle():
+    global ibt_btn
+
+    if ibt_btn.config('text')[-1] == 'ON':
+        ibt_btn.config(text='OFF', style="Stop.TButton")
+    else:
+        ibt_btn.config(text='ON', style="Run.TButton")
+#
+# ================ Make Phase Ana Window ==========================
+def MakePhAWindow():
+    global phawindow, PhAca, logo, PhAScreenStatus, PhADisp, AWGSync
+    global COLORcanvas, CANVASwidthPhA, CANVASheightPhA, RevDate, AWGAMode, AWGAShape, AWGBMode
+    global FFTwindow, CutDC, ColorMode, RefPhase, CHvpdiv, CHipdiv
+    global GRWPhA, X0LPhA, GRHPhA, Y0TPhA, DeBugMode, SWRev
+    global VScale, IScale, RefphEntry, MuxScreenStatus, AppendPhAData
+    global vat_btn, vbt_btn, iat_btn, ibt_btn, vabt_btn
+    global ShowPB_A, ShowPB_B, ShowPB_C, ShowPB_D
+
+    if PhAScreenStatus.get() == 0:
+        PhAScreenStatus.set(1)
+        PhADisp.set(1)
+        PhACheckBox()
+        CutDC.set(1) # set to remove DC
+        CANVASwidthPhA = 170 + GRWPhA + 2 * X0LPhA     # The canvas width
+        CANVASheightPhA = GRHPhA + Y0TPhA + 10         # The canvas height
+        phawindow = Toplevel()
+        phawindow.title("Phase Analyzer " + SWRev + RevDate)
+        phawindow.protocol("WM_DELETE_WINDOW", DestroyPhAScreen)
+        frame2phar = Frame(phawindow, borderwidth=5, relief=RIDGE)
+        frame2phar.pack(side=RIGHT, expand=NO, fill=BOTH)
+
+        frame2pha = Frame(phawindow, borderwidth=5, relief=RIDGE)
+        frame2pha.pack(side=TOP, expand=YES, fill=BOTH)
+
+        PhAca = Canvas(frame2pha, width=CANVASwidthPhA, height=CANVASheightPhA, background=COLORcanvas, cursor='cross')
+        PhAca.bind("<Configure>", PhACaresize)
+        PhAca.bind("<Return>", DoNothing)
+        PhAca.bind("<space>", onCanvasSpaceBar)
+        PhAca.pack(side=TOP, expand=YES, fill=BOTH)
+
+        # menu buttons
+        # right side drop down menu buttons
+        dropmenu = Frame( frame2phar )
+        dropmenu.pack(side=TOP)
+        # File menu 
+        PhAFilemenu = Menubutton(dropmenu, text="File", style="W5.TButton")
+        PhAFilemenu.menu = Menu(PhAFilemenu, tearoff = 0 )
+        PhAFilemenu["menu"] = PhAFilemenu.menu
+        PhAFilemenu.menu.add_command(label="Save Config", command=BSaveConfigIA)
+        PhAFilemenu.menu.add_command(label="Load Config", command=BLoadConfigIA)
+        PhAFilemenu.menu.add_command(label="Save Data", command=BSavePhAData)
+        PhAFilemenu.menu.add_checkbutton(label='- Append', variable=AppendPhAData)
+        PhAFilemenu.menu.add_command(label="Plot From File", command=PlotPhAFromFile)
+        PhAFilemenu.menu.add_command(label="Help", command=BHelp)
+        PhAFilemenu.pack(side=LEFT, anchor=W)
+        #
+        PhAOptionmenu = Menubutton(dropmenu, text="Options", style="W8.TButton")
+        PhAOptionmenu.menu = Menu(PhAOptionmenu, tearoff = 0 )
+        PhAOptionmenu["menu"]  = PhAOptionmenu.menu
+        PhAOptionmenu.menu.add_command(label='Change Settings', command=MakeSettingsMenu)
+        PhAOptionmenu.menu.add_command(label='Set Sample Rate', command=MakeSampleRateMenu) # SetSampleRate)
+        PhAOptionmenu.menu.add_checkbutton(label='Cut-DC', variable=CutDC)
+        
+        PhAOptionmenu.menu.add_command(label="-Background-", command=donothing)
+        PhAOptionmenu.menu.add_radiobutton(label='Black', variable=ColorMode, value=0, command=BgColor)
+        PhAOptionmenu.menu.add_radiobutton(label='White', variable=ColorMode, value=1, command=BgColor)
+        PhAOptionmenu.pack(side=LEFT, anchor=W)
+        #
+        rsphmenu = Frame( frame2phar )
+        rsphmenu.pack(side=TOP)
+        rsphb2 = Button(rsphmenu, text="Stop", style="Stop.TButton", command=BStop)
+        rsphb2.pack(side=RIGHT)
+        rsphb3 = Button(rsphmenu, text="Run", style="Run.TButton", command=BStart)
+        rsphb3.pack(side=RIGHT)
+        #
+        PhAFFTwindmenu = Menubutton(frame2phar, text="FFTwindow", style="W11.TButton")
+        PhAFFTwindmenu.menu = Menu(PhAFFTwindmenu, tearoff = 0 )
+        PhAFFTwindmenu["menu"]  = PhAFFTwindmenu.menu
+        PhAFFTwindmenu.menu.add_radiobutton(label='Rectangular window (B=1)', variable=FFTwindow, value=0)
+        PhAFFTwindmenu.menu.add_radiobutton(label='Cosine window (B=1.24)', variable=FFTwindow, value=1)
+        PhAFFTwindmenu.menu.add_radiobutton(label='Triangular window (B=1.33)', variable=FFTwindow, value=2)
+        PhAFFTwindmenu.menu.add_radiobutton(label='Hann window (B=1.5)', variable=FFTwindow, value=3)
+        PhAFFTwindmenu.menu.add_radiobutton(label='Blackman window (B=1.73)', variable=FFTwindow, value=4)
+        PhAFFTwindmenu.menu.add_radiobutton(label='Nuttall window (B=2.02)', variable=FFTwindow, value=5)
+        PhAFFTwindmenu.menu.add_radiobutton(label='Flat top window (B=3.77)', variable=FFTwindow, value=6)
+        PhAFFTwindmenu.pack(side=TOP)
+        #
+        FFTwindow.set(6) # default to Flat top window (6)
+        #
+        smphmenu = Frame( frame2phar )
+        smphmenu.pack(side=TOP)
+        smphb1 = Button(smphmenu, text="-Samples", style="W8.TButton", command=Bsamples1)
+        smphb1.pack(side=LEFT)
+        smphb2 = Button(smphmenu, text="+Samples", style="W8.TButton", command=Bsamples2)
+        smphb2.pack(side=LEFT)
+        # 
+        refph = Frame( frame2phar )
+        refph.pack(side=TOP)
+        refphlab = Label(refph, text="Ref Phase")
+        refphlab.pack(side=LEFT, anchor=W)
+        RefphEntry = Spinbox(refph, width=5, values=RefPhase)
+        RefphEntry.bind('<MouseWheel>', onSpinBoxScroll)
+        RefphEntry.pack(side=LEFT, anchor=W)
+        RefphEntry.delete(0,"end")
+        RefphEntry.insert(0,"CA-V")
+        vatb = Frame( frame2phar )
+        vatb.pack(side=TOP)
+        vatblab = Label(vatb, text="CA-V ")
+        vatblab.pack(side=LEFT)
+        vat_btn = Button(vatb, text="OFF", style="Stop.TButton", width=4, command=VAtoggle)
+        vat_btn.pack(side=LEFT)
+        vbtb = Frame( frame2phar )
+        vbtb.pack(side=TOP)
+        if MuxScreenStatus.get() == 0:
+            vbtblab = Label(vbtb, text="CB-V ")
+            vbtblab.pack(side=LEFT)
+            vbt_btn = Button(vbtb, text="OFF", style="Stop.TButton", width=4, command=VBtoggle)
+            vbt_btn.pack(side=LEFT)
+            vabtb = Frame( frame2phar )
+            vabtb.pack(side=TOP)
+            vabtblab = Label(vabtb, text="CA-B V ")
+            vabtblab.pack(side=LEFT)
+            vabt_btn = Button(vabtb, text="OFF", style="Stop.TButton", width=4, command=VABtoggle)
+            vabt_btn.pack(side=LEFT)
+        else:
+            RefphEntry.configure(state=DISABLED)
+            amuxlab = Label(frame2phar, text="Analog Mux In")
+            amuxlab.pack(side=TOP)
+            phbt1 = Checkbutton(frame2phar, text='CB-A ', style="Strace2.TCheckbutton", variable=ShowPB_A)
+            phbt1.pack(side=TOP)
+            phbt2 = Checkbutton(frame2phar, text='CB-B ', style="Strace6.TCheckbutton", variable=ShowPB_B) #, command=TraceSelectADC_Mux)
+            phbt2.pack(side=TOP)
+            phbt3 = Checkbutton(frame2phar, text='CB-C ', style="Strace7.TCheckbutton", variable=ShowPB_C) #, command=TraceSelectADC_Mux)
+            phbt3.pack(side=TOP)
+            phbt4 = Checkbutton(frame2phar, text='CB-D ', style="Strace4.TCheckbutton", variable=ShowPB_D) #, command=TraceSelectADC_Mux)
+            phbt4.pack(side=TOP)
+#
+        # Voltage Scale Spinbox
+        vssb = Frame( frame2phar )
+        vssb.pack(side=TOP)
+        vslab = Label(vssb, text="Volts/div ")
+        vslab.pack(side=LEFT)
+        VScale = Spinbox(vssb, width=7, values=CHvpdiv)
+        VScale.bind('<MouseWheel>', onSpinBoxScroll)
+        VScale.pack(side=LEFT)
+        VScale.delete(0,"end")
+        VScale.insert(0,0.5)
+        #
+        iatb = Frame( frame2phar )
+        iatb.pack(side=TOP)
+        iatblab = Label(iatb, text="CA-I ")
+        iatblab.pack(side=LEFT)
+        iat_btn = Button(iatb, text="OFF", style="Stop.TButton", width=4, command=IAtoggle)
+        iat_btn.pack(side=LEFT)
+        ibtb = Frame( frame2phar )
+        ibtb.pack(side=TOP)
+        ibtblab = Label(ibtb, text="CB-I ")
+        ibtblab.pack(side=LEFT)
+        ibt_btn = Button(ibtb, text="OFF", style="Stop.TButton", width=4, command=IBtoggle)
+        ibt_btn.pack(side=LEFT)
+        # Current Scale Spinbox
+        issb = Frame( frame2phar )
+        issb.pack(side=TOP)
+        islab = Label(issb, text="mA/div ")
+        islab.pack(side=LEFT)
+        IScale = Spinbox(issb, width=7, values=CHipdiv)
+        IScale.bind('<MouseWheel>', onSpinBoxScroll)
+        IScale.pack(side=LEFT)
+        IScale.delete(0,"end")
+        IScale.insert(0,10.0)
+        
+        dismiss1button = Button(frame2phar, text="Dismiss", style="W8.TButton", command=DestroyPhAScreen)
+        dismiss1button.pack(side=TOP)
+        # add ADI logo 
+        ADI1 = Label(frame2phar, image=logo, anchor= "sw", compound="top") #  height=49, width=116,
+        ADI1.pack(side=TOP)
+#
+# Destroy Phase Analizer window
+def DestroyPhAScreen():
+    global phawindow, PhAScreenStatus, PhAca, PhADisp
+    
+    PhAScreenStatus.set(0)
+    PhADisp.set(0)
+    PhACheckBox()
+    phawindow.destroy()
+#
+# Resize Phase Analizer window
+def PhACaresize(event):
+    global PhAca, GRWPhA, XOLPhA, GRHPhA, Y0TPhA, CANVASwidthPhA, CANVASheightPhA, FontSize
+     
+    CANVASwidthPhA = event.width - 4
+    CANVASheightPhA = event.height - 4
+    GRWPhA = CANVASwidthPhA - (2 * X0LPhA) - int(21.25 * FontSize) # 170 new grid width
+    GRHPhA = CANVASheightPhA - Y0TPhA - int(2.25 * FontSize) # 10 new grid height
+    UpdatePhAAll()
+#
+def UpdatePhAAll():        # Update Data, trace and screen
+    
+    MakePhATrace()         # Update the traces
+    UpdatePhAScreen()      # Update the screen
+
+def UpdatePhATrace():      # Update trace and screen
+    MakePhATrace()         # Update traces
+    UpdatePhAScreen()      # Update the screen
+
+def UpdatePhAScreen():     # Update screen with trace and text
+    MakePhAScreen()        # Update the screen
+    root.update()       # Activate updated screens    
+#
+# Place holder
+def MakePhATrace():        # Update the grid and trace
+    global VAresult, VBresult, IAresult, IBresult, VABresult, PhaseIA, PhaseIB, PhaseVA, PhaseVB, PhaseVAB
+    global VMAresult, VMBresult, VMCresult, VMDresult, PhaseVMD, PhaseVMA, PhaseVMB, PhaseVMC
+    global PeakVA, PeakVB, PeakIA, PeakIB, PeakVAB
+    global PeakVMA, PeakVMB, PeakVMC, PeakVMD
+    global PeakfreqVA, PeakfreqVB, PeakfreqIA, PeakfreqIB
+    global PeakphaseVA, PeakphaseVB, PeakphaseIA, PeakphaseIB, PeakphaseVAB
+    global PeakphaseVMA, PeakphaseVMB, PeakphaseVMC, PeakphaseVMD
+    global GRHPhA          # Screenheight
+    global GRWPhA          # Screenwidth
+    global AWGSAMPLErate, SAMPLErate, BaseSampleRate
+    global STARTsample, STOPsample, LoopNum, FSweepMode
+    global TRACEmode, Two_X_Sample, MuxScreenStatus, MuxChan 
+    global Vdiv         # Number of vertical divisions
+    global X0LPhA          # Left top X value
+    global Y0TPhA          # Left top Y value  
+
+    # Set the TRACEsize variable
+    if len(VAresult) < 32:
+        return
+    TRACEsize = len(VAresult)     # Set the trace length
+    Fsample = float(SAMPLErate / 2) / (TRACEsize - 1)
+    # Horizontal conversion factors (frequency Hz) and border limits
+    STARTsample = 0     # First sample in FFTresult[] that is used
+    STARTsample = int(math.ceil(STARTsample))               # First within screen range
+    if Two_X_Sample.get() == 0:
+        STOPsample = 45000 / Fsample       # Last sample in FFTresult that is used
+    else:
+        STOPsample = 90000 / Fsample
+    STOPsample = int(math.floor(STOPsample))                # Last within screen range, math.floor actually not necessary, part of int
+#
+        
+    MAXsample = TRACEsize                                   # Just an out of range check
+    if STARTsample > (MAXsample - 1):
+        STARTsample = MAXsample - 1
+
+    if STOPsample > MAXsample:
+        STOPsample = MAXsample
+
+    n = STARTsample +1
+    PeakVA = PeakVB = PeakIA = PeakIB = PeakVAB = 0.0
+    PeakfreqVA = PeakfreqVB = PeakfreqIA = PeakfreqIB = F = n * Fsample
+    PeakphaseVA = PhaseVA[n]
+    if MuxScreenStatus.get() == 0:
+        PeakphaseVB = PhaseVB[n]
+    PeakphaseIA = PhaseIA[n]
+    PeakphaseIB = PhaseIB[n]
+    PeakSampleVB = PeakSampleVA = PeakSampleIA = PeakSampleIB = n
+    if MuxChan == 0: #
+        PeakVMA = 0
+        PeakphaseVMA = PhaseVMA[n]
+        PeakSampleVMA = 0
+        PeakfreqVMA = PeakfreqVA
+    if MuxChan == 1: #
+        PeakVMB = 0
+        PeakphaseVMB = PhaseVMB[n]
+        PeakSampleVMB = 0
+        PeakfreqVMB = PeakfreqVA
+    if MuxChan == 2: #
+        PeakVMC = 0
+        PeakphaseVMC = PhaseVMC[n]
+        PeakSampleVMC = 0
+        PeakfreqVMC = PeakfreqVA
+    if MuxChan == 3: #
+        PeakVMD = 0
+        PeakphaseVMD = PhaseVMD[n]
+        PeakSampleVMD = 0
+        PeakfreqVMD = PeakfreqVA
+
+    while n <= STOPsample: # search for peaks
+        F = n * Fsample
+        try:
+            VA = float(VAresult[n])   #
+        except:
+            VA = 0.0
+        if VA > PeakVA:
+            PeakVA = VA
+            PeakfreqVA = F
+            PeakphaseVA = PhaseVA[n]
+            PeakSampleVA = n
+            
+        if MuxScreenStatus.get() == 0:
+            try:
+                VAB = float(VABresult[n])   #
+            except:
+                VAB = 0.0
+            if VAB > PeakVAB:
+                PeakVAB = VAB
+                PeakfreqVAB = F
+                PeakphaseVAB = PhaseVAB[n]
+                PeakSampleVAB = n
+
+            try:
+                VB = float(VBresult[n]) #  
+            except:
+                VB = 0.0
+            if VB > PeakVB:
+                PeakVB = VB
+                PeakfreqVB = F
+                PeakphaseVB = PhaseVB[n]
+                PeakSampleVB = n
+        else:
+            if MuxChan == 0: #
+                try:
+                    VMA = float(VMAresult[n])   #
+                except:
+                    VMA = 0.0
+                if VMA > PeakVMA:
+                    PeakVMA = VMA
+                    PeakfreqVMA = F
+                    PeakphaseVMA = PhaseVMA[n]
+                    PeakSampleVMA = n
+            if MuxChan == 1: #
+                try:
+                    VMB = float(VMBresult[n])   #
+                except:
+                    VMB = 0.0
+                if VMB > PeakVMB:
+                    PeakVMB = VMB
+                    PeakfreqVMB = F
+                    PeakphaseVMB = PhaseVMB[n]
+                    PeakSampleVMB = n
+            if MuxChan == 2: #
+                try:
+                    VMC = float(VMCresult[n])   #
+                except:
+                    VMC = 0.0
+                if VMC > PeakVMC:
+                    PeakVMC = VMC
+                    PeakfreqVMC = F
+                    PeakphaseVMC = PhaseVMC[n]
+                    PeakSampleVMC = n
+            if MuxChan == 3: #
+                try:
+                    VMD = float(VMDresult[n])   #
+                except:
+                    VMD = 0.0
+                if VMD > PeakVMD:
+                    PeakVMD = VMD
+                    PeakfreqVMD = F
+                    PeakphaseVMD = PhaseVMD[n]
+                    PeakSampleVMD = n
+        try:
+            IA = float(IAresult[n]) #  
+        except:
+            IA = 0.0
+        if IA > PeakIA:
+            PeakIA = IA
+            PeakfreqIA = F
+            PeakphaseIA = PhaseIA[n]
+            PeakSampleIA = n
+
+        try:
+            IB = float(IBresult[n]) #  
+        except:
+            IB = 0.0
+        if IB > PeakIB:
+            PeakIB = IB
+            PeakfreqIB = F
+            PeakphaseIB = PhaseIB[n]
+            PeakSampleIB = n
+
+        n = n + 1
+    # Check to see that V and I peaks are in same frequency bin?
+    if PeakSampleVA != PeakSampleIA:
+        PeakphaseIA = PhaseIA[PeakSampleVA]
+        PeakIA = IAresult[PeakSampleVA]
+    if PeakSampleVB != PeakSampleIB:
+        PeakphaseIB = PhaseIB[PeakSampleVB]
+        PeakIB = IBresult[PeakSampleVB]
+#
+# Draw the Phase Analyzer screen
+def MakePhAScreen():       # Update the screen with traces and text
+    global PeakVA, PeakVB, PeakIA, PeakIB
+    global PeakfreqVA, PeakfreqVB, PeakfreqIA, PeakfreqIB
+    global PeakphaseVA, PeakphaseVB, PeakphaseIA, PeakphaseIB
+    global PeakVMA, PeakVMB, PeakVMC, PeakVMD
+    global PeakphaseVMA, PeakphaseVMB, PeakphaseVMC, PeakphaseVMD
+    global CAVphase, CBVphase, CAIphase, CBIphase, CABVphase
+    global CMAphase, CMBphase, CMCphase, CMDphase
+    global CANVASheightPhA, CANVASwidthPhA, PhAca, TRACEwidth, GridWidth
+    global COLORsignalband, COLORtext, COLORgrid  # The colors
+    global COLORtrace1, COLORtrace2, COLORtrace3, COLORtrace4, COLORtrace5, COLORtrace6, COLORtrace7
+    global FFTwindow, FFTbandwidth, ZEROstuffing, FFTwindowname
+    global X0LPhA          # Left top X value
+    global Y0TPhA          # Left top Y value
+    global GRWPhA          # Screenwidth
+    global GRHPhA          # Screenheight
+    global FontSize, MuxScreenStatus, MuxChan
+    global RUNstatus    # 0 stopped, 1 start, 2 running, 3 stop now, 4 stop and restart
+    global AWGSAMPLErate, SAMPLErate, BaseSampleRate, OverRangeFlagA, OverRangeFlagB
+    global SMPfft       # number of FFT samples
+    global TRACEaverage # Number of traces for averageing
+    global FreqTraceMode    # 1 normal 2 max 3 average
+    global Vdiv, VScale, IScale         # Number of vertical divisions
+    global vat_btn, vbt_btn, iat_btn, ibt_btn, vabt_btn
+    global AWGBMode, AWGBIOMode, ShowPB_A, ShowPB_B, ShowPB_C, ShowPB_D
+
+    # Delete all items on the screen
+    PhAca.delete(ALL) # remove all items
+    # SmoothBool = SmoothCurvesBP.get()
+    # Draw circular grid lines
+    i = 1
+    xcenter = GRWPhA/2
+    ycenter = (GRHPhA/2) + 14
+    Radius = (GRWPhA-X0LPhA)/(1 + Vdiv.get()*2) # 11
+    VoltsperPixel = float(VScale.get())/Radius
+    mAperPixel = float(IScale.get())/Radius
+    TRadius = Radius * Vdiv.get() # 5
+    x1 = X0LPhA
+    x2 = X0LPhA + GRWPhA
+    xright = 10 + xcenter + ( Vdiv.get() * Radius ) # 5
+    while (i <= Vdiv.get()):
+        x0 = xcenter - ( i * Radius )
+        x1 = xcenter + ( i * Radius )
+        y0 = ycenter - ( i * Radius )
+        y1 = ycenter + ( i * Radius )
+        VTxt = float(VScale.get()) * i
+        ITxt = float(IScale.get()) * i
+        TOffset = xright+(4*FontSize)
+        PhAca.create_oval ( x0, y0, x1, y1, outline=COLORgrid, width=GridWidth.get())
+        PhAca.create_line(xcenter, y0, xright, y0, fill=COLORgrid, width=GridWidth.get(), dash=(4,3))
+        PhAca.create_text(xright, y0, text=str(VTxt), fill=COLORtrace1, anchor="w", font=("arial", FontSize+2 ))
+        if iat_btn.config('text')[-1] == 'ON' or ibt_btn.config('text')[-1] == 'ON':
+            PhAca.create_text(TOffset, y0, text=str(ITxt), fill=COLORtrace3, anchor="w", font=("arial", FontSize+2 ))
+        # 
+        i = i + 1
+    PhAca.create_line(xcenter, y0, xcenter, y1, fill=COLORgrid, width=2)
+    PhAca.create_line(x0, ycenter, x1, ycenter, fill=COLORgrid, width=2)
+    RAngle = math.radians(45)
+    y = TRadius*math.sin(RAngle)
+    x = TRadius*math.cos(RAngle)
+    PhAca.create_line(xcenter-x, ycenter-y, xcenter+x, ycenter+y, fill=COLORgrid, width=GridWidth.get())
+    PhAca.create_line(xcenter+x, ycenter-y, xcenter-x, ycenter+y, fill=COLORgrid, width=GridWidth.get())
+    PhAca.create_text(x0, ycenter, text="180", fill=COLORgrid, anchor="e", font=("arial", FontSize+2 ))
+    PhAca.create_text(x1, ycenter, text="0.0", fill=COLORgrid, anchor="w", font=("arial", FontSize+2 ))
+    PhAca.create_text(xcenter, y0, text="90", fill=COLORgrid, anchor="s", font=("arial", FontSize+2 ))
+    PhAca.create_text(xcenter, y1, text="-90", fill=COLORgrid, anchor="n", font=("arial", FontSize+2 ))
+    # calculate phase error due half sample period offset 0.0018
+    if Two_X_Sample.get() == 0:
+        if AWGBMode.get() == 2 or AWGBIOMode.get() > 0:
+            PhErr = 0.001675 * PeakfreqVA
+        else:
+            PhErr = 0.0
+    else:
+        PhErr = 0.0
+# Draw traces
+#
+    if RefphEntry.get() == "CA-V":
+        CAVphase = 0.0
+        CBVphase = PeakphaseVA - PeakphaseVB + PhErr
+        CAIphase = PeakphaseVA - PeakphaseIA
+        CBIphase = PeakphaseVA - PeakphaseIB + PhErr
+        CABVphase = PeakphaseVA - PeakphaseVAB
+    elif RefphEntry.get() == "CB-V":
+        CBVphase = 0.0
+        CAVphase = PeakphaseVB - PeakphaseVA - PhErr
+        CAIphase = PeakphaseVB - PeakphaseIA - PhErr
+        CBIphase = PeakphaseVB - PeakphaseIB
+        CABVphase = PeakphaseVB - PeakphaseVAB
+    elif RefphEntry.get() == "CA-I":
+        CAIphase = 0.0
+        CAVphase = PeakphaseIA - PeakphaseVA
+        CBVphase = PeakphaseIA - PeakphaseVB + PhErr
+        CBIphase = PeakphaseIA - PeakphaseIB + PhErr
+        CABVphase = PeakphaseIA - PeakphaseVAB
+    elif RefphEntry.get() == "CB-I":
+        CBIphase = 0.0
+        CAVphase = PeakphaseIB - PeakphaseVA - PhErr
+        CBVphase = PeakphaseIB - PeakphaseVB
+        CAIphase = PeakphaseIB - PeakphaseIA - PhErr
+        CABVphase = PeakphaseIB - PeakphaseVAB
+    #
+    if CAVphase > 180:
+        CAVphase = CAVphase - 360
+    elif CAVphase < -180:
+        CAVphase = CAVphase + 360
+    if CBVphase > 180:
+        CBVphase = CBVphase - 360
+    elif CBVphase < -180:
+        CBVphase = CBVphase + 360
+    if CAIphase > 180:
+        CAIphase = CAIphase - 360
+    elif CAIphase < -180:
+        CAIphase = CAIphase + 360
+    if CBIphase > 180:
+        CBIphase = CBIphase - 360
+    elif CBIphase < -180:
+        CBIphase = CBIphase + 360
+    #
+    if vat_btn.config('text')[-1] == 'ON':
+        MagRadius = PeakVA / VoltsperPixel
+        
+        y1 = ycenter - MagRadius*math.sin(math.radians(CAVphase))
+        if y1 > 1500:
+            y1 = xright
+        elif y1 < -500:
+            y1 = ycenter - xright
+        x1 = xcenter + MagRadius*math.cos(math.radians(CAVphase))
+        if x1 > 1500:
+            x1 = xright
+        elif x1 < -500:
+            x1 = xcenter - xright
+        PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace1, arrow="last", width=TRACEwidth.get())
+    if MuxScreenStatus.get() == 0:
+        if vbt_btn.config('text')[-1] == 'ON':
+            MagRadius = PeakVB / VoltsperPixel
+            y1 = ycenter - MagRadius*math.sin(math.radians(CBVphase))
+            if y1 > 1500:
+                y1 = xright
+            elif y1 < -500:
+                y1 = ycenter - xright
+            x1 = xcenter + MagRadius*math.cos(math.radians(CBVphase))
+            if x1 > 1500:
+                x1 = xright
+            elif x1 < -500:
+                x1 = xcenter - xright
+            PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace2, arrow="last", width=TRACEwidth.get())
+    else:
+        if ShowPB_A.get() > 0:
+            CMAphase = PeakphaseVA - PeakphaseVMA + PhErr
+            if CMAphase > 180:
+                CMAphase = CMAphase - 360
+            elif CMAphase < -180:
+                CMAphase = CMAphase + 360
+            MagRadius = PeakVMA / VoltsperPixel
+            y1 = ycenter - MagRadius*math.sin(math.radians(CMAphase))
+            if y1 > 1500:
+                y1 = xright
+            elif y1 < -500:
+                y1 = ycenter - xright
+            x1 = xcenter + MagRadius*math.cos(math.radians(CMAphase))
+            if x1 > 1500:
+                x1 = xright
+            elif x1 < -500:
+                x1 = xcenter - xright
+            PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace2, arrow="last", width=TRACEwidth.get())#
+        if ShowPB_B.get() > 0:
+            CMBphase = PeakphaseVA - PeakphaseVMB + PhErr
+            if CMBphase > 180:
+                CMBphase = CMBphase - 360
+            elif CMBphase < -180:
+                CMBphase = CMBphase + 360
+            MagRadius = PeakVMB / VoltsperPixel
+            y1 = ycenter - MagRadius*math.sin(math.radians(CMBphase))
+            if y1 > 1500:
+                y1 = xright
+            elif y1 < -500:
+                y1 = ycenter - xright
+            x1 = xcenter + MagRadius*math.cos(math.radians(CMBphase))
+            if x1 > 1500:
+                x1 = xright
+            elif x1 < -500:
+                x1 = xcenter - xright
+            PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace6, arrow="last", width=TRACEwidth.get())#
+        if ShowPB_C.get() > 0:
+            CMCphase = PeakphaseVA - PeakphaseVMC + PhErr
+            if CMCphase > 180:
+                CMCphase = CMCphase - 360
+            elif CMCphase < -180:
+                CMCphase = CMCphase + 360
+            MagRadius = PeakVMC / VoltsperPixel
+            y1 = ycenter - MagRadius*math.sin(math.radians(CMCphase))
+            if y1 > 1500:
+                y1 = xright
+            elif y1 < -500:
+                y1 = ycenter - xright
+            x1 = xcenter + MagRadius*math.cos(math.radians(CMCphase))
+            if x1 > 1500:
+                x1 = xright
+            elif x1 < -500:
+                x1 = xcenter - xright
+            PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace7, arrow="last", width=TRACEwidth.get())#
+        if ShowPB_D.get() > 0:
+            CMDphase = PeakphaseVA - PeakphaseVMD + PhErr
+            if CMDphase > 180:
+                CMDphase = CMDphase - 360
+            elif CBVphase < -180:
+                CMDphase = CMDphase + 360
+            MagRadius = PeakVMD / VoltsperPixel
+            y1 = ycenter - MagRadius*math.sin(math.radians(CMDphase))
+            if y1 > 1500:
+                y1 = xright
+            elif y1 < -500:
+                y1 = ycenter - xright
+            x1 = xcenter + MagRadius*math.cos(math.radians(CMDphase))
+            if x1 > 1500:
+                x1 = xright
+            elif x1 < -500:
+                x1 = xcenter - xright
+            PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace4, arrow="last", width=TRACEwidth.get())# 
+    if iat_btn.config('text')[-1] == 'ON':
+        MagRadius = PeakIA / mAperPixel
+        y1 = ycenter - MagRadius*math.sin(math.radians(CAIphase))
+        if y1 > 1500:
+            y1 = xright
+        elif y1 < -500:
+            y1 = ycenter - xright
+        x1 = xcenter + MagRadius*math.cos(math.radians(CAIphase))
+        if x1 > 1500:
+            x1 = xright
+        elif x1 < -500:
+            x1 = xcenter - xright
+        PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace3, arrow="last", width=TRACEwidth.get())
+    if ibt_btn.config('text')[-1] == 'ON':
+        MagRadius = PeakIB / mAperPixel
+        y1 = ycenter - MagRadius*math.sin(math.radians(CBIphase))
+        if y1 > 1500:
+            y1 = xright
+        elif y1 < -500:
+            y1 = ycenter - xright
+        x1 = xcenter + MagRadius*math.cos(math.radians(CBIphase))
+        if x1 > 1500:
+            x1 = xright
+        elif x1 < -500:
+            x1 = xcenter - xright
+        PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace4, arrow="last", width=TRACEwidth.get())
+    if MuxScreenStatus.get() == 0:
+        if vabt_btn.config('text')[-1] == 'ON':
+            MagRadius = PeakVAB / VoltsperPixel
+            
+            y1 = ycenter - MagRadius*math.sin(math.radians(CABVphase))
+            if y1 > 1500:
+                y1 = xright
+            elif y1 < -500:
+                y1 = ycenter - xright
+            x1 = xcenter + MagRadius*math.cos(math.radians(CABVphase))
+            if x1 > 1500:
+                x1 = xright
+            elif x1 < -500:
+                x1 = xcenter - xright
+            PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace5, arrow="last", width=TRACEwidth.get())   
+# display warning if input out of range
+    if OverRangeFlagA == 1:
+        x = X0LPhA+GRWPhA+10
+        y = Y0TPhA+GRHPhA-40
+        PhAca.create_rectangle(x-6, y-6, x+6, y+6, fill="#ff0000")
+        PhAca.create_text (x+12, y, text="CHA Over Range", anchor=W, fill="#ff0000", font=("arial", FontSize+4 ))
+    if OverRangeFlagB == 1:
+        x = X0LPhA+GRWPhA+10
+        y = Y0TPhA+GRHPhA-10
+        PhAca.create_rectangle(x-6, y-6, x+6, y+6, fill="#ff0000")
+        PhAca.create_text (x+12, y, text="CHB Over Range", anchor=W, fill="#ff0000", font=("arial", FontSize+4 ))
+    # General information on top of the grid
+
+    txt = "    Sample rate: " + str(SAMPLErate)
+    txt = txt + "    FFT samples: " + str(SMPfft)
+    txt = txt + "   " + FFTwindowname
+        
+    x = X0LPhA
+    y = 12
+    idTXT = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext)
+    #
+    x = X0LPhA + GRWPhA + 4
+    y = 24
+    txt = "CA " + ' {0:.3f} '.format(PeakVA) + " RMS V" 
+    TXT9  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace1, font=("arial", FontSize+4 ))
+    y = y + 24
+    if MuxScreenStatus.get() == 0:
+        txt = "CB " + ' {0:.3f} '.format(PeakVB) + " RMS V" 
+        TXT10  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace2, font=("arial", FontSize+4 ))
+        y = y + 24
+    else:
+        if ShowPB_A.get() > 0:
+            txt = "Mux A " + ' {0:.3f} '.format(PeakVMA) + " RMS V" 
+            TXT10  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace2, font=("arial", FontSize+4 ))
+            y = y + 24
+        if ShowPB_B.get() > 0:
+            txt = "Mux B " + ' {0:.3f} '.format(PeakVMB) + " RMS V" 
+            TXT10  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace6, font=("arial", FontSize+4 ))
+            y = y + 24
+        if ShowPB_C.get() > 0:
+            txt = "Mux C " + ' {0:.3f} '.format(PeakVMC) + " RMS V" 
+            TXT10  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace7, font=("arial", FontSize+4 ))
+            y = y + 24
+        if ShowPB_D.get() > 0:
+            txt = "Mux D " + ' {0:.3f} '.format(PeakVMD) + " RMS V" 
+            TXT10  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace4, font=("arial", FontSize+4 ))
+            y = y + 24
+    if iat_btn.config('text')[-1] == 'ON':
+        txt = "CA " + ' {0:.2f} '.format(PeakIA) + " RMS mA" 
+        TXT11  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace3, font=("arial", FontSize+4 ))
+        y = y + 24
+    if ibt_btn.config('text')[-1] == 'ON':
+        txt = "CB " + ' {0:.2f} '.format(PeakIB) + " RMS mA" 
+        TXT12  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace4, font=("arial", FontSize+4 ))
+        y = y + 24
+    txt = "CA V Phase " + ' {0:.1f} '.format(CAVphase) + " Degrees"
+    TXT13  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace1, font=("arial", FontSize+4 ))
+    y = y + 24
+    if MuxScreenStatus.get() == 0:
+        txt = "CB V Phase " + ' {0:.1f} '.format(CBVphase) + " Degrees"
+        TXT14  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace2, font=("arial", FontSize+4 ))
+        y = y + 24
+    else:
+        if ShowPB_A.get() > 0:
+            txt = "Mux A Phase " + ' {0:.1f} '.format(CMAphase) + " Degrees"
+            TXT14  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace2, font=("arial", FontSize+4 ))
+            y = y + 24
+        if ShowPB_B.get() > 0:
+            txt = "Mux B Phase " + ' {0:.1f} '.format(CMBphase) + " Degrees"
+            TXT14  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace6, font=("arial", FontSize+4 ))
+            y = y + 24
+        if ShowPB_C.get() > 0:
+            txt = "Mux C Phase " + ' {0:.1f} '.format(CMCphase) + " Degrees"
+            TXT14  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace7, font=("arial", FontSize+4 ))
+            y = y + 24
+        if ShowPB_D.get() > 0:
+            txt = "Mux D Phase " + ' {0:.1f} '.format(CMDphase) + " Degrees"
+            TXT14  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace4, font=("arial", FontSize+4 ))
+            y = y + 24
+    if iat_btn.config('text')[-1] == 'ON':
+        txt = "CA I Phase " + ' {0:.1f} '.format(CAIphase) + " Degrees"
+        TXT15  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace3, font=("arial", FontSize+4 ))
+        y = y + 24
+    if ibt_btn.config('text')[-1] == 'ON':
+        txt = "CB I Phase " + ' {0:.1f} '.format(CBIphase) + " Degrees"
+        TXT16  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace4, font=("arial", FontSize+4 ))
+        y = y + 24
+    #
+    txt = "CA-V Freq " + ' {0:.1f} '.format(PeakfreqVA) + " Hertz"
+    TXT17  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
+    y = y + 24
+#
+    # Start and stop frequency and trace mode
+    if Two_X_Sample.get() == 0:
+        txt = "0.0 to 45000 Hz"
+    else:
+        txt = "0.0 to 90000 Hz"
+    txt = txt + "  FFT Bandwidth =" + ' {0:.2f} '.format(FFTbandwidth)
+        
+    x = X0LPhA
+    y = Y0TPhA+GRHPhA-13
+    idTXT = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext)
+    txt = " "
+    # Runstatus and level information
+    if (RUNstatus.get() == 0):
+        txt = txt + "  Stopped "
+    else:
+        txt = txt + "  Running "
+    y = Y0TPhA+GRHPhA
+    IDtxt  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext)
+#
+def BSavePhAData():
+    global PeakVA, PeakVB, PeakIA, PeakIB
+    global PeakfreqVA, PeakfreqVB, PeakfreqIA, PeakfreqIB
+    global PeakVMA, PeakVMB, PeakVMC, PeakVMD
+    global CAVphase, CBVphase, CAIphase, CBIphase, CABVphase
+    global CMAphase, CMBphase, CMCphase, CMDphase
+    global MuxScreenStatus, AppendPhAData, PhADatafilename
+    global vat_btn, vbt_btn, iat_btn, ibt_btn, vabt_btn
+    global ShowPB_A, ShowPB_B, ShowPB_C, ShowPB_D
+
+    # open file to save data
+    if AppendPhAData.get() == 0:
+        PhADatafilename = asksaveasfilename(defaultextension = ".csv", filetypes=[("Comma Separated Values", "*.csv")])
+    DataFile = open(PhADatafilename, 'a')
+    DataFile.write( 'Amplitude, Phase, @ ' + str(PeakfreqVA) + ' Hertz\n')
+    
+    if vat_btn.config('text')[-1] == 'ON':
+        DataFile.write( str(PeakVA) + ', ' + str(CAVphase) + ', CA-V\n')
+    if MuxScreenStatus.get() == 0:
+        if vbt_btn.config('text')[-1] == 'ON':
+            DataFile.write( str(PeakVB) + ', ' + str(CBVphase) + ', CB-V\n')
+    else:
+        if ShowPB_A.get() > 0:
+            DataFile.write( str(PeakVMA) + ', ' + str(CMAphase) + ', Mux A\n')
+        if ShowPB_B.get() > 0:
+            DataFile.write( str(PeakVMB) + ', ' + str(CMBphase) + ', Mux B\n')
+        if ShowPB_C.get() > 0:
+            DataFile.write( str(PeakVMC) + ', ' + str(CMCphase) + ', Mux C\n')
+        if ShowPB_D.get() > 0:
+            DataFile.write( str(PeakVMD) + ', ' + str(CMDphase) + ', Mux D\n')
+    if iat_btn.config('text')[-1] == 'ON':
+        DataFile.write( str(PeakIA) + ', ' + str(CAIphase) + ', CA-I\n')
+    if ibt_btn.config('text')[-1] == 'ON':
+        DataFile.write( str(PeakIB) + ', ' + str(CBIphase) + ', CB-I\n')
+    DataFile.close()
+#
+def PlotPhAFromFile():
+    global CANVASheightPhA, CANVASwidthPhA, PhAca, TRACEwidth, GridWidth
+    global COLORsignalband, COLORtext, COLORgrid  # The colors
+    global COLORtrace1, COLORtrace2, COLORtrace3, COLORtrace4, COLORtrace5, COLORtrace6, COLORtrace7
+    global GRWPhA, GRHPhA, X0LPhA, Vdiv, VScale, IScale 
+# open file to read data from
+    filename = askopenfilename(defaultextension = ".csv", filetypes=[("Comma Separated Values", "*.csv")])
+    i = 1
+    xcenter = GRWPhA/2
+    ycenter = (GRHPhA/2) + 14
+    Radius = (GRWPhA-X0LPhA)/(1 + Vdiv.get()*2) # 11
+    VoltsperPixel = float(VScale.get())/Radius
+    mAperPixel = float(IScale.get())/Radius
+    TRadius = Radius * Vdiv.get() # 5
+    x1 = X0LPhA
+    x2 = X0LPhA + GRWPhA
+# Read values from CVS file
+    try:
+        CSVFile = open(filename)
+        dialect = csv.Sniffer().sniff(CSVFile.read(2048))
+        CSVFile.seek(0)
+        csv_f = csv.reader(CSVFile, dialect)
+        for row in csv_f:
+            try:
+                PeakMag = float(row[0])
+                PeakPhase = float(row[1])
+                if row[2] == "CA-I" or row[2] == "CB-I":
+                    MagRadius = PeakMag / mAperPixel
+                else:
+                    MagRadius = PeakMag / VoltsperPixel
+            
+                y1 = ycenter - MagRadius*math.sin(math.radians(PeakPhase))
+                if y1 > 1500:
+                    y1 = xright
+                elif y1 < -500:
+                    y1 = ycenter - xright
+                x1 = xcenter + MagRadius*math.cos(math.radians(PeakPhase))
+                if x1 > 1500:
+                    x1 = xright
+                elif x1 < -500:
+                    x1 = xcenter - xright
+                PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace5, arrow="last", width=TRACEwidth.get())
+            except:
+                print( 'skipping non-numeric row')
+        CSVFile.close()
+    except:
+        showwarning("WARNING","No such file found or wrong format!")
+#
 #
 def STOREcsvfile():     # Store the trace as CSV file [frequency, magnitude or dB value]
     global FFTmemoryA, FFTresultA
@@ -14589,6 +15810,8 @@ def onTextKey(event):
 #
 def onSpinBoxScroll(event):
     spbox = event.widget
+    if sys.version_info[0] == 3: # Spin Boxes do this automatically in Python 3 apparently
+        return
     if event.delta > 0: # increment digit
         spbox.invoke('buttonup')
     else: # decrement digit
@@ -18841,6 +20064,10 @@ ShowRA_I = IntVar(0)
 ShowRB_V = IntVar(0)
 ShowRB_I = IntVar(0)
 ShowMath = IntVar(0)
+ShowPB_A = IntVar(0)
+ShowPB_B = IntVar(0)
+ShowPB_C = IntVar(0)
+ShowPB_D = IntVar(0)
 Show_MathX = IntVar(0)
 Show_MathY = IntVar(0)
 AutoCenterA = IntVar(0)
@@ -18902,9 +20129,15 @@ TimeDisp = IntVar(0)
 TimeDisp.set(1)
 XYDisp = IntVar(0)
 FreqDisp = IntVar(0)
+PhADisp = IntVar(0)
 BodeDisp = IntVar(0)
 IADisp = IntVar(0)
 OhmDisp = IntVar(0)
+PhAScreenStatus = IntVar(0)
+PhAScreenStatus.set(0)
+AppendPhAData = IntVar(0)
+AppendPhAData.set(0)
+PhADatafilename = "PhaseData.csv"
 BodeScreenStatus = IntVar(0)
 BodeScreenStatus.set(0)
 DigScreenStatus = IntVar(0)
@@ -18994,6 +20227,12 @@ root.style.configure("Stop.TRadiobutton", background="red")
 root.style.configure("Run.TRadiobutton", background="green")
 root.style.configure("Disab.TCheckbutton", indicatorcolor="red")
 root.style.configure("Enab.TCheckbutton", indicatorcolor="green")
+root.style.configure("Strace1.TCheckbutton", background=COLORtrace1)
+root.style.configure("Strace2.TCheckbutton", background=COLORtrace2)
+root.style.configure("Strace3.TCheckbutton", background=COLORtrace3)
+root.style.configure("Strace4.TCheckbutton", background=COLORtrace4)
+root.style.configure("Strace6.TCheckbutton", background=COLORtrace6)
+root.style.configure("Strace7.TCheckbutton", background=COLORtrace7)
 root.style.configure("WPhase.TRadiobutton", width=5, background="white", indicatorcolor=("red", "green"))
 root.style.configure("GPhase.TRadiobutton", width=5, background="gray", indicatorcolor=("red", "green"))
 # create a pulldown menu
@@ -19199,6 +20438,7 @@ Optionmenu.menu.add_checkbutton(label='Gated Meas', variable=MeasGateStatus)
 Optionmenu.menu.add_checkbutton(label='Trace Avg [a]', variable=TRACEmodeTime)
 Optionmenu.menu.add_checkbutton(label='Persistance', variable=ScreenTrefresh)
 Optionmenu.menu.add_command(label='Set Marker Location', command=BSetMarkerLocation)
+Optionmenu.menu.add_command(label='Change Plot Label', command=BUserCustomPlotText)
 Optionmenu.menu.add_command(label="SnapShot [s]", command=BSnapShot)
 Optionmenu.menu.add_radiobutton(label='Black BG', variable=ColorMode, value=0, command=BgColor)
 Optionmenu.menu.add_radiobutton(label='White BG', variable=ColorMode, value=1, command=BgColor)
@@ -19291,40 +20531,64 @@ ckb1 = Checkbutton(timebtn, text="Enab", style="Disab.TCheckbutton", variable=Ti
 ckb1.pack(side=LEFT)
 timelab = Label(timebtn, text="Time Plot")
 timelab.pack(side=LEFT)
-xybtn = Frame( frame2r )
-xybtn.pack(side=TOP)
-ckb2 = Checkbutton(xybtn, text="Enab", style="Disab.TCheckbutton", variable=XYDisp, command=XYCheckBox)
-ckb2.pack(side=LEFT)
-BuildXYScreen = Button(xybtn, text="X-Y Plot", style="W11.TButton", command=MakeXYWindow)
-BuildXYScreen.pack(side=TOP)
+if EnableXYPlotter > 0:
+    xybtn = Frame( frame2r )
+    xybtn.pack(side=TOP)
+    ckb2 = Checkbutton(xybtn, text="Enab", style="Disab.TCheckbutton", variable=XYDisp, command=XYCheckBox)
+    ckb2.pack(side=LEFT)
+    BuildXYScreen = Button(xybtn, text="X-Y Plot", style="W11.TButton", command=MakeXYWindow)
+    BuildXYScreen.pack(side=TOP)
 #
-freqbtn = Frame( frame2r )
-freqbtn.pack(side=TOP)
-ckb3 = Checkbutton(freqbtn, text="Enab", style="Disab.TCheckbutton", variable=FreqDisp, command=FreqCheckBox)
-ckb3.pack(side=LEFT)
-BuildSpectrumScreen = Button(freqbtn, text="Spectrum Plot", style="W11.TButton", command=MakeSpectrumWindow)
-BuildSpectrumScreen.pack(side=LEFT)
+if EnablePhaseAnalizer > 0:
+    phasebtn = Frame( frame2r )
+    phasebtn.pack(side=TOP)
+    phckb = Checkbutton(phasebtn, text="Enab", style="Disab.TCheckbutton", variable=PhADisp, command=PhACheckBox)
+    phckb.pack(side=LEFT)
+    BuildPhAScreen = Button(phasebtn, text="Phasor Plot", style="W11.TButton", command=MakePhAWindow)
+    BuildPhAScreen.pack(side=LEFT)
 #
-bodebtn = Frame( frame2r )
-bodebtn.pack(side=TOP)
-ckb5 = Checkbutton(bodebtn, text="Enab", style="Disab.TCheckbutton", variable=BodeDisp, command=BodeCheckBox)
-ckb5.pack(side=LEFT)
-BuildBodeScreen = Button(bodebtn, text="Bode Plot", style="W11.TButton", command=MakeBodeWindow)
-BuildBodeScreen.pack(side=LEFT)
+if EnableSpectrumAnalizer > 0:
+    freqbtn = Frame( frame2r )
+    freqbtn.pack(side=TOP)
+    ckb3 = Checkbutton(freqbtn, text="Enab", style="Disab.TCheckbutton", variable=FreqDisp, command=FreqCheckBox)
+    ckb3.pack(side=LEFT)
+    BuildSpectrumScreen = Button(freqbtn, text="Spectrum Plot", style="W11.TButton", command=MakeSpectrumWindow)
+    BuildSpectrumScreen.pack(side=LEFT)
 #
-impdbtn = Frame( frame2r )
-impdbtn.pack(side=TOP)
-ckb4 = Checkbutton(impdbtn, text="Enab", style="Disab.TCheckbutton", variable=IADisp, command=IACheckBox)
-ckb4.pack(side=LEFT)
-BuildIAScreen = Button(impdbtn, text="Impedance", style="W11.TButton", command=MakeIAWindow)
-BuildIAScreen.pack(side=LEFT)
+if EnableBodePlotter > 0:
+    bodebtn = Frame( frame2r )
+    bodebtn.pack(side=TOP)
+    ckb5 = Checkbutton(bodebtn, text="Enab", style="Disab.TCheckbutton", variable=BodeDisp, command=BodeCheckBox)
+    ckb5.pack(side=LEFT)
+    BuildBodeScreen = Button(bodebtn, text="Bode Plot", style="W11.TButton", command=MakeBodeWindow)
+    BuildBodeScreen.pack(side=LEFT)
 #
-dcohmbtn = Frame( frame2r )
-dcohmbtn.pack(side=TOP)
-ckb6 = Checkbutton(dcohmbtn, text="Enab", style="Disab.TCheckbutton", variable=OhmDisp, command=OhmCheckBox)
-ckb6.pack(side=LEFT)
-BuildOhmScreen = Button(dcohmbtn, text="Ohmmeter", style="W11.TButton", command=MakeOhmWindow)
-BuildOhmScreen.pack(side=LEFT)
+if EnableImpedanceAnalizer > 0:
+    impdbtn = Frame( frame2r )
+    impdbtn.pack(side=TOP)
+    ckb4 = Checkbutton(impdbtn, text="Enab", style="Disab.TCheckbutton", variable=IADisp, command=IACheckBox)
+    ckb4.pack(side=LEFT)
+    BuildIAScreen = Button(impdbtn, text="Impedance", style="W11.TButton", command=MakeIAWindow)
+    BuildIAScreen.pack(side=LEFT)
+#
+if EnableOhmMeter > 0:
+    dcohmbtn = Frame( frame2r )
+    dcohmbtn.pack(side=TOP)
+    ckb6 = Checkbutton(dcohmbtn, text="Enab", style="Disab.TCheckbutton", variable=OhmDisp, command=OhmCheckBox)
+    ckb6.pack(side=LEFT)
+    BuildOhmScreen = Button(dcohmbtn, text="Ohmmeter", style="W11.TButton", command=MakeOhmWindow)
+    BuildOhmScreen.pack(side=LEFT)
+#
+if ShowTraceControls > 0:
+    ckbt1 = Checkbutton(frame2r, text='CA-V [1]', style="Strace1.TCheckbutton", variable=ShowC1_V, command=TraceSelectADC_Mux)
+    ckbt1.pack(side=TOP)
+    ckbt2 = Checkbutton(frame2r, text='CA-I [3]', style="Strace3.TCheckbutton", variable=ShowC1_I, command=TraceSelectADC_Mux)
+    ckbt2.pack(side=TOP)
+    ckbt3 = Checkbutton(frame2r, text='CB-V [2]', style="Strace2.TCheckbutton", variable=ShowC2_V, command=TraceSelectADC_Mux)
+    ckbt3.pack(side=TOP)
+    ckbt4 = Checkbutton(frame2r, text='CB-I [4]', style="Strace4.TCheckbutton", variable=ShowC2_I, command=TraceSelectADC_Mux)
+    ckbt4.pack(side=TOP)
+
 if ShowBallonHelp > 0:
     math_tip = CreateToolTip(mathbt, 'Open Math window')
     BuildAWGScreen_tip = CreateToolTip(BuildAWGScreen, 'Surface AWG Controls window')
@@ -19336,8 +20600,9 @@ if ShowBallonHelp > 0:
 # Digital Input / Output Option screens
 DigScreenStatus = IntVar(0)
 DigScreenStatus.set(0)
-BuildDigScreen = Button(frame2r, text="Digital I/O Screen", style="W17.TButton", command=MakeDigScreen)
-BuildDigScreen.pack(side=TOP)
+if EnableDigIO > 0:
+    BuildDigScreen = Button(frame2r, text="Digital I/O Screen", style="W17.TButton", command=MakeDigScreen)
+    BuildDigScreen.pack(side=TOP)
 #
 # Optional plugin tools
 if EnablePIODACMode > 0:

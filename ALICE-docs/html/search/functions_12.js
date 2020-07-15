@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['xycaresize_1625',['XYcaresize',['../namespacealice-desktop-1.html#aaf8836e216b10287085d5bc64c79c1b8',1,'alice-desktop-1']]],
-  ['xycheckbox_1626',['XYCheckBox',['../namespacealice-desktop-1.html#a23faba02b29eb5fadf7044f2b476accb',1,'alice-desktop-1']]]
+  ['vabtoggle_1700',['VABtoggle',['../namespacealice-desktop-1.html#aaccf6268d149ea66a0dfc8bc4639a71a',1,'alice-desktop-1']]],
+  ['vatoggle_1701',['VAtoggle',['../namespacealice-desktop-1.html#a0e826c8c8ded7f135091434a1498d050',1,'alice-desktop-1']]],
+  ['vbtoggle_1702',['VBtoggle',['../namespacealice-desktop-1.html#a47261dedd3e5dd718145bb05a94d8800',1,'alice-desktop-1']]]
 ];

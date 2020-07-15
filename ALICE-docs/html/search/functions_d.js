@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['reinterploatetrigger_1540',['ReInterploateTrigger',['../namespacealice-desktop-1.html#a5eb9e7fbba2984a6278431dd4acabb58',1,'alice-desktop-1']]],
-  ['remakeawgwaves_1541',['ReMakeAWGwaves',['../namespacealice-desktop-1.html#a76521eab39671699e2a493d6e4a1fc12',1,'alice-desktop-1']]],
-  ['rexecutefromstring_1542',['RExecuteFromString',['../namespacealice-desktop-1.html#a190473303fcdd94a1b08bfb72d8d636a',1,'alice-desktop-1']]]
+  ['phacaresize_1611',['PhACaresize',['../namespacealice-desktop-1.html#a8cf4aa1ed18b7fea1c4a9ead85218719',1,'alice-desktop-1']]],
+  ['phacheckbox_1612',['PhACheckBox',['../namespacealice-desktop-1.html#a7ceb90b2f391c8ce8baa8e54bb4f3f1c',1,'alice-desktop-1']]],
+  ['plotphafromfile_1613',['PlotPhAFromFile',['../namespacealice-desktop-1.html#a74c5834b28d8bcbbd3b57a6c3c02277c',1,'alice-desktop-1']]]
 ];
