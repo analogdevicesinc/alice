@@ -14534,7 +14534,7 @@ def MakePhAScreen():       # Update the screen with traces and text
             CMDphase = PeakphaseVA - PeakphaseVMD + PhErr
             if CMDphase > 180:
                 CMDphase = CMDphase - 360
-            elif CBVphase < -180:
+            elif CMDphase < -180:
                 CMDphase = CMDphase + 360
             MagRadius = PeakVMD / VoltsperPixel
             y1 = ycenter - MagRadius*math.sin(math.radians(CMDphase))
