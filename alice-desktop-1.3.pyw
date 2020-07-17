@@ -13960,7 +13960,7 @@ def MakePhAWindow():
     global phawindow, PhAca, logo, PhAScreenStatus, PhADisp, AWGSync
     global COLORcanvas, CANVASwidthPhA, CANVASheightPhA, RevDate, AWGAMode, AWGAShape, AWGBMode
     global FFTwindow, CutDC, ColorMode, RefPhase, CHvpdiv, CHipdiv
-    global GRWPhA, X0LPhA, GRHPhA, Y0TPhA, DeBugMode, SWRev
+    global GRWPhA, X0LPhA, GRHPhA, Y0TPhA, DeBugMode, SWRev, PhAPlotMode
     global VScale, IScale, RefphEntry, MuxScreenStatus, AppendPhAData
     global vat_btn, vbt_btn, iat_btn, ibt_btn, vabt_btn
     global ShowPB_A, ShowPB_B, ShowPB_C, ShowPB_D
@@ -13998,8 +13998,10 @@ def MakePhAWindow():
         PhAFilemenu.menu.add_command(label="Save Config", command=BSaveConfigIA)
         PhAFilemenu.menu.add_command(label="Load Config", command=BLoadConfigIA)
         PhAFilemenu.menu.add_command(label="Save Data", command=BSavePhAData)
-        PhAFilemenu.menu.add_checkbutton(label='- Append', variable=AppendPhAData)
+        PhAFilemenu.menu.add_checkbutton(label=' - Append', variable=AppendPhAData)
         PhAFilemenu.menu.add_command(label="Plot From File", command=PlotPhAFromFile)
+        PhAFilemenu.menu.add_radiobutton(label=' - Vectors', variable=PhAPlotMode, value=0)
+        PhAFilemenu.menu.add_radiobutton(label=' - Outline', variable=PhAPlotMode, value=1)
         PhAFilemenu.menu.add_command(label="Help", command=BHelp)
         PhAFilemenu.pack(side=LEFT, anchor=W)
         #
@@ -14737,8 +14739,8 @@ def BSavePhAData():
     DataFile.close()
 #
 def PlotPhAFromFile():
-    global CANVASheightPhA, CANVASwidthPhA, PhAca, TRACEwidth, GridWidth
-    global COLORsignalband, COLORtext, COLORgrid  # The colors
+    global CANVASheightPhA, CANVASwidthPhA, PhAca, TRACEwidth, GridWidth, PhAPlotMode
+    global COLORsignalband, COLORtext, COLORgrid, SmoothCurves  # The colors
     global COLORtrace1, COLORtrace2, COLORtrace3, COLORtrace4, COLORtrace5, COLORtrace6, COLORtrace7
     global GRWPhA, GRHPhA, X0LPhA, Vdiv, VScale, IScale 
 # open file to read data from
@@ -14752,6 +14754,7 @@ def PlotPhAFromFile():
     TRadius = Radius * Vdiv.get() # 5
     x1 = X0LPhA
     x2 = X0LPhA + GRWPhA
+    PhATrace = []
 # Read values from CVS file
     try:
         CSVFile = open(filename)
@@ -14777,9 +14780,15 @@ def PlotPhAFromFile():
                     x1 = xright
                 elif x1 < -500:
                     x1 = xcenter - xright
-                PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace5, arrow="last", width=TRACEwidth.get())
+                if PhAPlotMode.get() == 0:
+                    PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace5, arrow="last", width=TRACEwidth.get())
+                else:
+                    PhATrace.append(x1)
+                    PhATrace.append(y1)
             except:
                 print( 'skipping non-numeric row')
+        if PhAPlotMode.get() == 1:
+            PhAca.create_line(PhATrace, fill=COLORtrace5, smooth=SmoothCurves.get(), splinestep=5, width=TRACEwidth.get())
         CSVFile.close()
     except:
         showwarning("WARNING","No such file found or wrong format!")
@@ -20137,6 +20146,7 @@ PhAScreenStatus = IntVar(0)
 PhAScreenStatus.set(0)
 AppendPhAData = IntVar(0)
 AppendPhAData.set(0)
+PhAPlotMode = IntVar(0)
 PhADatafilename = "PhaseData.csv"
 BodeScreenStatus = IntVar(0)
 BodeScreenStatus.set(0)
