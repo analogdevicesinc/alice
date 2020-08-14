@@ -103,5 +103,6 @@ var searchData=
   ['awglayout_101',['AwgLayout',['../namespacealice-desktop-1.html#ada8d8679fc81fe584622b0c9f59443d6',1,'alice-desktop-1']]],
   ['awgsamplerate_102',['AWGSAMPLErate',['../namespacealice-desktop-1.html#a78dbc147531a89e652c0a07cbfcf2e46',1,'alice-desktop-1']]],
   ['awgscreenstatus_103',['AWGScreenStatus',['../namespacealice-desktop-1.html#ae5e5e0eb955a237ae72449cfbd2fe624',1,'alice-desktop-1']]],
-  ['alice_104',['ALICE',['../md__r_e_a_d_m_e.html',1,'']]]
+  ['awgshowadvanced_104',['AWGShowAdvanced',['../namespacealice-desktop-1.html#aba6cf14c8b1303088b04041bd8d7ba22',1,'alice-desktop-1']]],
+  ['alice_105',['ALICE',['../md__r_e_a_d_m_e.html',1,'']]]
 ];

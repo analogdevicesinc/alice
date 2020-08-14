@@ -1,17 +1,29 @@
 #!/usr/bin/python
-# ADALM1000 DC volt meter / source tool 7-30-2019
+# ADALM1000 DC volt meter / source tool 8-4-2020
 # For use with pysmu / libsmu.rework >= 1.0
-# For Python version > = 2.7.8
-from Tkinter import *
+# For Python version > = 2.7.8 and 3.7
+import __future__
+import os
+import sys
+if sys.version_info[0] == 2:
+    print ("Python 2.x")
+    from Tkinter import *
+    from tkFileDialog import askopenfilename
+    from tkFileDialog import asksaveasfilename
+    from tkSimpleDialog import askstring
+    from tkMessageBox import *
+if sys.version_info[0] == 3:
+    from tkinter import *
+    from tkinter.filedialog import askopenfilename
+    from tkinter.filedialog import asksaveasfilename
+    from tkinter.simpledialog import askstring
+    print ("Python 3.x")
 import time
 from pysmu import *
-from tkFileDialog import askopenfilename
-from tkFileDialog import asksaveasfilename
-from tkSimpleDialog import askstring
-from tkMessageBox import *
+
 # define button actions
 loopnum = 0
-RevDate = "5 May 2020)"
+RevDate = "14 Aug 2020)"
 PIO_0 = 28
 PIO_1 = 29
 PIO_2 = 47
@@ -139,7 +151,7 @@ def onAWGscroll(event):
     onTextScroll(event)
     UpdateAwgCont()
 #
-def onTextScroll(event):   # august 7
+def onTextScroll(event):   # Use mouse wheel to scroll entry values, august 7
     button = event.widget
     cursor_position = button.index(INSERT) # get current cursor position
     Pos = cursor_position
@@ -153,12 +165,13 @@ def onTextScroll(event):   # august 7
         Step = 10**(Len - Pos)
     elif Pos <= Dot : # no point left of position
         Step = 10**(Dot - Pos)
-    else :
+    else:
         Step = 10**(Dot - Pos + 1)
-    if event.delta > 0: # increment value
-        NewVal = OldValfl + Step
-    else: # decrement value
+    # respond to Linux or Windows wheel event
+    if event.num == 5 or event.delta == -120:
         NewVal = OldValfl - Step
+    if event.num == 4 or event.delta == 120:
+        NewVal = OldValfl + Step
     FormatStr = "{0:." + str(Decimals) + "f}"
     NewStr = FormatStr.format(NewVal)
     NewDot = NewStr.find (".") 
@@ -169,6 +182,7 @@ def onTextScroll(event):   # august 7
     button.delete(0, END) # remove old entry
     button.insert(0, NewStr) # insert new entry
     button.icursor(NewPos) # resets the insertion cursor
+#
 #
 def BStart():
     global RUNstatus, devx, DevID, FWRevOne, session, chatestv
@@ -388,7 +402,7 @@ def BLoadCal():
         try:
             exec( line.rstrip() )
         except:
-            print "Skipping " + line.rstrip()
+            print( "Skipping " + line.rstrip())
     CalFile.close()
 
 def DestroyDigScreen():
@@ -746,7 +760,7 @@ def DestroyAD5626Screen():
     ad5626window.destroy()
 #
 def donothing():
-    print "doing nothing"
+    print( "doing nothing")
     
 def SelectBoard():
     global devx, dev0, dev1, dev0, session, BrdSel, CHA, CHB
@@ -757,30 +771,30 @@ def SelectBoard():
         try:
             session.remove(dev1)
         except:
-            print "Skipping dev1"
+            print( "Skipping dev1")
         try:
             session.remove(dev2)
         except:
-            print "Skipping dev2"
+            print( "Skipping dev2")
         session.add(dev0)
         devx = dev0
     if BrdSel.get() == 1:
         try:
             session.remove(dev0)
         except:
-            print "Skipping dev0"
+            print( "Skipping dev0")
         try:
             session.remove(dev2)
         except:
-            print "Skipping dev2"
+            print( "Skipping dev2")
         session.add(dev1)
         devx = dev1
     #devx = session.devices[BrdSel.get()]
     DevID = devx.serial
-    print DevID
-    print devx.fwver
-    print devx.hwver
-    print devx.default_rate
+    print( DevID)
+    print( devx.fwver)
+    print( devx.hwver)
+    print( devx.default_rate)
     CHA = devx.channels['A']    # Open CHA
     CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
     CHB = devx.channels['B']    # Open CHB
@@ -789,6 +803,27 @@ def SelectBoard():
     devx.ctrl_transfer(0x40, 0x51, 38, 0, 0, 0, 100) # set CHB GND switch to open
     session.add(devx)
     #session.start(0)
+#
+def Bcloseexit():
+    global RUNstatus, session, CHA, CHB, devx, AWG_2X
+    
+    RUNstatus.set(0)
+    # BSaveConfig("alice-last-config.cfg")
+    try:
+        # Put channels in Hi-Z and exit
+        CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z split mode
+        CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z split mode
+        devx.set_adc_mux(0) # set ADC mux conf to default
+        CHA.constant(0.0)
+        CHB.constant(0.0)
+        devx.set_led(0b001) # Set LED.red on the way out
+        if session.continuous:
+            session.end()
+    except:
+        donothing()
+
+    root.destroy()
+    exit()
 # setup main window
 TBicon = """
 R0lGODlhIAAgAHAAACH5BAEAAAIALAAAAAAgACAAgQAAAP///wAAAAAAAAJJhI+py+0PYwtBWkDp
@@ -802,6 +837,7 @@ img = PhotoImage(data=TBicon)
 root.call('wm', 'iconphoto', root._w, '-default', img)
 #
 root.tk_focusFollowsMouse()
+root.protocol("WM_DELETE_WINDOW", Bcloseexit)
 #root.style.configure("Stop.TRadiobutton", background="red")
 #root.style.configure("Run.TRadiobutton", background="green")
 RUNstatus = IntVar(0)
@@ -814,9 +850,9 @@ AWGBIOMode = IntVar(0)
 #
 buttons = Frame( root )
 buttons.grid(row=0, column=0, columnspan=4, sticky=W)
-rb1 = Radiobutton(buttons, text="Stop", bg = "RED", variable=RUNstatus, value=0, command=BStop )
+rb1 = Radiobutton(buttons, text="Stop", bg = "#ff0000", variable=RUNstatus, value=0, command=BStop )
 rb1.pack(side=LEFT)
-rb2 = Radiobutton(buttons, text="Run", bg = "GREEN", variable=RUNstatus, value=1, command=BStart )
+rb2 = Radiobutton(buttons, text="Run", bg = "#00ff00", variable=RUNstatus, value=1, command=BStart )
 rb2.pack(side=LEFT)
 b1 = Button(buttons, text='Save Confg', command=BSaveCal)
 b1.pack(side=LEFT)
@@ -864,11 +900,15 @@ gainavlab = Label(ProbeAV, text="VA")
 gainavlab.pack(side=LEFT)
 CHAVGainEntry = Entry(ProbeAV, width=6) #
 CHAVGainEntry.bind('<MouseWheel>', onTextScroll)
+CHAVGainEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+CHAVGainEntry.bind("<Button-5>", onTextScroll)
 CHAVGainEntry.pack(side=LEFT)
 CHAVGainEntry.delete(0,"end")
 CHAVGainEntry.insert(0,1.0)
 CHAVOffsetEntry = Entry(ProbeAV, width=6) #
 CHAVOffsetEntry.bind('<MouseWheel>', onTextScroll)
+CHAVOffsetEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+CHAVOffsetEntry.bind("<Button-5>", onTextScroll)
 CHAVOffsetEntry.pack(side=LEFT)
 CHAVOffsetEntry.delete(0,"end")
 CHAVOffsetEntry.insert(0,0.0)
@@ -879,11 +919,15 @@ gainailab = Label(ProbeAI, text=" IA ")
 gainailab.pack(side=LEFT)
 CHAIGainEntry = Entry(ProbeAI, width=6) #
 CHAIGainEntry.bind('<MouseWheel>', onTextScroll)
+CHAIGainEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+CHAIGainEntry.bind("<Button-5>", onTextScroll)
 CHAIGainEntry.pack(side=LEFT)
 CHAIGainEntry.delete(0,"end")
 CHAIGainEntry.insert(0,1.0)
 CHAIOffsetEntry = Entry(ProbeAI, width=6)
 CHAIOffsetEntry.bind('<MouseWheel>', onTextScroll)
+CHAIOffsetEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+CHAIOffsetEntry.bind("<Button-5>", onTextScroll)
 CHAIOffsetEntry.pack(side=LEFT)
 CHAIOffsetEntry.delete(0,"end")
 CHAIOffsetEntry.insert(0,0.0)
@@ -913,11 +957,15 @@ gainbvlab = Label(ProbeBV, text="VB")
 gainbvlab.pack(side=LEFT)
 CHBVGainEntry = Entry(ProbeBV, width=6) #
 CHBVGainEntry.bind('<MouseWheel>', onTextScroll)
+CHBVGainEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+CHBVGainEntry.bind("<Button-5>", onTextScroll)
 CHBVGainEntry.pack(side=LEFT)
 CHBVGainEntry.delete(0,"end")
 CHBVGainEntry.insert(0,1.0)
 CHBVOffsetEntry = Entry(ProbeBV, width=6) #
 CHBVOffsetEntry.bind('<MouseWheel>', onTextScroll)
+CHBVOffsetEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+CHBVOffsetEntry.bind("<Button-5>", onTextScroll)
 CHBVOffsetEntry.pack(side=LEFT)
 CHBVOffsetEntry.delete(0,"end")
 CHBVOffsetEntry.insert(0,0.0)
@@ -928,11 +976,15 @@ gainbilab = Label(ProbeBI, text=" IB ")
 gainbilab.pack(side=LEFT)
 CHBIGainEntry = Entry(ProbeBI, width=6) #
 CHBIGainEntry.bind('<MouseWheel>', onTextScroll)
+CHBIGainEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+CHBIGainEntry.bind("<Button-5>", onTextScroll)
 CHBIGainEntry.pack(side=LEFT)
 CHBIGainEntry.delete(0,"end")
 CHBIGainEntry.insert(0,1.0)
 CHBIOffsetEntry = Entry(ProbeBI, width=6) #
 CHBIOffsetEntry.bind('<MouseWheel>', onTextScroll)
+CHBIOffsetEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+CHBIOffsetEntry.bind("<Button-5>", onTextScroll)
 CHBIOffsetEntry.pack(side=LEFT)
 CHBIOffsetEntry.delete(0,"end")
 CHBIOffsetEntry.insert(0,0.0)
@@ -968,6 +1020,8 @@ chatestvlab = Label(TestVA, text="CA-V")
 chatestvlab.pack(side=LEFT)
 CHATestVEntry = Entry(TestVA, width=6) #
 CHATestVEntry.bind('<MouseWheel>', onAWGscroll)
+CHATestVEntry.bind("<Button-4>", onAWGscroll)# with Linux OS
+CHATestVEntry.bind("<Button-5>", onAWGscroll)
 CHATestVEntry.pack(side=LEFT)
 CHATestVEntry.delete(0,"end")
 CHATestVEntry.insert(0,0.0)
@@ -980,6 +1034,8 @@ chatestilab = Label(TestIA, text="CA-I")
 chatestilab.pack(side=LEFT)
 CHATestIEntry = Entry(TestIA, width=6) #
 CHATestIEntry.bind('<MouseWheel>', onAWGscroll)
+CHATestIEntry.bind("<Button-4>", onAWGscroll)# with Linux OS
+CHATestIEntry.bind("<Button-5>", onAWGscroll)
 CHATestIEntry.pack(side=LEFT)
 CHATestIEntry.delete(0,"end")
 CHATestIEntry.insert(0,0.0)
@@ -1017,6 +1073,8 @@ chbtestvlab = Label(TestVB, text="CB-V")
 chbtestvlab.pack(side=LEFT)
 CHBTestVEntry = Entry(TestVB, width=6) #
 CHBTestVEntry.bind('<MouseWheel>', onAWGscroll)
+CHBTestVEntry.bind("<Button-4>", onAWGscroll)# with Linux OS
+CHBTestVEntry.bind("<Button-5>", onAWGscroll)
 CHBTestVEntry.pack(side=LEFT)
 CHBTestVEntry.delete(0,"end")
 CHBTestVEntry.insert(0,0.0)
@@ -1029,6 +1087,8 @@ chbtestilab = Label(TestIB, text="CB-I")
 chbtestilab.pack(side=LEFT)
 CHBTestIEntry = Entry(TestIB, width=6) #
 CHBTestIEntry.bind('<MouseWheel>', onAWGscroll)
+CHBTestIEntry.bind("<Button-4>", onAWGscroll)# with Linux OS
+CHBTestIEntry.bind("<Button-5>", onAWGscroll)
 CHBTestIEntry.pack(side=LEFT)
 CHBTestIEntry.delete(0,"end")
 CHBTestIEntry.insert(0,0.0)
@@ -1038,7 +1098,7 @@ chbunitsilab.pack(side=LEFT)
 session = Session(ignore_dataflow=True, queue_size=10000)
 # session.add_all()
 if not session.devices:
-    print 'no device found'
+    print( 'no device found')
     root.destroy()
     exit()
 # session.configure()
