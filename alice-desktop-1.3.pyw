@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
 ## @package alice-desktop 1.3.py(w)
-# ADALM1000 alice-desktop 1.3.py(w) (8-14-2020)
+# ADALM1000 alice-desktop 1.3.py(w) (8-20-2020)
 # For Python version 2.7 or 3.7, Windows OS and Linux OS
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -56,7 +56,7 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(14 Aug 2020)"
+RevDate = "(20 Aug 2020)"
 SWRev = "1.3 "
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.8/alice-desktop-1.3-setup.exe'
 # small bit map of ADI logo for window icon
@@ -70,7 +70,7 @@ root=Tk()
 root.title("ALICE DeskTop " + SWRev + RevDate + ": ALM1000 Oscilloscope")
 img = PhotoImage(data=TBicon)
 root.call('wm', 'iconphoto', root._w, '-default', img)
-print("Windowing Syayem is " + str(root.tk.call('tk', 'windowingsystem')))
+print("Windowing System is " + str(root.tk.call('tk', 'windowingsystem')))
 ## Window graph area Values that can be modified
 GRW = 720                   # Width of the time grid 720 default
 GRH = 390                   # Height of the time grid 390 default
@@ -313,6 +313,15 @@ PhaseOffset2x = 37
 # 'aqua' built-in native Mac OS X only; Native Mac OS X
 if (root.tk.call('tk', 'windowingsystem')=='aqua'):
     Style_String = 'aqua'
+    windowingsystem = root.tk.call('tk', 'windowingsystem')
+    # On Macs, allow the dock icon to deiconify.
+    root.createcommand('::tk::mac::ReopenApplication', root.deiconify)
+    # On Macs, set up menu bar to be minimal.
+    root.option_add('*tearOff', False)
+    menubar = tk.Menu(root)
+    appmenu = tk.Menu(menubar, name='apple')
+    menubar.add_cascade(menu=appmenu)
+    root['menu'] = menubar
 else:
     Style_String = 'alt'
 # Check if there is an alice_init.ini file to read in
@@ -2202,13 +2211,14 @@ def ApplyMathYString():
     MathYAxis = yaxisentry.get()
 ## Ask user for new Marker text location on screen
 def BSetMarkerLocation():
-    global MarkerLoc
+    global MarkerLoc, RUNstatus
 
     TempString = MarkerLoc
     MarkerLoc = askstring("Marker Text Location", "Current Marker Text Location: " + MarkerLoc + "\n\nNew Location: (UL, UR, LL, LR)\n", initialvalue=MarkerLoc)
     if (MarkerLoc == None):         # If Cancel pressed, then None
         MarkerLoc = TempString
-    UpdateTimeTrace()
+    if RUNstatus.get() == 0:      # if not running
+        UpdateTimeTrace()           # Update
 ## Nop
 def donothing():
     global RUNstatus
@@ -2217,20 +2227,24 @@ def DoNothing(event):
     global RUNstatus
 ## Set to display all time waveforms
 def BShowCurvesAll():
-    global ShowC1_V, ShowC1_I, ShowC2_V, ShowC2_I
+    global ShowC1_V, ShowC1_I, ShowC2_V, ShowC2_I, RUNstatus
+    
     ShowC1_V.set(1)
     ShowC1_I.set(1)
     ShowC2_V.set(1)
     ShowC2_I.set(1)
-    UpdateTimeTrace()
+    if RUNstatus.get() == 0:      # if not running
+        UpdateTimeTrace()           # Update
 ## Turn off display of all time waveforms
 def BShowCurvesNone():
-    global ShowC1_V, ShowC1_I, ShowC2_V, ShowC2_I
+    global ShowC1_V, ShowC1_I, ShowC2_V, ShowC2_I, RUNstatus
+    
     ShowC1_V.set(0)
     ShowC1_I.set(0)
     ShowC2_V.set(0)
     ShowC2_I.set(0)
-    UpdateTimeTrace()
+    if RUNstatus.get() == 0:      # if not running
+        UpdateTimeTrace()           # Update
 ## Function no longer used
 def BTriggerEdge():
     global TgEdge
@@ -2239,7 +2253,7 @@ def BTriggerEdge():
 # TRIGCOND trigcondFallingNegative = 1
 ## Set Trigger level to 50% (mid) point of current waveform
 def BTrigger50p():
-    global TgInput, TRIGGERlevel, TRIGGERentry
+    global TgInput, TRIGGERlevel, TRIGGERentry, RUNstatus
     global MaxV1, MinV1, MaxV2, MinV2
     global MaxI1, MinI1, MaxI2, MinI2
     # set new trigger level to mid point of waveform    
@@ -2261,8 +2275,9 @@ def BTrigger50p():
     TRIGGERlevel = eval(DCString)
     TRIGGERentry.delete(0,END)
     TRIGGERentry.insert(4, DCString)
-    
-    UpdateTimeTrace()           # Always Update
+    if RUNstatus.get() == 0:      # if not running
+        UpdateTimeTrace()           # Update
+        
 ## place holder for future hardware triggering if implemented
 def BTriggerMode(): 
     global TgInput
@@ -2277,7 +2292,7 @@ def BTriggerMode():
         # 0 disables auto trigger
 ## evalute trigger level entry string to a numerical value and set new trigger level     
 def BTriglevel(event):
-    global TRIGGERlevel, TRIGGERentry
+    global TRIGGERlevel, TRIGGERentry, RUNstatus
 
     # evalute entry string to a numerical value
     try:
@@ -2286,26 +2301,31 @@ def BTriglevel(event):
         TRIGGERentry.delete(0,END)
         TRIGGERentry.insert(0, TRIGGERlevel)
     # set new trigger level
-    
-    UpdateTimeTrace()           # Always Update
+    if RUNstatus.get() == 0:      # if not running
+        UpdateTimeTrace()           # Update
+
 ## Set Hold off time from entry widget
 def BHoldOff(event):
-    global HoldOff, HoldOffentry
+    global HoldOff, HoldOffentry, RUNstatus
 
     try:
         HoldOff = float(eval(HoldOffentry.get()))
     except:
         HoldOffentry.delete(0,END)
         HoldOffentry.insert(0, HoldOff)
+    if RUNstatus.get() == 0:      # if not running
+        UpdateTimeTrace()           # Update
 # Set Horx possition from entry widget
 def BHozPoss(event):
-    global HozPoss, HozPossentry
+    global HozPoss, HozPossentry, RUNstatus
 
     try:
         HozPoss = float(eval(HozPossentry.get()))
     except:
         HozPossentry.delete(0,END)
         HozPossentry.insert(0, HozPoss)
+    if RUNstatus.get() == 0:      # if not running
+        UpdateTimeTrace()           # Update
 #
 def SetTriggerPoss():
     global HozPossentry, TgInput, TMsb
@@ -2662,53 +2682,55 @@ def BTime():
                 Two_X_Sample.set(0)
             SetADC_Mux()
     #
-    if RUNstatus.get() == 2:      # Restart if running
-        RUNstatus.set(4)
-
-    UpdateTimeTrace()           # Always Update
+    if RUNstatus.get() == 0:      # if not running
+        UpdateTimeTrace()           # Update
 
 def BCHAlevel():
-    global CHAsb
+    global CHAsb, RUNstatus, CH1vpdvLevel
     
     try:
         CH1vpdvLevel = float(eval(CHAsb.get()))
     except:
         CHAsb.delete(0,END)
         CHAsb.insert(0, CH1vpdvLevel)
-    UpdateTimeTrace()           # Always Update
+    if RUNstatus.get() == 0:
+        UpdateTimeTrace()           # if not running Update
 
 def BCHAIlevel():
-    global CHAIsb
+    global CHAIsb, RUNstatus, CH1ipdvLevel
     
     try:
         CH1ipdvLevel = float(eval(CHAIsb.get()))
     except:
         CHAIsb.delete(0,END)
         CHAIsb.insert(0, CH1ipdvLevel)
-    UpdateTimeTrace()           # Always Update
+    if RUNstatus.get() == 0:
+        UpdateTimeTrace()           # if not running Update
 
 def BCHBlevel():
-    global CHBsb
+    global CHBsb, RUNstatus, CH2vpdvLevel
     
     try:
         CH2vpdvLevel = float(eval(CHBsb.get()))
     except:
         CHBsb.delete(0,END)
         CHBsb.insert(0, CH2vpdvLevel)
-    UpdateTimeTrace()           # Always Update    
+    if RUNstatus.get() == 0:
+        UpdateTimeTrace()           # if not running Update   
 
 def BCHBIlevel():
-    global CHBIsb
+    global CHBIsb, RUNstatus, CH2ipdvLevel
     
     try:
         CH2ipdvLevel = float(eval(CHBIsb.get()))
     except:
         CHBIsb.delete(0,END)
         CHBIsb.insert(0, CH2ipdvLevel)
-    UpdateTimeTrace()           # Always Update    
-
+    if RUNstatus.get() == 0:
+        UpdateTimeTrace()           # if not running Update
+        
 def BOffsetA(event):
-    global CHAOffset, CHAVPosEntry
+    global CHAOffset, CHAVPosEntry, RUNstatus
 
     try:
         CHAOffset = float(eval(CHAVPosEntry.get())) # evalute entry string to a numerical value
@@ -2716,10 +2738,11 @@ def BOffsetA(event):
         CHAVPosEntry.delete(0,END)
         CHAVPosEntry.insert(0, CHAOffset)
     # set new offset level
-    UpdateTimeTrace()           # Always Update
+    if RUNstatus.get() == 0:
+        UpdateTimeTrace()           # if not running Update
 
 def BIOffsetA(event):
-    global CHAIOffset, CHAIPosEntry
+    global CHAIOffset, CHAIPosEntry, RUNstatus
 
     try:
         CHAIOffset = float(eval(CHAIPosEntry.get())) # evalute entry string to a numerical value
@@ -2727,10 +2750,11 @@ def BIOffsetA(event):
         CHAIPosEntry.delete(0,END)
         CHAIPosEntry.insert(0, CHAIOffset)
     # set new offset level
-    UpdateTimeTrace()           # Always Update
+    if RUNstatus.get() == 0:
+        UpdateTimeTrace()           # if not running Update
 
 def BOffsetB(event):
-    global CHBOffset, CHBVPosEntry
+    global CHBOffset, CHBVPosEntry, RUNstatus
 
     try:
         CHBOffset = float(eval(CHBVPosEntry.get())) # evalute entry string to a numerical value
@@ -2738,10 +2762,11 @@ def BOffsetB(event):
         CHBVPosEntry.delete(0,END)
         CHBVPosEntry.insert(0, CHBOffset)
     # set new offset level
-    UpdateTimeTrace()           # Always Update
+    if RUNstatus.get() == 0:
+        UpdateTimeTrace()           # if not running Update
 
 def BIOffsetB(event):
-    global CHBIOffset, CHBIPosEntry
+    global CHBIOffset, CHBIPosEntry, RUNstatus
 
     try:
         CHBIOffset = float(eval(CHBIPosEntry.get())) # evalute entry string to a numerical value
@@ -2749,7 +2774,8 @@ def BIOffsetB(event):
         CHBIPosEntry.delete(0,END)
         CHBIPosEntry.insert(0, CHBIOffset)
     # set new offset level
-    UpdateTimeTrace()           # Always Update
+    if RUNstatus.get() == 0:
+        UpdateTimeTrace()           # if not running Update
 ## set check box colors
 def TimeCheckBox():
     global TimeDisp, ckb1
@@ -5175,12 +5201,12 @@ def MakeTimeTrace():
         CH1pdvRange = float(eval(CHAsb.get()))
     except:
         CHAsb.delete(0,END)
-        CHAsb.insert(0, CH1vpdvRange)
+        CHAsb.insert(0, CH1pdvRange)
     try:
         CH2pdvRange = float(eval(CHBsb.get()))
     except:
         CHBsb.delete(0,END)
-        CHBsb.insert(0, CH2vpdvRange)
+        CHBsb.insert(0, CH2pdvRange)
     try:
         CH1IpdvRange = float(eval(CHAIsb.get()))
     except:
@@ -6181,12 +6207,12 @@ def MakeXYTrace():
         CH1pdvRange = float(eval(CHAsbxy.get()))
     except:
         CHAsbxy.delete(0,END)
-        CHAsbxy.insert(0, CH1vpdvRange)
+        CHAsbxy.insert(0, CH1pdvRange)
     try:
         CH2pdvRange = float(eval(CHBsbxy.get()))
     except:
         CHBsbxy.delete(0,END)
-        CHBsbxy.insert(0, CH2vpdvRange)
+        CHBsbxy.insert(0, CH2pdvRange)
     try:
         CH1IpdvRange = float(eval(CHAIsbxy.get()))
     except:
@@ -6473,12 +6499,12 @@ def MakeTimeScreen():
         CH1pdvRange = float(eval(CHAsb.get()))
     except:
         CHAsb.delete(0,END)
-        CHAsb.insert(0, CH1vpdvRange)
+        CHAsb.insert(0, CH1pdvRange)
     try:
         CH2pdvRange = float(eval(CHBsb.get()))
     except:
         CHBsb.delete(0,END)
-        CHBsb.insert(0, CH2vpdvRange)
+        CHBsb.insert(0, CH2pdvRange)
     try:
         CH1IpdvRange = float(eval(CHAIsb.get()))
     except:
@@ -7317,12 +7343,12 @@ def MakeXYScreen():
         CH1pdvRange = float(eval(CHAsbxy.get()))
     except:
         CHAsbxy.delete(0,END)
-        CHAsbxy.insert(0, CH1vpdvRange)
+        CHAsbxy.insert(0, CH1pdvRange)
     try:
         CH2pdvRange = float(eval(CHBsbxy.get()))
     except:
         CHBsbxy.delete(0,END)
-        CHBsbxy.insert(0, CH2vpdvRange)
+        CHBsbxy.insert(0, CH2pdvRange)
     try:
         CH1IpdvRange = float(eval(CHAIsbxy.get()))
     except:
@@ -8310,12 +8336,12 @@ def onCanvasClickLeft(event):
             CH1pdvRange = float(eval(CHAsb.get()))
         except:
             CHAsb.delete(0,END)
-            CHAsb.insert(0, CH1vpdvRange)
+            CHAsb.insert(0, CH1pdvRange)
         try:
             CH2pdvRange = float(eval(CHBsb.get()))
         except:
             CHBsb.delete(0,END)
-            CHBsb.insert(0, CH2vpdvRange)
+            CHBsb.insert(0, CH2pdvRange)
         try:
             CH1IpdvRange = float(eval(CHAIsb.get()))
         except:
@@ -8687,12 +8713,12 @@ def onCanvasXYLeftClick(event):
             CH1pdvRange = float(eval(CHAsbxy.get()))
         except:
             CHAsbxy.delete(0,END)
-            CHAsbxy.insert(0, CH1vpdvRange)
+            CHAsbxy.insert(0, CH1pdvRange)
         try:
             CH2pdvRange = float(eval(CHBsbxy.get()))
         except:
             CHBsb.delete(0,END)
-            CHBsb.insert(0, CH2vpdvRange)
+            CHBsb.insert(0, CH2pdvRange)
         try:
             CH1IpdvRange = float(eval(CHAIsbxy.get()))
         except:
@@ -13626,13 +13652,15 @@ def MakeIAWindow():
         RsystemEntry.pack(side=LEFT, anchor=W)
         RsystemEntry.delete(0,"end")
         RsystemEntry.insert(4,1000)
-        # Res Sacle Spinbox
+        # Res Scale Spinbox
         ressb = Frame( frame2iar )
         ressb.pack(side=TOP)
         reslab = Label(ressb, text="Ohms/div ")
         reslab.pack(side=LEFT)
         ResScale = Spinbox(ressb, width=7, values=ResScalediv)
         ResScale.bind('<MouseWheel>', onSpinBoxScroll)
+        ResScale.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
+        ResScale.bind("<Button-5>", onSpinBoxScroll)
         ResScale.pack(side=LEFT)
         ResScale.delete(0,"end")
         ResScale.insert(0,500)
@@ -14163,6 +14191,8 @@ def MakePhAWindow():
         refphlab.pack(side=LEFT, anchor=W)
         RefphEntry = Spinbox(refph, width=5, values=RefPhase)
         RefphEntry.bind('<MouseWheel>', onSpinBoxScroll)
+        RefphEntry.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
+        RefphEntry.bind("<Button-5>", onSpinBoxScroll)
         RefphEntry.pack(side=LEFT, anchor=W)
         RefphEntry.delete(0,"end")
         RefphEntry.insert(0,"CA-V")
@@ -14205,6 +14235,8 @@ def MakePhAWindow():
         vslab.pack(side=LEFT)
         VScale = Spinbox(vssb, width=7, values=CHvpdiv)
         VScale.bind('<MouseWheel>', onSpinBoxScroll)
+        VScale.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
+        VScale.bind("<Button-5>", onSpinBoxScroll)
         VScale.pack(side=LEFT)
         VScale.delete(0,"end")
         VScale.insert(0,0.5)
@@ -14228,6 +14260,8 @@ def MakePhAWindow():
         islab.pack(side=LEFT)
         IScale = Spinbox(issb, width=7, values=CHipdiv)
         IScale.bind('<MouseWheel>', onSpinBoxScroll)
+        IScale.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
+        IScale.bind("<Button-5>", onSpinBoxScroll)
         IScale.pack(side=LEFT)
         IScale.delete(0,"end")
         IScale.insert(0,10.0)
@@ -16151,11 +16185,11 @@ def onTextKey(event):
 #
 def onSpinBoxScroll(event):
     spbox = event.widget
-    if sys.version_info[0] == 3: # Spin Boxes do this automatically in Python 3 apparently
+    if sys.version_info[0] == 3 and sys.version_info[1] > 6: # Spin Boxes do this automatically in Python > 3.6 apparently
         return
-    if event.delta > 0: # increment digit
+    if event.num == 4 or event.delta > 0: # if event.delta > 0: # increment digit
         spbox.invoke('buttonup')
-    else: # decrement digit
+    if event.num == 5 or event.delta < 0:
         spbox.invoke('buttondown')
 #
 # ================ Make awg sub window ==========================
@@ -16572,6 +16606,8 @@ def MakeMuxModeWindow():
         cba.pack(side=LEFT, anchor=W)
         CHB_Asb = Spinbox(frameA, width=4, values=CHvpdiv, command=UpdateTimeTrace)
         CHB_Asb.bind('<MouseWheel>', onSpinBoxScroll)
+        CHB_Asb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
+        CHB_Asb.bind("<Button-5>", onSpinBoxScroll)
         CHB_Asb.pack(side=LEFT)
         CHB_Asb.delete(0,"end")
         CHB_Asb.insert(0,0.5)
@@ -16596,6 +16632,8 @@ def MakeMuxModeWindow():
         cbb.pack(side=LEFT, anchor=W)
         CHB_Bsb = Spinbox(frameB, width=4, values=CHvpdiv, command=UpdateTimeTrace)
         CHB_Bsb.bind('<MouseWheel>', onSpinBoxScroll)
+        CHB_Bsb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
+        CHB_Bsb.bind("<Button-5>", onSpinBoxScroll)
         CHB_Bsb.pack(side=LEFT)
         CHB_Bsb.delete(0,"end")
         CHB_Bsb.insert(0,0.5)
@@ -16619,6 +16657,8 @@ def MakeMuxModeWindow():
         cbc.pack(side=LEFT, anchor=W)
         CHB_Csb = Spinbox(frameC, width=4, values=CHvpdiv, command=UpdateTimeTrace)
         CHB_Csb.bind('<MouseWheel>', onSpinBoxScroll)
+        CHB_Csb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
+        CHB_Csb.bind("<Button-5>", onSpinBoxScroll)
         CHB_Csb.pack(side=LEFT)
         CHB_Csb.delete(0,"end")
         CHB_Csb.insert(0,0.5)
@@ -16643,6 +16683,8 @@ def MakeMuxModeWindow():
         cbd.pack(side=LEFT, anchor=W)
         CHB_Dsb = Spinbox(frameD, width=4, values=CHvpdiv, command=UpdateTimeTrace)
         CHB_Dsb.bind('<MouseWheel>', onSpinBoxScroll)
+        CHB_Dsb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
+        CHB_Dsb.bind("<Button-5>", onSpinBoxScroll)
         CHB_Dsb.pack(side=LEFT)
         CHB_Dsb.delete(0,"end")
         CHB_Dsb.insert(0,0.5)
@@ -17520,6 +17562,8 @@ def MakeXYWindow():
         # Voltage channel A
         CHAsbxy = Spinbox(frame3xy, width=4, values=CHvpdiv)
         CHAsbxy.bind('<MouseWheel>', onSpinBoxScroll)
+        CHAsbxy.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
+        CHAsbxy.bind("<Button-5>", onSpinBoxScroll)
         CHAsbxy.pack(side=LEFT)
         CHAsbxy.delete(0,"end")
         CHAsbxy.insert(0,0.5)
@@ -17540,6 +17584,8 @@ def MakeXYWindow():
         # Current channel A
         CHAIsbxy = Spinbox(frame3xy, width=4, values=CHipdiv)
         CHAIsbxy.bind('<MouseWheel>', onSpinBoxScroll)
+        CHAIsbxy.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
+        CHAIsbxy.bind("<Button-5>", onSpinBoxScroll)
         CHAIsbxy.pack(side=LEFT)
         CHAIsbxy.delete(0,"end")
         CHAIsbxy.insert(0,50.0)
@@ -17560,6 +17606,8 @@ def MakeXYWindow():
         # Voltage channel B
         CHBsbxy = Spinbox(frame4xy, width=4, values=CHvpdiv)
         CHBsbxy.bind('<MouseWheel>', onSpinBoxScroll)
+        CHBsbxy.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
+        CHBsbxy.bind("<Button-5>", onSpinBoxScroll)
         CHBsbxy.pack(side=LEFT)
         CHBsbxy.delete(0,"end")
         CHBsbxy.insert(0,0.5)
@@ -17581,6 +17629,8 @@ def MakeXYWindow():
         # Current channel B
         CHBIsbxy = Spinbox(frame4xy, width=4, values=CHipdiv) #
         CHBIsbxy.bind('<MouseWheel>', onSpinBoxScroll)
+        CHBIsbxy.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
+        CHBIsbxy.bind("<Button-5>", onSpinBoxScroll)
         CHBIsbxy.pack(side=LEFT)
         CHBIsbxy.delete(0,"end")
         CHBIsbxy.insert(0,50.0)
@@ -20889,6 +20939,8 @@ if EnableHSsampling > 0:
 # Time per Div
 TMsb = Spinbox(frame1, width=5, values= TMpdiv, command=BTime)
 TMsb.bind('<MouseWheel>', onSpinBoxScroll)
+TMsb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
+TMsb.bind("<Button-5>", onSpinBoxScroll)
 TMsb.pack(side=RIGHT)
 TMsb.delete(0,"end")
 TMsb.insert(0,0.5)
@@ -21302,8 +21354,11 @@ ADI1.pack(side=TOP)
 
 # Bottom Buttons
 # Voltage channel A
+
 CHAsb = Spinbox(frame3, width=4, values=CHvpdiv, command=BCHAlevel)
 CHAsb.bind('<MouseWheel>', onSpinBoxScroll)
+CHAsb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
+CHAsb.bind("<Button-5>", onSpinBoxScroll)
 CHAsb.pack(side=LEFT)
 CHAsb.delete(0,"end")
 CHAsb.insert(0,0.5)
@@ -21325,6 +21380,8 @@ CHAofflab.pack(side=LEFT)
 # Current channel A
 CHAIsb = Spinbox(frame3, width=4, values=CHipdiv, command=BCHAIlevel)
 CHAIsb.bind('<MouseWheel>', onSpinBoxScroll)
+CHAIsb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
+CHAIsb.bind("<Button-5>", onSpinBoxScroll)
 CHAIsb.pack(side=LEFT)
 CHAIsb.delete(0,"end")
 CHAIsb.insert(0,50.0)
@@ -21345,6 +21402,8 @@ CHAIofflab.pack(side=LEFT)
 # Voltage channel B
 CHBsb = Spinbox(frame3, width=4, values=CHvpdiv, command=BCHBlevel)
 CHBsb.bind('<MouseWheel>', onSpinBoxScroll)
+CHAIsb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
+CHAIsb.bind("<Button-5>", onSpinBoxScroll)
 CHBsb.pack(side=LEFT)
 CHBsb.delete(0,"end")
 CHBsb.insert(0,0.5)
@@ -21366,6 +21425,8 @@ CHBofflab.pack(side=LEFT)
 # Current channel B
 CHBIsb = Spinbox(frame3, width=4, values=CHipdiv, command=BCHBIlevel)
 CHBIsb.bind('<MouseWheel>', onSpinBoxScroll)
+CHBIsb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
+CHBIsb.bind("<Button-5>", onSpinBoxScroll)
 CHBIsb.pack(side=LEFT)
 CHBIsb.delete(0,"end")
 CHBIsb.insert(0,50.0)
