@@ -2,7 +2,7 @@ The following steps were tested using the ubuntu-18.04.5-desktop-amd64.iso inmag
 
 After creating a new virtual machine in VirtualBox and installing Ubuntu 18.04 from iso file the following steps were performed:
 
-Assuming a clean Ubuntu 18.04 install, the state of your linux may vary from this.
+This procedure assume a clean Ubuntu 18.04 install, the state of your linux may vary from this.
 
 Steps to install and run ALICE with libsmu and python bindings:
 
@@ -19,13 +19,13 @@ and unzip (extract) to working folder
 
 Open a terminal in working folder, type the following commands:
 
-1. sudo apt-get update 
+1. sudo apt-get update
 
-2. sudo apt-get install python3-pip 
+2. sudo apt-get install python3-pip
 
-3  sudo apt-get install libusb-1.0 
+3  sudo apt-get install libusb-1.0
 
-4. sudo python3 -m pip install numpy 
+4. sudo python3 -m pip install numpy
 
 Verify numpy
  python3
@@ -36,11 +36,11 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> exit()
 exit Python
 
-5. sudo apt-get install idle3 
+5. sudo apt-get install idle3
 
-6. sudo apt-get install tk 
+6. sudo apt-get install tk
 
-Verfy tkinter
+Verfy tKinter
  python3
 Python 3.6.9 (default, Jul 17 2020, 12:50:27) 
 [GCC 8.4.0] on linux
@@ -50,16 +50,18 @@ Type "help", "copyright", "credits" or "license" for more information.
 exit Python
 
 Verfy can see m1k USB device (plug in m1k to a usb port)
- lsusb 
+ lsusb
 Bus 001 Device 003: ID 064b:784c Analog Devices, Inc. (White Mountain DSP) 
 
-7. sudo apt-get install libboost-all-dev 
+7. sudo apt-get install libboost-all-dev
 
-8. sudo python3 -m pip install cython 
+8. sudo apt-get install git
 
-9. sudo dpkg -i libsmu-1.0.2-ubuntu-18.04-amd64.deb 
+9. sudo python3 -m pip install cython
 
-10. Unplug / replug m1k from usb port (i.e. do a power cycle / reattech)?
+10. sudo dpkg -i libsmu-1.0.2-ubuntu-18.04-amd64.deb libboost errors
+
+11. Unplug / replug m1k from usb port (i.e. do a power cycle / reattech)
 
 Test installed libsmu for smu cli
  smu
@@ -81,15 +83,13 @@ More testing m1k with smu
  smu -l
 ADALM1000: serial 2031205050485230313530303830313 : fw 2.17 : hw F
 
-11. sudo apt-get install git 
-
 12. git clone https://github.com/analogdevicesinc/libsmu.git 
 
 13. cd libsmu/bindings/python 
 
-14. python3 setup.py build 
+14. python3 setup.py build
 
-15. sudo python3 setup.py install 
+15. sudo python3 setup.py install
 
 Back out to working folder:
 cd ..
@@ -111,3 +111,4 @@ Run ALICE:
 
 17. python3 ./alice-desktop-1.3.pyw
 
+Note: When using the libsmu-1.0.2-ubuntu-18.04-amd64.deb on Ubuntu 20.04 (which is built using Ubuntu 18.04) will report an error about libboost, ignore that, however because of the "failed" install other installs attempted after that will not work until failed install is removed, that will cause libsmu to be removed.
