@@ -1,23 +1,37 @@
 #!/usr/bin/python
-# ADALM1000 data logger tool (5-12-2019)
-# For Python version > = 2.7.8
+# ADALM1000 data logger tool (8-4-2020)
+# For Python version > = 2.7.8 and 3.7
 # With external module pysmu (libsmu > = 1.0 ADALM1000 )
 # Created by D Mercer ()
 #
 import struct
 import subprocess
-import tkFont
-from Tkinter import *
-from ttk import *
+import __future__
+import os
+import sys
+if sys.version_info[0] == 2:
+    print ("Python 2.x")
+    from Tkinter import *
+    import tkFont
+    from ttk import *
+    from tkFileDialog import askopenfilename
+    from tkFileDialog import asksaveasfilename
+    from tkSimpleDialog import askstring
+    from tkMessageBox import *
+if sys.version_info[0] == 3:
+    from tkinter import *
+    from tkinter.font import *
+    from tkinter.ttk import *
+    from tkinter.filedialog import askopenfilename
+    from tkinter.filedialog import asksaveasfilename
+    from tkinter.simpledialog import askstring
+    from tkinter.messagebox import *
+    print ("Python 3.x")
 import math, random, threading, time
-from tkFileDialog import askopenfilename
-from tkFileDialog import asksaveasfilename
-from tkSimpleDialog import askstring
-from tkMessageBox import *
 from pysmu import *
 from time import gmtime, strftime
 #
-RevDate = "(12 May 2019)"
+RevDate = "(8 Aug 2020)"
 MouseFocus = 0
 # Colors that can be modified
 COLORframes = "#000080"   # Color = "#rrggbb" rr=red gg=green bb=blue, Hexadecimal values 00 - ff
@@ -62,10 +76,10 @@ try:
         try:
             exec( line.rstrip() )
         except:
-            print "Skiping " + line.rstrip()
+            print( "Skiping " + line.rstrip())
     InitFile.close()
 except:
-    print "No Init File Read"
+    print( "No Init File Read")
 #
 # samll bit map of ADI logo for window icon
 TBicon = """
@@ -101,13 +115,13 @@ root.style.configure("W10.TButton", width=10, relief=RAISED)
 root.style.configure("W11.TButton", width=11, relief=RAISED)
 root.style.configure("W16.TButton", width=16, relief=RAISED)
 root.style.configure("W17.TButton", width=17, relief=RAISED)
-root.style.configure("Stop.TButton", background="red", width=4, relief=RAISED)
-root.style.configure("Run.TButton", background="green", width=4, relief=RAISED)
-root.style.configure("Reset.TButton", background="yellow", width=5, relief=RAISED)
-root.style.configure("Pwr.TButton", background="green", width=7, relief=RAISED)
-root.style.configure("PwrOff.TButton", background="red", width=7, relief=RAISED)
-root.style.configure("RConn.TButton", background="red", width=5, relief=RAISED)
-root.style.configure("GConn.TButton", background="green", width=5, relief=RAISED)
+root.style.configure("Stop.TButton", background="#ff0000", width=4, relief=RAISED)
+root.style.configure("Run.TButton", background="#00ff00", width=4, relief=RAISED)
+root.style.configure("Reset.TButton", background="#ffff00", width=5, relief=RAISED)
+root.style.configure("Pwr.TButton", background="#00ff00", width=7, relief=RAISED)
+root.style.configure("PwrOff.TButton", background="#ff0000", width=7, relief=RAISED)
+root.style.configure("RConn.TButton", background="#ff0000", width=5, relief=RAISED)
+root.style.configure("GConn.TButton", background="#00ff00", width=5, relief=RAISED)
 root.style.configure("Rtrace1.TButton", background=COLORtrace1, width=7, relief=RAISED)
 root.style.configure("Strace1.TButton", background=COLORtrace1, width=7, relief=SUNKEN)
 root.style.configure("Rtrace2.TButton", background=COLORtrace2, width=7, relief=RAISED)
@@ -127,14 +141,14 @@ root.style.configure("A10R1.TLabelframe", borderwidth=5, relief=RIDGE)
 root.style.configure("A10R2.TLabelframe.Label", foreground=COLORtraceR2, font=('Arial', 10, 'bold'))
 root.style.configure("A10R2.TLabelframe", borderwidth=5, relief=RIDGE)
 root.style.configure("A10B.TLabel", foreground=COLORcanvas, font="Arial 10 bold") # Black text
-root.style.configure("A10R.TLabel", foreground="red", font="Arial 10 bold") # Red text
-root.style.configure("A10G.TLabel", foreground="green", font="Arial 10 bold") # Red text
+root.style.configure("A10R.TLabel", foreground="#ff0000", font="Arial 10 bold") # Red text
+root.style.configure("A10G.TLabel", foreground="#00ff00", font="Arial 10 bold") # Red text
 root.style.configure("A12B.TLabel", foreground=COLORcanvas, font="Arial 12 bold") # Black text
 root.style.configure("A16B.TLabel", foreground=COLORcanvas, font="Arial 16 bold") # Black text
-root.style.configure("Stop.TRadiobutton", background="red")
-root.style.configure("Run.TRadiobutton", background="green")
-root.style.configure("Disab.TCheckbutton", indicatorcolor="red")
-root.style.configure("Enab.TCheckbutton", indicatorcolor="green")
+root.style.configure("Stop.TRadiobutton", background="#ff0000")
+root.style.configure("Run.TRadiobutton", background="#00ff00")
+root.style.configure("Disab.TCheckbutton", indicatorcolor="#ff0000")
+root.style.configure("Enab.TCheckbutton", indicatorcolor="#00ff00")
 root.style.configure("WPhase.TRadiobutton", width=5, background="white", indicatorcolor=("red", "green"))
 root.style.configure("GPhase.TRadiobutton", width=5, background="gray", indicatorcolor=("red", "green"))
 #
@@ -322,9 +336,9 @@ class StripChart:
         global Run_For, RunForEntry
         
         self.go = 0
-        for t in threading.enumerate():
-            if t.name == "_gen_":
-                t.join()
+##        for t in threading.enumerate():
+##            if t.name == "_gen_":
+##                t.join()
         RUNstatus.set(0)
         # print "Stoping continuous mode"
         # session.cancel() # cancel continuous session mode while paused
@@ -480,23 +494,28 @@ class StripChart:
         if not self.data:
             self.data = data
         for d in range(len(data)):
-            y0 = int((self.h-1) * (1.0-self.data[d]))   # plot all the data points
-            y1 = int((self.h-1) * (1.0-data[d]))
-            ya, yb = sorted((y0, y1))
-            for y in range(ya, yb+1):                   # connect the dots
-                p.put(colors[d], (self.x,y))
-                p.put(colors[d], (self.x+self.sw,y))
+            try:
+                y0 = int((self.h-1) * (1.0-self.data[d]))   # plot all the data points
+                y1 = int((self.h-1) * (1.0-data[d]))
+                ya, yb = sorted((y0, y1))
+                for y in range(ya, yb+1):                   # connect the dots
+                    p.put(colors[d], (self.x,y))
+                    p.put(colors[d], (self.x+self.sw,y))
+            except:
+                self.Stop()
+                self.Reset()
         self.data = data            # save for next call
 #
 def onSpinBoxScroll(event):
     spbox = event.widget
+    if sys.version_info[0] == 3: # Spin Boxes do this automatically in Python 3 apparently
+        return
     if event.delta > 0: # increment digit
         spbox.invoke('buttonup')
     else: # decrement digit
         spbox.invoke('buttondown')
-    time.sleep(0.05)
 #
-def onTextScroll(event):   # august 7
+def onTextScroll(event):   # Use mouse wheel to scroll entry values, august 7
     button = event.widget
     cursor_position = button.index(INSERT) # get current cursor position
     Pos = cursor_position
@@ -510,12 +529,13 @@ def onTextScroll(event):   # august 7
         Step = 10**(Len - Pos)
     elif Pos <= Dot : # no point left of position
         Step = 10**(Dot - Pos)
-    else :
+    else:
         Step = 10**(Dot - Pos + 1)
-    if event.delta > 0: # increment value
-        NewVal = OldValfl + Step
-    else: # decrement value
+    # respond to Linux or Windows wheel event
+    if event.num == 5 or event.delta < 0:
         NewVal = OldValfl - Step
+    if event.num == 4 or event.delta > 0:
+        NewVal = OldValfl + Step
     FormatStr = "{0:." + str(Decimals) + "f}"
     NewStr = FormatStr.format(NewVal)
     NewDot = NewStr.find (".") 
@@ -778,7 +798,7 @@ def BLoadCal():
         try:
             exec( line.rstrip() )
         except:
-            print "Skipping " + line.rstrip()
+            print( "Skipping " + line.rstrip())
     CalFile.close()
     InOffA = float(eval(CHAVOffsetEntry.get()))
     InGainA = float(eval(CHAVGainEntry.get()))
@@ -982,11 +1002,15 @@ def MakeMeterSourceWindow():
         gainavlab.pack(side=LEFT)
         CHAVGainEntry = Entry(ProbeAV, width=6) #
         CHAVGainEntry.bind('<MouseWheel>', onTextScroll)
+        CHAVGainEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+        CHAVGainEntry.bind("<Button-5>", onTextScroll)
         CHAVGainEntry.pack(side=LEFT)
         CHAVGainEntry.delete(0,"end")
         CHAVGainEntry.insert(0,1.0)
         CHAVOffsetEntry = Entry(ProbeAV, width=6) #
         CHAVOffsetEntry.bind('<MouseWheel>', onTextScroll)
+        CHAVOffsetEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+        CHAVOffsetEntry.bind("<Button-5>", onTextScroll)
         CHAVOffsetEntry.pack(side=LEFT)
         CHAVOffsetEntry.delete(0,"end")
         CHAVOffsetEntry.insert(0,0.0)
@@ -997,11 +1021,15 @@ def MakeMeterSourceWindow():
         gainailab.pack(side=LEFT)
         CHAIGainEntry = Entry(ProbeAI, width=6) #
         CHAIGainEntry.bind('<MouseWheel>', onTextScroll)
+        CHAIGainEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+        CHAIGainEntry.bind("<Button-5>", onTextScroll)
         CHAIGainEntry.pack(side=LEFT)
         CHAIGainEntry.delete(0,"end")
         CHAIGainEntry.insert(0,1.0)
         CHAIOffsetEntry = Entry(ProbeAI, width=6)
         CHAIOffsetEntry.bind('<MouseWheel>', onTextScroll)
+        CHAIOffsetEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+        CHAIOffsetEntry.bind("<Button-5>", onTextScroll)
         CHAIOffsetEntry.pack(side=LEFT)
         CHAIOffsetEntry.delete(0,"end")
         CHAIOffsetEntry.insert(0,0.0)
@@ -1031,11 +1059,15 @@ def MakeMeterSourceWindow():
         gainbvlab.pack(side=LEFT)
         CHBVGainEntry = Entry(ProbeBV, width=6) #
         CHBVGainEntry.bind('<MouseWheel>', onTextScroll)
+        CHBVGainEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+        CHBVGainEntry.bind("<Button-5>", onTextScroll)
         CHBVGainEntry.pack(side=LEFT)
         CHBVGainEntry.delete(0,"end")
         CHBVGainEntry.insert(0,1.0)
         CHBVOffsetEntry = Entry(ProbeBV, width=6) #
         CHBVOffsetEntry.bind('<MouseWheel>', onTextScroll)
+        CHBVOffsetEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+        CHBVOffsetEntry.bind("<Button-5>", onTextScroll)
         CHBVOffsetEntry.pack(side=LEFT)
         CHBVOffsetEntry.delete(0,"end")
         CHBVOffsetEntry.insert(0,0.0)
@@ -1046,11 +1078,15 @@ def MakeMeterSourceWindow():
         gainbilab.pack(side=LEFT)
         CHBIGainEntry = Entry(ProbeBI, width=6) #
         CHBIGainEntry.bind('<MouseWheel>', onTextScroll)
+        CHBIGainEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+        CHBIGainEntry.bind("<Button-5>", onTextScroll)
         CHBIGainEntry.pack(side=LEFT)
         CHBIGainEntry.delete(0,"end")
         CHBIGainEntry.insert(0,1.0)
         CHBIOffsetEntry = Entry(ProbeBI, width=6) #
         CHBIOffsetEntry.bind('<MouseWheel>', onTextScroll)
+        CHBIOffsetEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+        CHBIOffsetEntry.bind("<Button-5>", onTextScroll)
         CHBIOffsetEntry.pack(side=LEFT)
         CHBIOffsetEntry.delete(0,"end")
         CHBIOffsetEntry.insert(0,0.0)
@@ -1086,6 +1122,8 @@ def MakeMeterSourceWindow():
         chatestvlab.pack(side=LEFT)
         CHATestVEntry = Entry(TestVA, width=6) #
         CHATestVEntry.bind('<MouseWheel>', onAWGscroll)
+        CHATestVEntry.bind("<Button-4>", onAWGscroll)# with Linux OS
+        CHATestVEntry.bind("<Button-5>", onAWGscroll)
         CHATestVEntry.pack(side=LEFT)
         CHATestVEntry.delete(0,"end")
         CHATestVEntry.insert(0,0.0)
@@ -1098,6 +1136,8 @@ def MakeMeterSourceWindow():
         chatestilab.pack(side=LEFT)
         CHATestIEntry = Entry(TestIA, width=6) #
         CHATestIEntry.bind('<MouseWheel>', onAWGscroll)
+        CHATestIEntry.bind("<Button-4>", onAWGscroll)# with Linux OS
+        CHATestIEntry.bind("<Button-5>", onAWGscroll)
         CHATestIEntry.pack(side=LEFT)
         CHATestIEntry.delete(0,"end")
         CHATestIEntry.insert(0,0.0)
@@ -1135,6 +1175,8 @@ def MakeMeterSourceWindow():
         chbtestvlab.pack(side=LEFT)
         CHBTestVEntry = Entry(TestVB, width=6) #
         CHBTestVEntry.bind('<MouseWheel>', onAWGscroll)
+        CHBTestVEntry.bind("<Button-4>", onAWGscroll)# with Linux OS
+        CHBTestVEntry.bind("<Button-5>", onAWGscroll)
         CHBTestVEntry.pack(side=LEFT)
         CHBTestVEntry.delete(0,"end")
         CHBTestVEntry.insert(0,0.0)
@@ -1147,6 +1189,8 @@ def MakeMeterSourceWindow():
         chbtestilab.pack(side=LEFT)
         CHBTestIEntry = Entry(TestIB, width=6) #
         CHBTestIEntry.bind('<MouseWheel>', onAWGscroll)
+        CHBTestIEntry.bind("<Button-4>", onAWGscroll)# with Linux OS
+        CHBTestIEntry.bind("<Button-5>", onAWGscroll)
         CHBTestIEntry.pack(side=LEFT)
         CHBTestIEntry.delete(0,"end")
         CHBTestIEntry.insert(0,0.0)
@@ -1163,16 +1207,16 @@ def main():
     # session = Session()
     session.add_all()
     if not session.devices:
-        print 'no device found'
+        print( 'no device found')
         root.destroy()
         exit()
     session.configure()
     devx = session.devices[0]
     DevID = devx.serial
-    print DevID
-    print devx.fwver
-    print devx.hwver
-    print devx.default_rate
+    print( DevID)
+    print( devx.fwver)
+    print( devx.hwver)
+    print( devx.default_rate)
     CHA = devx.channels['A']    # Open CHA
     CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
     CHB = devx.channels['B']    # Open CHB

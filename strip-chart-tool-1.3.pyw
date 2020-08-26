@@ -1,13 +1,23 @@
 #!/usr/bin/python
-# ADALM1000 Strip chart recorder tool (5-23-2019)
-# For Python version > = 2.7.8
+# ADALM1000 Strip chart recorder tool (8-4-2020)
+# For Python version > = 2.7.8 and 3.7
 # With external module pysmu (libsmu > = 1.0 ADALM1000 )
 # Created by D Mercer ()
 #
-from Tkinter import *
+import __future__
+import os
+import sys
+if sys.version_info[0] == 2:
+    print ("Python 2.x")
+    from Tkinter import *
+    from tkFileDialog import askopenfilename
+    from tkFileDialog import asksaveasfilename
+if sys.version_info[0] == 3:
+    from tkinter import *
+    from tkinter.filedialog import askopenfilename
+    from tkinter.filedialog import asksaveasfilename
+    print ("Python 3.x")
 import math, random, threading, time
-from tkFileDialog import askopenfilename
-from tkFileDialog import asksaveasfilename
 from pysmu import *
 from time import gmtime, strftime
 # set up variables
@@ -36,10 +46,10 @@ try:
         try:
             exec( line.rstrip() )
         except:
-            print "Skiping " + line.rstrip()
+            print( "Skiping " + line.rstrip())
     InitFile.close()
 except:
-    print "No Init File Read"
+    print( "No Init File Read")
 #
 class StripChart:
     global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry
@@ -76,9 +86,9 @@ class StripChart:
         global SampRates, InOffA, InOffB, InGainA, InGainB
         
         cf = Frame(frame, borderwidth=1, relief="raised")
-        br = Button(cf, text="Run", bg='green', command=self.Run)
+        br = Button(cf, text="Run", bg="#00ff00", command=self.Run)
         br.grid(column=2, row=2)
-        bs = Button(cf, text="Stop", bg='red',command=self.Stop)
+        bs = Button(cf, text="Stop", bg="#ff0000",command=self.Stop)
         bs.grid(column=3, row=2)
         bt = Button(cf, text="Reset", bg='yellow', command=self.Reset)
         bt.grid(column=4, row=2)
@@ -195,15 +205,16 @@ class StripChart:
             Dlog_open.set(0)
 
     def Stop(self):
-        global Run_For, RunForEntry
+        global Run_For, RunForEntry, session
         
         self.go = 0
-        for t in threading.enumerate():
-            if t.name == "_gen_":
-                t.join()
-        #if session.continuous:
-            # print "ending session"
-            # session.end() # end continuous session mode
+        #for t in threading.enumerate():
+            #print( t.name )
+            #if t.name == "_gen_":
+                #t.join()
+##        if session.continuous:
+##            print( "ending session")
+##            session.end() # end continuous session mode
     def Reset(self):
         global CHAMaxV, CHAMinV, CHBMaxV, CHBMinV
         global InOffA, InGainA, InOffB, InGainB
@@ -318,12 +329,16 @@ class StripChart:
         if not self.data:
             self.data = data
         for d in range(len(data)):
-            y0 = int((self.h-1) * (1.0-self.data[d]))   # plot all the data points
-            y1 = int((self.h-1) * (1.0-data[d]))
-            ya, yb = sorted((y0, y1))
-            for y in range(ya, yb+1):                   # connect the dots
-                p.put(colors[d], (self.x,y))
-                p.put(colors[d], (self.x+self.sw,y))
+            try:
+                y0 = int((self.h-1) * (1.0-self.data[d]))   # plot all the data points
+                y1 = int((self.h-1) * (1.0-data[d]))
+                ya, yb = sorted((y0, y1))
+                for y in range(ya, yb+1):                   # connect the dots
+                    p.put(colors[d], (self.x,y))
+                    p.put(colors[d], (self.x+self.sw,y))
+            except:
+                self.Stop()
+                self.Reset()
         self.data = data            # save for next call
 #
 def onSpinBoxScroll(event):
@@ -497,7 +512,7 @@ def BLoadCal():
         try:
             exec( line.rstrip() )
         except:
-            print "Skipping " + line.rstrip()
+            print( "Skipping " + line.rstrip())
     CalFile.close()
     InOffA = float(eval(CHAVOffsetEntry.get()))
     InGainA = float(eval(CHAVGainEntry.get()))
@@ -524,7 +539,7 @@ def main():
     """
     #
     root = Tk()
-    root.title("ALICE 1.3 (5-23-2019): ALM1000 StripChart")
+    root.title("ALICE 1.2 (4 Aug 2019): ALM1000 StripChart")
     img = PhotoImage(data=TBicon)
     root.call('wm', 'iconphoto', root._w, img)
     #
@@ -533,16 +548,16 @@ def main():
     # session = Session()
     session.add_all()
     if not session.devices:
-        print 'no device found'
+        print( 'no device found')
         root.destroy()
         exit()
     session.configure()
     devx = session.devices[0]
     DevID = devx.serial
-    print DevID
-    print devx.fwver
-    print devx.hwver
-    print devx.default_rate
+    print( DevID)
+    print( devx.fwver)
+    print( devx.hwver)
+    print( devx.default_rate)
     CHA = devx.channels['A']    # Open CHA
     CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
     CHB = devx.channels['B']    # Open CHB
