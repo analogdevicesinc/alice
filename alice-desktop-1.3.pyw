@@ -121,25 +121,26 @@ COLORframes = "#000080"   # Color = "#rrggbb" rr=red gg=green bb=blue, Hexadecim
 COLORcanvas = "#000000"   # 100% black
 COLORgrid = "#808080"     # 50% Gray
 COLORzeroline = "#0000ff" # 100% blue
-COLORtrace1 = "#00ff00"   # 100% green
-COLORtrace2 = "#ff8000"   # 100% orange
-COLORtrace3 = "#00ffff"   # 100% cyan
-COLORtrace4 = "#ffff00"   # 100% yellow
-COLORtrace5 = "#ff00ff"   # 100% magenta
-COLORtrace6 = "#C80000"   # 90% red
-COLORtrace7 = "#8080ff"   # 100% purple
+
+COLORtrace1 =  "#88ff88"   # light green
+COLORtrace2 =  "#ff8888"   # light orange
+COLORtrace3 =  "#88ffff"   # light cyan
+COLORtrace4 =  "#ffff88"   # light yellow
+COLORtrace5 =  "#ff00ff"   # 100% magenta
+COLORtrace6 =  "#C80000"   # 90% red
+COLORtrace7 =  "#8080ff"   # 100% purple
 COLORtraceR1 = "#008000"   # 50% green
 COLORtraceR2 = "#905000"   # 50% orange
 COLORtraceR3 = "#008080"   # 50% cyan
 COLORtraceR4 = "#808000"   # 50% yellow
 COLORtraceR5 = "#800080"   # 50% magenta
 COLORtraceR6 = "#800000"   # 80% red
-COLORtraceR7 = "#4040a0"  # 80% purple
-COLORtext = "#ffffff"     # 100% white
-COLORtrigger = "#ff0000"  # 100% red
+COLORtraceR7 = "#4040a0"   # 80% purple
+COLORtext =    "#ffffff"   # 100% white
+COLORtrigger = "#ff0000"   # 100% red
 COLORsignalband = "#ff0000" # 100% red
-ButtonGreen = "#00ff00"   # 100% green
-ButtonRed = "#ff0000" # 100% red
+ButtonGreen =   "#88ff88"  # light green
+ButtonRed =      "#ff8888" # light red
 GUITheme = "Light"
 # # Can be Light or Dark or Blue or LtBlue or Custom where:
 FrameBG = "#d7d7d7" # Background color for frame
@@ -280,7 +281,7 @@ EnableETSScreen = 0
 EnableHSsampling = 0
 AllowFlashFirmware = 0
 DeBugMode = 0
-ShowTraceControls = 0
+ShowTraceControls = 1
 # ADC Mux defaults
 v1_adc_conf = 0x20F1
 i1_adc_conf = 0x20F7
@@ -2561,6 +2562,8 @@ def BStart():
             devx.ctrl_transfer( 0x40, 0x51, 49, 0, 0, 0, 100) # turn on analog power
         if (RUNstatus.get() == 0):
             RUNstatus.set(1)
+            brun.config(style="RunActive.TButton")
+            bstop.config(style="Stop.TButton")
             if AWGSync.get() == 0:
                 session.flush()
                 CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z mode
@@ -2657,6 +2660,10 @@ def BStop():
     if (RUNstatus.get() == 1):
         # print("Stoping")
         RUNstatus.set(0)
+        brun.config(style="Run.TButton")
+        bstop.config(style="StopActive.TButton")
+       
+
         CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z split mode
         CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z split mode
         if AWGSync.get() == 0: # running in continuous mode
@@ -20963,7 +20970,7 @@ CHB_RC_HP = IntVar(0)
 CHAI_RC_HP = IntVar(0)
 CHBI_RC_HP = IntVar(0)
 #
-if GUITheme == "Light": # Caa be Light or Dark or Blue or LtBlue
+if GUITheme == "Light": # Can be Light or Dark or Blue or LtBlue
     FrameBG = "#d7d7d7"
     ButtonText = "#000000"
 elif GUITheme == "Dark":
@@ -20997,12 +21004,19 @@ root.style.configure("W10.TButton", width=10, relief=ButRelief)
 root.style.configure("W11.TButton", width=11, relief=ButRelief)
 root.style.configure("W16.TButton", width=16, relief=ButRelief)
 root.style.configure("W17.TButton", width=17, relief=ButRelief)
-root.style.configure("Stop.TButton", background=ButtonRed, foreground="#000000", width=4, relief=ButRelief)
-root.style.configure("Run.TButton", background=ButtonGreen, foreground="#000000", width=4, relief=ButRelief)
-root.style.configure("Pwr.TButton", background=ButtonGreen, foreground="#000000", width=8, relief=ButRelief)
-root.style.configure("PwrOff.TButton", background=ButtonRed, foreground="#000000", width=8, relief=ButRelief)
+
+root.style.configure("Stop.TButton", background=ButtonRed, foreground="#000000", width=4, relief=RAISED)
+root.style.configure("StopActive.TButton", foreground="#000000", width=4, relief=SUNKEN)
+
+root.style.configure("Run.TButton", background=ButtonGreen, foreground="#000000", width=4, relief=RAISED)
+root.style.configure("RunActive.TButton", foreground="#000000", width=4, relief=SUNKEN)
+
+root.style.configure("Pwr.TButton", background=ButtonGreen, foreground="#000000", width=8, relief=SUNKEN)
+root.style.configure("PwrOff.TButton", background=ButtonRed, foreground="#000000", width=8, relief=RAISED)
+
 root.style.configure("RConn.TButton", background=ButtonRed, foreground="#000000", width=5, relief=ButRelief)
 root.style.configure("GConn.TButton", background=ButtonGreen, foreground="#000000", width=5, relief=ButRelief)
+
 root.style.configure("Rtrace1.TButton", background=COLORtrace1, foreground="#000000", width=7, relief=RAISED)
 root.style.configure("Strace1.TButton", background=COLORtrace1, foreground="#000000", width=7, relief=SUNKEN)
 root.style.configure("Rtrace2.TButton", background=COLORtrace2, foreground="#000000", width=7, relief=RAISED)
@@ -21038,18 +21052,28 @@ root.style.configure("Strace6.TCheckbutton", background=COLORtrace6, foreground=
 root.style.configure("Strace7.TCheckbutton", background=COLORtrace7, foreground="#000000", indicatorcolor="#ffffff")
 root.style.configure("WPhase.TRadiobutton", width=5, foreground="#000000", background="white", indicatorcolor=("red", "green"))
 root.style.configure("GPhase.TRadiobutton", width=5, foreground="#000000", background="gray", indicatorcolor=("red", "green"))
+
+###############################################################################
 # Create frames
-frame2r = Frame(root, relief=RIDGE)
+###############################################################################
+
+#left frame
+frame2r = Frame(root,borderwidth=6, relief=FLAT)
 frame2r.pack(side=RIGHT, fill=BOTH, expand=NO)
 
-frame1 = Frame(root, relief=RIDGE)
+#upper frame
+frame1 = Frame(root,borderwidth=6, relief=FLAT)
 frame1.pack(side=TOP, fill=BOTH, expand=NO)
 
-frame2 = Frame(root, relief=RIDGE)
+#osciloscope_viz_frame
+frame2 = Frame(root,borderwidth=6, relief=FLAT)
 frame2.pack(side=TOP, fill=BOTH, expand=YES)
 
-frame3 = Frame(root, relief=RIDGE)
+#bottom frame
+frame3 = Frame(root,borderwidth=6, relief=FLAT)
 frame3.pack(side=TOP, fill=BOTH, expand=NO)
+
+
 # create a pulldown menu
 # Trigger signals
 Triggermenu = Menubutton(frame1, text="Trigger", style="W7.TButton")
@@ -21410,14 +21434,14 @@ if EnableOhmMeter > 0:
 #
 if ShowTraceControls > 0:
     ckbt1 = Checkbutton(frame2r, text='CA-V [1]', style="Strace1.TCheckbutton", variable=ShowC1_V, command=TraceSelectADC_Mux)
-    ckbt1.pack(side=TOP)
-    ckbt2 = Checkbutton(frame2r, text='CA-I [3]', style="Strace3.TCheckbutton", variable=ShowC1_I, command=TraceSelectADC_Mux)
-    ckbt2.pack(side=TOP)
+    ckbt1.pack(side=TOP,fill=X )
+    ckbt2 = Checkbutton(frame2r, text='CA-I  [3]', style="Strace3.TCheckbutton", variable=ShowC1_I, command=TraceSelectADC_Mux)
+    ckbt2.pack(side=TOP,fill=X )
     ckbt3 = Checkbutton(frame2r, text='CB-V [2]', style="Strace2.TCheckbutton", variable=ShowC2_V, command=TraceSelectADC_Mux)
-    ckbt3.pack(side=TOP)
-    ckbt4 = Checkbutton(frame2r, text='CB-I [4]', style="Strace4.TCheckbutton", variable=ShowC2_I, command=TraceSelectADC_Mux)
-    ckbt4.pack(side=TOP)
-
+    ckbt3.pack(side=TOP,fill=X )
+    ckbt4 = Checkbutton(frame2r, text='CB-I  [4]', style="Strace4.TCheckbutton", variable=ShowC2_I, command=TraceSelectADC_Mux)
+    ckbt4.pack(side=TOP,fill=X )
+   
 if ShowBallonHelp > 0:
     math_tip = CreateToolTip(mathbt, 'Open Math window')
     BuildAWGScreen_tip = CreateToolTip(BuildAWGScreen, 'Surface AWG Controls window')
@@ -21431,42 +21455,42 @@ DigScreenStatus = IntVar(0)
 DigScreenStatus.set(0)
 if EnableDigIO > 0:
     BuildDigScreen = Button(frame2r, text="Digital I/O Screen", style="W17.TButton", command=MakeDigScreen)
-    BuildDigScreen.pack(side=TOP)
+    BuildDigScreen.pack(side=TOP,fill=X )
 #
 # Optional plugin tools
 if EnablePIODACMode > 0:
     BuildDacScreen = Button(frame2r, text="PIO-DAC Screen", style="W17.TButton", command=MakeDacScreen)
-    BuildDacScreen.pack(side=TOP)
+    BuildDacScreen.pack(side=TOP,fill=X )
 if EnableMuxMode > 0:
     BuildMuxScreen = Button(frame2r, text="Analog In Mux Screen", style="W17.TButton", command=MakeMuxModeWindow)
-    BuildMuxScreen.pack(side=TOP)
+    BuildMuxScreen.pack(side=TOP,fill=X )
 if EnableMinigenMode > 0:
     BuildMinigenScreen = Button(frame2r, text="AD983x DDS Screen", style="W17.TButton", command=MakeMinigenWindow)
-    BuildMinigenScreen.pack(side=TOP)
+    BuildMinigenScreen.pack(side=TOP,fill=X )
 if EnablePmodDA1Mode > 0:
     BuildDA1Screen = Button(frame2r, text="PMOD DA1 Screen", style="W17.TButton", command=MakeDA1Window)
-    BuildDA1Screen.pack(side=TOP)
+    BuildDA1Screen.pack(side=TOP,fill=X )
 if EnableDigPotMode >0:
     BuildDigPotScreen = Button(frame2r, text="Dig Pot Screen", style="W17.TButton", command=MakeDigPotWindow)
-    BuildDigPotScreen.pack(side=TOP)
+    BuildDigPotScreen.pack(side=TOP,fill=X )
 if EnableGenericSerialMode >0:
     GenericSerialScreen = Button(frame2r, text="Generic Serial Output", style="W17.TButton", command=MakeGenericSerialWindow)
-    GenericSerialScreen.pack(side=TOP)
+    GenericSerialScreen.pack(side=TOP,fill=X )
 if EnableAD5626SerialMode >0:
     AD5626SerialScreen = Button(frame2r, text="AD5626 Output", style="W17.TButton", command=MakeAD5626Window)
-    AD5626SerialScreen.pack(side=TOP)
+    AD5626SerialScreen.pack(side=TOP,fill=X )
 if EnableDigitalFilter >0:
     DigFiltScreen = Button(frame2r, text="Digital Filter", style="W17.TButton", command=MakeDigFiltWindow)
-    DigFiltScreen.pack(side=TOP)
+    DigFiltScreen.pack(side=TOP,fill=X )
 if EnableCommandInterface > 0:
     CommandLineScreen = Button(frame2r, text="Command Interface", style="W17.TButton", command=MakeCommandScreen)
-    CommandLineScreen.pack(side=TOP)
+    CommandLineScreen.pack(side=TOP,fill=X )
 if EnableMeasureScreen > 0:
     MeasureScreen = Button(frame2r, text="Measure Screen", style="W17.TButton", command=MakeMeasureScreen)
-    MeasureScreen.pack(side=TOP)
+    MeasureScreen.pack(side=TOP,fill=X )
 if EnableETSScreen > 0:
     ETSScreen = Button(frame2r, text="ETS Controls", style="W17.TButton", command=MakeETSWindow)
-    ETSScreen.pack(side=TOP)
+    ETSScreen.pack(side=TOP,fill=X )
 # input probe wigets
 prlab = Label(frame2r, text="Adjust Gain / Offset")
 prlab.pack(side=TOP)
@@ -21607,8 +21631,18 @@ logo = PhotoImage(data=ADIlogo)
 ADI1 = Label(frame2r, image=logo, anchor= "sw", compound="top") # , height=49, width=116
 ADI1.pack(side=TOP)
 
+
+###############################################################################
 # Bottom Buttons
+###############################################################################
+# changed all buttons to before the text, as they also serve as labels
+
+
 # Voltage channel A
+
+
+CHAlab = Button(frame3, text="CA V/Div", style="Rtrace1.TButton", command=SetScaleA)
+CHAlab.pack(side=LEFT)
 
 CHAsb = Spinbox(frame3, cursor='double_arrow', width=4, values=CHvpdiv, command=BCHAlevel)
 #CHAsb = ttk.Spinbox(frame3, cursor='double_arrow', style="Div.TSpinbox", values=CHvpdiv, command=BCHAlevel)
@@ -21618,9 +21652,10 @@ CHAsb.bind("<Button-5>", onSpinBoxScroll)
 CHAsb.pack(side=LEFT)
 CHAsb.delete(0,"end")
 CHAsb.insert(0,0.5)
-#
-CHAlab = Button(frame3, text="CA V/Div", style="Rtrace1.TButton", command=SetScaleA)
-CHAlab.pack(side=LEFT)
+
+
+CHAofflab = Button(frame3, text="CA V Pos", style="Rtrace1.TButton", command=SetVAPoss)
+CHAofflab.pack(side=LEFT)
 
 CHAVPosEntry = Entry(frame3, width=5, cursor='double_arrow')
 CHAVPosEntry.bind("<Return>", BOffsetA)
@@ -21631,9 +21666,11 @@ CHAVPosEntry.bind('<Key>', onTextKey)
 CHAVPosEntry.pack(side=LEFT)
 CHAVPosEntry.delete(0,"end")
 CHAVPosEntry.insert(0,2.5)
-CHAofflab = Button(frame3, text="CA V Pos", style="Rtrace1.TButton", command=SetVAPoss)
-CHAofflab.pack(side=LEFT)
+
 # Current channel A
+CHAIlab = Button(frame3, text="CA mA/Div", style="Strace3.TButton", command=SetScaleIA)
+CHAIlab.pack(side=LEFT)
+
 CHAIsb = Spinbox(frame3, cursor='double_arrow', width=4, values=CHipdiv, command=BCHAIlevel)
 CHAIsb.bind('<MouseWheel>', onSpinBoxScroll)
 CHAIsb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
@@ -21641,8 +21678,10 @@ CHAIsb.bind("<Button-5>", onSpinBoxScroll)
 CHAIsb.pack(side=LEFT)
 CHAIsb.delete(0,"end")
 CHAIsb.insert(0,50.0)
-CHAIlab = Button(frame3, text="CA mA/Div", style="Strace3.TButton", command=SetScaleIA)
-CHAIlab.pack(side=LEFT)
+
+
+CHAIofflab = Button(frame3, text="CA I Pos", style="Rtrace3.TButton", command=SetIAPoss)
+CHAIofflab.pack(side=LEFT)
 
 CHAIPosEntry = Entry(frame3, width=5, cursor='double_arrow')
 CHAIPosEntry.bind("<Return>", BIOffsetA)
@@ -21653,9 +21692,12 @@ CHAIPosEntry.bind('<Key>', onTextKey)
 CHAIPosEntry.pack(side=LEFT)
 CHAIPosEntry.delete(0,"end")
 CHAIPosEntry.insert(0,0.0)
-CHAIofflab = Button(frame3, text="CA I Pos", style="Rtrace3.TButton", command=SetIAPoss)
-CHAIofflab.pack(side=LEFT)
+
+
 # Voltage channel B
+CHBlab = Button(frame3, text="CB V/Div", style="Strace2.TButton", command=SetScaleB)
+CHBlab.pack(side=LEFT)
+
 CHBsb = Spinbox(frame3, width=4, cursor='double_arrow', values=CHvpdiv, command=BCHBlevel)
 CHBsb.bind('<MouseWheel>', onSpinBoxScroll)
 CHAIsb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
@@ -21664,8 +21706,9 @@ CHBsb.pack(side=LEFT)
 CHBsb.delete(0,"end")
 CHBsb.insert(0,0.5)
 #
-CHBlab = Button(frame3, text="CB V/Div", style="Strace2.TButton", command=SetScaleB)
-CHBlab.pack(side=LEFT)
+
+CHBofflab = Button(frame3, text="CB V Pos", style="Rtrace2.TButton", command=SetVBPoss)
+CHBofflab.pack(side=LEFT)
 
 CHBVPosEntry = Entry(frame3, width=5, cursor='double_arrow')
 CHBVPosEntry.bind("<Return>", BOffsetB)
@@ -21676,9 +21719,12 @@ CHBVPosEntry.bind('<Key>', onTextKey)
 CHBVPosEntry.pack(side=LEFT)
 CHBVPosEntry.delete(0,"end")
 CHBVPosEntry.insert(0,2.5)
-CHBofflab = Button(frame3, text="CB V Pos", style="Rtrace2.TButton", command=SetVBPoss)
-CHBofflab.pack(side=LEFT)
+
+
 # Current channel B
+CHBIlab = Button(frame3, text="CB mA/Div", style="Rtrace4.TButton", command=SetScaleIB)
+CHBIlab.pack(side=LEFT)
+
 CHBIsb = Spinbox(frame3, width=4, cursor='double_arrow', values=CHipdiv, command=BCHBIlevel)
 CHBIsb.bind('<MouseWheel>', onSpinBoxScroll)
 CHBIsb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
@@ -21686,8 +21732,10 @@ CHBIsb.bind("<Button-5>", onSpinBoxScroll)
 CHBIsb.pack(side=LEFT)
 CHBIsb.delete(0,"end")
 CHBIsb.insert(0,50.0)
-CHBIlab = Button(frame3, text="CB mA/Div", style="Strace4.TButton", command=SetScaleIB)
-CHBIlab.pack(side=LEFT)
+
+
+CHBIofflab = Button(frame3, text="CB I Pos", style="Rtrace4.TButton", command=SetIBPoss)
+CHBIofflab.pack(side=LEFT)
 
 CHBIPosEntry = Entry(frame3, width=5, cursor='double_arrow')
 CHBIPosEntry.bind("<Return>", BIOffsetB)
@@ -21698,8 +21746,7 @@ CHBIPosEntry.bind('<Key>', onTextKey)
 CHBIPosEntry.pack(side=LEFT)
 CHBIPosEntry.delete(0,"end")
 CHBIPosEntry.insert(0,0.0)
-CHBIofflab = Button(frame3, text="CB I Pos", style="Rtrace4.TButton", command=SetIBPoss)
-CHBIofflab.pack(side=LEFT)
+
 #
 if ShowBallonHelp > 0:
     CHAlab_tip = CreateToolTip(CHAlab, 'Select CHA-V vertical range/position axis to be used for markers and drawn color')
