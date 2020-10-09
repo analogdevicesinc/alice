@@ -56,8 +56,8 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(14 Sept 2020)"
-SWRev = "1.3 "
+RevDate = "(05 Outubro 2020)"
+SWRev = "1.3.Unifei "
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.9/alice-desktop-1.3-setup.exe'
 # small bit map of ADI logo for window icon
 TBicon = """
@@ -67,7 +67,7 @@ i8fUAgA7
 """
 
 root=Tk()
-root.title("ALICE DeskTop " + SWRev + RevDate + ": ALM1000 Oscilloscope")
+root.title("ALICE DeskTop " + SWRev  +" ALM1000 Osciloscópio")
 img = PhotoImage(data=TBicon)
 root.call('wm', 'iconphoto', root._w, '-default', img)
 print("Windowing System is " + str(root.tk.call('tk', 'windowingsystem')))
@@ -112,7 +112,7 @@ GRHPhA = 400                # Height of the grid 400 default
 X0LPhA = 37                 # Left top X value of grid
 Y0TPhA = 25                 # Left top Y value of grid
 #
-FontSize = 8
+FontSize = 9
 BorderSize = 5
 MouseX = MouseY = -10
 MouseCAV = MouseCAI = MouseCBV = MouseCBI = MouseMuxA = MouseMuxB = MouseMuxC = MouseMuxD = -10
@@ -121,31 +121,34 @@ COLORframes = "#000080"   # Color = "#rrggbb" rr=red gg=green bb=blue, Hexadecim
 COLORcanvas = "#000000"   # 100% black
 COLORgrid = "#808080"     # 50% Gray
 COLORzeroline = "#0000ff" # 100% blue
-COLORtrace1 = "#00ff00"   # 100% green
-COLORtrace2 = "#ff8000"   # 100% orange
-COLORtrace3 = "#00ffff"   # 100% cyan
-COLORtrace4 = "#ffff00"   # 100% yellow
-COLORtrace5 = "#ff00ff"   # 100% magenta
-COLORtrace6 = "#C80000"   # 90% red
-COLORtrace7 = "#8080ff"   # 100% purple
+
+COLORtrace1 = "#33dd33"   # 100% green
+COLORtrace2 = "#dd8033"   # 100% orange
+COLORtrace3 = "#33dddd"   # 100% cyan
+COLORtrace4 = "#dddd33"   # 100% yellow
+COLORtrace5 =  "#ff00ff"   # 100% magenta
+COLORtrace6 =  "#C80000"   # 90% red
+COLORtrace7 =  "#8080ff"   # 100% purple
 COLORtraceR1 = "#008000"   # 50% green
 COLORtraceR2 = "#905000"   # 50% orange
 COLORtraceR3 = "#008080"   # 50% cyan
 COLORtraceR4 = "#808000"   # 50% yellow
 COLORtraceR5 = "#800080"   # 50% magenta
 COLORtraceR6 = "#800000"   # 80% red
-COLORtraceR7 = "#4040a0"  # 80% purple
-COLORtext = "#ffffff"     # 100% white
-COLORtrigger = "#ff0000"  # 100% red
+COLORtraceR7 = "#4040a0"   # 80% purple
+COLORtext =    "#ffffff"   # 100% white
+COLORtrigger = "#ff0000"   # 100% red
 COLORsignalband = "#ff0000" # 100% red
-ButtonGreen = "#00ff00"   # 100% green
-ButtonRed = "#ff0000" # 100% red
+ButtonGreen = "#55dd55"   # 100% green
+ButtonRed = "#dd5555" # 100% red
 GUITheme = "Light"
 # # Can be Light or Dark or Blue or LtBlue or Custom where:
 FrameBG = "#d7d7d7" # Background color for frame
 ButtonText = "#000000" # Button Text color
+ButtonDefault = "#a0a0a0"
+#ButtonDefault = "#d7d7d7"
 # Widget relief can be RAISED, GROOVE, RIDGE, and FLAT
-ButRelief = RAISED
+ButRelief = FLAT
 LabRelief = FLAT
 ## set value for on board resistors and ext AD584 reference
 OnBoardRes = 50.83
@@ -260,11 +263,11 @@ MultipleBoards = IntVar(0)
 MultipleBoards.set(0) # Turn on access for multiple m1k boards
 IgnoreFirmwareCheck = 0
 EnableXYPlotter = 1
-EnablePhaseAnalizer = 1
-EnableSpectrumAnalizer = 1
-EnableBodePlotter = 1
-EnableImpedanceAnalizer = 1
-EnableOhmMeter = 1
+EnablePhaseAnalizer = 0
+EnableSpectrumAnalizer = 0
+EnableBodePlotter = 0
+EnableImpedanceAnalizer = 0
+EnableOhmMeter = 0
 EnableDigIO = 1
 EnableCommandInterface = 0
 EnableMuxMode = 0
@@ -278,16 +281,21 @@ EnableDigitalFilter = 0
 EnableMeasureScreen = 0
 EnableETSScreen = 0
 EnableHSsampling = 0
+
 AllowFlashFirmware = 0
 DeBugMode = 0
-ShowTraceControls = 0
+ShowTraceControls = 1
+
+
+simpleInterface = 1
+
 # ADC Mux defaults
 v1_adc_conf = 0x20F1
 i1_adc_conf = 0x20F7
 v2_adc_conf = 0x20F7
 i2_adc_conf = 0x20F1
 #
-MouseFocus = 1
+MouseFocus = 0
 HistAsPercent = 0
 ShowBallonHelp = 0
 contloop = 0
@@ -350,6 +358,7 @@ try:
 except:
     print( "No Init File Read")
 #
+
 X0L = FontSize * 7
 XOLF = XOLBP = XOLXY = XOLIA = int(FontSize * 4.625)
 XOLNqP = XOLNiC = int(FontSize * 3.125)
@@ -871,7 +880,8 @@ def BSaveConfig(filename):
         return
     # Save Window placements
     ConfgFile.write("root.geometry('+" + str(root.winfo_x()) + '+' + str(root.winfo_y()) + "')\n")
-    ConfgFile.write("awgwindow.geometry('+" + str(awgwindow.winfo_x()) + '+' + str(awgwindow.winfo_y()) + "')\n")
+    if (simpleInterface == 0):
+        ConfgFile.write("awgwindow.geometry('+" + str(awgwindow.winfo_x()) + '+' + str(awgwindow.winfo_y()) + "')\n")
     ConfgFile.write('global GRW; GRW = ' + str(GRW) + '\n')
     ConfgFile.write('global GRH; GRH = ' + str(GRH) + '\n')
     # Windows configuration
@@ -1048,31 +1058,31 @@ def BSaveConfig(filename):
         ConfgFile.write('RefphEntry.delete(0,END)\n')
         ConfgFile.write('RefphEntry.insert(0, "' + str(RefphEntry.get()) + '")\n')
         if vat_btn.config('text')[-1] == 'OFF':
-            ConfgFile.write('vat_btn.config(text="OFF", style="Stop.TButton")\n')
+            ConfgFile.write('vat_btn.config(text="OFF", style="Red.TButton")\n')
         else:
-            ConfgFile.write('vat_btn.config(text="ON", style="Run.TButton")\n')
+            ConfgFile.write('vat_btn.config(text="ON", style="Green.TButton")\n')
         if MuxScreenStatus.get() == 0: # these buttons do not exist if Mux screen open
             if vbt_btn.config('text')[-1] == 'OFF':
-                ConfgFile.write('vbt_btn.config(text="OFF", style="Stop.TButton")\n')
+                ConfgFile.write('vbt_btn.config(text="OFF", style="Red.TButton")\n')
             else:
-                ConfgFile.write('vbt_btn.config(text="ON", style="Run.TButton")\n')
+                ConfgFile.write('vbt_btn.config(text="ON", style="Green.TButton")\n')
             if vabt_btn.config('text')[-1] == 'OFF':
-                ConfgFile.write('vabt_btn.config(text="OFF", style="Stop.TButton")\n')
+                ConfgFile.write('vabt_btn.config(text="OFF", style="Red.TButton")\n')
             else:
-                ConfgFile.write('vabt_btn.config(text="ON", style="Run.TButton")\n')
+                ConfgFile.write('vabt_btn.config(text="ON", style="Green.TButton")\n')
         else: # But these do 
             ConfgFile.write('ShowPB_A.set(' + str(ShowPB_A.get()) + ')\n')
             ConfgFile.write('ShowPB_B.set(' + str(ShowPB_B.get()) + ')\n')
             ConfgFile.write('ShowPB_C.set(' + str(ShowPB_C.get()) + ')\n')
             ConfgFile.write('ShowPB_D.set(' + str(ShowPB_D.get()) + ')\n')
         if iat_btn.config('text')[-1] == 'OFF':
-            ConfgFile.write('iat_btn.config(text="OFF", style="Stop.TButton")\n')
+            ConfgFile.write('iat_btn.config(text="OFF", style="Red.TButton")\n')
         else:
-            ConfgFile.write('iat_btn.config(text="ON", style="Run.TButton")\n')
+            ConfgFile.write('iat_btn.config(text="ON", style="Green.TButton")\n')
         if ibt_btn.config('text')[-1] == 'OFF':
-            ConfgFile.write('ibt_btn.config(text="OFF", style="Stop.TButton")\n')
+            ConfgFile.write('ibt_btn.config(text="OFF", style="Red.TButton")\n')
         else:
-            ConfgFile.write('ibt_btn.config(text="ON", style="Run.TButton")\n')
+            ConfgFile.write('ibt_btn.config(text="ON", style="Green.TButton")\n')
         #
     else:
         ConfgFile.write('DestroyPhAScreen()\n')
@@ -1485,10 +1495,11 @@ def BLoadConfig(filename):
         UpdateAWGWin()
         TimeCheckBox()
         XYCheckBox()
-        FreqCheckBox()
-        BodeCheckBox()
-        IACheckBox()
-        OhmCheckBox()
+        if (simpleInterface==0):
+            FreqCheckBox()
+            BodeCheckBox()
+            IACheckBox()
+            OhmCheckBox()
 #
         time.sleep(0.05)
         ReMakeAWGwaves()
@@ -1648,17 +1659,33 @@ def BLoadConfigTime():
 def BgColor():
     global COLORtext, COLORcanvas, ColorMode, Bodeca, BodeScreenStatus, PhAca, PhAScreenStatus
     global ca, Freqca, SpectrumScreenStatus, XYca, XYScreenStatus, IAca, IAScreenStatus
+    global COLORtrace1, COLORtrace2, COLORtrace3, COLORtrace4, COLORtrace5, COLORtrace6, COLORtrace7, COLORtraceR1, COLORtraceR2, COLORtraceR3, COLORtraceR4, COLORtraceR5, COLORtraceR6, COLORtraceR7
 
     if ColorMode.get() > 0:
-        COLORtext = "#000000"   # 100% black
-        COLORtrace4 = "#a0a000" # 50% yellow
-        COLORtraceR4 = "#606000"   # 25% yellow
         COLORcanvas = "#ffffff"     # 100% white
+        COLORtext = "#000000"   # 100% black
+        COLORtrace1 = "#00dd00"    # 100% green
+        COLORtrace2 = "#dd8000"    # 100% orange
+        COLORtrace3 = "#00dddd"    # 100% cyan
+        COLORtrace4 = "#dddd00"    # 100% yellow
+        COLORtrace5 =  "#dd00dd"    # 100% magenta
+        COLORtrace6 =  "#b80000"    # 90% red
+        COLORtrace7 =  "#8080dd"    # 100% purple
+        TRACEwidth.set(2) #TODO, change dinamically
     else:
         COLORcanvas = "#000000"   # 100% black
-        COLORtrace4 = "#ffff00" # 100% yellow
-        COLORtraceR4 = "#808000"   # 50% yellow
         COLORtext = "#ffffff"     # 100% white
+        COLORtrace1 = "#00ff00"   # 100% green
+        COLORtrace2 = "#ff8000"   # 100% orange
+        COLORtrace3 = "#00ffff"   # 100% cyan
+        COLORtrace4 = "#ffff00"   # 100% yellow
+        COLORtrace5 =  "#ff00ff"   # 100% magenta
+        COLORtrace6 =  "#C80000"   # 90% red
+        COLORtrace7 =  "#8080ff"   # 100% purple
+        TRACEwidth.set(1)
+
+
+        
     ca.config(background=COLORcanvas)
     UpdateTimeScreen()
     if SpectrumScreenStatus.get() > 0:
@@ -2431,9 +2458,9 @@ def SetScaleMuxA():
     if MarkerScale.get() != 1:
         MarkerScale.set(5)
         CHB_Alab.config(style="Rtrace2.TButton")
-        CHB_Blab.config(style="Strace6.TButton")
-        CHB_Clab.config(style="Strace7.TButton")
-        CHB_Dlab.config(style="Strace4.TButton")
+        CHB_Blab.config(style="Rtrace6.TButton")
+        CHB_Clab.config(style="Rtrace7.TButton")
+        CHB_Dlab.config(style="Rtrace4.TButton")
     else:
         MarkerScale.set(0)
 #
@@ -2442,10 +2469,10 @@ def SetScaleMuxB():
 
     if MarkerScale.get() != 1:
         MarkerScale.set(6)
-        CHB_Alab.config(style="Strace2.TButton")
+        CHB_Alab.config(style="Rtrace2.TButton")
         CHB_Blab.config(style="Rtrace6.TButton")
-        CHB_Clab.config(style="Strace7.TButton")
-        CHB_Dlab.config(style="Strace4.TButton")
+        CHB_Clab.config(style="Rtrace7.TButton")
+        CHB_Dlab.config(style="Rtrace4.TButton")
     else:
         MarkerScale.set(0)
 #
@@ -2454,10 +2481,10 @@ def SetScaleMuxC():
 
     if MarkerScale.get() != 1:
         MarkerScale.set(7)
-        CHB_Alab.config(style="Strace2.TButton")
-        CHB_Blab.config(style="Strace6.TButton")
+        CHB_Alab.config(style="Rtrace2.TButton")
+        CHB_Blab.config(style="Rtrace6.TButton")
         CHB_Clab.config(style="Rtrace7.TButton")
-        CHB_Dlab.config(style="Strace4.TButton")
+        CHB_Dlab.config(style="Rtrace4.TButton")
     else:
         MarkerScale.set(0)
 #
@@ -2466,9 +2493,9 @@ def SetScaleMuxD():
 
     if MarkerScale.get() != 1:
         MarkerScale.set(8)
-        CHB_Alab.config(style="Strace2.TButton")
-        CHB_Blab.config(style="Strace6.TButton")
-        CHB_Clab.config(style="Strace7.TButton")
+        CHB_Alab.config(style="Rtrace2.TButton")
+        CHB_Blab.config(style="Rtrace6.TButton")
+        CHB_Clab.config(style="Rtrace7.TButton")
         CHB_Dlab.config(style="Rtrace4.TButton")
     else:
         MarkerScale.set(0)
@@ -2544,7 +2571,7 @@ def Bcloseexit():
         donothing()
 
     root.destroy()
-    exit()
+    #exit()
 ## Start aquaring scope time data
 def BStart():
     global RUNstatus, PowerStatus, devx, PwrBt, DevID, FWRevOne, session, AWGSync
@@ -2555,12 +2582,17 @@ def BStart():
     elif FWRevOne == 0.0:
         showwarning("WARNING","Out of data Firmware!")
     else:
+        if (simpleInterface==1):
+            AWGSync.set(0) # always run in continuous mode
+
         if PowerStatus == 0:
             PowerStatus = 1
-            PwrBt.config(style="Pwr.TButton",text="PWR-On")
+            PwrBt.config(style="Green.TButton", text="PWR-On")
             devx.ctrl_transfer( 0x40, 0x51, 49, 0, 0, 0, 100) # turn on analog power
         if (RUNstatus.get() == 0):
             RUNstatus.set(1)
+            brun.config(style="Green.TButton")
+            bstop.config(style="Default.TButton")
             if AWGSync.get() == 0:
                 session.flush()
                 CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z mode
@@ -2657,6 +2689,10 @@ def BStop():
     if (RUNstatus.get() == 1):
         # print("Stoping")
         RUNstatus.set(0)
+        brun.config(style="Default.TButton")
+        bstop.config(style="Red.TButton")
+       
+
         CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z split mode
         CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z split mode
         if AWGSync.get() == 0: # running in continuous mode
@@ -2690,11 +2726,11 @@ def BPower():
         BStop()
     if PowerStatus == 1:
         PowerStatus = 0
-        PwrBt.config(style="PwrOff.TButton",text="PWR-Off")
+        PwrBt.config(style="Red.TButton",text="PWR-Off")
         devx.ctrl_transfer( 0x40, 0x50, 49, 0, 0, 0, 100) # turn off analog power
     else:
         PowerStatus = 1
-        PwrBt.config(style="Pwr.TButton",text="PWR-On")
+        PwrBt.config(style="Green.TButton",text="PWR-On")
         devx.ctrl_transfer( 0x40, 0x51, 49, 0, 0, 0, 100) # turn on analog power
 ## Set Hor time scale from entry widget
 def BTime():
@@ -3003,8 +3039,14 @@ def Analog_In():
                 Analog_Freq_In()
         elif OhmRunStatus.get() == 1 and OhmDisp.get() == 1:
             Ohm_Analog_In()
-        root.update_idletasks()
-        root.update()
+        #give problem when try to close with X button
+        try:
+            root.update_idletasks()
+            root.update()
+        except:
+            RUNstatus.set(0)
+            break
+            
 ## Ohmmeter loop
 def Ohm_Analog_In():
     global RMode, CHATestVEntry, CHATestREntry, CHA, CHB, devx, OhmA0, OhmA1, discontloop
@@ -6673,7 +6715,7 @@ def MakeTimeScreen():
         MathFlag3 = (MathAxis == "I-A" and MathTrace.get() == 12) or (MathXAxis == "I-A" and Show_MathX.get() == 1) or (MathYAxis == "I-A" and Show_MathY.get() == 1)
         MathFlag4 = (MathAxis == "I-B" and MathTrace.get() == 12) or (MathXAxis == "I-B" and Show_MathX.get() == 1) or (MathYAxis == "I-B" and Show_MathY.get() == 1)
         # vertical scale text labels
-        RightOffset = FontSize * 3
+        RightOffset =int(FontSize * 3.5)
         LeftOffset = int(FontSize/2)
         if (ShowC1_V.get() == 1 or MathTrace.get() == 1 or MathTrace.get() == 2 or MathFlag1):
             ca.create_text(x1-LeftOffset, 12, text="CA-V", fill=COLORtrace1, anchor="e", font=("arial", FontSize-1 ))
@@ -6708,7 +6750,10 @@ def MakeTimeScreen():
                 
             if (ShowC1_I.get() == 1 or MathTrace.get() == 4 or MathTrace.get() == 6 or MathTrace.get() == 8 or MathFlag3):
                 Iaxis_value = 1.0 * (((5-i) * CH1IpdvRange ) + CHAIOffset)
-                Iaxis_label = str(round(Iaxis_value, 3))
+                if ((CH1IpdvRange*5+CHAIOffset) >= 100):
+                    Iaxis_label = str(int(Iaxis_value))
+                else:
+                    Iaxis_label = str(round(Iaxis_value,1))
                 ca.create_text(x2+LeftOffset, y, text=Iaxis_label, fill=COLORtrace3, anchor="w", font=("arial", FontSize ))
                 
             if (ShowC2_V.get() == 1 or MathTrace.get() == 3 or MathTrace.get() == 10 or MathFlag2):
@@ -6718,7 +6763,10 @@ def MakeTimeScreen():
                 
             if (ShowC2_I.get() == 1 or MathTrace.get() == 5 or MathTrace.get() == 7 or MathTrace.get() == 9 or MathTrace.get() == 11 or MathFlag4):
                 Iaxis_value = 1.0 * (((5-i) * CH2IpdvRange ) + CHBIOffset)
-                Iaxis_label = str(round(Iaxis_value, 3))
+                if ((CH2IpdvRange*5+CHBIOffset) >= 100):
+                    Iaxis_label = str(int(Iaxis_value))
+                else:
+                    Iaxis_label = str(round(Iaxis_value,1))
                 ca.create_text(x2+RightOffset+4, y, text=Iaxis_label, fill=COLORtrace4, anchor="w", font=("arial", FontSize )) # 28
             if MuxScreenStatus.get() == 1:
                 if Show_CBA.get() == 1: 
@@ -8015,9 +8063,9 @@ def SetScaleA():
     if MarkerScale.get() != 1:
         MarkerScale.set(1)
         CHAlab.config(style="Rtrace1.TButton")
-        CHBlab.config(style="Strace2.TButton")
-        CHAIlab.config(style="Strace3.TButton")
-        CHBIlab.config(style="Strace4.TButton")
+        CHBlab.config(style="Rtrace2.TButton")
+        CHAIlab.config(style="Rtrace3.TButton")
+        CHBIlab.config(style="Rtrace4.TButton")
     else:
         MarkerScale.set(0)
 #
@@ -8026,10 +8074,10 @@ def SetScaleIA():
 
     if MarkerScale.get() != 3:
         MarkerScale.set(3)
-        CHAlab.config(style="Strace1.TButton")
-        CHBlab.config(style="Strace2.TButton")
+        CHAlab.config(style="Rtrace1.TButton")
+        CHBlab.config(style="Rtrace2.TButton")
         CHAIlab.config(style="Rtrace3.TButton")
-        CHBIlab.config(style="Strace4.TButton")
+        CHBIlab.config(style="Rtrace4.TButton")
     else:
         MarkerScale.set(0)
 
@@ -8038,10 +8086,10 @@ def SetScaleB():
 
     if MarkerScale.get() != 2:
         MarkerScale.set(2)
-        CHAlab.config(style="Strace1.TButton")
+        CHAlab.config(style="Rtrace1.TButton")
         CHBlab.config(style="Rtrace2.TButton")
-        CHAIlab.config(style="Strace3.TButton")
-        CHBIlab.config(style="Strace4.TButton")
+        CHAIlab.config(style="Rtrace3.TButton")
+        CHBIlab.config(style="Rtrace4.TButton")
     else:
         MarkerScale.set(0)
 
@@ -8050,9 +8098,9 @@ def SetScaleIB():
 
     if MarkerScale.get() != 3:
         MarkerScale.set(4)
-        CHAlab.config(style="Strace1.TButton")
-        CHBlab.config(style="Strace2.TButton")
-        CHAIlab.config(style="Strace3.TButton")
+        CHAlab.config(style="Rtrace1.TButton")
+        CHBlab.config(style="Rtrace2.TButton")
+        CHAIlab.config(style="Rtrace3.TButton")
         CHBIlab.config(style="Rtrace4.TButton")
     else:
         MarkerScale.set(0)
@@ -8062,14 +8110,14 @@ def SetXYScaleA():
 
     MarkerXYScale.set(1)
     CHAxylab.config(style="Rtrace1.TButton")
-    CHBxylab.config(style="Strace2.TButton")
+    CHBxylab.config(style="Rtrace2.TButton")
 
 def SetXYScaleB():
     global MarkerXYScale, CHAxylab, CHBxylab
 
     MarkerXYScale.set(2)
     CHBxylab.config(style="Rtrace2.TButton")
-    CHAxylab.config(style="Strace1.TButton")       
+    CHAxylab.config(style="Rtrace1.TButton")       
 #
 def onCanvasClickRight(event):
     global ShowTCur, ShowVCur, TCursor, VCursor, RUNstatus, ca
@@ -10126,8 +10174,8 @@ def BAWGAModeLabel():
                 AWGAMode.set(1)
                 CHA.set_mode('i') # channel must be in source current mode for rev D boards
                 label_txt = "SIMV"
-        label_txt = label_txt + " Split I/O"
-    label_txt = label_txt + " Mode"
+        label_txt = label_txt + ", Split I/O"
+    #label_txt = label_txt + " Mode"
     AWGAModeLabel.config(text = label_txt ) # change displayed value
     ReMakeAWGwaves()
     #UpdateAwgCont()
@@ -10149,11 +10197,11 @@ def UpdateAWGA():
     BAWGAShape()
 
     if AWG_Amp_Mode.get() == 0: # 0 = Min/Max mode, 1 = Amp/Offset
-        amp1lab.config(text = "Min Ch A" ) # change displayed value
-        off1lab.config(text = "Max Ch A" ) # change displayed value
+        amp1lab.config(text = "Min" ) # change displayed value
+        off1lab.config(text = "Max" ) # change displayed value
     else:
-        amp1lab.config(text = "Amp Ch A" )
-        off1lab.config(text = "Off Ch A" )
+        amp1lab.config(text = "Amp" )
+        off1lab.config(text = "Off" )
         
     if AWGAFreqvalue > 0.0:
         AWGAperiodvalue = AWGSAMPLErate/AWGAFreqvalue
@@ -11309,8 +11357,8 @@ def BAWGBModeLabel():
                 AWGBMode.set(1)
                 CHB.set_mode('i') # channel must be in source current mode for rev D boards
                 label_txt = "SIMV"
-        label_txt = label_txt + " Split I/O"
-    label_txt = label_txt + " Mode"
+        label_txt = label_txt + ", Split I/O"
+    #label_txt = label_txt + " Mode"
     AWGBModeLabel.config(text = label_txt ) # change displayed value
     ReMakeAWGwaves()
     #UpdateAwgCont()
@@ -11326,11 +11374,11 @@ def UpdateAWGB():
     global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
     
     if AWG_Amp_Mode.get() == 0: # 0 = Min/Max mode, 1 = Amp/Offset
-        amp2lab.config(text = "Min Ch B" ) # change displayed value
-        off2lab.config(text = "Max Ch B" ) # change displayed value
+        amp2lab.config(text = "Min" ) # change displayed value
+        off2lab.config(text = "Max" ) # change displayed value
     else:
-        amp2lab.config(text = "Amp Ch B" )
-        off2lab.config(text = "Off Ch B" )
+        amp2lab.config(text = "Amp" )
+        off2lab.config(text = "Off" )
 #
     if AWG_2X.get() == 1:
         AWGBWave = 'arbitrary'
@@ -11761,7 +11809,7 @@ def BStartSA():
     else:
         if PowerStatus == 0:
             PowerStatus = 1
-            PwrBt.config(style="Pwr.TButton",text="PWR-On")
+            PwrBt.config(style="Green.TButton",text="PWR-On")
             devx.ctrl_transfer( 0x40, 0x51, 49, 0, 0, 0, 100) # turn on analog power
 
         if (ShowC1_VdB.get() == 0 and
@@ -11934,7 +11982,7 @@ def BStartBP():
     else:
         if PowerStatus == 0:
             PowerStatus = 1
-            PwrBt.config(style="Pwr.TButton",text="PWR-On")
+            PwrBt.config(style="Green.TButton",text="PWR-On")
             devx.ctrl_transfer( 0x40, 0x51, 49, 0, 0, 0, 100) # turn on analog power
 
         if ShowCA_VdB.get() == 0 and ShowCB_VdB.get() == 0 and ShowMathBP.get() == 0:
@@ -13807,7 +13855,7 @@ def MakeIAWindow():
         dropmenu = Frame( frame2iar )
         dropmenu.pack(side=TOP)
         # File menu 
-        IAFilemenu = Menubutton(dropmenu, text="File", style="W5.TButton")
+        IAFilemenu = Menubutton(dropmenu, text="File", style="Default.TButton", width=5)
         IAFilemenu.menu = Menu(IAFilemenu, tearoff = 0 )
         IAFilemenu["menu"] = IAFilemenu.menu
         IAFilemenu.menu.add_command(label="Save Config", command=BSaveConfigIA)
@@ -13819,7 +13867,7 @@ def MakeIAWindow():
         IAFilemenu.menu.add_command(label="Help", command=BHelp)
         IAFilemenu.pack(side=LEFT, anchor=W)
         #
-        IAOptionmenu = Menubutton(dropmenu, text="Options", style="W8.TButton")
+        IAOptionmenu = Menubutton(dropmenu, text="Options", style="Default.TButton", width=8)
         IAOptionmenu.menu = Menu(IAOptionmenu, tearoff = 0 )
         IAOptionmenu["menu"]  = IAOptionmenu.menu
         IAOptionmenu.menu.add_command(label='Change Settings', command=MakeSettingsMenu)
@@ -13841,12 +13889,12 @@ def MakeIAWindow():
         #
         rsemenu = Frame( frame2iar )
         rsemenu.pack(side=TOP)
-        rseb2 = Button(rsemenu, text="Stop", style="Stop.TButton", command=BStop)
+        rseb2 = Button(rsemenu, text="Stop", style="Red.TButton", command=BStop)
         rseb2.pack(side=RIGHT)
-        rseb3 = Button(rsemenu, text="Run", style="Run.TButton", command=BStartIA)
+        rseb3 = Button(rsemenu, text="Run", style="Green.TButton", command=BStartIA)
         rseb3.pack(side=RIGHT)
         #
-        IAFFTwindmenu = Menubutton(frame2iar, text="FFTwindow", style="W11.TButton")
+        IAFFTwindmenu = Menubutton(frame2iar, text="FFTwindow", style="Default.TButton", width=11)
         IAFFTwindmenu.menu = Menu(IAFFTwindmenu, tearoff = 0 )
         IAFFTwindmenu["menu"]  = IAFFTwindmenu.menu
         IAFFTwindmenu.menu.add_radiobutton(label='Rectangular window (B=1)', variable=FFTwindow, value=0)
@@ -13860,9 +13908,9 @@ def MakeIAWindow():
         #
         smpmenu = Frame( frame2iar )
         smpmenu.pack(side=TOP)
-        smpb1 = Button(smpmenu, text="-Samples", style="W8.TButton", command=Bsamples1)
+        smpb1 = Button(smpmenu, text="-Samples", style="Default.TButton", width=8, command=Bsamples1)
         smpb1.pack(side=LEFT)
-        smpb2 = Button(smpmenu, text="+Samples", style="W8.TButton", command=Bsamples2)
+        smpb2 = Button(smpmenu, text="+Samples", style="Default.TButton", width=8, command=Bsamples2)
         smpb2.pack(side=LEFT)
         # Temp set source resistance to 1000
         rsystem = Frame( frame2iar )
@@ -13926,7 +13974,7 @@ def MakeIAWindow():
         extsrc2 = Radiobutton(frame2iar, text="External", variable=IASource, value=1, command=IASourceSet)
         extsrc2.pack(side=TOP)
         
-        dismiss1button = Button(frame2iar, text="Dismiss", style="W8.TButton", command=DestroyIAScreen)
+        dismiss1button = Button(frame2iar, text="Dismiss", style="Default.TButton", width=8, command=DestroyIAScreen)
         dismiss1button.pack(side=TOP)
         # add ADI logo 
         ADI1 = Label(frame2iar, image=logo, anchor= "sw", compound="top") #  height=49, width=116,
@@ -14281,41 +14329,41 @@ def VAtoggle():
     global vat_btn
 
     if vat_btn.config('text')[-1] == 'ON':
-        vat_btn.config(text='OFF', style="Stop.TButton")
+        vat_btn.config(text='OFF', style="Red.TButton")
     else:
-        vat_btn.config(text='ON', style="Run.TButton")
+        vat_btn.config(text='ON', style="Green.TButton")
 #
 def VABtoggle():
     global vabt_btn
 
     if vabt_btn.config('text')[-1] == 'ON':
-        vabt_btn.config(text='OFF', style="Stop.TButton")
+        vabt_btn.config(text='OFF', style="Red.TButton")
     else:
-        vabt_btn.config(text='ON', style="Run.TButton")
+        vabt_btn.config(text='ON', style="Green.TButton")
 #
 def VBtoggle():
     global vbt_btn
 
     if vbt_btn.config('text')[-1] == 'ON':
-        vbt_btn.config(text='OFF', style="Stop.TButton")
+        vbt_btn.config(text='OFF', style="Red.TButton")
     else:
-        vbt_btn.config(text='ON', style="Run.TButton")
+        vbt_btn.config(text='ON', style="Green.TButton")
 #
 def IAtoggle():
     global iat_btn
 
     if iat_btn.config('text')[-1] == 'ON':
-        iat_btn.config(text='OFF', style="Stop.TButton")
+        iat_btn.config(text='OFF', style="Red.TButton")
     else:
-        iat_btn.config(text='ON', style="Run.TButton")
+        iat_btn.config(text='ON', style="Green.TButton")
 #
 def IBtoggle():
     global ibt_btn
 
     if ibt_btn.config('text')[-1] == 'ON':
-        ibt_btn.config(text='OFF', style="Stop.TButton")
+        ibt_btn.config(text='OFF', style="Red.TButton")
     else:
-        ibt_btn.config(text='ON', style="Run.TButton")
+        ibt_btn.config(text='ON', style="Green.TButton")
 #
 # ================ Make Phase Ana Window ==========================
 def MakePhAWindow():
@@ -14354,7 +14402,7 @@ def MakePhAWindow():
         dropmenu = Frame( frame2phar )
         dropmenu.pack(side=TOP)
         # File menu 
-        PhAFilemenu = Menubutton(dropmenu, text="File", style="W5.TButton")
+        PhAFilemenu = Menubutton(dropmenu, text="File", style="Default.TButton", width=5)
         PhAFilemenu.menu = Menu(PhAFilemenu, tearoff = 0 )
         PhAFilemenu["menu"] = PhAFilemenu.menu
         PhAFilemenu.menu.add_command(label="Save Config", command=BSaveConfigIA)
@@ -14367,7 +14415,7 @@ def MakePhAWindow():
         PhAFilemenu.menu.add_command(label="Help", command=BHelp)
         PhAFilemenu.pack(side=LEFT, anchor=W)
         #
-        PhAOptionmenu = Menubutton(dropmenu, text="Options", style="W8.TButton")
+        PhAOptionmenu = Menubutton(dropmenu, text="Options", style="Default.TButton", width=8)
         PhAOptionmenu.menu = Menu(PhAOptionmenu, tearoff = 0 )
         PhAOptionmenu["menu"]  = PhAOptionmenu.menu
         PhAOptionmenu.menu.add_command(label='Change Settings', command=MakeSettingsMenu)
@@ -14381,12 +14429,12 @@ def MakePhAWindow():
         #
         rsphmenu = Frame( frame2phar )
         rsphmenu.pack(side=TOP)
-        rsphb2 = Button(rsphmenu, text="Stop", style="Stop.TButton", command=BStop)
+        rsphb2 = Button(rsphmenu, text="Stop", style="Red.TButton", command=BStop)
         rsphb2.pack(side=RIGHT)
-        rsphb3 = Button(rsphmenu, text="Run", style="Run.TButton", command=BStart)
+        rsphb3 = Button(rsphmenu, text="Run", style="Green.TButton", command=BStart)
         rsphb3.pack(side=RIGHT)
         #
-        PhAFFTwindmenu = Menubutton(frame2phar, text="FFTwindow", style="W11.TButton")
+        PhAFFTwindmenu = Menubutton(frame2phar, text="FFTwindow", style="Default.TButton", width=11)
         PhAFFTwindmenu.menu = Menu(PhAFFTwindmenu, tearoff = 0 )
         PhAFFTwindmenu["menu"]  = PhAFFTwindmenu.menu
         PhAFFTwindmenu.menu.add_radiobutton(label='Rectangular window (B=1)', variable=FFTwindow, value=0)
@@ -14402,9 +14450,9 @@ def MakePhAWindow():
         #
         smphmenu = Frame( frame2phar )
         smphmenu.pack(side=TOP)
-        smphb1 = Button(smphmenu, text="-Samples", style="W8.TButton", command=Bsamples1)
+        smphb1 = Button(smphmenu, text="-Samples", style="Default.TButton", width=8, command=Bsamples1)
         smphb1.pack(side=LEFT)
-        smphb2 = Button(smphmenu, text="+Samples", style="W8.TButton", command=Bsamples2)
+        smphb2 = Button(smphmenu, text="+Samples", style="Default.TButton", width=8, command=Bsamples2)
         smphb2.pack(side=LEFT)
         # 
         refph = Frame( frame2phar )
@@ -14422,32 +14470,32 @@ def MakePhAWindow():
         vatb.pack(side=TOP)
         vatblab = Label(vatb, text="CA-V ")
         vatblab.pack(side=LEFT)
-        vat_btn = Button(vatb, text="OFF", style="Stop.TButton", width=4, command=VAtoggle)
+        vat_btn = Button(vatb, text="OFF", style="Red.TButton", width=4, command=VAtoggle)
         vat_btn.pack(side=LEFT)
         vbtb = Frame( frame2phar )
         vbtb.pack(side=TOP)
         if MuxScreenStatus.get() == 0:
             vbtblab = Label(vbtb, text="CB-V ")
             vbtblab.pack(side=LEFT)
-            vbt_btn = Button(vbtb, text="OFF", style="Stop.TButton", width=4, command=VBtoggle)
+            vbt_btn = Button(vbtb, text="OFF", style="Red.TButton", width=4, command=VBtoggle)
             vbt_btn.pack(side=LEFT)
             vabtb = Frame( frame2phar )
             vabtb.pack(side=TOP)
             vabtblab = Label(vabtb, text="CA-B V ")
             vabtblab.pack(side=LEFT)
-            vabt_btn = Button(vabtb, text="OFF", style="Stop.TButton", width=4, command=VABtoggle)
+            vabt_btn = Button(vabtb, text="OFF", style="Red.TButton", width=4, command=VABtoggle)
             vabt_btn.pack(side=LEFT)
         else:
             RefphEntry.configure(state=DISABLED)
             amuxlab = Label(frame2phar, text="Analog Mux In")
             amuxlab.pack(side=TOP)
-            phbt1 = Checkbutton(frame2phar, text='CB-A ', style="Strace2.TCheckbutton", variable=ShowPB_A)
+            phbt1 = Checkbutton(frame2phar, text='CB-A ', style="Rtrace2.TCheckbutton", variable=ShowPB_A)
             phbt1.pack(side=TOP)
-            phbt2 = Checkbutton(frame2phar, text='CB-B ', style="Strace6.TCheckbutton", variable=ShowPB_B) #, command=TraceSelectADC_Mux)
+            phbt2 = Checkbutton(frame2phar, text='CB-B ', style="Rtrace6.TCheckbutton", variable=ShowPB_B) #, command=TraceSelectADC_Mux)
             phbt2.pack(side=TOP)
-            phbt3 = Checkbutton(frame2phar, text='CB-C ', style="Strace7.TCheckbutton", variable=ShowPB_C) #, command=TraceSelectADC_Mux)
+            phbt3 = Checkbutton(frame2phar, text='CB-C ', style="Rtrace7.TCheckbutton", variable=ShowPB_C) #, command=TraceSelectADC_Mux)
             phbt3.pack(side=TOP)
-            phbt4 = Checkbutton(frame2phar, text='CB-D ', style="Strace4.TCheckbutton", variable=ShowPB_D) #, command=TraceSelectADC_Mux)
+            phbt4 = Checkbutton(frame2phar, text='CB-D ', style="Rtrace4.TCheckbutton", variable=ShowPB_D) #, command=TraceSelectADC_Mux)
             phbt4.pack(side=TOP)
 #
         # Voltage Scale Spinbox
@@ -14467,13 +14515,13 @@ def MakePhAWindow():
         iatb.pack(side=TOP)
         iatblab = Label(iatb, text="CA-I ")
         iatblab.pack(side=LEFT)
-        iat_btn = Button(iatb, text="OFF", style="Stop.TButton", width=4, command=IAtoggle)
+        iat_btn = Button(iatb, text="OFF", style="Red.TButton", width=4, command=IAtoggle)
         iat_btn.pack(side=LEFT)
         ibtb = Frame( frame2phar )
         ibtb.pack(side=TOP)
         ibtblab = Label(ibtb, text="CB-I ")
         ibtblab.pack(side=LEFT)
-        ibt_btn = Button(ibtb, text="OFF", style="Stop.TButton", width=4, command=IBtoggle)
+        ibt_btn = Button(ibtb, text="OFF", style="Red.TButton", width=4, command=IBtoggle)
         ibt_btn.pack(side=LEFT)
         # Current Scale Spinbox
         issb = Frame( frame2phar )
@@ -14488,7 +14536,7 @@ def MakePhAWindow():
         IScale.delete(0,"end")
         IScale.insert(0,10.0)
         
-        dismiss1button = Button(frame2phar, text="Dismiss", style="W8.TButton", command=DestroyPhAScreen)
+        dismiss1button = Button(frame2phar, text="Dismiss", style="Default.TButton", width=8, command=DestroyPhAScreen)
         dismiss1button.pack(side=TOP)
         # add ADI logo 
         ADI1 = Label(frame2phar, image=logo, anchor= "sw", compound="top") #  height=49, width=116,
@@ -16430,24 +16478,32 @@ def MakeAWGWindow():
     global AwgLayout, AWG_Amp_Mode, awgsync, SWRev # 0 = Min/Max mode, 1 = Amp/Offset
     global amp1lab, amp2lab, off1lab, off2lab, Reset_Freq, AWG_2X, BisCompA, FWRevOne
     
+    global frame2r
+    global simpleInterface
+
     if AWGScreenStatus.get() == 0:
         AWGScreenStatus.set(1)
         
-        awgwindow = Toplevel()
-        awgwindow.title("AWG Controls " + SWRev + RevDate)
-        awgwindow.resizable(FALSE,FALSE)
-        awgwindow.geometry('+0+100')
-        awgwindow.protocol("WM_DELETE_WINDOW", DestroyAWGScreen)
-        #
-        frame2 = LabelFrame(awgwindow, text="AWG CH A", style="A10R1.TLabelframe")
-        frame3 = LabelFrame(awgwindow, text="AWG CH B", style="A10R2.TLabelframe")
-        #
-        if AwgLayout == "Horz":
-            frame2.pack(side=LEFT, expand=1, fill=X)
-            frame3.pack(side=LEFT, expand=1, fill=X)
+        
+        if (simpleInterface == 1):
+            frame2 = LabelFrame(frame2r, text="Canal A")
+            frame3 = LabelFrame(frame2r, text="Canal B")
+            frame2.pack(side=TOP, fill=X)
+            frame3.pack(side=TOP, fill=X)
         else:
-            frame2.pack(side=TOP, expand=1, fill=Y)
-            frame3.pack(side=TOP, expand=1, fill=Y)
+            awgwindow = Toplevel()
+            awgwindow.title("AWG Controls " + SWRev + RevDate)
+            awgwindow.resizable(FALSE,FALSE)
+            awgwindow.geometry('+0+100')
+            awgwindow.protocol("WM_DELETE_WINDOW", DestroyAWGScreen)
+            frame2 = LabelFrame(awgwindow, text="AWG CH A", style="A10R1.TLabelframe")
+            frame3 = LabelFrame(awgwindow, text="AWG CH B", style="A10R2.TLabelframe")
+            if AwgLayout == "Horz":
+                frame2.pack(side=LEFT, expand=1, fill=X)
+                frame3.pack(side=LEFT, expand=1, fill=X)
+            else:
+                frame2.pack(side=TOP, expand=1, fill=Y)
+                frame3.pack(side=TOP, expand=1, fill=Y)
         # now AWG A
         # AWG enable sub frame
         AWGAMode = IntVar(0)   # AWG A mode variable
@@ -16460,32 +16516,43 @@ def MakeAWGWindow():
         AWGAMode.set(2)
         AWGSync = IntVar(0) # Sync start both AWG channels
         AWGSync.set(1)
-        awg1eb = Frame( frame2 )
-        awg1eb.pack(side=TOP)
-        ModeAMenu = Menubutton(awg1eb, text="Mode", style="W5.TButton")
+
+        awg1mode = Frame( frame2 )
+        awg1mode.pack(side=TOP,fill =X)
+        ModeAMenu = Menubutton(awg1mode, text="Modo", style="Default.TButton", width=8)
         ModeAMenu.menu = Menu(ModeAMenu, tearoff = 0 )
         ModeAMenu["menu"] = ModeAMenu.menu
         ModeAMenu.menu.add_command(label="-Mode-", foreground="blue", command=donothing)
         ModeAMenu.menu.add_radiobutton(label="SVMI", variable=AWGAMode, value=0, command=BAWGAModeLabel)
         ModeAMenu.menu.add_radiobutton(label="SIMV", variable=AWGAMode, value=1, command=BAWGAModeLabel)
         ModeAMenu.menu.add_radiobutton(label="Hi-Z", variable=AWGAMode, value=2, command=BAWGAModeLabel)
-        ModeAMenu.menu.add_checkbutton(label="Split I/O", variable=AWGAIOMode, command=BAWGAModeLabel)
         ModeAMenu.menu.add_separator()
-        ModeAMenu.menu.add_command(label="-Term-", foreground="blue", command=donothing)
-        ModeAMenu.menu.add_radiobutton(label="Open", variable=AWGATerm, value=0, command=UpdateAwgCont)
-        ModeAMenu.menu.add_radiobutton(label="To GND", variable=AWGATerm, value=1, command=UpdateAwgCont)
-        ModeAMenu.menu.add_radiobutton(label="To 2.5V", variable=AWGATerm, value=2, command=UpdateAwgCont)
-        ModeAMenu.pack(side=LEFT, anchor=W)
-        ShapeAMenu = Menubutton(awg1eb, text="Shape", style="W6.TButton")
+        ModeAMenu.menu.add_checkbutton(label="Split I/O", variable=AWGAIOMode, command=BAWGAModeLabel)
+        if (simpleInterface == 0): 
+            ModeAMenu.menu.add_separator()
+            ModeAMenu.menu.add_command(label="-Term-", foreground="blue", command=donothing)
+            ModeAMenu.menu.add_radiobutton(label="Open", variable=AWGATerm, value=0, command=UpdateAwgCont)
+            ModeAMenu.menu.add_radiobutton(label="To GND", variable=AWGATerm, value=1, command=UpdateAwgCont)
+            ModeAMenu.menu.add_radiobutton(label="To 2.5V", variable=AWGATerm, value=2, command=UpdateAwgCont)
+        ModeAMenu.pack(side=LEFT, anchor=W,padx=1,pady=1)
+        
+        AWGAModeLabel = Label(awg1mode, text="AWG A Mode")
+        AWGAModeLabel.pack(side=LEFT)
+
+        awg1shape = Frame( frame2 )
+        awg1shape.pack(side=TOP,fill =X)
+
+        ShapeAMenu = Menubutton(awg1shape, text="Curva", style="Default.TButton", width=8)
         ShapeAMenu.menu = Menu(ShapeAMenu, tearoff = 0 )
         ShapeAMenu["menu"] = ShapeAMenu.menu
-        ShapeAMenu.menu.add_command(label="-Basic-", foreground="blue", command=donothing)
+        if (simpleInterface == 0): 
+            ShapeAMenu.menu.add_command(label="-Basic-", foreground="blue", command=donothing)
         ShapeAMenu.menu.add_radiobutton(label="DC", variable=AWGAShape, value=0, command=ReMakeAWGwaves)
-        ShapeAMenu.menu.add_radiobutton(label="Sine", variable=AWGAShape, value=18, command=ReMakeAWGwaves)
-        ShapeAMenu.menu.add_radiobutton(label="Triangle", variable=AWGAShape, value=2, command=ReMakeAWGwaves)
-        ShapeAMenu.menu.add_radiobutton(label="Sawtooth", variable=AWGAShape, value=3, command=ReMakeAWGwaves)
-        ShapeAMenu.menu.add_radiobutton(label="Square", variable=AWGAShape, value=4, command=ReMakeAWGwaves)
-        ShapeAMenu.menu.add_radiobutton(label="StairStep", variable=AWGAShape, value=5, command=ReMakeAWGwaves)
+        ShapeAMenu.menu.add_radiobutton(label="Seno", variable=AWGAShape, value=18, command=ReMakeAWGwaves)
+        ShapeAMenu.menu.add_radiobutton(label="Triangulo", variable=AWGAShape, value=2, command=ReMakeAWGwaves)
+        ShapeAMenu.menu.add_radiobutton(label="Dente de Serra", variable=AWGAShape, value=3, command=ReMakeAWGwaves)
+        ShapeAMenu.menu.add_radiobutton(label="Quadrada", variable=AWGAShape, value=4, command=ReMakeAWGwaves)
+        ShapeAMenu.menu.add_radiobutton(label="Escada", variable=AWGAShape, value=5, command=ReMakeAWGwaves)
         if AWGShowAdvanced.get() > 0:
             ShapeAMenu.menu.add_command(label="-Advanced-", foreground="blue", command=donothing)
             ShapeAMenu.menu.add_radiobutton(label="Impulse", variable=AWGAShape, value=9, command=ReMakeAWGwaves)
@@ -16502,78 +16569,90 @@ def MakeAWGWindow():
             ShapeAMenu.menu.add_radiobutton(label="UU Noise", variable=AWGAShape, value=7, command=ReMakeAWGwaves)
             ShapeAMenu.menu.add_radiobutton(label="UG Noise", variable=AWGAShape, value=8, command=ReMakeAWGwaves)
         else:
-            ShapeAMenu.menu.add_separator()
-        ShapeAMenu.menu.add_radiobutton(label="Math", variable=AWGAShape, value=10, command=AWGAMakeMath)
-        ShapeAMenu.menu.add_radiobutton(label="Read CSV File", variable=AWGAShape, value=6, command=AWGAReadFile)
-        ShapeAMenu.menu.add_radiobutton(label="Read WAV File", variable=AWGAShape, value=13, command=AWGAReadWAV)
-        ShapeAMenu.menu.add_command(label="Save CSV File", command=AWGAWriteFile)
-        ShapeAMenu.menu.add_checkbutton(label='Burst', variable=AWGABurstFlag, command=AWGANumCycles)
-        ShapeAMenu.menu.add_checkbutton(label='Repeat', variable=AWGARepeatFlag)
-        ShapeAMenu.pack(side=LEFT, anchor=W)
+            if (simpleInterface == 0): 
+                ShapeAMenu.menu.add_separator()
+        if (simpleInterface == 0):    
+            ShapeAMenu.menu.add_radiobutton(label="Math", variable=AWGAShape, value=10, command=AWGAMakeMath)
+            ShapeAMenu.menu.add_radiobutton(label="Read CSV File", variable=AWGAShape, value=6, command=AWGAReadFile)
+            ShapeAMenu.menu.add_radiobutton(label="Read WAV File", variable=AWGAShape, value=13, command=AWGAReadWAV)
+            ShapeAMenu.menu.add_command(label="Save CSV File", command=AWGAWriteFile)
+            ShapeAMenu.menu.add_checkbutton(label='Burst', variable=AWGABurstFlag, command=AWGANumCycles)
+            ShapeAMenu.menu.add_checkbutton(label='Repeat', variable=AWGARepeatFlag)
+        ShapeAMenu.pack(side=LEFT, anchor=W, padx=1,pady=1)
         #
-        AWGAModeLabel = Label(frame2, text="AWG A Mode")
-        AWGAModeLabel.pack(side=TOP)
-        AWGAShapeLabel = Label(frame2, text="AWG A Shape")
-        AWGAShapeLabel.pack(side=TOP)
+       
+        AWGAShapeLabel = Label(awg1shape, text="AWG A Shape")
+        AWGAShapeLabel.pack(side=LEFT)
         #
         awg1ampl = Frame( frame2 )
-        awg1ampl.pack(side=TOP)
+        awg1ampl.pack(side=TOP,fill=X)
+
+
+
+        
+        amp1lab = Label(awg1ampl) #, text="Min Ch A")
+        amp1lab.grid(row=0,column=0,sticky=E+S+N+W)
+        
         AWGAAmplEntry = Entry(awg1ampl, width=5, cursor='double_arrow')
         AWGAAmplEntry.bind("<Return>", UpdateAwgContRet)
         AWGAAmplEntry.bind('<MouseWheel>', onAWGAscroll)
         AWGAAmplEntry.bind("<Button-4>", onAWGAscroll)# with Linux OS
         AWGAAmplEntry.bind("<Button-5>", onAWGAscroll)
         AWGAAmplEntry.bind('<Key>', onTextKeyAWG)
-        AWGAAmplEntry.pack(side=LEFT, anchor=W)
+
+        AWGAAmplEntry.grid(row=1,column=0,sticky=E+S+N+W)
         AWGAAmplEntry.delete(0,"end")
         AWGAAmplEntry.insert(0,0.0)
-        amp1lab = Label(awg1ampl) #, text="Min Ch A")
-        amp1lab.pack(side=LEFT, anchor=W)
-        #
-        awg1off = Frame( frame2 )
-        awg1off.pack(side=TOP)
-        AWGAOffsetEntry = Entry(awg1off, width=5, cursor='double_arrow')
+        
+      
+        
+        off1lab = Label(awg1ampl) #, text="Max Ch A")
+        off1lab.grid(row=0,column=1,sticky=E+S+N+W)
+        
+        AWGAOffsetEntry = Entry(awg1ampl, width=5, cursor='double_arrow')
         AWGAOffsetEntry.bind("<Return>", UpdateAwgContRet)
         AWGAOffsetEntry.bind('<MouseWheel>', onAWGAscroll)
         AWGAOffsetEntry.bind("<Button-4>", onAWGAscroll)# with Linux OS
         AWGAOffsetEntry.bind("<Button-5>", onAWGAscroll)
         AWGAOffsetEntry.bind('<Key>', onTextKeyAWG)
-        AWGAOffsetEntry.pack(side=LEFT, anchor=W)
+
+        AWGAOffsetEntry.grid(row=1,column=1,sticky=E+S+N+W)
         AWGAOffsetEntry.delete(0,"end")
         AWGAOffsetEntry.insert(0,0.0)
-        off1lab = Label(awg1off) #, text="Max Ch A")
-        off1lab.pack(side=LEFT, anchor=W)
         if AWG_Amp_Mode.get() == 0:
-            amp1lab.config(text = "Min Ch A" ) # change displayed value
-            off1lab.config(text = "Max Ch A" ) # change displayed value
+            amp1lab.config(text = "Min" ) # change displayed value
+            off1lab.config(text = "Max" ) # change displayed value
         else:
-            amp1lab.config(text = "Amp Ch A" )
-            off1lab.config(text = "Off Ch A" )
+            amp1lab.config(text = "Amp" )
+            off1lab.config(text = "Off" )
         # AWG Frequency sub frame
-        awg1freq = Frame( frame2 )
-        awg1freq.pack(side=TOP)
-        AWGAFreqEntry = Entry(awg1freq, width=7, cursor='double_arrow')
+        
+        freq1lab = Label(awg1ampl, text="Freq")
+        freq1lab.grid(row=0,column=2,sticky=E+S+N+W)
+        AWGAFreqEntry = Entry(awg1ampl, width=7, cursor='double_arrow')
         AWGAFreqEntry.bind("<Return>", UpdateAwgContRet)
         AWGAFreqEntry.bind('<MouseWheel>', onAWGAscroll)
         AWGAFreqEntry.bind("<Button-4>", onAWGAscroll)# with Linux OS
         AWGAFreqEntry.bind("<Button-5>", onAWGAscroll)
         AWGAFreqEntry.bind('<Key>', onTextKeyAWG)
-        AWGAFreqEntry.pack(side=LEFT, anchor=W)
+
+        AWGAFreqEntry.grid(row=1,column=2,sticky=E+S+N+W)
         AWGAFreqEntry.delete(0,"end")
         AWGAFreqEntry.insert(0,100.0)
-        freq1lab = Label(awg1freq, text="Freq Ch A")
-        freq1lab.pack(side=LEFT, anchor=W)
+        
         # AWG Phase or delay select sub frame
         AWGAPhaseDelay = IntVar(0) # 
         awgadelay = Frame( frame2 )
-        awgadelay.pack(side=TOP)
+        if (simpleInterface == 0):
+            awgadelay.pack(side=TOP)
         awgaph = Radiobutton(awgadelay, text="Phase", style="WPhase.TRadiobutton", variable=AWGAPhaseDelay, value=0, command=BAWGAPhaseDelay)
         awgaph.pack(side=LEFT, anchor=W)
         awgadel = Radiobutton(awgadelay, text="Delay", style="GPhase.TRadiobutton", variable=AWGAPhaseDelay, value=1, command=BAWGAPhaseDelay)
         awgadel.pack(side=LEFT, anchor=W)
         # AWG Phase entry sub frame
         awg1phase = Frame( frame2 )
-        awg1phase.pack(side=TOP)
+        if (simpleInterface == 0):
+            awg1phase.pack(side=TOP)
         AWGAPhaseEntry = Entry(awg1phase, width=5, cursor='double_arrow')
         AWGAPhaseEntry.bind("<Return>", UpdateAwgContRet)
         AWGAPhaseEntry.bind('<MouseWheel>', onAWGAscroll)
@@ -16587,7 +16666,8 @@ def MakeAWGWindow():
         phasealab.pack(side=LEFT, anchor=W)
         # AWG duty cycle frame
         awg1dc = Frame( frame2 )
-        awg1dc.pack(side=TOP)
+        if (simpleInterface == 0):
+            awg1dc.pack(side=TOP)
         AWGADutyCycleEntry = Entry(awg1dc, width=5, cursor='double_arrow')
         AWGADutyCycleEntry.bind("<Return>", UpdateAwgContRet)
         AWGADutyCycleEntry.bind('<MouseWheel>', onAWGAscroll)
@@ -16601,19 +16681,24 @@ def MakeAWGWindow():
         duty1lab.pack(side=LEFT, anchor=W)
         #
         AWGALength = Label(frame2, text="Length")
-        AWGALength.pack(side=TOP)
+        if (simpleInterface == 0):
+            AWGALength.pack(side=TOP)
         #
-        if FWRevOne > 2.16:
-            awg2x1 = Radiobutton(frame2, text="Both CH 1X", variable=AWG_2X, value=0, command=BAWG2X)
-            awg2x1.pack(side=TOP)
-            awg2x2 = Radiobutton(frame2, text="CH A 2X", variable=AWG_2X, value=1, command=BAWG2X)
-            awg2x2.pack(side=TOP)
-            awg2x3 = Radiobutton(frame2, text="CH B 2X", variable=AWG_2X, value=2, command=BAWG2X)
-            awg2x3.pack(side=TOP)
-        else:
-            awgsync = Checkbutton(frame2, text="Sync AWG", variable=AWGSync, command=BAWGSync)
-            awgsync.pack(side=TOP)
+        if (simpleInterface == 0):
+            if FWRevOne > 2.16:
+                awg2x1 = Radiobutton(frame2, text="Both CH 1X", variable=AWG_2X, value=0, command=BAWG2X)
+                awg2x1.pack(side=TOP)
+                awg2x2 = Radiobutton(frame2, text="CH A 2X", variable=AWG_2X, value=1, command=BAWG2X)
+                awg2x2.pack(side=TOP)
+                awg2x3 = Radiobutton(frame2, text="CH B 2X", variable=AWG_2X, value=2, command=BAWG2X)
+                awg2x3.pack(side=TOP)
+            else:
+                awgsync = Checkbutton(frame2, text="Sync AWG", variable=AWGSync, command=BAWGSync)
+                awgsync.pack(side=TOP)
+        
+        ##################################################################################
         # now AWG B
+        ##################################################################################
         # AWG enable sub frame
         AWGBMode = IntVar(0)   # AWG B mode variable
         AWGBIOMode = IntVar(0)   # AWG B Split I/O mode variable
@@ -16621,32 +16706,43 @@ def MakeAWGWindow():
         AWGBShape = IntVar(0)  # AWG B Wave shape variable
         AWGBRepeatFlag = IntVar(0) # AWG B Arb shape repeat flag
         AWGBMode.set(2)
-        awg2eb = Frame( frame3 )
-        awg2eb.pack(side=TOP)
-        ModeBMenu = Menubutton(awg2eb, text="Mode", style="W5.TButton")
+        awg2mode = Frame( frame3 )
+        awg2mode.pack(side=TOP,fill=X)
+        
+        ModeBMenu = Menubutton(awg2mode, text="Modo", style="Default.TButton", width=8)
         ModeBMenu.menu = Menu(ModeBMenu, tearoff = 0 )
         ModeBMenu["menu"] = ModeBMenu.menu
         ModeBMenu.menu.add_command(label="-Mode-", foreground="blue", command=donothing)
         ModeBMenu.menu.add_radiobutton(label="SVMI", variable=AWGBMode, value=0, command=BAWGBModeLabel)
         ModeBMenu.menu.add_radiobutton(label="SIMV", variable=AWGBMode, value=1, command=BAWGBModeLabel)
         ModeBMenu.menu.add_radiobutton(label="Hi-Z", variable=AWGBMode, value=2, command=BAWGBModeLabel)
-        ModeBMenu.menu.add_checkbutton(label="Split I/O", variable=AWGBIOMode, command=BAWGBModeLabel)
         ModeBMenu.menu.add_separator()
-        ModeBMenu.menu.add_command(label="-Term-", foreground="blue", command=donothing)
-        ModeBMenu.menu.add_radiobutton(label="Open", variable=AWGBTerm, value=0, command=UpdateAwgCont)
-        ModeBMenu.menu.add_radiobutton(label="To GND", variable=AWGBTerm, value=1, command=UpdateAwgCont)
-        ModeBMenu.menu.add_radiobutton(label="To 2.5V", variable=AWGBTerm, value=2, command=UpdateAwgCont)
-        ModeBMenu.pack(side=LEFT, anchor=W)
-        ShapeBMenu = Menubutton(awg2eb, text="Shape", style="W6.TButton")
+        ModeBMenu.menu.add_checkbutton(label="Split I/O", variable=AWGBIOMode, command=BAWGBModeLabel)
+        if (simpleInterface == 0): 
+            ModeBMenu.menu.add_separator()
+            ModeBMenu.menu.add_command(label="-Term-", foreground="blue", command=donothing)
+            ModeBMenu.menu.add_radiobutton(label="Open", variable=AWGBTerm, value=0, command=UpdateAwgCont)
+            ModeBMenu.menu.add_radiobutton(label="To GND", variable=AWGBTerm, value=1, command=UpdateAwgCont)
+            ModeBMenu.menu.add_radiobutton(label="To 2.5V", variable=AWGBTerm, value=2, command=UpdateAwgCont)
+        ModeBMenu.pack(side=LEFT, anchor=W,padx=1,pady=1)
+
+        AWGBModeLabel = Label(awg2mode, text="AWG B Mode")
+        AWGBModeLabel.pack(side=LEFT)
+
+        awg2shape = Frame( frame3 )
+        awg2shape.pack(side=TOP,fill=X)
+
+        ShapeBMenu = Menubutton(awg2shape, text="Curva", style="Default.TButton", width=8)
         ShapeBMenu.menu = Menu(ShapeBMenu, tearoff = 0 )
         ShapeBMenu["menu"] = ShapeBMenu.menu
-        ShapeBMenu.menu.add_command(label="-Basic-", foreground="blue", command=donothing)
+        if (simpleInterface == 0):
+            ShapeBMenu.menu.add_command(label="-Basic-", foreground="blue", command=donothing)
         ShapeBMenu.menu.add_radiobutton(label="DC", variable=AWGBShape, value=0, command=ReMakeAWGwaves)
-        ShapeBMenu.menu.add_radiobutton(label="Sine", variable=AWGBShape, value=18, command=ReMakeAWGwaves)
-        ShapeBMenu.menu.add_radiobutton(label="Triangle", variable=AWGBShape, value=2, command=ReMakeAWGwaves)
-        ShapeBMenu.menu.add_radiobutton(label="Sawtooth", variable=AWGBShape, value=3, command=ReMakeAWGwaves)
-        ShapeBMenu.menu.add_radiobutton(label="Square", variable=AWGBShape, value=4, command=ReMakeAWGwaves)
-        ShapeBMenu.menu.add_radiobutton(label="StairStep", variable=AWGBShape, value=5, command=ReMakeAWGwaves)
+        ShapeBMenu.menu.add_radiobutton(label="Seno", variable=AWGBShape, value=18, command=ReMakeAWGwaves)
+        ShapeBMenu.menu.add_radiobutton(label="Triangulo", variable=AWGBShape, value=2, command=ReMakeAWGwaves)
+        ShapeBMenu.menu.add_radiobutton(label="Dente de Serra", variable=AWGBShape, value=3, command=ReMakeAWGwaves)
+        ShapeBMenu.menu.add_radiobutton(label="Quadrada", variable=AWGBShape, value=4, command=ReMakeAWGwaves)
+        ShapeBMenu.menu.add_radiobutton(label="Escada", variable=AWGBShape, value=5, command=ReMakeAWGwaves)
         if AWGShowAdvanced.get() > 0:
             ShapeBMenu.menu.add_command(label="-Advanced-", foreground="blue", command=donothing)
             ShapeBMenu.menu.add_radiobutton(label="Impulse", variable=AWGBShape, value=9, command=ReMakeAWGwaves)
@@ -16661,78 +16757,83 @@ def MakeAWGWindow():
             ShapeBMenu.menu.add_radiobutton(label="UU Noise", variable=AWGBShape, value=7, command=ReMakeAWGwaves)
             ShapeBMenu.menu.add_radiobutton(label="UG Noise", variable=AWGBShape, value=8, command=ReMakeAWGwaves)
         else:
-            ShapeBMenu.menu.add_separator()
-        ShapeBMenu.menu.add_radiobutton(label="Math", variable=AWGBShape, value=10, command=AWGBMakeMath)
-        ShapeBMenu.menu.add_radiobutton(label="Read CSV File", variable=AWGBShape, value=6, command=AWGBReadFile)
-        ShapeBMenu.menu.add_radiobutton(label="Read WAV File", variable=AWGBShape, value=13, command=AWGBReadWAV)
-        ShapeBMenu.menu.add_command(label="Save CSV File", command=AWGBWriteFile)
-        ShapeBMenu.menu.add_checkbutton(label='Burst', variable=AWGBBurstFlag, command=AWGBNumCycles)
-        ShapeBMenu.menu.add_checkbutton(label='Repeat', variable=AWGBRepeatFlag)
-        ShapeBMenu.pack(side=LEFT, anchor=W)
+            if (simpleInterface == 0):
+                ShapeBMenu.menu.add_separator()
+        if (simpleInterface == 0):
+            ShapeBMenu.menu.add_radiobutton(label="Math", variable=AWGBShape, value=10, command=AWGBMakeMath)
+            ShapeBMenu.menu.add_radiobutton(label="Read CSV File", variable=AWGBShape, value=6, command=AWGBReadFile)
+            ShapeBMenu.menu.add_radiobutton(label="Read WAV File", variable=AWGBShape, value=13, command=AWGBReadWAV)
+            ShapeBMenu.menu.add_command(label="Save CSV File", command=AWGBWriteFile)
+            ShapeBMenu.menu.add_checkbutton(label='Burst', variable=AWGBBurstFlag, command=AWGBNumCycles)
+            ShapeBMenu.menu.add_checkbutton(label='Repeat', variable=AWGBRepeatFlag)
+        ShapeBMenu.pack(side=LEFT, anchor=W,padx=1,pady=1)
         #
-        AWGBModeLabel = Label(frame3, text="AWG B Mode")
-        AWGBModeLabel.pack(side=TOP)
-        AWGBShapeLabel = Label(frame3, text="AWG B Shape")
-        AWGBShapeLabel.pack(side=TOP)
+        AWGBShapeLabel = Label(awg2shape, text="AWG B Shape")
+        AWGBShapeLabel.pack(side=LEFT)
+
         #
         awg2ampl = Frame( frame3 )
-        awg2ampl.pack(side=TOP)
+        awg2ampl.pack(side=TOP,fill=X)
+
+        amp2lab = Label(awg2ampl) #, text="Min Ch B")
+        amp2lab.grid(row=0,column=0,sticky=E+S+N+W)
         AWGBAmplEntry = Entry(awg2ampl, width=5, cursor='double_arrow')
         AWGBAmplEntry.bind("<Return>", UpdateAwgContRet)
         AWGBAmplEntry.bind('<MouseWheel>', onAWGBscroll)
         AWGBAmplEntry.bind("<Button-4>", onAWGBscroll)# with Linux OS
         AWGBAmplEntry.bind("<Button-5>", onAWGBscroll)
         AWGBAmplEntry.bind('<Key>', onTextKeyAWG)
-        AWGBAmplEntry.pack(side=LEFT, anchor=W)
+        AWGBAmplEntry.grid(row=1,column=0,sticky=E+S+N+W)
         AWGBAmplEntry.delete(0,"end")
         AWGBAmplEntry.insert(0,0.0)
-        amp2lab = Label(awg2ampl) #, text="Min Ch B")
-        amp2lab.pack(side=LEFT, anchor=W)
         #
-        awg2off = Frame( frame3 )
-        awg2off.pack(side=TOP)
-        AWGBOffsetEntry = Entry(awg2off, width=5, cursor='double_arrow')
+    
+        off2lab = Label(awg2ampl) #, text="Max Ch B")
+        off2lab.grid(row=0,column=1,sticky=E+S+N+W)
+        
+        AWGBOffsetEntry = Entry(awg2ampl, width=5, cursor='double_arrow')
         AWGBOffsetEntry.bind("<Return>", UpdateAwgContRet)
         AWGBOffsetEntry.bind('<MouseWheel>', onAWGBscroll)
         AWGBOffsetEntry.bind("<Button-4>", onAWGBscroll)# with Linux OS
         AWGBOffsetEntry.bind("<Button-5>", onAWGBscroll)
         AWGBOffsetEntry.bind('<Key>', onTextKeyAWG)
-        AWGBOffsetEntry.pack(side=LEFT, anchor=W)
+        AWGBOffsetEntry.grid(row=1,column=1,sticky=E+S+N+W)
         AWGBOffsetEntry.delete(0,"end")
         AWGBOffsetEntry.insert(0,0.0)
-        off2lab = Label(awg2off) #, text="Max Ch B")
-        off2lab.pack(side=LEFT, anchor=W)
+        
         if AWG_Amp_Mode.get() == 0:
-            amp2lab.config(text = "Min Ch B" ) # change displayed value
-            off2lab.config(text = "Max Ch B" ) # change displayed value
+            amp2lab.config(text = "Min" ) # change displayed value
+            off2lab.config(text = "Max" ) # change displayed value
         else:
-            amp2lab.config(text = "Amp Ch B" )
-            off2lab.config(text = "Off Ch B" )
+            amp2lab.config(text = "Amp" )
+            off2lab.config(text = "Off" )
         # AWG Frequency sub frame
-        awg2freq = Frame( frame3 )
-        awg2freq.pack(side=TOP)
-        AWGBFreqEntry = Entry(awg2freq, width=7, cursor='double_arrow')
+      
+        freq2lab = Label(awg2ampl, text="Freq")
+        freq2lab.grid(row=0,column=2,sticky=E+S+N+W)
+        AWGBFreqEntry = Entry(awg2ampl, width=7, cursor='double_arrow')
         AWGBFreqEntry.bind("<Return>", UpdateAwgContRet)
         AWGBFreqEntry.bind('<MouseWheel>', onAWGBscroll)
         AWGBFreqEntry.bind("<Button-4>", onAWGBscroll)# with Linux OS
         AWGBFreqEntry.bind("<Button-5>", onAWGBscroll)
         AWGBFreqEntry.bind('<Key>', onTextKeyAWG)
-        AWGBFreqEntry.pack(side=LEFT, anchor=W)
+        AWGBFreqEntry.grid(row=1,column=2,sticky=E+S+N+W)
         AWGBFreqEntry.delete(0,"end")
         AWGBFreqEntry.insert(0,100.0)
-        freq2lab = Label(awg2freq, text="Freq Ch B")
-        freq2lab.pack(side=LEFT, anchor=W)
+        
         # AWG Phase or delay select sub frame
         AWGBPhaseDelay = IntVar(0) # 
         awgbdelay = Frame( frame3 )
-        awgbdelay.pack(side=TOP)
+        if (simpleInterface == 0):
+            awgbdelay.pack(side=TOP)
         awgbph = Radiobutton(awgbdelay, text="Phase", style="WPhase.TRadiobutton", variable=AWGBPhaseDelay, value=0, command=BAWGBPhaseDelay)
         awgbph.pack(side=LEFT, anchor=W)
         awgbdel = Radiobutton(awgbdelay, text="Delay", style="GPhase.TRadiobutton", variable=AWGBPhaseDelay, value=1, command=BAWGBPhaseDelay)
         awgbdel.pack(side=LEFT, anchor=W)
         # AWG Phase sub frame
         awg2phase = Frame( frame3 )
-        awg2phase.pack(side=TOP)
+        if (simpleInterface == 0):
+            awg2phase.pack(side=TOP)
         AWGBPhaseEntry = Entry(awg2phase, width=5, cursor='double_arrow')
         AWGBPhaseEntry.bind("<Return>", UpdateAwgContRet)
         AWGBPhaseEntry.bind('<MouseWheel>', onAWGBscroll)
@@ -16746,7 +16847,8 @@ def MakeAWGWindow():
         phaseblab.pack(side=LEFT, anchor=W)
         # AWG duty cycle frame
         awg2dc = Frame( frame3 )
-        awg2dc.pack(side=TOP)
+        if (simpleInterface == 0):
+            awg2dc.pack(side=TOP)
         AWGBDutyCycleEntry = Entry(awg2dc, width=5, cursor='double_arrow')
         AWGBDutyCycleEntry.bind("<Return>", UpdateAwgContRet)
         AWGBDutyCycleEntry.bind('<MouseWheel>', onAWGBscroll)
@@ -16760,18 +16862,22 @@ def MakeAWGWindow():
         duty2lab.pack(side=LEFT, anchor=W)
         #
         AWGBLength = Label(frame3, text="Length")
-        AWGBLength.pack(side=TOP)
+        if (simpleInterface == 0):
+            AWGBLength.pack(side=TOP)
         #
         BisCompA = IntVar(0) # Sync start both AWG channels
         BisCompA.set(0)
         bcompa = Checkbutton(frame3, text="B = Comp A", variable=BisCompA, command=ReMakeAWGwaves)#SetBCompA)
-        bcompa.pack(side=TOP)
+        if (simpleInterface == 0):
+            bcompa.pack(side=TOP)
         if FWRevOne > 2.16:
             awgsync = Checkbutton(frame3, text="Sync AWG", variable=AWGSync, command=BAWGSync)
-            awgsync.pack(side=TOP)
+            if (simpleInterface == 0):
+                awgsync.pack(side=TOP)
         #
-        dismissbutton = Button(frame3, text="Minimize", style="W8.TButton", command=DestroyAWGScreen)
-        dismissbutton.pack(side=TOP)
+        dismissbutton = Button(frame3, text="Minimize", style="Default.TButton", width=8, command=DestroyAWGScreen)
+        if (simpleInterface == 0):
+            dismissbutton.pack(side=TOP)
     else:
         awgwindow.deiconify()
 #
@@ -16935,7 +17041,7 @@ def MakeMuxModeWindow():
         muxenab.pack(side=LEFT)
         SyncButton = Checkbutton(frameE, compound=TOP, image=hipulseimg, variable=MuxSync, command=SyncImage)
         SyncButton.pack(side=LEFT)
-        dismissbutton = Button(frameE, text="Dismiss", style="W8.TButton", command=DestroyMuxScreen)
+        dismissbutton = Button(frameE, text="Dismiss", style="Default.TButton", width=8, command=DestroyMuxScreen)
         dismissbutton.pack(side=LEFT)
         frameF = Frame(frameM)
         frameF.pack(side=TOP)
@@ -17124,7 +17230,7 @@ def MakeBodeWindow():
         dropmenu = Frame( frame2bp )
         dropmenu.pack(side=TOP)
         # File menu
-        BodeFilemenu = Menubutton(dropmenu, text="File", style="W5.TButton")
+        BodeFilemenu = Menubutton(dropmenu, text="File", style="Default.TButton", width=5)
         BodeFilemenu.menu = Menu(BodeFilemenu, tearoff = 0 )
         BodeFilemenu["menu"] = BodeFilemenu.menu
         BodeFilemenu.menu.add_command(label="Save Config", command=BSaveConfigBP)
@@ -17133,7 +17239,7 @@ def MakeBodeWindow():
         BodeFilemenu.menu.add_command(label="Save Data", command=BCSVfile)
         BodeFilemenu.pack(side=LEFT, anchor=W)
         #
-        BodeOptionmenu = Menubutton(dropmenu, text="Options", style="W8.TButton")
+        BodeOptionmenu = Menubutton(dropmenu, text="Options", style="Default.TButton", width=8)
         BodeOptionmenu.menu = Menu(BodeOptionmenu, tearoff = 0 )
         BodeOptionmenu["menu"]  = BodeOptionmenu.menu
         BodeOptionmenu.menu.add_command(label='Change Settings', command=MakeSettingsMenu)
@@ -17154,12 +17260,12 @@ def MakeBodeWindow():
         #
         RUNframe = Frame( frame2bp )
         RUNframe.pack(side=TOP)
-        rbode = Button(RUNframe, text="Run", style="Run.TButton", command=BStartBP)
+        rbode = Button(RUNframe, text="Run", style="Green.TButton", command=BStartBP)
         rbode.pack(side=LEFT)
-        sbode = Button(RUNframe, text="Stop", style="Stop.TButton", command=BStopBP)
+        sbode = Button(RUNframe, text="Stop", style="Red.TButton", command=BStopBP)
         sbode.pack(side=LEFT)
         #
-        BodeFFTwindmenu = Menubutton(frame2bp, text="FFTwindow", style="W11.TButton")
+        BodeFFTwindmenu = Menubutton(frame2bp, text="FFTwindow", style="Default.TButton", width=11)
         BodeFFTwindmenu.menu = Menu(BodeFFTwindmenu, tearoff = 0 )
         BodeFFTwindmenu["menu"]  = BodeFFTwindmenu.menu
         BodeFFTwindmenu.menu.add_radiobutton(label='Rectangular window (B=1)', variable=FFTwindow, value=0)
@@ -17178,7 +17284,7 @@ def MakeBodeWindow():
         tracemenu.pack(side=TOP)
         # Curves menu
         # Show channels menu
-        BodeShowmenu = Menubutton(tracemenu, text="Curves", style="W7.TButton")
+        BodeShowmenu = Menubutton(tracemenu, text="Curves", style="Default.TButton", width=7)
         BodeShowmenu.menu = Menu(BodeShowmenu, tearoff = 0 )
         BodeShowmenu["menu"] = BodeShowmenu.menu
         BodeShowmenu.menu.add_command(label="-Show-", command=donothing)
@@ -17209,7 +17315,7 @@ def MakeBodeWindow():
         BodeShowmenu.menu.add_checkbutton(label='Ref Series Ang', variable=Show_AngleRef, command=UpdateBodeAll)
         BodeShowmenu.pack(side=LEFT, anchor=W)
         #
-        BodeMarkmenu = Menubutton(tracemenu, text="Cursors", style="W7.TButton")
+        BodeMarkmenu = Menubutton(tracemenu, text="Cursors", style="Default.TButton", width=7)
         BodeMarkmenu.menu = Menu(BodeMarkmenu, tearoff = 0 )
         BodeMarkmenu["menu"] = BodeMarkmenu.menu
         BodeMarkmenu.menu.add_command(label="-Cursors&Markers-", command=donothing)
@@ -17234,23 +17340,23 @@ def MakeBodeWindow():
         
         DBrange = Frame( frame2bp )
         DBrange.pack(side=TOP)
-        bd3 = Button(DBrange, text="+dB/div", style="W8.TButton", command=BDBdiv2BP)
+        bd3 = Button(DBrange, text="+dB/div", style="Default.TButton", width=8, command=BDBdiv2BP)
         bd3.pack(side=LEFT)
-        bd4 = Button(DBrange, text="-dB/div", style="W8.TButton", command=BDBdiv1BP)
+        bd4 = Button(DBrange, text="-dB/div", style="Default.TButton", width=8, command=BDBdiv1BP)
         bd4.pack(side=LEFT)
 
         LVBrange = Frame( frame2bp )
         LVBrange.pack(side=TOP)
-        bd5 = Button(LVBrange, text="LVL+10", style="W8.TButton", command=Blevel4BP)
+        bd5 = Button(LVBrange, text="LVL+10", style="Default.TButton", width=8, command=Blevel4BP)
         bd5.pack(side=LEFT)
-        bd6 = Button(LVBrange, text="LVL-10", style="W8.TButton", command=Blevel3BP)
+        bd6 = Button(LVBrange, text="LVL-10", style="Default.TButton", width=8, command=Blevel3BP)
         bd6.pack(side=LEFT)
 
         LVSrange = Frame( frame2bp )
         LVSrange.pack(side=TOP)
-        bd7 = Button(LVSrange, text="LVL+1", style="W8.TButton", command=Blevel2BP)
+        bd7 = Button(LVSrange, text="LVL+1", style="Default.TButton", width=8, command=Blevel2BP)
         bd7.pack(side=LEFT)
-        bd8 = Button(LVSrange, text="LVL-1", style="W8.TButton", command=Blevel1BP)
+        bd8 = Button(LVSrange, text="LVL-1", style="Default.TButton", width=8, command=Blevel1BP)
         bd8.pack(side=LEFT)
 
         PhaseCenter = Frame( frame2bp )
@@ -17345,11 +17451,11 @@ def MakeBodeWindow():
         sgrb6.pack(side=TOP)
         Plotsframe = Frame( frame2bp )
         Plotsframe.pack(side=TOP)
-        nyquistplotbutton = Button(Plotsframe, text="Polar Plot", style="W9.TButton", command=MakeNyquistPlot)
+        nyquistplotbutton = Button(Plotsframe, text="Polar Plot", style="Default.TButton", width=9, command=MakeNyquistPlot)
         nyquistplotbutton.pack(side=LEFT)
-        nicholsplotbutton = Button(Plotsframe, text="Rect Plot", style="W8.TButton", command=MakeNicPlot)
+        nicholsplotbutton = Button(Plotsframe, text="Rect Plot", style="Default.TButton", width=8, command=MakeNicPlot)
         nicholsplotbutton.pack(side=LEFT)
-        bodismiss1button = Button(frame2bp, text="Dismiss", style="W8.TButton", command=DestroyBodeScreen)
+        bodismiss1button = Button(frame2bp, text="Dismiss", style="Default.TButton", width=8, command=DestroyBodeScreen)
         bodismiss1button.pack(side=TOP)
         
         ADI2 = Label(frame2bp, image=logo, anchor= "sw", compound="top") #, height=49, width=116
@@ -17440,7 +17546,7 @@ def MakeSpectrumWindow():
         dropmenu = Frame( frame2fr )
         dropmenu.pack(side=TOP)
         # File menu
-        SAFilemenu = Menubutton(dropmenu, text="File", style="W5.TButton")
+        SAFilemenu = Menubutton(dropmenu, text="File", style="Default.TButton", width=5)
         SAFilemenu.menu = Menu(SAFilemenu, tearoff = 0 )
         SAFilemenu["menu"] = SAFilemenu.menu
         SAFilemenu.menu.add_command(label="Save Config", command=BSaveConfigSA)
@@ -17449,7 +17555,7 @@ def MakeSpectrumWindow():
         SAFilemenu.menu.add_command(label="Save Data", command=STOREcsvfile)
         SAFilemenu.pack(side=LEFT, anchor=W)
         #
-        SAOptionmenu = Menubutton(dropmenu, text="Options", style="W8.TButton")
+        SAOptionmenu = Menubutton(dropmenu, text="Options", style="Default.TButton", width=8)
         SAOptionmenu.menu = Menu(SAOptionmenu, tearoff = 0 )
         SAOptionmenu["menu"]  = SAOptionmenu.menu
         SAOptionmenu.menu.add_command(label='Change Settings', command=MakeSettingsMenu)
@@ -17463,14 +17569,14 @@ def MakeSpectrumWindow():
         #
         RUNframe = Frame( frame2fr )
         RUNframe.pack(side=TOP)
-        rb = Button(RUNframe, text="Run", style="Run.TButton", command=BStartSA)
+        rb = Button(RUNframe, text="Run", style="Green.TButton", command=BStartSA)
         rb.pack(side=LEFT)
-        sb = Button(RUNframe, text="Stop", style="Stop.TButton", command=BStopSA)
+        sb = Button(RUNframe, text="Stop", style="Red.TButton", command=BStopSA)
         sb.pack(side=LEFT)
         #
         Modeframe = Frame( frame2fr )
         Modeframe.pack(side=TOP)
-        Modemenu = Menubutton(Modeframe, text="Mode", style="W5.TButton")
+        Modemenu = Menubutton(Modeframe, text="Mode", style="Default.TButton", width=5)
         Modemenu.menu = Menu(Modemenu, tearoff = 0 )
         Modemenu["menu"]  = Modemenu.menu
         Modemenu.menu.add_command(label="Normal mode [n]", command=BNormalmode)
@@ -17480,7 +17586,7 @@ def MakeSpectrumWindow():
         Modemenu.menu.add_checkbutton(label='SingleShot', variable=SingleShotSA)
         Modemenu.pack(side=LEFT)
         #
-        SAFFTwindmenu = Menubutton(Modeframe, text="FFTwindow", style="W11.TButton")
+        SAFFTwindmenu = Menubutton(Modeframe, text="FFTwindow", style="Default.TButton", width=11)
         SAFFTwindmenu.menu = Menu(SAFFTwindmenu, tearoff = 0 )
         SAFFTwindmenu["menu"]  = SAFFTwindmenu.menu
         SAFFTwindmenu.menu.add_radiobutton(label='Rectangular window (B=1)', variable=FFTwindow, value=0)
@@ -17497,9 +17603,9 @@ def MakeSpectrumWindow():
         #
         SamplesMenu = Frame( frame2fr )
         SamplesMenu.pack(side=TOP)
-        bless = Button(SamplesMenu, text="-Samples", style="W8.TButton", command=Bsamples1)
+        bless = Button(SamplesMenu, text="-Samples", style="Default.TButton", width=8, command=Bsamples1)
         bless.pack(side=LEFT)
-        bmore = Button(SamplesMenu, text="+Samples", style="W8.TButton", command=Bsamples2)
+        bmore = Button(SamplesMenu, text="+Samples", style="Default.TButton", width=8, command=Bsamples2)
         bmore.pack(side=LEFT)
         #
         # Show channels menu
@@ -17519,7 +17625,7 @@ def MakeSpectrumWindow():
         #
         MarkersMenu = Frame( frame2fr )
         MarkersMenu.pack(side=TOP)
-        SAShowmenu = Menubutton(MarkersMenu, text="Curves", style="W7.TButton")
+        SAShowmenu = Menubutton(MarkersMenu, text="Curves", style="Default.TButton", width=7)
         SAShowmenu.menu = Menu(SAShowmenu, tearoff = 0 )
         SAShowmenu["menu"] = SAShowmenu.menu
         SAShowmenu.menu.add_command(label="-Show-", command=donothing)
@@ -17544,7 +17650,7 @@ def MakeSpectrumWindow():
         SAShowmenu.menu.add_checkbutton(label='RPhase B-A', variable=ShowRB_P, command=UpdateFreqAll)
         SAShowmenu.menu.add_checkbutton(label='Ref Math', variable=ShowRMath, command=UpdateFreqAll)
         SAShowmenu.pack(side=LEFT)
-        SACursormenu = Menubutton(MarkersMenu, text="Cursors", style="W7.TButton")
+        SACursormenu = Menubutton(MarkersMenu, text="Cursors", style="Default.TButton", width=7)
         SACursormenu.menu = Menu(SACursormenu, tearoff = 0 )
         SACursormenu["menu"] = SACursormenu.menu
         SACursormenu.menu.add_command(label="-Marker-", command=donothing)
@@ -17610,26 +17716,26 @@ def MakeSpectrumWindow():
         #
         DBrange = Frame( frame2fr )
         DBrange.pack(side=TOP)
-        b3 = Button(DBrange, text="+dB/div", style="W8.TButton", command=BDBdiv2)
+        b3 = Button(DBrange, text="+dB/div", style="Default.TButton", width=8, command=BDBdiv2)
         b3.pack(side=LEFT)
-        b4 = Button(DBrange, text="-dB/div", style="W8.TButton", command=BDBdiv1)
+        b4 = Button(DBrange, text="-dB/div", style="Default.TButton", width=8, command=BDBdiv1)
         b4.pack(side=LEFT)
 
         LVBrange = Frame( frame2fr )
         LVBrange.pack(side=TOP)
-        b5 = Button(LVBrange, text="LVL+10", style="W8.TButton", command=Blevel4)
+        b5 = Button(LVBrange, text="LVL+10", style="Default.TButton", width=8, command=Blevel4)
         b5.pack(side=LEFT)
-        b6 = Button(LVBrange, text="LVL-10", style="W8.TButton", command=Blevel3)
+        b6 = Button(LVBrange, text="LVL-10", style="Default.TButton", width=8, command=Blevel3)
         b6.pack(side=LEFT)
 
         LVSrange = Frame( frame2fr )
         LVSrange.pack(side=TOP)
-        b7 = Button(LVSrange, text="LVL+1", style="W8.TButton", command=Blevel2)
+        b7 = Button(LVSrange, text="LVL+1", style="Default.TButton", width=8, command=Blevel2)
         b7.pack(side=LEFT)
-        b8 = Button(LVSrange, text="LVL-1", style="W8.TButton", command=Blevel1)
+        b8 = Button(LVSrange, text="LVL-1", style="Default.TButton", width=8, command=Blevel1)
         b8.pack(side=LEFT)
         
-        sadismiss1button = Button(frame2fr, text="Dismiss", style="W8.TButton", command=DestroySpectrumScreen)
+        sadismiss1button = Button(frame2fr, text="Dismiss", style="Default.TButton", width=8, command=DestroySpectrumScreen)
         sadismiss1button.pack(side=TOP)
         
         ADI2 = Label(frame2fr, image=logo, anchor= "sw", compound="top") #, height=49, width=116
@@ -17721,12 +17827,12 @@ def MakeXYWindow():
         #
         RUNframe = Frame( frame2xyr )
         RUNframe.pack(side=TOP)
-        rbxy = Button(RUNframe, text="Run", style="Run.TButton", command=BStart)
+        rbxy = Button(RUNframe, text="Run", style="Green.TButton", command=BStart)
         rbxy.pack(side=LEFT)
-        sbxy = Button(RUNframe, text="Stop", style="Stop.TButton", command=BStop)
+        sbxy = Button(RUNframe, text="Stop", style="Red.TButton", command=BStop)
         sbxy.pack(side=LEFT)
         # Open Math trace menu
-        mathbt = Button(frame2xyr, text="Math", style="W5.TButton", command = NewEnterMathControls)
+        mathbt = Button(frame2xyr, text="Math", style="Default.TButton", width=5, command = NewEnterMathControls)
         mathbt.pack(side=TOP) #, anchor=W)
         # Disply mode menu
         # X - Y mode signal select
@@ -17779,12 +17885,15 @@ def MakeXYWindow():
         cb4 = Checkbutton(frame2xyr, text='Persistance', variable=ScreenXYrefresh, command=UpdateXYTrace)
         cb4.pack(side=TOP)
         #
-        snapbutton = Button(frame2xyr, style="W11.TButton", text="SnapShot", command=BSnapShot)
+        snapbutton = Button(frame2xyr, style="Default.TButton", width=11, text="SnapShot", command=BSnapShot)
         snapbutton.pack(side=TOP)
-        savebutton = Button(frame2xyr, style="W11.TButton", text="Save Screen", command=BSaveScreenXY)
+        savebutton = Button(frame2xyr, style="Default.TButton", width=11, text="Save Screen", command=BSaveScreenXY)
         savebutton.pack(side=TOP)
-        dismissxybutton = Button(frame2xyr, style="W7.TButton", text="Dismiss", command=DestroyXYScreen)
+        dismissxybutton = Button(frame2xyr, style="Default.TButton", width=7, text="Dismiss", command=DestroyXYScreen)
         dismissxybutton.pack(side=TOP)
+        
+        ADI2xy = Label(frame2xyr, image=logo1, anchor= "sw", compound="top") # , height=49, width=116
+        ADI2xy.pack(side=TOP)
         ADI1xy = Label(frame2xyr, image=logo, anchor= "sw", compound="top") # , height=49, width=116
         ADI1xy.pack(side=TOP)
 
@@ -17821,7 +17930,7 @@ def MakeXYWindow():
         CHAIsbxy.pack(side=LEFT)
         CHAIsbxy.delete(0,"end")
         CHAIsbxy.insert(0,50.0)
-        CHAIlabxy = Label(frame3xy, text="CA mA/Div", style="Strace3.TButton")
+        CHAIlabxy = Label(frame3xy, text="CA mA/Div", style="Rtrace3.TButton")
         CHAIlabxy.pack(side=LEFT)
 
         CHAIPosEntryxy = Entry(frame3xy, width=5, cursor='double_arrow')
@@ -17844,7 +17953,7 @@ def MakeXYWindow():
         CHBsbxy.delete(0,"end")
         CHBsbxy.insert(0,0.5)
         #
-        CHBxylab = Button(frame4xy, text="CB V/Div", style="Strace2.TButton", command=SetXYScaleB)
+        CHBxylab = Button(frame4xy, text="CB V/Div", style="Rtrace2.TButton", command=SetXYScaleB)
         CHBxylab.pack(side=LEFT)
 
         CHBVPosEntryxy = Entry(frame4xy, width=5, cursor='double_arrow')
@@ -17866,7 +17975,7 @@ def MakeXYWindow():
         CHBIsbxy.pack(side=LEFT)
         CHBIsbxy.delete(0,"end")
         CHBIsbxy.insert(0,50.0)
-        CHBIlabxy = Label(frame4xy, text="CB mA/Div", style="Strace4.TButton")
+        CHBIlabxy = Label(frame4xy, text="CB mA/Div", style="Rtrace4.TButton")
         CHBIlabxy.pack(side=LEFT)
 
         CHBIPosEntryxy = Entry(frame4xy, width=5, cursor='double_arrow')
@@ -18594,9 +18703,9 @@ def MakeMinigenWindow():
         MinigenFout.grid(row=4, column=1, columnspan=2, sticky=W)
         MinigenFout.delete(0,"end")
         MinigenFout.insert(0,100)
-        bsn1 = Button(minigenwindow, text='UpDate', style="W7.TButton", command=BSendMG)
+        bsn1 = Button(minigenwindow, text='UpDate', style="Default.TButton", width=7, command=BSendMG)
         bsn1.grid(row=5, column=0, sticky=W, pady=4)
-        dismissmgbutton = Button(minigenwindow, text="Dismiss", style="W8.TButton", command=DestroyMinigenScreen)
+        dismissmgbutton = Button(minigenwindow, text="Dismiss", style="Default.TButton", width=8, command=DestroyMinigenScreen)
         dismissmgbutton.grid(row=5, column=1, columnspan=2, sticky=W, pady=4)
         #
         label3 = Label(minigenwindow,text="SCLK PI/O Port ")
@@ -18774,9 +18883,9 @@ def MakeDA1Window():
         REFEntry.delete(0,"end")
         REFEntry.insert(0,3.3)
 
-        bsn1 = Button(da1window, text='UpDate', style="W7.TButton", command=BSendDA1)
+        bsn1 = Button(da1window, text='UpDate', style="Default.TButton", width=7, command=BSendDA1)
         bsn1.grid(row=5, column=0, sticky=W)
-        dismissdabutton = Button(da1window, text="Dismiss", style="W8.TButton", command=DestroyDA1Screen)
+        dismissdabutton = Button(da1window, text="Dismiss", style="Default.TButton", width=8, command=DestroyDA1Screen)
         dismissdabutton.grid(row=5, column=1, sticky=W, pady=4)
 ##
 # Destroy PMOD DA1 screen
@@ -18904,7 +19013,7 @@ def MakeDigPotWindow():
         
         SingleDualPot = IntVar(0)
         SingleDualPot.set(0)
-        CompMenu = Menubutton(digpotwindow, text="Sel Comp.", style="W8.TButton")
+        CompMenu = Menubutton(digpotwindow, text="Sel Comp.", style="Default.TButton", width=8)
         CompMenu.menu = Menu(CompMenu, tearoff = 0 )
         CompMenu["menu"] = CompMenu.menu
         CompMenu.menu.add_radiobutton(label="AD840X", variable=SingleDualPot, value=0, command=UpdatePotSlider)
@@ -18927,7 +19036,7 @@ def MakeDigPotWindow():
         lab4.grid(row=8, column=0, sticky=W)
         DigPot4 = Scale(digpotwindow, from_=0, to=255, orient=HORIZONTAL, command=DigPotSend, length=256)
         DigPot4.grid(row=9, column=0, columnspan=3, sticky=W)
-        dismissdpbutton = Button(digpotwindow, text="Dismiss", style="W8.TButton", command=DestroyDigPotScreen)
+        dismissdpbutton = Button(digpotwindow, text="Dismiss", style="Default.TButton", width=8, command=DestroyDigPotScreen)
         dismissdpbutton.grid(row=10, column=0, sticky=W, pady=4)
 
 def DestroyDigPotScreen():
@@ -19075,9 +19184,9 @@ def MakeAD5626Window():
         slth4 = Radiobutton(ad5626window, text="3", variable=SLATCHPort, value=PIO_3)
         slth4.grid(row=4, column=4, sticky=W)
         #
-        bsn1 = Button(ad5626window, text='Send', style="W5.TButton", command=BSendGS)
+        bsn1 = Button(ad5626window, text='Send', style="Default.TButton", width=5, command=BSendGS)
         bsn1.grid(row=5, column=0, sticky=W)
-        dismissgsbutton = Button(ad5626window, text="Dismiss", style="W8.TButton", command=DestroyAD5626Screen)
+        dismissgsbutton = Button(ad5626window, text="Dismiss", style="Default.TButton", width=8, command=DestroyAD5626Screen)
         dismissgsbutton.grid(row=5, column=1, columnspan=2, sticky=W, pady=4)
 #
 def onAD5626Scroll(event):
@@ -19177,9 +19286,9 @@ def MakeGenericSerialWindow():
         sdir2 = Radiobutton(serialwindow, text="MSB First", variable=SerDirection, value=1 )
         sdir2.grid(row=8, column=1, columnspan=2, sticky=W)
 
-        bsn1 = Button(serialwindow, text='Send', style="W5.TButton", command=BSendGS)
+        bsn1 = Button(serialwindow, text='Send', style="Default.TButton", width=5, command=BSendGS)
         bsn1.grid(row=9, column=0, sticky=W)
-        dismissgsbutton = Button(serialwindow, text="Dismiss", style="W8.TButton", command=DestroyGenericSerialScreen)
+        dismissgsbutton = Button(serialwindow, text="Dismiss", style="Default.TButton", width=8, command=DestroyGenericSerialScreen)
         dismissgsbutton.grid(row=9, column=1, columnspan=2, sticky=W, pady=4)
         
 def DestroyGenericSerialScreen():
@@ -19260,7 +19369,7 @@ def MakeDigFiltWindow():
         cbld.grid(row=4, column=0, sticky=W)
         cbmath = Button(digfiltb, text='CH B Filter formula', command=BDFiltBMath)
         cbmath.grid(row=5, column=0, sticky=W)
-        dismissdfbutton = Button(digfiltb, text="Dismiss", style="W8.TButton", command=DestroyDigFiltScreen)
+        dismissdfbutton = Button(digfiltb, text="Dismiss", style="Default.TButton", width=8, command=DestroyDigFiltScreen)
         dismissdfbutton.grid(row=6, column=0, columnspan=1, sticky=W)
         #
 def onRetDigFiltA(event):
@@ -19415,10 +19524,10 @@ def MakeCommandScreen():
         ExecString.grid(row=3, column=0, columnspan=4, sticky=W)
         ExecString.delete(0,"end")
         ExecString.insert(0,"global ; ")
-        executeclbutton = Button(commandwindow, text="Execute", style="W8.TButton", command=BExecuteFromString)
+        executeclbutton = Button(commandwindow, text="Execute", style="Default.TButton", width=8, command=BExecuteFromString)
         executeclbutton.grid(row=4, column=0, sticky=W, pady=8)
         #
-        dismissclbutton = Button(commandwindow, text="Dismiss", style="W8.TButton", command=DestroyCommandScreen)
+        dismissclbutton = Button(commandwindow, text="Dismiss", style="Default.TButton", width=8, command=DestroyCommandScreen)
         dismissclbutton.grid(row=4, column=1, sticky=W, pady=7)
         
 def DestroyCommandScreen():
@@ -19625,13 +19734,13 @@ def ConnectDevice():
             print( 'No Device plugged IN!')
             DevID = "No Device"
             FWRevOne = 0.0
-            bcon.configure(text="Recon", style="RConn.TButton")
+            bcon.configure(text="Re-conectar", style="Red.TButton")
             return
         session.configure(sample_rate=SAMPLErate)
         # print("Session sample rate: " + str(session.sample_rate))
         MakeBoardScreen()
         SelectBoard()
-        bcon.configure(text="Conn", style="GConn.TButton")
+        bcon.configure(text="Conectado!", style="Green.TButton")
         devx.set_adc_mux(0)
         devx.ctrl_transfer(0x40, 0x24, 0x0, 0, 0, 0, 100) # set to addr DAC A 
         devx.ctrl_transfer(0x40, 0x25, 0x1, 0, 0, 0, 100) # set not addr DAC B
@@ -19768,27 +19877,27 @@ def MakeSampleRateMenu():
             AltSweep.grid(row=3, column=0, sticky=W)
             chabuttons = Frame( frame1 )
             chabuttons.grid(row=4, column=0, sticky=W)
-            muxrb1 = Radiobutton(chabuttons, text="VA and VB", variable=ADC_Mux_Mode, value=0, command=SetADC_Mux ) #style="W8.TButton",
+            muxrb1 = Radiobutton(chabuttons, text="VA and VB", variable=ADC_Mux_Mode, value=0, command=SetADC_Mux ) #style="Default.TButton", width=8,
             muxrb1.pack(side=LEFT)
-            muxrb2 = Radiobutton(chabuttons, text="IA and IB", variable=ADC_Mux_Mode, value=1, command=SetADC_Mux ) #style="W8.TButton",
+            muxrb2 = Radiobutton(chabuttons, text="IA and IB", variable=ADC_Mux_Mode, value=1, command=SetADC_Mux ) #style="Default.TButton", width=8,
             muxrb2.pack(side=LEFT)
             chcbuttons = Frame( frame1 )
             chcbuttons.grid(row=5, column=0, sticky=W)
-            muxrb5 = Radiobutton(chcbuttons, text="VA and IA", variable=ADC_Mux_Mode, value=4, command=SetADC_Mux ) # style="W8.TButton",
+            muxrb5 = Radiobutton(chcbuttons, text="VA and IA", variable=ADC_Mux_Mode, value=4, command=SetADC_Mux ) # style="Default.TButton", width=8,
             muxrb5.pack(side=LEFT)
-            muxrb6 = Radiobutton(chcbuttons, text="VB and IB", variable=ADC_Mux_Mode, value=5, command=SetADC_Mux ) # style="W8.TButton",
+            muxrb6 = Radiobutton(chcbuttons, text="VB and IB", variable=ADC_Mux_Mode, value=5, command=SetADC_Mux ) # style="Default.TButton", width=8,
             muxrb6.pack(side=LEFT)
             nextrow = 6
             if DeBugMode == 1:
                 chbbuttons = Frame( frame1 )
                 chbbuttons.grid(row=nextrow, column=0, sticky=W)
-                muxrb3 = Radiobutton(chbbuttons, text="VA and IB", variable=ADC_Mux_Mode, value=2, command=SetADC_Mux ) # style="W8.TButton",
+                muxrb3 = Radiobutton(chbbuttons, text="VA and IB", variable=ADC_Mux_Mode, value=2, command=SetADC_Mux ) # style="Default.TButton", width=8,
                 muxrb3.pack(side=LEFT)
-                muxrb4 = Radiobutton(chbbuttons, text="VB and IA", variable=ADC_Mux_Mode, value=3, command=SetADC_Mux ) # style="W8.TButton",
+                muxrb4 = Radiobutton(chbbuttons, text="VB and IA", variable=ADC_Mux_Mode, value=3, command=SetADC_Mux ) # style="Default.TButton", width=8,
                 muxrb4.pack(side=LEFT)
                 nextrow = nextrow + 1
         #
-        sratedismissclbutton = Button(frame1, text="Dismiss", style="W8.TButton", command=DestroySampleRate)
+        sratedismissclbutton = Button(frame1, text="Dismiss", style="Default.TButton", width=8, command=DestroySampleRate)
         sratedismissclbutton.grid(row=nextrow, column=0, sticky=W, pady=7)
 #
 def DestroySampleRate():
@@ -20071,7 +20180,7 @@ def MakeOhmWindow():
         CHATestREntry.delete(0,"end")
         CHATestREntry.insert(0,OnBoardRes)
         #
-        ohmdismissclbutton = Button(frame1, text="Dismiss", style="W8.TButton", command=DestroyOhmScreen)
+        ohmdismissclbutton = Button(frame1, text="Dismiss", style="Default.TButton", width=8, command=DestroyOhmScreen)
         ohmdismissclbutton.grid(row=6, column=0, sticky=W, pady=7)
 #
 def DestroyOhmScreen():
@@ -20105,7 +20214,7 @@ def MakeETSWindow():
         ESRstring = "ET Sample Rate = " + str(SAMPLErate)
         etssrlab = Label(frame1, text=SRstring, style= "A10B.TLabel")
         etssrlab.grid(row=2, column=0, sticky=W)
-        etssrbutton = Button(frame1, text="Set RT Sample Rate", command=MakeSampleRateMenu) #, style= "W8.TButton"
+        etssrbutton = Button(frame1, text="Set RT Sample Rate", command=MakeSampleRateMenu) #, style= "Default.TButton", width=8
         etssrbutton.grid(row=3, column=0, sticky=W, pady=7)
         enb1 = Checkbutton(frame1,text="Enable ETS", variable=ETSDisp, command=ETSCheckBox)
         enb1.grid(row=4, column=0, sticky=W)
@@ -20175,7 +20284,7 @@ def MakeETSWindow():
         ETStslab = Label( TSMode, text = "Factor")
         ETStslab.pack(side=RIGHT)
         #
-        etsdismissclbutton = Button(frame1, text="Dismiss", style= "W8.TButton", command=DestroyETSScreen)
+        etsdismissclbutton = Button(frame1, text="Dismiss", style= "Default.TButton", width=8, command=DestroyETSScreen)
         etsdismissclbutton.grid(row=GridRow+9, column=0, sticky=W, pady=7)
         ETSDisp.set(0)
         ETSCheckBox()
@@ -20585,10 +20694,10 @@ def MakeSettingsMenu():
             ets_A2Entry.delete(0,"end")
             ets_A2Entry.insert(0,ETS_A2.get())
         #
-            Settingsdismissbutton = Button(frame1, text="Dismiss", style= "W8.TButton", command=DestroySettings)
+            Settingsdismissbutton = Button(frame1, text="Dismiss", style= "Default.TButton", width=8, command=DestroySettings)
             Settingsdismissbutton.grid(row=15, column=0, sticky=W, pady=7)
         else:
-            Settingsdismissbutton = Button(frame1, text="Dismiss", style= "W8.TButton", command=DestroySettings)
+            Settingsdismissbutton = Button(frame1, text="Dismiss", style= "Default.TButton", width=8, command=DestroySettings)
             Settingsdismissbutton.grid(row=12, column=0, sticky=W, pady=7)
 #
 def SetETSComp():
@@ -20963,7 +21072,7 @@ CHB_RC_HP = IntVar(0)
 CHAI_RC_HP = IntVar(0)
 CHBI_RC_HP = IntVar(0)
 #
-if GUITheme == "Light": # Caa be Light or Dark or Blue or LtBlue
+if GUITheme == "Light": # Can be Light or Dark or Blue or LtBlue
     FrameBG = "#d7d7d7"
     ButtonText = "#000000"
 elif GUITheme == "Dark":
@@ -20980,41 +21089,27 @@ BoxColor = "#0000ff" # 100% blue
 root.style.configure("TFrame", background=FrameBG, borderwidth=BorderSize)
 root.style.configure("TLabelframe", background=FrameBG)
 root.style.configure("TLabel", foreground=ButtonText, background=FrameBG, relief=LabRelief)
-root.style.configure("TEntry", foreground=EntryText, background=FrameBG, relief=ButRelief) #cursor='sb_v_double_arrow'
+root.style.configure("TEntry", foreground=EntryText, background=FrameBG, relief=ButRelief)
 root.style.configure("TCheckbutton", foreground=ButtonText, background=FrameBG, indicatorcolor=FrameBG)
 root.style.configure("TRadiobutton", foreground=ButtonText, background=FrameBG, indicatorcolor=FrameBG)
 root.style.configure("TButton", foreground=ButtonText, background=FrameBG, highlightcolor=FrameBG, relief=ButRelief)
 # define custom buttons
 root.style.configure("TSpinbox", arrowsize=13) # only changes things in Python 3
-root.style.configure("W3.TButton", width=3, relief=ButRelief)
-root.style.configure("W4.TButton", width=4, relief=ButRelief)
-root.style.configure("W5.TButton", width=5, relief=ButRelief)
-root.style.configure("W6.TButton", width=6, relief=ButRelief)
-root.style.configure("W7.TButton", width=7, relief=ButRelief)
-root.style.configure("W8.TButton", width=8, relief=ButRelief)
-root.style.configure("W9.TButton", width=9, relief=ButRelief)
-root.style.configure("W10.TButton", width=10, relief=ButRelief)
-root.style.configure("W11.TButton", width=11, relief=ButRelief)
-root.style.configure("W16.TButton", width=16, relief=ButRelief)
-root.style.configure("W17.TButton", width=17, relief=ButRelief)
-root.style.configure("Stop.TButton", background=ButtonRed, foreground="#000000", width=4, relief=ButRelief)
-root.style.configure("Run.TButton", background=ButtonGreen, foreground="#000000", width=4, relief=ButRelief)
-root.style.configure("Pwr.TButton", background=ButtonGreen, foreground="#000000", width=8, relief=ButRelief)
-root.style.configure("PwrOff.TButton", background=ButtonRed, foreground="#000000", width=8, relief=ButRelief)
-root.style.configure("RConn.TButton", background=ButtonRed, foreground="#000000", width=5, relief=ButRelief)
-root.style.configure("GConn.TButton", background=ButtonGreen, foreground="#000000", width=5, relief=ButRelief)
-root.style.configure("Rtrace1.TButton", background=COLORtrace1, foreground="#000000", width=7, relief=RAISED)
-root.style.configure("Strace1.TButton", background=COLORtrace1, foreground="#000000", width=7, relief=SUNKEN)
-root.style.configure("Rtrace2.TButton", background=COLORtrace2, foreground="#000000", width=7, relief=RAISED)
-root.style.configure("Strace2.TButton", background=COLORtrace2, foreground="#000000", width=7, relief=SUNKEN)
-root.style.configure("Rtrace3.TButton", background=COLORtrace3, foreground="#000000", width=7, relief=RAISED)
-root.style.configure("Strace3.TButton", background=COLORtrace3, foreground="#000000", width=7, relief=SUNKEN)
-root.style.configure("Rtrace4.TButton", background=COLORtrace4, foreground="#000000", width=7, relief=RAISED)
-root.style.configure("Strace4.TButton", background=COLORtrace4, foreground="#000000", width=7, relief=SUNKEN)
-root.style.configure("Rtrace6.TButton", background=COLORtrace6, foreground="#000000", width=7, relief=RAISED)
-root.style.configure("Strace6.TButton", background=COLORtrace6, foreground="#000000", width=7, relief=SUNKEN)
-root.style.configure("Rtrace7.TButton", background=COLORtrace7, foreground="#000000", width=7, relief=RAISED)
-root.style.configure("Strace7.TButton", background=COLORtrace7, foreground="#000000", width=7, relief=SUNKEN)
+
+root.style.configure("Default.TButton", background=ButtonDefault, foreground=ButtonText, relief=ButRelief)
+root.style.configure("Red.TButton",  background=ButtonRed, relief=ButRelief)
+root.style.configure("Green.TButton", background=ButtonGreen, relief=ButRelief)
+
+
+
+#TODO confirm that is is ok to remove sunken
+root.style.configure("Rtrace1.TButton", background=COLORtrace1, foreground="#000000", width=7, relief=ButRelief)
+root.style.configure("Rtrace2.TButton", background=COLORtrace2, foreground="#000000", width=7, relief=ButRelief)
+root.style.configure("Rtrace3.TButton", background=COLORtrace3, foreground="#000000", width=7, relief=ButRelief)
+root.style.configure("Rtrace4.TButton", background=COLORtrace4, foreground="#000000", width=7, relief=ButRelief)
+root.style.configure("Rtrace6.TButton", background=COLORtrace6, foreground="#000000", width=7, relief=ButRelief)
+root.style.configure("Rtrace7.TButton", background=COLORtrace7, foreground="#000000", width=7, relief=ButRelief)
+
 root.style.configure("RGray.TButton", background="#808080", width=7, relief=RAISED)
 root.style.configure("SGray.TButton", background="#808080", width=7, relief=SUNKEN)
 root.style.configure("A10R1.TLabelframe.Label", background=FrameBG, foreground=COLORtraceR1, font=('Arial', 10, 'bold'))
@@ -21030,98 +21125,127 @@ root.style.configure("Stop.TRadiobutton", background=ButtonRed, indicatorcolor=F
 root.style.configure("Run.TRadiobutton", background=ButtonGreen, indicatorcolor=FrameBG)
 root.style.configure("Disab.TCheckbutton", foreground=ButtonText, background=FrameBG, indicatorcolor=ButtonRed)
 root.style.configure("Enab.TCheckbutton", foreground=ButtonText, background=FrameBG, indicatorcolor=ButtonGreen)
-root.style.configure("Strace1.TCheckbutton", background=COLORtrace1, foreground="#000000", indicatorcolor="#ffffff")
-root.style.configure("Strace2.TCheckbutton", background=COLORtrace2, foreground="#000000", indicatorcolor="#ffffff")
-root.style.configure("Strace3.TCheckbutton", background=COLORtrace3, foreground="#000000", indicatorcolor="#ffffff")
-root.style.configure("Strace4.TCheckbutton", background=COLORtrace4, foreground="#000000", indicatorcolor="#ffffff")
-root.style.configure("Strace6.TCheckbutton", background=COLORtrace6, foreground="#000000", indicatorcolor="#ffffff")
-root.style.configure("Strace7.TCheckbutton", background=COLORtrace7, foreground="#000000", indicatorcolor="#ffffff")
+root.style.configure("Rtrace1.TCheckbutton", background=COLORtrace1, foreground="#000000", indicatorcolor="#ffffff")
+root.style.configure("Rtrace2.TCheckbutton", background=COLORtrace2, foreground="#000000", indicatorcolor="#ffffff")
+root.style.configure("Rtrace3.TCheckbutton", background=COLORtrace3, foreground="#000000", indicatorcolor="#ffffff")
+root.style.configure("Rtrace4.TCheckbutton", background=COLORtrace4, foreground="#000000", indicatorcolor="#ffffff")
+root.style.configure("Rtrace6.TCheckbutton", background=COLORtrace6, foreground="#000000", indicatorcolor="#ffffff")
+root.style.configure("Rtrace7.TCheckbutton", background=COLORtrace7, foreground="#000000", indicatorcolor="#ffffff")
 root.style.configure("WPhase.TRadiobutton", width=5, foreground="#000000", background="white", indicatorcolor=("red", "green"))
 root.style.configure("GPhase.TRadiobutton", width=5, foreground="#000000", background="gray", indicatorcolor=("red", "green"))
+
+###############################################################################
 # Create frames
-frame2r = Frame(root, relief=RIDGE)
-frame2r.pack(side=RIGHT, fill=BOTH, expand=NO)
+###############################################################################
 
-frame1 = Frame(root, relief=RIDGE)
-frame1.pack(side=TOP, fill=BOTH, expand=NO)
+#left frame
+frame2r = Frame(root, relief=FLAT)
+frame2r.pack(side=RIGHT, fill=BOTH, expand=NO,padx=1,pady=1)
 
-frame2 = Frame(root, relief=RIDGE)
-frame2.pack(side=TOP, fill=BOTH, expand=YES)
+#upper frame
+frame1 = Frame(root, relief=FLAT)
+frame1.pack(side=TOP, fill=BOTH, expand=NO,padx=1,pady=1)
 
-frame3 = Frame(root, relief=RIDGE)
-frame3.pack(side=TOP, fill=BOTH, expand=NO)
+#osciloscope_viz_frame
+frame2 = Frame(root, relief=FLAT)
+frame2.pack(side=TOP, fill=BOTH, expand=YES,padx=1,pady=1)
+
+#bottom frame
+frame3 = Frame(root, relief=FLAT)
+frame3.pack(side=TOP, fill=BOTH, expand=NO,padx=1,pady=1)
+
+
 # create a pulldown menu
+upleftFrame = Frame(frame1, relief=FLAT)
+upleftFrame.pack(side=LEFT, fill=BOTH)
+
+uprightFrame = Frame(frame1, relief=FLAT)
+uprightFrame.pack(side=RIGHT, fill=BOTH)
+
 # Trigger signals
-Triggermenu = Menubutton(frame1, text="Trigger", style="W7.TButton")
+Triggermenu = Menubutton(upleftFrame, text="Trigger", style="Default.TButton", width=8)
 Triggermenu.menu = Menu(Triggermenu, tearoff = 0 )
 Triggermenu["menu"]  = Triggermenu.menu
-Triggermenu.menu.add_radiobutton(label='None', variable=TgInput, value=0)
+Triggermenu.menu.add_radiobutton(label='Nenhum', variable=TgInput, value=0)
 Triggermenu.menu.add_radiobutton(label='CA-V', variable=TgInput, value=1)
 Triggermenu.menu.add_radiobutton(label='CA-I', variable=TgInput, value=2)
 Triggermenu.menu.add_radiobutton(label='CB-V', variable=TgInput, value=3)
 Triggermenu.menu.add_radiobutton(label='CB-I', variable=TgInput, value=4)
-Triggermenu.menu.add_checkbutton(label='Auto Level', variable=AutoLevel)
-Triggermenu.menu.add_checkbutton(label='Low Pass Filter', variable=LPFTrigger)
-Triggermenu.menu.add_checkbutton(label='Manual Trgger', variable=ManualTrigger)
-Triggermenu.menu.add_checkbutton(label='SingleShot', variable=SingleShot)
-Triggermenu.pack(side=LEFT)
+if (simpleInterface == 0):
+    Triggermenu.menu.add_separator()  
+    Triggermenu.menu.add_checkbutton(label='Auto Level', variable=AutoLevel)
+    Triggermenu.menu.add_checkbutton(label='Low Pass Filter', variable=LPFTrigger)
+    Triggermenu.menu.add_checkbutton(label='Manual Trgger', variable=ManualTrigger)
+    Triggermenu.menu.add_checkbutton(label='SingleShot', variable=SingleShot)
+Triggermenu.grid(row=0, column=0, sticky=N+E+W+S ,padx=1,pady=1)
 #
-Edgemenu = Menubutton(frame1, text="Edge", style="W5.TButton")
+Edgemenu = Menubutton(upleftFrame, text="Borda", style="Default.TButton", width=8)
 Edgemenu.menu = Menu(Edgemenu, tearoff = 0 )
 Edgemenu["menu"]  = Edgemenu.menu
-Edgemenu.menu.add_radiobutton(label='Rising [+]', variable=TgEdge, value=0)
-Edgemenu.menu.add_radiobutton(label='Falling [-]', variable=TgEdge, value=1)
-Edgemenu.pack(side=LEFT)
+Edgemenu.menu.add_radiobutton(label='Subida [+]', variable=TgEdge, value=0)
+Edgemenu.menu.add_radiobutton(label='Descida [-]', variable=TgEdge, value=1)
+Edgemenu.grid(row=0, column=1, sticky=N+E+W+S ,padx=1,pady=1)
 #
-tlab = Label(frame1, text="Trig Level")
-tlab.pack(side=LEFT)
-TRIGGERentry = Entry(frame1, width=5, cursor='double_arrow')
+tlab = Label(upleftFrame, text="Trig Level")
+tlab.grid(row=0, column=2, sticky=N+E+W+S ,padx=1,pady=1)
+TRIGGERentry = Entry(upleftFrame, width=5, cursor='double_arrow')
 TRIGGERentry.bind('<MouseWheel>', onTextScroll)
 TRIGGERentry.bind("<Button-4>", onTextScroll)# with Linux OS
 TRIGGERentry.bind("<Button-5>", onTextScroll)
 TRIGGERentry.bind("<Return>", BTriglevel)
 TRIGGERentry.bind('<Key>', onTextKey)
-TRIGGERentry.pack(side=LEFT)
+TRIGGERentry.grid(row=0, column=3, sticky=N+E+W+S ,padx=1,pady=1)
 TRIGGERentry.delete(0,"end")
 TRIGGERentry.insert(0,0.0)
 #
-tgb = Button(frame1, text="50%", style="W4.TButton", command=BTrigger50p)
-tgb.pack(side=LEFT)
+tgb = Button(upleftFrame, text="50%", style="Default.TButton", width=4, command=BTrigger50p)
+tgb.grid(row=0, column=4, sticky=N+E+W+S ,padx=1,pady=1)
 #
-hldlab = Button(frame1, text="Hold Off", style="W8.TButton", command=IncHoldOff)
-hldlab.pack(side=LEFT)
-HoldOffentry = Entry(frame1, width=4, cursor='double_arrow')
+#if (simpleInterface == 0):
+hldlab = Button(upleftFrame, text="Hold Off", style="Default.TButton", width=8, command=IncHoldOff)
+if (simpleInterface == 0):
+    hldlab.grid(row=0, column=5, sticky=N+E+W+S ,padx=1,pady=1)
+HoldOffentry = Entry(upleftFrame, width=4, cursor='double_arrow')
 HoldOffentry.bind('<MouseWheel>', onTextScroll)
 HoldOffentry.bind("<Button-4>", onTextScroll)# with Linux OS
 HoldOffentry.bind("<Button-5>", onTextScroll)
 HoldOffentry.bind("<Return>", BHoldOff)
 HoldOffentry.bind('<Key>', onTextKey)
-HoldOffentry.pack(side=LEFT)
+if (simpleInterface == 0):
+    HoldOffentry.grid(row=0, column=6, sticky=N+E+W+S ,padx=1,pady=1)
 HoldOffentry.delete(0,"end")
 HoldOffentry.insert(0,0.0)
 #
-hozlab = Button(frame1, text="Horz Pos", style="W8.TButton", command=SetTriggerPoss)
-hozlab.pack(side=LEFT)
-HozPossentry = Entry(frame1, width=4, cursor='double_arrow')
+hozlab = Button(upleftFrame, text="Horz Pos", style="Default.TButton", width=8, command=SetTriggerPoss)
+if (simpleInterface == 0):
+    hozlab.grid(row=0, column=7, sticky=N+E+W+S ,padx=1,pady=1)
+HozPossentry = Entry(upleftFrame, width=4, cursor='double_arrow')
 HozPossentry.bind('<MouseWheel>', onTextScroll)
 HozPossentry.bind("<Button-4>", onTextScroll)# with Linux OS
 HozPossentry.bind("<Button-5>", onTextScroll)
 HozPossentry.bind("<Return>", BHozPoss)
 HozPossentry.bind('<Key>', onTextKey)
-HozPossentry.pack(side=LEFT)
+if (simpleInterface == 0):
+    HozPossentry.grid(row=0, column=8, sticky=N+E+W+S ,padx=1,pady=1)
 HozPossentry.delete(0,"end")
 HozPossentry.insert(0,0.0)
+
+
 #
-bexit = Button(frame1, text="Exit", style="W4.TButton", command=Bcloseexit)
-bexit.pack(side=RIGHT)
-bstop = Button(frame1, text="Stop", style="Stop.TButton", command=BStop)
-bstop.pack(side=RIGHT)
-brun = Button(frame1, text="Run", style="Run.TButton", command=BStart)
-brun.pack(side=RIGHT)
-PwrBt = Button(frame1, text="PWR-ON", style="Pwr.TButton", command=BPower)
-PwrBt.pack(side=RIGHT)
+bexit = Button(uprightFrame, text="Sair", style="Default.TButton", width=6, command=Bcloseexit)
+bexit.grid(row=0, column=8, sticky=N+E+W+S ,padx=1,pady=1)
+
+bstop = Button(uprightFrame, text="Parar", style="Red.TButton", width = 6, command=BStop)
+bstop.grid(row=0, column=7, sticky=N+E+W+S ,padx=1,pady=1)
+
+brun = Button(uprightFrame, text="Iniciar", style="Default.TButton", width = 6,command=BStart)
+brun.grid(row=0, column=6, sticky=N+E+W+S ,padx=1,pady=1)
+
+PwrBt = Button(uprightFrame, text="PWR-ON", style="Green.TButton", width = 8,command=BPower)
+PwrBt.grid(row=0, column=5, sticky=N+E+W+S ,padx=1,pady=1)
+
 # Curves Menu , background="#A0A0A0"
-Showmenu = Menubutton(frame1, text="Curves", style="W7.TButton")
+Showmenu = Menubutton(uprightFrame, text="Curves", style="Default.TButton", width=6)
 Showmenu.menu = Menu(Showmenu, tearoff = 0 )
 Showmenu["menu"] = Showmenu.menu
 Showmenu.menu.add_command(label="-Show-", foreground="blue", command=donothing)
@@ -21151,7 +21275,8 @@ Showmenu.menu.add_checkbutton(label='RMath', background=COLORtraceR5, variable=S
 Showmenu.menu.add_separator()
 Showmenu.menu.add_checkbutton(label='T Cursor [t]', variable=ShowTCur, command=UpdateTimeTrace)
 Showmenu.menu.add_checkbutton(label='V Cursor [v]', variable=ShowVCur, command=UpdateTimeTrace)
-Showmenu.pack(side=RIGHT)
+if (simpleInterface == 0):
+    Showmenu.grid(row=0, column=4, sticky=N+E+W+S ,padx=1,pady=1)
 #
 if ShowBallonHelp > 0:
     Triggermenu_tip = CreateToolTip(Triggermenu, 'Select trigger signal')
@@ -21167,40 +21292,45 @@ if ShowBallonHelp > 0:
 
 # Sampling controls Widgets
 if EnableHSsampling > 0:
-    fminlab2 = Label(frame1, text="KHz")
-    fminlab2.pack(side=RIGHT)
+    fminlab2 = Label(uprightFrame, text="KHz")
+    #fminlab2.pack(side=RIGHT,padx=1,pady=1)
     FminEntry = Entry(frame1, width=6, cursor='double_arrow')
     FminEntry.bind('<MouseWheel>', onFminScroll)
     FminEntry.bind("<Button-4>", onFminScroll)# with Linux OS
     FminEntry.bind("<Button-5>", onFminScroll)
     FminEntry.bind("<Return>", SetAD9833)
-    FminEntry.pack(side=RIGHT)
+    FminEntry.pack(side=RIGHT,padx=1,pady=1)
     FminEntry.delete(0,"end")
     FminEntry.insert(0,25)
-    fminlab = Button(frame1, text="Fmin", style="W5.TButton", command=BSetFmin)
-    fminlab.pack(side=RIGHT)
+    fminlab = Button(frame1, text="Fmin", style="Default.TButton", width=5, command=BSetFmin)
+   # fminlab.pack(side=RIGHT,padx=1,pady=1)
     #
-    HtMulEntry = Entry(frame1, width=4, cursor='double_arrow')
+    HtMulEntry = Entry(uprightFrame, width=4, cursor='double_arrow')
     HtMulEntry.bind('<MouseWheel>', onMulXScroll)
     HtMulEntry.bind("<Button-4>", onMulXScroll)# with Linux OS
     HtMulEntry.bind("<Button-5>", onMulXScroll)
     HtMulEntry.bind("<Return>", SetAD9833)
-    HtMulEntry.pack(side=RIGHT)
+    #HtMulEntry.pack(side=RIGHT,padx=1,pady=1)
     HtMulEntry.delete(0,"end")
     HtMulEntry.insert(0,1)
-    mulxlab = Label( frame1, text = "Mul X")
-    mulxlab.pack(side=RIGHT)
+    mulxlab = Label( uprightFrame, text = "Mul X")
+    #mulxlab.pack(side=RIGHT,padx=1,pady=1)
 #
 # Time per Div
-TMsb = Spinbox(frame1, width=5, values= TMpdiv, cursor='double_arrow', command=BTime)
+TMsb = Spinbox(upleftFrame, width=5, values= TMpdiv, cursor='double_arrow', command=BTime)
 TMsb.bind('<MouseWheel>', onSpinBoxScroll)
 TMsb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
 TMsb.bind("<Button-5>", onSpinBoxScroll)
-TMsb.pack(side=RIGHT)
+TMsb.grid(row=0, column=10, sticky=N+E+W+S ,padx=1,pady=1)
 TMsb.delete(0,"end")
 TMsb.insert(0,0.5)
-TMlab = Label(frame1, text="Time mS/Div")
-TMlab.pack(side=RIGHT)
+TMlab = Label(upleftFrame, text="Tempo mS/Div")
+TMlab.grid(row=0, column=9, sticky=N+E+W+S ,padx=1,pady=1)
+
+
+
+
+
 #
 ca = Canvas(frame2, width=CANVASwidth, height=CANVASheight, background=COLORcanvas, cursor='cross')
 # add mouse left and right button click to canvas
@@ -21232,15 +21362,18 @@ ca.bind("-", onCanvasTfalling)
 ca.bind('<MouseWheel>', onCanvasClickScroll)
 ca.bind("<Button-4>", onCanvasClickScroll)# with Linux OS
 ca.bind("<Button-5>", onCanvasClickScroll)
-ca.pack(side=TOP, fill=BOTH, expand=YES)
+ca.pack(side=TOP, fill=BOTH, expand=YES,padx=1,pady=1)
 MouseWidget = ca
+
+
 # right side menu buttons
 dropmenu = Frame( frame2r )
-dropmenu.pack(side=TOP)
-bcon = Button(dropmenu, text="Recon", style="RConn.TButton", command=ConnectDevice)
-bcon.pack(side=LEFT, anchor=W)
+dropmenu.pack(side=TOP,fill=X,padx=1,pady=1)
+
+bcon = Button(dropmenu, text="Re-conectar", style="Red.TButton", width=24, command=ConnectDevice)
+bcon.grid(row =0, column=0, columnspan=2,sticky=E+W,padx=1,pady=1)
 # File menu
-Filemenu = Menubutton(dropmenu, text="File", style="W4.TButton")
+Filemenu = Menubutton(dropmenu, text="Arquivo", style="Default.TButton", width=7)
 Filemenu.menu = Menu(Filemenu, tearoff = 0 )
 Filemenu["menu"] = Filemenu.menu
 Filemenu.menu.add_command(label="Save Config", command=BSaveConfigTime)
@@ -21253,13 +21386,14 @@ Filemenu.menu.add_command(label="Load From CSV", command=BReadData)
 Filemenu.menu.add_command(label="Save PWL Data", command=BSaveChannelData)
 Filemenu.menu.add_command(label="Help", command=BHelp)
 Filemenu.menu.add_command(label="About", command=BAbout)
-Filemenu.pack(side=LEFT, anchor=W)
+Filemenu.grid(row =1, column=0,sticky=E+W,padx=1,pady=1)
 # Options Menu
-Optionmenu = Menubutton(dropmenu, text="Options", style="W7.TButton")
+Optionmenu = Menubutton(dropmenu, text="Opções", style="Default.TButton", width=7)
 Optionmenu.menu = Menu(Optionmenu, tearoff = 0 )
 Optionmenu["menu"]  = Optionmenu.menu
 Optionmenu.menu.add_command(label='Change Settings', command=MakeSettingsMenu)
 Optionmenu.menu.add_command(label='Set Sample Rate', command=MakeSampleRateMenu) # SetSampleRate)
+Optionmenu.menu.add_separator() 
 Optionmenu.menu.add_checkbutton(label='Smooth', variable=SmoothCurves, command=UpdateTimeTrace)
 Optionmenu.menu.add_checkbutton(label='Z-O-Hold', variable=ZOHold, command=UpdateTimeTrace)
 Optionmenu.menu.add_checkbutton(label='Decimate', variable=DecimateOption)
@@ -21271,24 +21405,25 @@ Optionmenu.menu.add_command(label='Change Plot Label', command=BUserCustomPlotTe
 Optionmenu.menu.add_command(label="SnapShot [s]", command=BSnapShot)
 Optionmenu.menu.add_radiobutton(label='Black BG', variable=ColorMode, value=0, command=BgColor)
 Optionmenu.menu.add_radiobutton(label='White BG', variable=ColorMode, value=1, command=BgColor)
+Optionmenu.menu.add_separator() 
 Optionmenu.menu.add_command(label="Run Self Cal", command=SelfCalibration)
 if AllowFlashFirmware == 1:
     Optionmenu.menu.add_command(label="Save Cal Settings", command=Save_Cal_file)
     Optionmenu.menu.add_command(label="Update Firmware", command=UpdateFirmware)
-Optionmenu.pack(side=LEFT, anchor=W)
+Optionmenu.grid(row =1, column=1,sticky=E+W,padx=1,pady=1)
 #
 dropmenu2 = Frame( frame2r )
-dropmenu2.pack(side=TOP)
-# Open Math trace menu
-mathbt = Button(dropmenu2, text="Math", style="W4.TButton", command = NewEnterMathControls)
-mathbt.pack(side=RIGHT, anchor=W)
+dropmenu2.pack(side=TOP,fill=X,padx=1,pady=1)
+
+
 # Measurments menu
-measlab = Label(dropmenu2, text="Meas")
-measlab.pack(side=LEFT, anchor=W)
-MeasmenuA = Menubutton(dropmenu2, text="CA", style="W3.TButton")
+measlab = Label(dropmenu2, text="Medidas")
+measlab.grid(row =0, column=0, columnspan=3, sticky=E+W,padx=1,pady=1)
+
+MeasmenuA = Menubutton(dropmenu2, text="Ch. A", style="Default.TButton", width=6)
 MeasmenuA.menu = Menu(MeasmenuA, tearoff = 0 )
 MeasmenuA["menu"]  = MeasmenuA.menu
-MeasmenuA.menu.add_command(label="-CA-V-", foreground="blue", command=donothing)
+MeasmenuA.menu.add_command(label=":: CA-V ::", foreground="blue", command=donothing)
 MeasmenuA.menu.add_checkbutton(label='Avg', variable=MeasDCV1)
 MeasmenuA.menu.add_checkbutton(label='Min', variable=MeasMinV1)
 MeasmenuA.menu.add_checkbutton(label='Max', variable=MeasMaxV1)
@@ -21297,11 +21432,12 @@ MeasmenuA.menu.add_checkbutton(label='Top', variable=MeasTopV1)
 MeasmenuA.menu.add_checkbutton(label='Mid', variable=MeasMidV1)
 MeasmenuA.menu.add_checkbutton(label='P-P', variable=MeasPPV1)
 MeasmenuA.menu.add_checkbutton(label='RMS', variable=MeasRMSV1)
-MeasmenuA.menu.add_checkbutton(label='CA-CB', variable=MeasDiffAB)
-MeasmenuA.menu.add_checkbutton(label='CA-CB RMS', variable=MeasRMSVA_B)
-MeasmenuA.menu.add_checkbutton(label='User', variable=MeasUserA, command=BUserAMeas)
+if(simpleInterface==0):
+    MeasmenuA.menu.add_checkbutton(label='CA-CB', variable=MeasDiffAB)
+    MeasmenuA.menu.add_checkbutton(label='CA-CB RMS', variable=MeasRMSVA_B)
+    MeasmenuA.menu.add_checkbutton(label='User', variable=MeasUserA, command=BUserAMeas)
 #MeasmenuA.menu.add_separator()
-MeasmenuA.menu.add_command(label="-CA-I-", foreground="blue", command=donothing)
+MeasmenuA.menu.add_command(label=":: CA-I ::", foreground="blue", command=donothing)
 MeasmenuA.menu.add_checkbutton(label='Avg', variable=MeasDCI1)
 MeasmenuA.menu.add_checkbutton(label='Min', variable=MeasMinI1)
 MeasmenuA.menu.add_checkbutton(label='Max', variable=MeasMaxI1)
@@ -21309,7 +21445,7 @@ MeasmenuA.menu.add_checkbutton(label='Mid', variable=MeasMidI1)
 MeasmenuA.menu.add_checkbutton(label='P-P', variable=MeasPPI1)
 MeasmenuA.menu.add_checkbutton(label='RMS', variable=MeasRMSI1)
 #MeasmenuA.menu.add_separator()
-MeasmenuA.menu.add_command(label="-CA-Time-", foreground="blue", command=donothing)
+MeasmenuA.menu.add_command(label=":: CA-Time ::", foreground="blue", command=donothing)
 MeasmenuA.menu.add_checkbutton(label='H-Width', variable=MeasAHW)
 MeasmenuA.menu.add_checkbutton(label='L-Width', variable=MeasALW)
 MeasmenuA.menu.add_checkbutton(label='DutyCyle', variable=MeasADCy)
@@ -21317,12 +21453,12 @@ MeasmenuA.menu.add_checkbutton(label='Period', variable=MeasAPER)
 MeasmenuA.menu.add_checkbutton(label='Freq', variable=MeasAFREQ)
 MeasmenuA.menu.add_checkbutton(label='A-B Phase', variable=MeasPhase)
 #
-MeasmenuA.pack(side=LEFT)
+MeasmenuA.grid(row =1, column=0,sticky=E+W+N+S,padx=1,pady=1)
 #
-MeasmenuB = Menubutton(dropmenu2, text="CB", style="W3.TButton")
+MeasmenuB = Menubutton(dropmenu2, text="Ch. B", style="Default.TButton", width=6)
 MeasmenuB.menu = Menu(MeasmenuB, tearoff = 0 )
 MeasmenuB["menu"]  = MeasmenuB.menu
-MeasmenuB.menu.add_command(label="-CB-V-", foreground="blue", command=donothing)
+MeasmenuB.menu.add_command(label=":: CB-V ::", foreground="blue", command=donothing)
 MeasmenuB.menu.add_checkbutton(label='Avg', variable=MeasDCV2)
 MeasmenuB.menu.add_checkbutton(label='Min', variable=MeasMinV2)
 MeasmenuB.menu.add_checkbutton(label='Max', variable=MeasMaxV2)
@@ -21331,10 +21467,11 @@ MeasmenuB.menu.add_checkbutton(label='Top', variable=MeasTopV2)
 MeasmenuB.menu.add_checkbutton(label='Mid', variable=MeasMidV2)
 MeasmenuB.menu.add_checkbutton(label='P-P', variable=MeasPPV2)
 MeasmenuB.menu.add_checkbutton(label='RMS', variable=MeasRMSV2)
-MeasmenuB.menu.add_checkbutton(label='CB-CA', variable=MeasDiffBA)
-MeasmenuB.menu.add_checkbutton(label='User', variable=MeasUserB, command=BUserBMeas)
+if(simpleInterface==0):
+    MeasmenuB.menu.add_checkbutton(label='CB-CA', variable=MeasDiffBA)
+    MeasmenuB.menu.add_checkbutton(label='User', variable=MeasUserB, command=BUserBMeas)
 #MeasmenuB.menu.add_separator()
-MeasmenuB.menu.add_command(label="-CB-I-", foreground="blue", command=donothing)
+MeasmenuB.menu.add_command(label=":: CB-I ::", foreground="blue", command=donothing)
 MeasmenuB.menu.add_checkbutton(label='Avg', variable=MeasDCI2)
 MeasmenuB.menu.add_checkbutton(label='Min', variable=MeasMinI2)
 MeasmenuB.menu.add_checkbutton(label='Max', variable=MeasMaxI2)
@@ -21342,82 +21479,90 @@ MeasmenuB.menu.add_checkbutton(label='Mid', variable=MeasMidI2)
 MeasmenuB.menu.add_checkbutton(label='P-P', variable=MeasPPI2)
 MeasmenuB.menu.add_checkbutton(label='RMS', variable=MeasRMSI2)
 #MeasmenuB.menu.add_separator()
-MeasmenuB.menu.add_command(label="-CB-Time-", foreground="blue", command=donothing)
+MeasmenuB.menu.add_command(label=":: CB-Time ::", foreground="blue", command=donothing)
 MeasmenuB.menu.add_checkbutton(label='H-Width', variable=MeasBHW)
 MeasmenuB.menu.add_checkbutton(label='L-Width', variable=MeasBLW)
 MeasmenuB.menu.add_checkbutton(label='DutyCyle', variable=MeasBDCy)
 MeasmenuB.menu.add_checkbutton(label='Period', variable=MeasBPER)
 MeasmenuB.menu.add_checkbutton(label='Freq', variable=MeasBFREQ)
 MeasmenuB.menu.add_checkbutton(label='B-A Delay', variable=MeasDelay)
-MeasmenuB.pack(side=LEFT)
+MeasmenuB.grid(row =1, column=1,sticky=E+W+N+S,padx=1,pady=1)
+
+# Open Math trace menu
+mathbt = Button(dropmenu2, text="Math", style="Default.TButton", width=6, command = NewEnterMathControls)
+mathbt.grid(row =1, column=2,sticky=E+W,padx=1,pady=1)
+
+
 #
-BuildAWGScreen = Button(frame2r, text="AWG Window", style="W16.TButton", command=MakeAWGWindow)
-BuildAWGScreen.pack(side=TOP)
+BuildAWGScreen = Button(frame2r, text="Open AWG Window", style="Default.TButton", width=16, command=MakeAWGWindow)
+if (simpleInterface == 0):
+    BuildAWGScreen.pack(side=TOP,fill=X,padx=1,pady=1)
+
 # Mode selector
 timebtn = Frame( frame2r )
-timebtn.pack(side=TOP)
-ckb1 = Checkbutton(timebtn, text="Enab", style="Disab.TCheckbutton", variable=TimeDisp, command=TimeCheckBox)
-ckb1.pack(side=LEFT)
-timelab = Label(timebtn, text="Time Plot")
-timelab.pack(side=LEFT)
+timebtn.pack(side=TOP,fill=X,padx=1,pady=1)
+ckb1 = Checkbutton(timebtn, text="Ligar osciloscópio", style="Disab.TCheckbutton", variable=TimeDisp, command=TimeCheckBox)
+ckb1.pack(side=LEFT,padx=1,pady=1)
+#timelab = Label(timebtn, text="Time Plot")
+#timelab.pack(side=LEFT,fill=X)
 if EnableXYPlotter > 0:
     xybtn = Frame( frame2r )
-    xybtn.pack(side=TOP)
-    ckb2 = Checkbutton(xybtn, text="Enab", style="Disab.TCheckbutton", variable=XYDisp, command=XYCheckBox)
+    xybtn.pack(side=TOP,fill=X)
+    ckb2 = Checkbutton(xybtn, text="Lig.", style="Disab.TCheckbutton", variable=XYDisp, command=XYCheckBox)
     ckb2.pack(side=LEFT)
-    BuildXYScreen = Button(xybtn, text="X-Y Plot", style="W11.TButton", command=MakeXYWindow)
-    BuildXYScreen.pack(side=TOP)
+    BuildXYScreen = Button(xybtn, text="Gráfico X-Y", style="Default.TButton",  command=MakeXYWindow)
+    BuildXYScreen.pack(fill=X,padx=1,pady=1)
 #
 if EnablePhaseAnalizer > 0:
     phasebtn = Frame( frame2r )
-    phasebtn.pack(side=TOP)
-    phckb = Checkbutton(phasebtn, text="Enab", style="Disab.TCheckbutton", variable=PhADisp, command=PhACheckBox)
+    phasebtn.pack(side=TOP,fill=X)
+    phckb = Checkbutton(phasebtn, text="Enab.", style="Disab.TCheckbutton", variable=PhADisp, command=PhACheckBox)
     phckb.pack(side=LEFT)
-    BuildPhAScreen = Button(phasebtn, text="Phasor Plot", style="W11.TButton", command=MakePhAWindow)
-    BuildPhAScreen.pack(side=LEFT)
+    BuildPhAScreen = Button(phasebtn, text="Phasor Plot", style="Default.TButton", width=11, command=MakePhAWindow)
+    BuildPhAScreen.pack(fill=X,padx=1,pady=1)
 #
 if EnableSpectrumAnalizer > 0:
     freqbtn = Frame( frame2r )
-    freqbtn.pack(side=TOP)
-    ckb3 = Checkbutton(freqbtn, text="Enab", style="Disab.TCheckbutton", variable=FreqDisp, command=FreqCheckBox)
+    freqbtn.pack(side=TOP,fill=X)
+    ckb3 = Checkbutton(freqbtn, text="Enab.", style="Disab.TCheckbutton", variable=FreqDisp, command=FreqCheckBox)
     ckb3.pack(side=LEFT)
-    BuildSpectrumScreen = Button(freqbtn, text="Spectrum Plot", style="W11.TButton", command=MakeSpectrumWindow)
-    BuildSpectrumScreen.pack(side=LEFT)
+    BuildSpectrumScreen = Button(freqbtn, text="Spectrum Plot", style="Default.TButton", width=11, command=MakeSpectrumWindow)
+    BuildSpectrumScreen.pack(fill=X,padx=1,pady=1)
 #
 if EnableBodePlotter > 0:
     bodebtn = Frame( frame2r )
-    bodebtn.pack(side=TOP)
-    ckb5 = Checkbutton(bodebtn, text="Enab", style="Disab.TCheckbutton", variable=BodeDisp, command=BodeCheckBox)
+    bodebtn.pack(side=TOP,fill=X)
+    ckb5 = Checkbutton(bodebtn, text="Enab.", style="Disab.TCheckbutton", variable=BodeDisp, command=BodeCheckBox)
     ckb5.pack(side=LEFT)
-    BuildBodeScreen = Button(bodebtn, text="Bode Plot", style="W11.TButton", command=MakeBodeWindow)
-    BuildBodeScreen.pack(side=LEFT)
+    BuildBodeScreen = Button(bodebtn, text="Bode Plot", style="Default.TButton", width=11, command=MakeBodeWindow)
+    BuildBodeScreen.pack(fill=X,padx=1,pady=1)
 #
 if EnableImpedanceAnalizer > 0:
     impdbtn = Frame( frame2r )
-    impdbtn.pack(side=TOP)
-    ckb4 = Checkbutton(impdbtn, text="Enab", style="Disab.TCheckbutton", variable=IADisp, command=IACheckBox)
+    impdbtn.pack(side=TOP,fill=X)
+    ckb4 = Checkbutton(impdbtn, text="Enab.", style="Disab.TCheckbutton", variable=IADisp, command=IACheckBox)
     ckb4.pack(side=LEFT)
-    BuildIAScreen = Button(impdbtn, text="Impedance", style="W11.TButton", command=MakeIAWindow)
-    BuildIAScreen.pack(side=LEFT)
+    BuildIAScreen = Button(impdbtn, text="Impedance", style="Default.TButton", width=11, command=MakeIAWindow)
+    BuildIAScreen.pack(fill=X,padx=1,pady=1)
 #
 if EnableOhmMeter > 0:
     dcohmbtn = Frame( frame2r )
-    dcohmbtn.pack(side=TOP)
-    ckb6 = Checkbutton(dcohmbtn, text="Enab", style="Disab.TCheckbutton", variable=OhmDisp, command=OhmCheckBox)
+    dcohmbtn.pack(side=TOP,fill=X)
+    ckb6 = Checkbutton(dcohmbtn, text="Enab.", style="Disab.TCheckbutton", variable=OhmDisp, command=OhmCheckBox)
     ckb6.pack(side=LEFT)
-    BuildOhmScreen = Button(dcohmbtn, text="Ohmmeter", style="W11.TButton", command=MakeOhmWindow)
-    BuildOhmScreen.pack(side=LEFT)
+    BuildOhmScreen = Button(dcohmbtn, text="Ohmmeter", style="Default.TButton", width=11, command=MakeOhmWindow)
+    BuildOhmScreen.pack(fill=X,padx=1,pady=1)
 #
 if ShowTraceControls > 0:
-    ckbt1 = Checkbutton(frame2r, text='CA-V [1]', style="Strace1.TCheckbutton", variable=ShowC1_V, command=TraceSelectADC_Mux)
-    ckbt1.pack(side=TOP)
-    ckbt2 = Checkbutton(frame2r, text='CA-I [3]', style="Strace3.TCheckbutton", variable=ShowC1_I, command=TraceSelectADC_Mux)
-    ckbt2.pack(side=TOP)
-    ckbt3 = Checkbutton(frame2r, text='CB-V [2]', style="Strace2.TCheckbutton", variable=ShowC2_V, command=TraceSelectADC_Mux)
-    ckbt3.pack(side=TOP)
-    ckbt4 = Checkbutton(frame2r, text='CB-I [4]', style="Strace4.TCheckbutton", variable=ShowC2_I, command=TraceSelectADC_Mux)
-    ckbt4.pack(side=TOP)
-
+    ckbt1 = Checkbutton(frame2r, text='CA-V (tensão)  [1]', style="Rtrace1.TCheckbutton", variable=ShowC1_V, command=TraceSelectADC_Mux)
+    ckbt1.pack(side=TOP,fill=X ,padx=1,pady=1)
+    ckbt2 = Checkbutton(frame2r, text='CA-I (corrente) [3]', style="Rtrace3.TCheckbutton", variable=ShowC1_I, command=TraceSelectADC_Mux)
+    ckbt2.pack(side=TOP,fill=X ,padx=1,pady=1)
+    ckbt3 = Checkbutton(frame2r, text='CB-V (tensão)  [2]', style="Rtrace2.TCheckbutton", variable=ShowC2_V, command=TraceSelectADC_Mux)
+    ckbt3.pack(side=TOP,fill=X ,padx=1,pady=1)
+    ckbt4 = Checkbutton(frame2r, text='CB-I (corrente) [4]', style="Rtrace4.TCheckbutton", variable=ShowC2_I, command=TraceSelectADC_Mux)
+    ckbt4.pack(side=TOP,fill=X ,padx=1,pady=1)
+   
 if ShowBallonHelp > 0:
     math_tip = CreateToolTip(mathbt, 'Open Math window')
     BuildAWGScreen_tip = CreateToolTip(BuildAWGScreen, 'Surface AWG Controls window')
@@ -21427,61 +21572,68 @@ if ShowBallonHelp > 0:
     BuildIAScreen_tip = CreateToolTip(BuildIAScreen, 'Open Impedance analyzer window')
     BuildOhmScreen_tip = CreateToolTip(BuildOhmScreen, 'Open DC Ohmmeter window')
 # Digital Input / Output Option screens
-DigScreenStatus = IntVar(0)
-DigScreenStatus.set(0)
-if EnableDigIO > 0:
-    BuildDigScreen = Button(frame2r, text="Digital I/O Screen", style="W17.TButton", command=MakeDigScreen)
-    BuildDigScreen.pack(side=TOP)
+if (simpleInterface == 0):
+    DigScreenStatus = IntVar(0)
+    DigScreenStatus.set(0)
+    if EnableDigIO > 0:
+        BuildDigScreen = Button(frame2r, text="Digital I/O Screen", style="Default.TButton", width=17, command=MakeDigScreen)
+        BuildDigScreen.pack(side=TOP,fill=X ,padx=1,pady=1)
 #
 # Optional plugin tools
 if EnablePIODACMode > 0:
-    BuildDacScreen = Button(frame2r, text="PIO-DAC Screen", style="W17.TButton", command=MakeDacScreen)
-    BuildDacScreen.pack(side=TOP)
+    BuildDacScreen = Button(frame2r, text="PIO-DAC Screen", style="Default.TButton", width=17, command=MakeDacScreen)
+    BuildDacScreen.pack(side=TOP,fill=X ,padx=1,pady=1)
 if EnableMuxMode > 0:
-    BuildMuxScreen = Button(frame2r, text="Analog In Mux Screen", style="W17.TButton", command=MakeMuxModeWindow)
-    BuildMuxScreen.pack(side=TOP)
+    BuildMuxScreen = Button(frame2r, text="Analog In Mux Screen", style="Default.TButton", width=17, command=MakeMuxModeWindow)
+    BuildMuxScreen.pack(side=TOP,fill=X ,padx=1,pady=1)
 if EnableMinigenMode > 0:
-    BuildMinigenScreen = Button(frame2r, text="AD983x DDS Screen", style="W17.TButton", command=MakeMinigenWindow)
-    BuildMinigenScreen.pack(side=TOP)
+    BuildMinigenScreen = Button(frame2r, text="AD983x DDS Screen", style="Default.TButton", width=17, command=MakeMinigenWindow)
+    BuildMinigenScreen.pack(side=TOP,fill=X ,padx=1,pady=1)
 if EnablePmodDA1Mode > 0:
-    BuildDA1Screen = Button(frame2r, text="PMOD DA1 Screen", style="W17.TButton", command=MakeDA1Window)
-    BuildDA1Screen.pack(side=TOP)
+    BuildDA1Screen = Button(frame2r, text="PMOD DA1 Screen", style="Default.TButton", width=17, command=MakeDA1Window)
+    BuildDA1Screen.pack(side=TOP,fill=X ,padx=1,pady=1)
 if EnableDigPotMode >0:
-    BuildDigPotScreen = Button(frame2r, text="Dig Pot Screen", style="W17.TButton", command=MakeDigPotWindow)
-    BuildDigPotScreen.pack(side=TOP)
+    BuildDigPotScreen = Button(frame2r, text="Dig Pot Screen", style="Default.TButton", width=17, command=MakeDigPotWindow)
+    BuildDigPotScreen.pack(side=TOP,fill=X ,padx=1,pady=1)
 if EnableGenericSerialMode >0:
-    GenericSerialScreen = Button(frame2r, text="Generic Serial Output", style="W17.TButton", command=MakeGenericSerialWindow)
-    GenericSerialScreen.pack(side=TOP)
+    GenericSerialScreen = Button(frame2r, text="Generic Serial Output", style="Default.TButton", width=17, command=MakeGenericSerialWindow)
+    GenericSerialScreen.pack(side=TOP,fill=X ,padx=1,pady=1)
 if EnableAD5626SerialMode >0:
-    AD5626SerialScreen = Button(frame2r, text="AD5626 Output", style="W17.TButton", command=MakeAD5626Window)
-    AD5626SerialScreen.pack(side=TOP)
+    AD5626SerialScreen = Button(frame2r, text="AD5626 Output", style="Default.TButton", width=17, command=MakeAD5626Window)
+    AD5626SerialScreen.pack(side=TOP,fill=X ,padx=1,pady=1)
 if EnableDigitalFilter >0:
-    DigFiltScreen = Button(frame2r, text="Digital Filter", style="W17.TButton", command=MakeDigFiltWindow)
-    DigFiltScreen.pack(side=TOP)
+    DigFiltScreen = Button(frame2r, text="Digital Filter", style="Default.TButton", width=17, command=MakeDigFiltWindow)
+    DigFiltScreen.pack(side=TOP,fill=X ,padx=1,pady=1)
 if EnableCommandInterface > 0:
-    CommandLineScreen = Button(frame2r, text="Command Interface", style="W17.TButton", command=MakeCommandScreen)
-    CommandLineScreen.pack(side=TOP)
+    CommandLineScreen = Button(frame2r, text="Command Interface", style="Default.TButton", width=17, command=MakeCommandScreen)
+    CommandLineScreen.pack(side=TOP,fill=X ,padx=1,pady=1)
 if EnableMeasureScreen > 0:
-    MeasureScreen = Button(frame2r, text="Measure Screen", style="W17.TButton", command=MakeMeasureScreen)
-    MeasureScreen.pack(side=TOP)
+    MeasureScreen = Button(frame2r, text="Measure Screen", style="Default.TButton", width=17, command=MakeMeasureScreen)
+    MeasureScreen.pack(side=TOP,fill=X ,padx=1,pady=1)
 if EnableETSScreen > 0:
-    ETSScreen = Button(frame2r, text="ETS Controls", style="W17.TButton", command=MakeETSWindow)
-    ETSScreen.pack(side=TOP)
+    ETSScreen = Button(frame2r, text="ETS Controls", style="Default.TButton", width=17, command=MakeETSWindow)
+    ETSScreen.pack(side=TOP,fill=X ,padx=1,pady=1)
 # input probe wigets
-prlab = Label(frame2r, text="Adjust Gain / Offset")
-prlab.pack(side=TOP)
+prlab = Label(frame2r, text="Adjust Gain / Offset", anchor="e")
+if (simpleInterface == 0):
+    prlab.pack(side=TOP,fill=X,padx=1,pady=1)
+
+#changed gains/offset order to keep up with the pattern Av, Ai, Bv, Bi
 # Input Probes sub frame 
 ProbeA = Frame( frame2r )
-ProbeA.pack(side=TOP)
-gain1lab = Label(ProbeA, text="CA-V")
-gain1lab.pack(side=LEFT)
+
+if (simpleInterface == 0):
+    ProbeA.pack(side=TOP,fill=X)
+
+gain1lab = Label(ProbeA, text="CA-V", style="Rtrace1.TButton",width = 9)
+gain1lab.grid(row=0, column=0,sticky=E+W,padx=1,pady=1)
 CHAVGainEntry = Entry(ProbeA, width=5, cursor='double_arrow')
 CHAVGainEntry.bind('<Return>', onTextKey)
 CHAVGainEntry.bind('<MouseWheel>', onTextScroll)
 CHAVGainEntry.bind("<Button-4>", onTextScroll)# with Linux OS
 CHAVGainEntry.bind("<Button-5>", onTextScroll)
 CHAVGainEntry.bind('<Key>', onTextKey)
-CHAVGainEntry.pack(side=LEFT)
+CHAVGainEntry.grid(row=0, column=1,sticky=E+W+N+S,padx=1,pady=1)
 CHAVGainEntry.delete(0,"end")
 CHAVGainEntry.insert(0,1.0)
 CHAVOffsetEntry = Entry(ProbeA, width=5, cursor='double_arrow')
@@ -21490,78 +21642,80 @@ CHAVOffsetEntry.bind('<MouseWheel>', onTextScroll)
 CHAVOffsetEntry.bind("<Button-4>", onTextScroll)# with Linux OS
 CHAVOffsetEntry.bind("<Button-5>", onTextScroll)
 CHAVOffsetEntry.bind('<Key>', onTextKey)
-CHAVOffsetEntry.pack(side=LEFT)
+CHAVOffsetEntry.grid(row=0, column=2,sticky=E+W+N+S,padx=1,pady=1)
 CHAVOffsetEntry.delete(0,"end")
 CHAVOffsetEntry.insert(0,0.0)
 #
-ProbeB = Frame( frame2r )
-ProbeB.pack(side=TOP)
-gain2lab = Label(ProbeB, text="CB-V")
-gain2lab.pack(side=LEFT)
-CHBVGainEntry = Entry(ProbeB, width=5, cursor='double_arrow')
-CHBVGainEntry.bind('<Return>', onTextKey)
-CHBVGainEntry.bind('<MouseWheel>', onTextScroll)
-CHBVGainEntry.bind("<Button-4>", onTextScroll)# with Linux OS
-CHBVGainEntry.bind("<Button-5>", onTextScroll)
-CHBVGainEntry.bind('<Key>', onTextKey)
-CHBVGainEntry.pack(side=LEFT)
-CHBVGainEntry.delete(0,"end")
-CHBVGainEntry.insert(0,1.0)
-CHBVOffsetEntry = Entry(ProbeB, width=5, cursor='double_arrow')
-CHBVOffsetEntry.bind('<Return>', onTextKey)
-CHBVOffsetEntry.bind('<MouseWheel>', onTextScroll)
-CHBVOffsetEntry.bind("<Button-4>", onTextScroll)# with Linux OS
-CHBVOffsetEntry.bind("<Button-5>", onTextScroll)
-CHBVOffsetEntry.bind('<Key>', onTextKey)
-CHBVOffsetEntry.pack(side=LEFT)
-CHBVOffsetEntry.delete(0,"end")
-CHBVOffsetEntry.insert(0,0.0)
-#
-ProbeAI = Frame( frame2r )
-ProbeAI.pack(side=TOP)
-gainailab = Label(ProbeAI, text="CA-I")
-gainailab.pack(side=LEFT)
-CHAIGainEntry = Entry(ProbeAI, width=5, cursor='double_arrow')
+gainailab = Label(ProbeA, text="CA-I", style="Rtrace3.TButton")
+gainailab.grid(row=1, column=0,sticky=E+W,padx=1,pady=1)
+CHAIGainEntry = Entry(ProbeA, width=5, cursor='double_arrow')
 CHAIGainEntry.bind('<Return>', onTextKey)
 CHAIGainEntry.bind('<MouseWheel>', onTextScroll)
 CHAIGainEntry.bind("<Button-4>", onTextScroll)# with Linux OS
 CHAIGainEntry.bind("<Button-5>", onTextScroll)
 CHAIGainEntry.bind('<Key>', onTextKey)
-CHAIGainEntry.pack(side=LEFT)
+CHAIGainEntry.grid(row=1, column=1,sticky=E+W+N+S,padx=1,pady=1)
 CHAIGainEntry.delete(0,"end")
 CHAIGainEntry.insert(0,1.0)
-CHAIOffsetEntry = Entry(ProbeAI, width=5, cursor='double_arrow')
+CHAIOffsetEntry = Entry(ProbeA, width=5, cursor='double_arrow')
 CHAIOffsetEntry.bind('<Return>', onTextKey)
 CHAIOffsetEntry.bind('<MouseWheel>', onTextScroll)
 CHAIOffsetEntry.bind("<Button-4>", onTextScroll)# with Linux OS
 CHAIOffsetEntry.bind("<Button-5>", onTextScroll)
 CHAIOffsetEntry.bind('<Key>', onTextKey)
-CHAIOffsetEntry.pack(side=LEFT)
+CHAIOffsetEntry.grid(row=1, column=2,sticky=E+W+N+S,padx=1,pady=1)
 CHAIOffsetEntry.delete(0,"end")
 CHAIOffsetEntry.insert(0,0.0)
 #
-ProbeBI = Frame( frame2r )
-ProbeBI.pack(side=TOP)
-gainbilab = Label(ProbeBI, text="CB-I")
-gainbilab.pack(side=LEFT)
-CHBIGainEntry = Entry(ProbeBI, width=5, cursor='double_arrow')
+gain2lab = Label(ProbeA, text="CB-V", style="Rtrace2.TButton")
+gain2lab.grid(row=2, column=0,sticky=E+W,padx=1,pady=1)
+CHBVGainEntry = Entry(ProbeA, width=5, cursor='double_arrow')
+CHBVGainEntry.bind('<Return>', onTextKey)
+CHBVGainEntry.bind('<MouseWheel>', onTextScroll)
+CHBVGainEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+CHBVGainEntry.bind("<Button-5>", onTextScroll)
+CHBVGainEntry.bind('<Key>', onTextKey)
+CHBVGainEntry.grid(row=2, column=1,sticky=E+W+N+S,padx=1,pady=1)
+CHBVGainEntry.delete(0,"end")
+CHBVGainEntry.insert(0,1.0)
+CHBVOffsetEntry = Entry(ProbeA, width=5, cursor='double_arrow')
+CHBVOffsetEntry.bind('<Return>', onTextKey)
+CHBVOffsetEntry.bind('<MouseWheel>', onTextScroll)
+CHBVOffsetEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+CHBVOffsetEntry.bind("<Button-5>", onTextScroll)
+CHBVOffsetEntry.bind('<Key>', onTextKey)
+CHBVOffsetEntry.grid(row=2, column=2,sticky=E+W+N+S,padx=1,pady=1)
+CHBVOffsetEntry.delete(0,"end")
+CHBVOffsetEntry.insert(0,0.0)
+
+#
+gainbilab = Label(ProbeA, text="CB-I", style="Rtrace4.TButton")
+gainbilab.grid(row=3, column=0,sticky=E+W,padx=1,pady=1)
+CHBIGainEntry = Entry(ProbeA, width=5, cursor='double_arrow')
 CHBIGainEntry.bind('<Return>', onTextKey)
 CHBIGainEntry.bind('<MouseWheel>', onTextScroll)
 CHBIGainEntry.bind("<Button-4>", onTextScroll)# with Linux OS
 CHBIGainEntry.bind("<Button-5>", onTextScroll)
 CHBIGainEntry.bind('<Key>', onTextKey)
-CHBIGainEntry.pack(side=LEFT)
+CHBIGainEntry.grid(row=3, column=1,sticky=E+W+N+S,padx=1,pady=1)
 CHBIGainEntry.delete(0,"end")
 CHBIGainEntry.insert(0,1.0)
-CHBIOffsetEntry = Entry(ProbeBI, width=5, cursor='double_arrow')
+CHBIOffsetEntry = Entry(ProbeA, width=5, cursor='double_arrow')
 CHBIOffsetEntry.bind('<Return>', onTextKey)
 CHBIOffsetEntry.bind('<MouseWheel>', onTextScroll)
 CHBIOffsetEntry.bind("<Button-4>", onTextScroll)# with Linux OS
 CHBIOffsetEntry.bind("<Button-5>", onTextScroll)
 CHBIOffsetEntry.bind('<Key>', onTextKey)
-CHBIOffsetEntry.pack(side=LEFT)
+CHBIOffsetEntry.grid(row=3, column=2,sticky=E+W+N+S,padx=1,pady=1)
 CHBIOffsetEntry.delete(0,"end")
 CHBIOffsetEntry.insert(0,0.0)
+
+
+
+gainbilab = Label(frame2r, text="Gerador de sinais analógico")
+gainbilab.pack(side=TOP)
+
+
 # add ADI logo Don't mess with this bit map data!
 ADIlogo = """
 R0lGODlhdAAxAPcAAAAAAIAAAACAAICAAAAAgIAAgACAgICAgMDAwP8AAAD/AP//AAAA//8A/wD/
@@ -21603,24 +21757,73 @@ RwuqEtgqy3gt/hkTdXYUVl0cqEiFyE5ozlugL+GXpS32pwkdjNIqncjNWnXwYBZaEVSm+CIyQekv
 jYTffaDkpjqpzpOym6a8HmepKk2KcAS5J+OcV0JDAIXJioPMEZQaxJd6Kkqfe1RTNxfquWNRBFo6
 oV0qbvNQ6BQxjP/4TOGSpBSKUDQVEH2awHrTupKa9KQoTWl0AgIAOw==
 """
-logo = PhotoImage(data=ADIlogo)
-ADI1 = Label(frame2r, image=logo, anchor= "sw", compound="top") # , height=49, width=116
-ADI1.pack(side=TOP)
 
+Unifeilogo = """
+R0lGODlhMgAyAOfDAAA0bgA1bgA3bwA5cAA6cCI6byc6bj80ai45bi85bS85bkI2ajg5bTo5bD85
+bEE5bEI5bFkzZkU5a0k4aks4alE4aVM4aWwxYV84Z2A4Z2c3ZW43ZHA3ZHY2YXg2YYgyWo40WpA0
+WZA0WpczVpczV5ozVZszU6UxTs4oKqcxT6wwS6gxT6kxTaoxTLAwSLAwSbIwSLcvQtgoHbsuQbMw
+R9QpJNooG8ItOcgsNNcpIcgsNdgpHtkpHM4rLdMqKNQqJdopG8UtOcEuPNopHMEuPdUqJMosNcct
+NtYqI9YqJNcqItIrKc0sMNIrKkFXfkdXfdoyKNg0K1BhhNs+N8ZDTNtBOtZDPV9vjWBvjdJRTttQ
+TNFUUdtSTtBYVdBZV2Z1kWd1kc5dW9xdWdBjZnN9ltxjYctpaN1qaNdsbN1tat1ua95zccF8fM16
+f4aOooaOo8CAgb6Cg957eoyUp7uIiYyVp96BgN+BgJqUpLiNj7WRk7STlbOUlt+JiMKVneCPjqye
+oJyisdSTlqiipKalqKelp7OiraSnquGWlqKqrbKnqdmcnOGamsqhp66qttSgpOGdneGfnt6goamw
+s6mxs62yvqyztuKkpbC1wLC1weCtruOtrra8vuSxsdG3vLu/yL3CxeS4uOS5usDEx+W6usHEzeXA
+wd7CxcXKzObBwubExdDT2dXT2OfP0NPV19PW2NbY3dfa3OnW2Ond3t/h5Org4uvj5evk5uvl5uvl
+5+Xn6ubo6ufo6ufp6+vp6+nq7Ozr7evs7uzt7///////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////yH5BAEKAP8ALAAAAAAyADIA
+AAj+AP8JHEiwoMBECA0SRJhIocOHDhkmfCixIcSLBisyjKjRIkaIHTcqDDnxI0eSIQdpNAkSZUc+
+Q8zskciSokuNW4bo9CKy5sibDPPo1EmnpM+CHSmNekWLlzBhvGi5yjI0DM2jCytyihVsVaU6ZMCA
+IVPHz9AogCpiPSjRUixdmKQQmEuXgIEeQzXFsqQWo0e2DEH9+uSkrmESQ3U8+fQLVN+BfwE3rIiq
+lxvDhhU0GaphrpteqNRehUwSFa0rmA2bGHqiLhZaoUlm7QiqF5bUdR380MkEgWEsvRyHJN3R0q/L
+BErBWs6cuaChp5qXmvvmF9/h/0jG+kQX1tPv323+VdGJ6HsuUrDofoolmyQnXYXnegf/PZJOLbie
+1iqTKv1cJ7pwAlRFsWRS13zCwBLAghHIoNMHAABwAQpCACBAXZmwNyBClAQjV3ff+UcADDrNMJcH
+SfCQAWZSBDMJdhqNsophCPqHgU5JWECACDwMwQJuq4yyElIMvVIJjSHOFYNOIxBwgk5LMIBbJa+M
+RiRCtMyB5FPpcaBTEAa4MBQIuBFQBy1WzpYIL2RsKQwtgVAxBBSGNNKHTmgEMgBuZOySJnGJCPOF
+m8K0otMmTzEyhA2yCAMAbmAI86dkghK6xhBn+CLMLEAMAclTj6YW6aTZMcSmm6roJMcjgbQxhA/+
+eASiJ59+9nRlIlm6mYZOOFBQwQ5DhFAmXWeSKpGRW5qi0w0NEKDCEEcMSxeVf8Y444HC+CLGEEQk
+QMAEOQyxgbRzBTlkSB1+KJ8wogwxhm8EtDDEC+QS0OKLGyYSCyYH+sLFHawsuIASNRywYIQIW4ih
+hvm+Fx8BsHRih6ZPXTJEKPSBJyKAAg6nHXfyhUKxMLdMoQYwGSc513qylVrccXMp15wkQ3jS3M2w
+TEdAddd1BGhFtd1mGARI0FAvcML5/DNlpxm2QhISkHsFbCjd6jJClSFHwANJlEDuZ7FtVO2tiQhG
+GAEpGFHAsE4wlrRR2X1UkVu6OFJEB2VKgYlZLns9dpRGnCzyh1dzhDXWHJWsEkwsHZPKUkWFWKHI
+Uk09FdUro+Dr91pXswFHvnCvJREhXRwCeuh/MxSHHqej7lPrSnNe9U/YcX61sbHb/nNLtup+Je8+
+BQQAOw==
+"""
+logo = PhotoImage(data=ADIlogo)
+ADI2 = Label(frame2r, image=logo,  compound="top") # , height=49, width=116
+ADI2.pack(side=BOTTOM)
+
+logo1 = PhotoImage(data=Unifeilogo)
+ADI1 = Label(frame2r, image=logo1, compound="top") # , height=49, width=116
+ADI1.pack(side=BOTTOM)
+
+
+
+
+###############################################################################
 # Bottom Buttons
+###############################################################################
+# changed all buttons to before the text, as they also serve as labels
+
+
 # Voltage channel A
+
+CHAlab = Button(frame3, text="CA V/Div", width=8,style="Rtrace1.TButton", command=SetScaleA)
+CHAlab.grid(row=0,column=0,sticky=E+W+N+S,padx=1,pady=1)
 
 CHAsb = Spinbox(frame3, cursor='double_arrow', width=4, values=CHvpdiv, command=BCHAlevel)
 #CHAsb = ttk.Spinbox(frame3, cursor='double_arrow', style="Div.TSpinbox", values=CHvpdiv, command=BCHAlevel)
 CHAsb.bind('<MouseWheel>', onSpinBoxScroll)
 CHAsb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
 CHAsb.bind("<Button-5>", onSpinBoxScroll)
-CHAsb.pack(side=LEFT)
+CHAsb.grid(row=0,column=1,sticky=E+W+N+S,padx=1,pady=1)
 CHAsb.delete(0,"end")
 CHAsb.insert(0,0.5)
-#
-CHAlab = Button(frame3, text="CA V/Div", style="Rtrace1.TButton", command=SetScaleA)
-CHAlab.pack(side=LEFT)
+
+
+CHAofflab = Button(frame3, text="CA V Pos", width=8, style="Rtrace1.TButton", command=SetVAPoss)
+CHAofflab.grid(row=0,column=2,sticky=E+W+N+S,padx=1,pady=1)
 
 CHAVPosEntry = Entry(frame3, width=5, cursor='double_arrow')
 CHAVPosEntry.bind("<Return>", BOffsetA)
@@ -21628,21 +21831,25 @@ CHAVPosEntry.bind('<MouseWheel>', onTextScroll)# with Windows OS
 CHAVPosEntry.bind("<Button-4>", onTextScroll)# with Linux OS
 CHAVPosEntry.bind("<Button-5>", onTextScroll)
 CHAVPosEntry.bind('<Key>', onTextKey)
-CHAVPosEntry.pack(side=LEFT)
+CHAVPosEntry.grid(row=0,column=3,sticky=E+W+N+S,padx=1,pady=1)
 CHAVPosEntry.delete(0,"end")
 CHAVPosEntry.insert(0,2.5)
-CHAofflab = Button(frame3, text="CA V Pos", style="Rtrace1.TButton", command=SetVAPoss)
-CHAofflab.pack(side=LEFT)
+
 # Current channel A
+CHAIlab = Button(frame3, text="CA mA/Div", width=9, style="Rtrace3.TButton", command=SetScaleIA)
+CHAIlab.grid(row=0,column=4,sticky=E+W+N+S,padx=1,pady=1)
+
 CHAIsb = Spinbox(frame3, cursor='double_arrow', width=4, values=CHipdiv, command=BCHAIlevel)
 CHAIsb.bind('<MouseWheel>', onSpinBoxScroll)
 CHAIsb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
 CHAIsb.bind("<Button-5>", onSpinBoxScroll)
-CHAIsb.pack(side=LEFT)
+CHAIsb.grid(row=0,column=5,sticky=E+W+N+S,padx=1,pady=1)
 CHAIsb.delete(0,"end")
 CHAIsb.insert(0,50.0)
-CHAIlab = Button(frame3, text="CA mA/Div", style="Strace3.TButton", command=SetScaleIA)
-CHAIlab.pack(side=LEFT)
+
+
+CHAIofflab = Button(frame3, text="CA I Pos", width=8, style="Rtrace3.TButton", command=SetIAPoss)
+CHAIofflab.grid(row=0,column=6,sticky=E+W+N+S,padx=1,pady=1)
 
 CHAIPosEntry = Entry(frame3, width=5, cursor='double_arrow')
 CHAIPosEntry.bind("<Return>", BIOffsetA)
@@ -21650,22 +21857,26 @@ CHAIPosEntry.bind('<MouseWheel>', onTextScroll)# with Windows OS
 CHAIPosEntry.bind("<Button-4>", onTextScroll)# with Linux OS
 CHAIPosEntry.bind("<Button-5>", onTextScroll)
 CHAIPosEntry.bind('<Key>', onTextKey)
-CHAIPosEntry.pack(side=LEFT)
+CHAIPosEntry.grid(row=0,column=7,sticky=E+W+N+S,padx=1,pady=1)
 CHAIPosEntry.delete(0,"end")
 CHAIPosEntry.insert(0,0.0)
-CHAIofflab = Button(frame3, text="CA I Pos", style="Rtrace3.TButton", command=SetIAPoss)
-CHAIofflab.pack(side=LEFT)
+
+
 # Voltage channel B
+CHBlab = Button(frame3, text="CB V/Div", width=8, style="Rtrace2.TButton", command=SetScaleB)
+CHBlab.grid(row=0,column=8,sticky=E+W+N+S,padx=1,pady=1)
+
 CHBsb = Spinbox(frame3, width=4, cursor='double_arrow', values=CHvpdiv, command=BCHBlevel)
 CHBsb.bind('<MouseWheel>', onSpinBoxScroll)
 CHAIsb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
 CHAIsb.bind("<Button-5>", onSpinBoxScroll)
-CHBsb.pack(side=LEFT)
+CHBsb.grid(row=0,column=9,sticky=E+W+N+S,padx=1,pady=1)
 CHBsb.delete(0,"end")
 CHBsb.insert(0,0.5)
 #
-CHBlab = Button(frame3, text="CB V/Div", style="Strace2.TButton", command=SetScaleB)
-CHBlab.pack(side=LEFT)
+
+CHBofflab = Button(frame3, text="CB V Pos", width=8, style="Rtrace2.TButton", command=SetVBPoss)
+CHBofflab.grid(row=0,column=10,sticky=E+W+N+S,padx=1,pady=1)
 
 CHBVPosEntry = Entry(frame3, width=5, cursor='double_arrow')
 CHBVPosEntry.bind("<Return>", BOffsetB)
@@ -21673,21 +21884,26 @@ CHBVPosEntry.bind('<MouseWheel>', onTextScroll)# with Windows OS
 CHBVPosEntry.bind("<Button-4>", onTextScroll)# with Linux OS
 CHBVPosEntry.bind("<Button-5>", onTextScroll)
 CHBVPosEntry.bind('<Key>', onTextKey)
-CHBVPosEntry.pack(side=LEFT)
+CHBVPosEntry.grid(row=0,column=11,sticky=E+W+N+S,padx=1,pady=1)
 CHBVPosEntry.delete(0,"end")
 CHBVPosEntry.insert(0,2.5)
-CHBofflab = Button(frame3, text="CB V Pos", style="Rtrace2.TButton", command=SetVBPoss)
-CHBofflab.pack(side=LEFT)
+
+
 # Current channel B
+CHBIlab = Button(frame3, text="CB mA/Div", width=9, style="Rtrace4.TButton", command=SetScaleIB)
+CHBIlab.grid(row=0,column=12,sticky=E+W+N+S,padx=1,pady=1)
+
 CHBIsb = Spinbox(frame3, width=4, cursor='double_arrow', values=CHipdiv, command=BCHBIlevel)
 CHBIsb.bind('<MouseWheel>', onSpinBoxScroll)
 CHBIsb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
 CHBIsb.bind("<Button-5>", onSpinBoxScroll)
-CHBIsb.pack(side=LEFT)
+CHBIsb.grid(row=0,column=13,sticky=E+W+N+S,padx=1,pady=1)
 CHBIsb.delete(0,"end")
 CHBIsb.insert(0,50.0)
-CHBIlab = Button(frame3, text="CB mA/Div", style="Strace4.TButton", command=SetScaleIB)
-CHBIlab.pack(side=LEFT)
+
+
+CHBIofflab = Button(frame3, text="CB I Pos", width=8, style="Rtrace4.TButton", command=SetIBPoss)
+CHBIofflab.grid(row=0,column=14,sticky=E+W+N+S,padx=1,pady=1)
 
 CHBIPosEntry = Entry(frame3, width=5, cursor='double_arrow')
 CHBIPosEntry.bind("<Return>", BIOffsetB)
@@ -21695,11 +21911,10 @@ CHBIPosEntry.bind('<MouseWheel>', onTextScroll)# with Windows OS
 CHBIPosEntry.bind("<Button-4>", onTextScroll)# with Linux OS
 CHBIPosEntry.bind("<Button-5>", onTextScroll)
 CHBIPosEntry.bind('<Key>', onTextKey)
-CHBIPosEntry.pack(side=LEFT)
+CHBIPosEntry.grid(row=0,column=15,sticky=E+W+N+S,padx=1,pady=1)
 CHBIPosEntry.delete(0,"end")
 CHBIPosEntry.insert(0,0.0)
-CHBIofflab = Button(frame3, text="CB I Pos", style="Rtrace4.TButton", command=SetIBPoss)
-CHBIofflab.pack(side=LEFT)
+
 #
 if ShowBallonHelp > 0:
     CHAlab_tip = CreateToolTip(CHAlab, 'Select CHA-V vertical range/position axis to be used for markers and drawn color')
@@ -21711,6 +21926,9 @@ if ShowBallonHelp > 0:
     CHAIofflab_tip = CreateToolTip(CHAIofflab, 'Set CHA-I position to DC average of signal')
     CHBIofflab_tip = CreateToolTip(CHBIofflab, 'Set CHB-I position to DC average of signal')
 #
+
+
+
 root.geometry('+300+0')
 root.protocol("WM_DELETE_WINDOW", Bcloseexit)
 #===== Initalize device ======
@@ -21718,7 +21936,7 @@ if not numpy_found:
     root.update()
     showwarning("WARNING","Numpy not found!")
     root.destroy()
-    exit()
+    #exit()
 #
 BrdSel = IntVar(0)
 BoardStatus = IntVar(0)
@@ -21738,5 +21956,5 @@ else:
     root.update()
     showwarning("WARNING","Pysmu not found!")
     root.destroy()
-    exit()
+    #exit()
 

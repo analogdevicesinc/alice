@@ -1,0 +1,9 @@
+libs_to_substitute_for_numpy/*
+dist/*
+build/*
+.vscode/settings.json
+alice-desktop-1.3.spec
+alice-last-config.cfg
+calib23430303630313.txt
+inno_setup_script.iss
+setup.py
