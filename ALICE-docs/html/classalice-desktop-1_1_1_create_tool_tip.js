@@ -1,6 +1,7 @@
 var classalice_desktop_1_1_1_create_tool_tip =
 [
     [ "__init__", "classalice-desktop-1_1_1_create_tool_tip.html#a8336d19f13ca2553ebc3980f507479e0", null ],
+    [ "configure", "classalice-desktop-1_1_1_create_tool_tip.html#a7795b377279fd9d7c1e17117db20b038", null ],
     [ "enter", "classalice-desktop-1_1_1_create_tool_tip.html#a41df9e5362fe569b9173a4c6d894b99c", null ],
     [ "hidetip", "classalice-desktop-1_1_1_create_tool_tip.html#ab5e9ac7b2957f299e378b70d47760a88", null ],
     [ "leave", "classalice-desktop-1_1_1_create_tool_tip.html#af4c5bff90dc4d63a5078f75e251d0215", null ],
