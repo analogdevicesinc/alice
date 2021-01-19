@@ -351,7 +351,11 @@ else:
     Style_String = 'alt'
 # Check if there is an alice_init.ini file to read in
 try:
-    InitFile = open("alice_init.ini")
+    import alice
+    import pathlib
+    path = pathlib.Path(alice.__file__).parent.absolute()
+    filename = os.path.join(path, "resources", "alice_init.ini")
+    InitFile = open(filename)
     for line in InitFile:
         try:
             exec( line.rstrip() )

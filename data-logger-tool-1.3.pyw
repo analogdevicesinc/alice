@@ -71,7 +71,11 @@ SampRates = (10, 25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500)
 RunStatus = 0
 # Check if there is an init.ini file to read in
 try:
-    InitFile = open("datalogger_init.ini")
+    import alice
+    import pathlib
+    path = pathlib.Path(alice.__file__).parent.absolute()
+    filename = os.path.join(path, "resources", "datalogger_init.ini")
+    InitFile = open(filename)
     for line in InitFile:
         try:
             exec( line.rstrip() )
