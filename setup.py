@@ -15,8 +15,11 @@ def _get_version():
             raise RuntimeError("Unable to extract version.")
 
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+try:
+    with open("README.md", "r") as fh:
+        long_description = fh.read()
+except:
+    long_description = "Active Learning Interface (for) Circuits (and) Electronics"
 
 setuptools.setup(
     name="alice",
