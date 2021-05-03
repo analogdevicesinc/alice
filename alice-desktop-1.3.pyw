@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
-## @package alice-desktop 1.3.py(w)
-# ADALM1000 alice-desktop 1.3.py(w) (12-5-2020)
+#
+# ADALM1000 alice-desktop 1.3.py(w) (5-7-2021)
 # For Python version 2.7 or 3.7, Windows OS and Linux OS
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -25,6 +25,13 @@ import sys
 import struct
 import subprocess
 from time import gmtime, strftime
+# Check to see if user passed init file name on command line
+if len(sys.argv) > 1:
+    InitFileName = str(sys.argv[1])
+    print( 'Init file name: ' + InitFileName )
+else:
+    InitFileName = 'alice_init.ini'
+
 if sys.version_info[0] == 2:
     print ("Python 2.x")
     import urllib2
@@ -56,9 +63,9 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(5 Dec 2020)"
+RevDate = "(7 May 2021)"
 SWRev = "1.3 "
-Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.9/alice-desktop-1.3-setup.exe'
+Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.10/alice-desktop-1.3-setup.exe'
 # small bit map of ADI logo for window icon
 TBicon = """
 R0lGODlhIAAgAHAAACH5BAEAAAIALAAAAAAgACAAgQAAAP///wAAAAAAAAJJhI+py+0PYwtBWkDp
@@ -163,6 +170,7 @@ SAMPLErate = BaseSampleRate # Scope sample rate can be decimated
 MinSamples = 2000
 MaxSamples = 200000
 ETSrecord = 2000
+AWGRecLength = 32768
 DISsamples = GRW
 # set initial trigger conditions
 TRIGGERlevel = 2.5          # Triggerlevel in volts
@@ -250,6 +258,8 @@ Last_ADC_Mux_Mode = 0
 Alternate_Sweep_Mode = IntVar(0) # alternate sweeps when in 2X samplerate mode
 Alternate_Sweep_Mode.set(0)
 #
+ChopModeFilter = [0.25, 0.25, 0.25, 0.25] # [0.25, 0.25, 0.25, 0.25]
+#
 ZEROstuffing = IntVar(0) # The zero stuffing value is 2 ** ZERO stuffing, calculated on initialize
 ZEROstuffing.set(1)
 FFTwindow = IntVar(0)   # FFT window function variable
@@ -329,6 +339,9 @@ PhaseOffset2x = 37
 #('winnative', 'clam', 'alt', 'default', 'classic', 'vista', 'xpnative')
 # 'aqua' built-in native Mac OS X only; Native Mac OS X
 windowingsystem = root.tk.call('tk', 'windowingsystem')
+ScreenWidth = root.winfo_screenwidth()
+ScreenHeight = root.winfo_screenheight()
+# print(str(ScreenWidth) + "X" + str(ScreenHeight))
 if (root.tk.call('tk', 'windowingsystem')=='aqua'):
     Style_String = 'aqua'
     # On Macs, allow the dock icon to deiconify.
@@ -351,7 +364,12 @@ else:
     Style_String = 'alt'
 # Check if there is an alice_init.ini file to read in
 try:
-    InitFile = open("alice_init.ini")
+    import alice
+    import pathlib
+# pathlib only available as standard in Python 3.4 and higher. For Python 2.7 must manually install package
+    path = pathlib.Path(alice.__file__).parent.absolute()
+    filename = os.path.join(path, "resources", InitFileName) # "alice_init.ini")
+    InitFile = open(filename)
     for line in InitFile:
         try:
             exec( line.rstrip() )
@@ -359,7 +377,16 @@ try:
             print("Skiping " + line.rstrip()) 
     InitFile.close()
 except:
-    print( "No Init File Read")
+    try:
+        InitFile = open(InitFileName) # "alice_init.ini"
+        for line in InitFile:
+            try:
+                exec( line.rstrip() )
+            except:
+                print("Skiping " + line.rstrip()) 
+        InitFile.close()
+    except:
+        print( "No Init File Read. " + InitFileName + " Not Found")
 #
 X0L = FontSize * 7
 XOLF = XOLBP = XOLXY = XOLIA = int(FontSize * 4.625)
@@ -502,8 +529,10 @@ TMAVline = []               # Voltage Trace line MUX channel A
 TMBVline = []               # Voltage Trace line MUX channel B
 TMCVline = []               # Voltage Trace line MUX channel C
 TMDVline = []               # Voltage Trace line MUX channel D
+TMARline = []               # V reference Trace line MUX channel A
 TMBRline = []               # V reference Trace line MUX channel B
 TMCRline = []               # V reference line MUX channel C
+TMDRline = []               # V reference line MUX channel D
 TXYline = []                # XY Trace line
 TXYRline = []               # XY reference trace line
 Tmathline = []              # Math trace line
@@ -560,6 +589,11 @@ NSweepSeriesR = []
 NSweepSeriesX = []
 NSweepSeriesMag = [] # in ohms 
 NSweepSeriesAng = [] # in degrees
+NSweepParallelR = []
+NSweepParallelC = []
+NSweepParallelL = []
+NSweepSeriesC = []
+NSweepSeriesL = []
 NetworkScreenStatus = IntVar(0)
 BDSweepFile = IntVar(0)
 FileSweepFreq = []
@@ -626,6 +660,7 @@ RefIAXline = []
 RefIAMagline = []
 RefIAAngline = []
 IASource = IntVar(0)
+IAGridType = IntVar(0)
 ## In IA display series or parallel values
 DisplaySeries = IntVar(0) 
 IA_Ext_Conf = IntVar(0)
@@ -698,6 +733,10 @@ Show_CBA = IntVar(0)
 Show_CBB = IntVar(0)
 Show_CBC = IntVar(0)
 Show_CBD = IntVar(0)
+ShowRMA = IntVar(0)
+ShowRMB = IntVar(0)
+ShowRMC = IntVar(0)
+ShowRMD = IntVar(0)
 D0 = IntVar(0)
 D1 = IntVar(0)
 D2 = IntVar(0)
@@ -845,7 +884,7 @@ def BSaveConfig(filename):
     global TimeDisp, XYDisp, FreqDisp, IADisp, XYScreenStatus, IAScreenStatus, SpectrumScreenStatus
     global RsystemEntry, ResScale, GainCorEntry, PhaseCorEntry, AWGAPhaseDelay, AWGBPhaseDelay
     global MeasTopV1, MeasBaseV1, MeasTopV2, MeasBaseV2, MeasDelay
-    global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MuxScreenStatus, MuxEnb
+    global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MuxScreenStatus, MuxEnb, ChopMuxMode, ChopTrig, DualMuxMode
     global CHB_Asb, CHB_APosEntry, CHB_Bsb, CHB_BPosEntry, muxwindow
     global CHB_Csb, CHB_CPosEntry, CHB_Dsb, CHB_DPosEntry, HozPossentry
     global SmoothCurvesBP, bodewindow, AWG_Amp_Mode, ColorMode
@@ -873,10 +912,10 @@ def BSaveConfig(filename):
     global ets_TC1Entry, ets_A1Entry, ets_TC2Entry, ets_A2Entry
     global DigFiltStatus, DigFiltABoxCar, DigFiltBBoxCar, BCALenEntry, BCBLenEntry
     global phawindow, PhAca, PhAScreenStatus, PhADisp
-    global GRWPhA, X0LPhA, GRHPhA, Y0TPhA
+    global GRWPhA, X0LPhA, GRHPhA, Y0TPhA, BoardStatus, boardwindow, BrdSel
     global VScale, IScale, RefphEntry, EnableScopeOnly
     global vat_btn, vbt_btn, iat_btn, ibt_btn, vabt_btn
-    global ShowPB_A, ShowPB_B, ShowPB_C, ShowPB_D
+    global ShowPB_A, ShowPB_B, ShowPB_C, ShowPB_D, ScreenWidth, ScreenHeight
     
     # open Config file for Write?
     try:
@@ -900,6 +939,13 @@ def BSaveConfig(filename):
     ConfgFile.write('global MathYString; MathYString = "' + MathYString + '"\n')
     ConfgFile.write('global MathYUnits; MathYUnits = "' + MathYUnits + '"\n')
     ConfgFile.write('global MathYAxis; MathYAxis = "' + MathYAxis + '"\n')
+    if BoardStatus.get() > 0:
+        ConfgFile.write('MakeBoardScreen()\n')
+        ConfgFile.write("boardwindow.geometry('+" + str(boardwindow.winfo_x()) + '+' + str(boardwindow.winfo_y()) + "')\n")
+        ConfgFile.write('BrdSel.set(' + str(BrdSel.get()) + ')\n')
+        ConfgFile.write('SelectBoard()\n')
+    else:
+        ConfgFile.write('DestroyBoardScreen()\n')
     if MathScreenStatus.get() > 0:
         ConfgFile.write('NewEnterMathControls()\n')
         ConfgFile.write("MathWindow.geometry('+" + str(MathWindow.winfo_x()) + '+' + str(MathWindow.winfo_y()) + "')\n")
@@ -1033,6 +1079,9 @@ def BSaveConfig(filename):
         ConfgFile.write('Show_CBC.set(' + str(Show_CBC.get()) + ')\n')
         ConfgFile.write('Show_CBD.set(' + str(Show_CBD.get()) + ')\n')
         ConfgFile.write('MuxEnb.set(' + str(MuxEnb.get()) + ')\n')
+        ConfgFile.write('DualMuxMode.set(' + str(DualMuxMode.get()) + ')\n')
+        ConfgFile.write('ChopMuxMode.set(' + str(ChopMuxMode.get()) + ')\n')
+        ConfgFile.write('ChopTrig.set(' + str(ChopTrig.get()) + ')\n')
         ConfgFile.write('CHB_Asb.delete(0,END)\n')
         ConfgFile.write('CHB_Asb.insert(0, ' + CHB_Asb.get() + ')\n')
         ConfgFile.write('CHB_Bsb.delete(0,END)\n')
@@ -1446,7 +1495,7 @@ def BLoadConfig(filename):
     global RsystemEntry, ResScale, GainCorEntry, PhaseCorEntry
     global MeasTopV1, MeasBaseV1, MeasTopV2, MeasBaseV2
     global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MuxScreenStatus, MuxEnb
-    global CHB_Asb, CHB_APosEntry, CHB_Bsb, CHB_BPosEntry, muxwindow
+    global CHB_Asb, CHB_APosEntry, CHB_Bsb, CHB_BPosEntry, muxwindow, ChopMuxMode, ChopTrig, DualMuxMode
     global CHB_Csb, CHB_CPosEntry, CHB_Dsb, CHB_DPosEntry
     global MathString, MathXString, MathYString, UserAString, UserALabel, UserBString, UserBLabel
     global MathAxis, MathXAxis, MathYAxis, Show_MathX, Show_MathY, MathScreenStatus, MathWindow
@@ -1466,9 +1515,9 @@ def BLoadConfig(filename):
     global SCLKPort, SDATAPort, SLATCHPort, EnableHSsampling, FminEntry, HtMulEntry
     global phawindow, PhAca, PhAScreenStatus, PhADisp
     global GRWPhA, X0LPhA, GRHPhA, Y0TPhA, EnableScopeOnly
-    global VScale, IScale, RefphEntry, SMPfft
+    global VScale, IScale, RefphEntry, SMPfft, BoardStatus, boardwindow, BrdSel
     global vat_btn, vbt_btn, iat_btn, ibt_btn, vabt_btn
-    global ShowPB_A, ShowPB_B, ShowPB_C, ShowPB_D
+    global ShowPB_A, ShowPB_B, ShowPB_C, ShowPB_D, ScreenWidth, ScreenHeight
     global TRACEwidth, ColorMode, ca, COLORcanvas, COLORtrace4, COLORtraceR4, COLORtext
     
     # Read configuration values from file
@@ -1480,6 +1529,68 @@ def BLoadConfig(filename):
             except:
                 print( "Skipping " + line.rstrip())
         ConfgFile.close()
+        if ScreenWidth < root.winfo_x() or ScreenHeight < root.winfo_y(): # check if main window will be placed off screen?
+            root.geometry('+0+0')
+        try:
+            if ScreenWidth < awgwindow.winfo_x() or ScreenHeight < awgwindow.winfo_y(): # check if AWG window will be placed off screen?
+                awgwindow.geometry('+0+0')
+        except:
+            donothing()
+        try:
+            if ScreenWidth < xywindow.winfo_x() or ScreenHeight< xywindow.winfo_y(): # check if XY window will be placed off screen?
+                xywindow.geometry('+0+0')
+        except:
+            donothing()
+        try:
+            if ScreenWidth < iawindow.winfo_x() or ScreenHeight < iawindow.winfo_y(): # check if IA window will be placed off screen?
+                iawindow.geometry('+0+0')
+        except:
+            donothing()
+        try:
+            if ScreenWidth < freqwindow.winfo_x() or ScreenHeight < freqwindow.winfo_y(): # check if SA window will be placed off screen?
+                freqwindow.geometry('+0+0')
+        except:
+            donothing()
+        try:
+            if ScreenWidth < win1.winfo_x() or ScreenHeight < win1.winfo_y(): # check if DAC1 window will be placed off screen?
+                win1.geometry('+0+0')
+        except:
+            donothing()
+        try:
+            if ScreenWidth < win2.winfo_x() or ScreenHeight < win2.winfo_y(): # check if DAC2 window will be placed off screen?
+                win2.geometry('+0+0')
+        except:
+            donothing()
+        try:
+            if ScreenWidth < minigenwindow.winfo_x() or ScreenHeight < minigenwindow.winfo_y(): # check if mini gen window will be placed off screen?
+                minigenwindow.geometry('+0+0')
+        except:
+            donothing()
+        try:
+            if ScreenWidth < muxwindow.winfo_x() or ScreenHeight < muxwindow.winfo_y(): # check if mux window will be placed off screen?
+                muxwindow.geometry('+0+0')
+        except:
+            donothing()
+        try:
+            if ScreenWidth < phawindow.winfo_x() or ScreenHeight < phawindow.winfo_y(): # check if PhA window will be placed off screen?
+                phawindow.geometry('+0+0')
+        except:
+            donothing()
+        try:
+            if ScreenWidth < bodewindow.winfo_x() or ScreenHeight < bodewindow.winfo_y(): # check if Bode window will be placed off screen?
+                bodewindow.geometry('+0+0')
+        except:
+            donothing()
+        try:
+            if ScreenWidth < measurewindow.winfo_x() or ScreenHeight < measurewindow.winfo_y(): # check if Measure window will be placed off screen?
+                measurewindow.geometry('+0+0')
+        except:
+            donothing()
+        try:
+            if ScreenWidth < etswindow.winfo_x() or ScreenHeight < etswindow.winfo_y(): # check if ETS window will be placed off screen?
+                etswindow.geometry('+0+0')
+        except:
+            donothing()
         if DevID != "No Device":
             BAWGAModeLabel()
             BAWGBModeLabel()
@@ -1805,27 +1916,71 @@ def BSaveData():
         DataFile.write( str(TimePnt) + ', ' + str(VBuffA[index]) + ', ' + str(IBuffA[index]) + ', '
                         + str(VBuffB[index]) + ', ' + str(IBuffB[index]) + '\n')
     DataFile.close()
+## Save External Mux data to file
+def BSaveMuxData():
+    global SAMPLErate, VBuffMA, VBuffMB, VBuffMC, VBuffMD
+    # open file to save data
+    filename = asksaveasfilename(defaultextension = ".csv", filetypes=[("Comma Separated Values", "*.csv")])
+    DataFile = open(filename, 'w')
+    DataFile.write( 'Sample-#, MuxA, MuxB, MuxC, MuxD \n' )
+    
+    for index in range(len(VBuffMA)):
+        TimePnt = float((index+0.0)/SAMPLErate)
+        DataFile.write( str(TimePnt) + ', ' + str(VBuffMA[index]) + ', ' + str(VBuffMB[index]) + ', '
+                        + str(VBuffMC[index]) + ', ' + str(VBuffMD[index]) + '\n')
+    DataFile.close()
+    
 ## Save selected scope time array data to file
 def BSaveChannelData():
-    global SAMPLErate, VBuffA, VBuffB, IBuffA, IBuffB
+    global SAMPLErate, VBuffA, VBuffB, IBuffA, IBuffB, VBuffMA, VBuffMB, VBuffMC, VBuffMD
 
     # ask user for channel to save
-    Channel = askstring("Choose Channel", "CA-V, CB-V, CA-I or CB-I\n\nChannel:\n", initialvalue="CA-V")
+    Channel = askstring("Choose Channel", "CA-V, CB-V, CA-I, CB-I\n MuxA, MuxB, MuxC, MuxD \n Channel:\n", initialvalue="CA-V")
     if (Channel == None):         # If Cancel pressed, then None
         return
     # open file to save data
-    filename = asksaveasfilename(defaultextension = ".txt", filetypes=[("Text Columns", "*.txt")])
+    filename = asksaveasfilename(defaultextension = ".csv", filetypes=[("Comma Separated Values", "*.csv")])
     DataFile = open(filename, 'w')
-    for index in range(len(VBuffA)):
-        TimePnt = float((index+0.0)/SAMPLErate)
-        if Channel == "CA-V":
+    if Channel == "CA-V":
+        DataFile.write( 'Sample-#, CA-V\n' )
+        for index in range(len(VBuffA)):
+            TimePnt = float((index+0.0)/SAMPLErate)
             DataFile.write( str(TimePnt) + ', ' + str(VBuffA[index]) + '\n')
-        elif Channel == "CA-I":
+    elif Channel == "CA-I":
+        DataFile.write( 'Sample-#, CA-I,\n' )
+        for index in range(len(IBuffA)):
+            TimePnt = float((index+0.0)/SAMPLErate)
             DataFile.write( str(TimePnt) + ', ' + str(IBuffA[index]) + '\n')
-        elif Channel == "CB-V":
+    elif Channel == "CB-V":
+        DataFile.write( 'Sample-#, CB-V\n' )
+        for index in range(len(VBuffB)):
+            TimePnt = float((index+0.0)/SAMPLErate)
             DataFile.write( str(TimePnt) + ', ' + str(VBuffB[index]) + '\n')
-        elif Channel == "CB-I":
+    elif Channel == "CB-I":
+        DataFile.write( 'Sample-#, CB-I,\n' )
+        for index in range(len(IBuffB)):
+            TimePnt = float((index+0.0)/SAMPLErate)
             DataFile.write( str(TimePnt) + ', ' + str(IBuffB[index]) + '\n')
+    elif Channel == "MuxA":
+        DataFile.write( 'Sample-#, MuxA\n' )
+        for index in range(len(VBuffMA)):
+            TimePnt = float((index+0.0)/SAMPLErate)
+            DataFile.write( str(TimePnt) + ', ' + str(VBuffMA[index]) + '\n')
+    elif Channel == "MuxB":
+        DataFile.write( 'Sample-#, MuxB\n' )
+        for index in range(len(VBuffMB)):
+            TimePnt = float((index+0.0)/SAMPLErate)
+            DataFile.write( str(TimePnt) + ', ' + str(VBuffMB[index]) + '\n')
+    elif Channel == "MuxC":
+        DataFile.write( 'Sample-#, MuxC\n' )
+        for index in range(len(VBuffMC)):
+            TimePnt = float((index+0.0)/SAMPLErate)
+            DataFile.write( str(TimePnt) + ', ' + str(VBuffMC[index]) + '\n')
+    elif Channel == "MuxD":
+        DataFile.write( 'Sample-#, MuxD\n' )
+        for index in range(len(VBuffMD)):
+            TimePnt = float((index+0.0)/SAMPLErate)
+            DataFile.write( str(TimePnt) + ', ' + str(VBuffMD[index]) + '\n')
     DataFile.close()
 ## Read scope all time array data from saved file
 def BReadData():
@@ -1891,8 +2046,10 @@ def BSnapShot():
     global TXYline, Tmathline, TMRline, TXYRline
     global T1VRline, T2VRline, T1IRline, T2IRline, TMCVline, TMDVline
     global ShowC1_V, ShowC1_I, ShowC2_V, ShowC2_I, ShowMath, MathTrace
-    global MuxScreenStatus, TMCRline, TMBRline, TMAVline, TMBVline, TMCVline, TMDVline
+    global MuxScreenStatus, TMARline, TMBRline, TMCRline, TMDRline
+    global TMAVline, TMBVline, TMCVline, TMDVline
     global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MuxEnb
+    global ShowRMA, ShowRMB, ShowRMC, ShowRMD
 
     if ShowC1_V.get() == 1:
         T1VRline = T1Vline               # V reference Trace line channel A
@@ -1906,13 +2063,13 @@ def BSnapShot():
         TMRline = Tmathline              # Math reference Trace line
     if MuxScreenStatus.get() > 0:
         if Show_CBA.get() > 0:
-            T2VRline = TMAVline # V reference Trace line Mux channel A
+            TMARline = TMAVline # V reference Trace line Mux channel A
         if Show_CBB.get() > 0:
             TMBRline = TMBVline # V reference Trace line Mux channel B
         if Show_CBC.get() > 0:
             TMCRline = TMCVline # V reference Trace line Mux channel C
         if Show_CBD.get() > 0:
-            T2IRline = TMDVline # V reference Trace line Mux channel D
+            TMDRline = TMDVline # V reference Trace line Mux channel D
     if len(TXYline) > 4:
         TXYRline = TXYline               # XY reference trace line    
 ## Save gain, offset and filter variables for external dividers
@@ -2339,6 +2496,8 @@ def BTrigger50p():
     global TgInput, TRIGGERlevel, TRIGGERentry, RUNstatus
     global MaxV1, MinV1, MaxV2, MinV2
     global MaxI1, MinI1, MaxI2, MinI2
+    global MidVMuxA, MidVMuxB, MidVMuxC, MidVMuxD
+    global ChopMuxMode, ChopTrig
     # set new trigger level to mid point of waveform    
     MidV1 = (MaxV1+MinV1)/2
     MidV2 = (MaxV2+MinV2)/2
@@ -2354,7 +2513,19 @@ def BTrigger50p():
         DCString = ' {0:.2f} '.format(MidV2)
     elif (TgInput.get() == 4 ):
         DCString = ' {0:.2f} '.format(MidI2)
-
+#
+    if ChopMuxMode.get() > 0:
+        if ChopTrig.get() == 0:
+            DCString = "0.0"
+        if ChopTrig.get() == 1:
+            DCString = ' {0:.2f} '.format(MidVMuxA)
+        if ChopTrig.get() == 2:
+            DCString = ' {0:.2f} '.format(MidVMuxB)
+        if ChopTrig.get() == 3:
+            DCString = ' {0:.2f} '.format(MidVMuxC)
+        if ChopTrig.get() == 4:
+            DCString = ' {0:.2f} '.format(MidVMuxD)
+#
     TRIGGERlevel = eval(DCString)
     TRIGGERentry.delete(0,END)
     TRIGGERentry.insert(4, DCString)
@@ -2594,11 +2765,14 @@ def Bcloseexit():
 def BStart():
     global RUNstatus, PowerStatus, devx, PwrBt, DevID, FWRevOne, session, AWGSync
     global contloop, discontloop, TIMEdiv, First_Slow_sweep
+    global TimeDisp, XYDisp, PhADisp, FreqDisp, BodeDisp, IADisp
     
     if DevID == "No Device":
         showwarning("WARNING","No Device Plugged In!")
     elif FWRevOne == 0.0:
         showwarning("WARNING","Out of data Firmware!")
+    elif TimeDisp.get() == 0 and XYDisp.get() == 0 and PhADisp.get() == 0 and FreqDisp.get() == 0 and BodeDisp.get() == 0 and IADisp.get() == 0:
+        showwarning("WARNING","Enable at least one Instrument!")
     else:
         if PowerStatus == 0:
             PowerStatus = 1
@@ -2614,7 +2788,7 @@ def BStart():
                 if not session.continuous:
                     session.start(0)
                 time.sleep(0.02) # wait awhile here for some reason
-            elif session.continuous:
+            elif session.continuous: 
                 session.end()
                 session.flush()
                 CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z mode
@@ -2671,7 +2845,7 @@ def BStartIA():
         AWGAFreqEntry.delete(0,"end")
         AWGAFreqEntry.insert(0, AWGAFreqvalue)
     if FWRevOne > 2.16:
-        if AWGAFreqvalue > 20000.0:
+        if AWGAFreqvalue > 10000.0:
             Two_X_Sample.set(1)
         else:
             Two_X_Sample.set(0)
@@ -2743,8 +2917,9 @@ def BPower():
         devx.ctrl_transfer( 0x40, 0x51, 49, 0, 0, 0, 100) # turn on analog power
 ## Set Hor time scale from entry widget
 def BTime():
-    global TIMEdiv, TMsb, RUNstatus, Two_X_Sample, ETSDisp, FWRevOne
-
+    global TIMEdiv, TMsb, RUNstatus, Two_X_Sample, ETSDisp, FWRevOne, ChopMuxMode
+    global ShowC1_V, ShowC1_I, ShowC2_V, ShowC2_I, AWGSync
+    
     try: # get time scale in mSec/div
         TIMEdiv = float(eval(TMsb.get()))
         if TIMEdiv < 0.0002:
@@ -2756,11 +2931,17 @@ def BTime():
         TMsb.delete(0,"end")
         TMsb.insert(0,TIMEdiv)
     # Switch to 2X sampleling if time scale small enough and not runing ETS
-    if ETSDisp.get() == 0:
+    # and not in analog input mux Chop mode. 
+    if ETSDisp.get() == 0 and ChopMuxMode.get() == 0:
         Samples_per_div = TIMEdiv * 100.0 # samples per mSec @ base sample rate
         if FWRevOne > 2.16:
             if Samples_per_div < 20.0:
+                NumTraces = ShowC1_V.get() + ShowC1_I.get() + ShowC2_V.get() + ShowC2_I.get()
+                if NumTraces > 2 and AWGSync.get() == 0:
+                    showwarning("WARNING","You need to Select only 2 Traces or Enable AWG Sync Mode!")
+                    BStop()
                 Two_X_Sample.set(1)
+                TraceSelectADC_Mux()
             else:
                 Two_X_Sample.set(0)
             SetADC_Mux()
@@ -2953,7 +3134,7 @@ def ETSCheckBox():
 ## Main Loop
 def Analog_In():
     global RUNstatus, SingleShot, ManualTrigger, TimeDisp, XYDisp, FreqDisp, SpectrumScreenStatus, HWRevOne
-    global IADisp, IAScreenStatus, CutDC, DevOne, AWGBMode, MuxEnb, BodeScreenStatus, BodeDisp
+    global PhADisp, IADisp, IAScreenStatus, CutDC, DevOne, AWGBMode, MuxEnb, BodeScreenStatus, BodeDisp
     global MuxScreenStatus, VBuffA, VBuffB, MuxSync, AWGBIOMode
     global VmemoryMuxA, VmemoryMuxB, VmemoryMuxC, VmemoryMuxD, MuxChan
     global ShowC1_V, ShowC2_V, ShowC2_I, SMPfft
@@ -2961,10 +3142,10 @@ def Analog_In():
     global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
     global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2
     global SV1, SI1, SV2, SI2, SVA_B
-    global FregPoint, FBins, FStep
+    global FregPoint, FBins, FStep, TRACEaverage
     # Analog Mux channel measurement variables
-    global TRACEresetTime, TRACEmodeTime, SettingsStatus
-    global VBuffMA, VBuffMB, VBuffMC, VBuffMD, DualMuxMode
+    global TRACEresetTime, TRACEmodeTime, TgInput, SettingsStatus, TRIGGERsample
+    global VBuffMA, VBuffMB, VBuffMC, VBuffMD, DualMuxMode, ChopMuxMode
     global Show_CBA, Show_CBB, Show_CBC, Show_CBD
     global DCVMuxA, MinVMuxA, MaxVMuxA, MidVMuxA, PPVMuxA, SVMuxA
     global DCVMuxB, MinVMuxB, MaxVMuxB, MidVMuxB, PPVMuxB, SVMuxB
@@ -2976,11 +3157,12 @@ def Analog_In():
         if (RUNstatus.get() == 1) or (RUNstatus.get() == 2):
             if SettingsStatus.get() == 1:
                 SettingsUpdate() # Make sure current entries in Settings controls are up to date
-            if TimeDisp.get() > 0 or XYDisp.get() > 0:
+            if TimeDisp.get() > 0 or XYDisp.get() > 0 or PhADisp.get() > 0:
                 if MuxScreenStatus.get() == 0:
                     MuxChan = -1
                     Analog_Time_In()
                 else:
+                    MuxChan = 0
                     if DualMuxMode.get() == 1: # force split I/O mode if dual mux mode set
                         AWGAIOMode.set(1)
                         AWGBIOMode.set(1)
@@ -3001,61 +3183,89 @@ def Analog_In():
                     else:
                         PIO3 = 0x50
                         PIO3x = 0x51
-                    if TRACEmodeTime.get() == 0 and TRACEresetTime == False:
-                        TRACEresetTime = True               # Clear the memory for averaging
-                    elif TRACEmodeTime.get() == 1:
-                        if TRACEresetTime == True:
-                            TRACEresetTime = False
-                    # Save previous trace in memory for average trace
-                        VmemoryMuxA = VBuffMA
-                        VmemoryMuxB = VBuffMB
-                        VmemoryMuxC = VBuffMC
-                        ImemoryMuxD = VBuffMD
-                    if Show_CBA.get() == 1:
+                    #
+                    if ChopMuxMode.get() == 0: # do this if in alternate sweep mode
+                        if TRACEmodeTime.get() == 0 and TRACEresetTime == False:
+                            TRACEresetTime = True               # Clear the memory for averaging
+                        if Show_CBA.get() == 1:
+                            MuxChan = 0
+                            devx.ctrl_transfer(0x40, 0x50, PIO_0, 0, 0, 0, 100) # set PIO 0 to 0
+                            devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
+                            devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO enable
+                            devx.ctrl_transfer(0x40, PIO3, PIO_3, 0, 0, 0, 100) # set PIO 3 to 1 sync pulse for sweep start
+                            time.sleep(0.002)
+                            devx.ctrl_transfer(0x40, PIO3x, PIO_3, 0, 0, 0, 100) # set PIO 3 to return value
+                            if TRACEmodeTime.get() == 1:
+                                if TRACEresetTime == True:
+                                    TRACEresetTime = False
+                            # Save previous trace in memory for average trace
+                                VmemoryMuxA = VBuffMA
+                            Analog_Time_In()
+                        if Show_CBB.get() == 1:
+                            MuxChan = 1
+                            devx.ctrl_transfer(0x40, 0x51, PIO_0, 0, 0, 0, 100) # set PIO 0 to 1
+                            devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
+                            devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO 2 to 0
+                            devx.ctrl_transfer(0x40, PIO3, PIO_3, 0, 0, 0, 100) # set PIO 3 to sync pulse for sweep start
+                            time.sleep(0.002)
+                            devx.ctrl_transfer(0x40, PIO3x, 3, 0, 0, 0, 100) # set PIO 3 to return value
+                            if TRACEmodeTime.get() == 1:
+                                if TRACEresetTime == True:
+                                    TRACEresetTime = False
+                            # Save previous trace in memory for average trace
+                                VmemoryMuxB = VBuffMB
+                            Analog_Time_In()
+                        if Show_CBC.get() == 1:
+                            MuxChan = 2
+                            if DualMuxMode.get() == 1:
+                                devx.ctrl_transfer(0x40, 0x51, PIO_0, 0, 0, 0, 100) # set PIO 0 to 1
+                                devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
+                            else:
+                                devx.ctrl_transfer(0x40, 0x50, PIO_0, 0, 0, 0, 100) # set PIO 0 to 0
+                                devx.ctrl_transfer(0x40, 0x51, PIO_1, 0, 0, 0, 100) # set PIO 1 to 1
+                            devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO 2 to 0
+                            devx.ctrl_transfer(0x40, PIO3, PIO_3, 0, 0, 0, 100) # set PIO 3 to sync pulse for sweep start
+                            time.sleep(0.002)
+                            devx.ctrl_transfer(0x40, PIO3x, PIO_3, 0, 0, 0, 100) # set PIO 3 to return value
+                            if TRACEmodeTime.get() == 1:
+                                if TRACEresetTime == True:
+                                    TRACEresetTime = False
+                            # Save previous trace in memory for average trace
+                                VmemoryMuxC = VBuffMC
+                            Analog_Time_In()
+                        if Show_CBD.get() == 1:
+                            MuxChan = 3
+                            if DualMuxMode.get() == 1:
+                                devx.ctrl_transfer(0x40, 0x50, PIO_0, 0, 0, 0, 100) # set PIO 0 to 0
+                                devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
+                            else:
+                                devx.ctrl_transfer(0x40, 0x51, PIO_0, 0, 0, 0, 100) # set PIO 0 to 1
+                                devx.ctrl_transfer(0x40, 0x51, PIO_1, 0, 0, 0, 100) # set PIO 1 to 1
+                            devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO 2 to 0
+                            devx.ctrl_transfer(0x40, PIO3, PIO_3, 0, 0, 0, 100) # set PIO 3 to sync pulse for sweep start
+                            time.sleep(0.002)
+                            devx.ctrl_transfer(0x40, PIO3x, PIO_3, 0, 0, 0, 100) # set PIO 3 to return value
+                            if TRACEmodeTime.get() == 1:
+                                if TRACEresetTime == True:
+                                    TRACEresetTime = False
+                            # Save previous trace in memory for average trace
+                                VmemoryMuxD = VBuffMD
+                            Analog_Time_In()
+                        if Show_CBA.get() == 0 and Show_CBB.get() == 0 and Show_CBC.get() == 0 and Show_CBD.get() == 0 and ShowC1_V.get() == 1:
+                            Analog_Time_In()
+                    else: # do this if in Chop mode
                         MuxChan = 0
-                        devx.ctrl_transfer(0x40, 0x50, PIO_0, 0, 0, 0, 100) # set PIO 0 to 0
-                        devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
-                        devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO enable
-                        devx.ctrl_transfer(0x40, PIO3, PIO_3, 0, 0, 0, 100) # set PIO 3 to 1 sync pulse for sweep start
-                        time.sleep(0.002)
-                        devx.ctrl_transfer(0x40, PIO3x, PIO_3, 0, 0, 0, 100) # set PIO 3 to return value
-                        Analog_Time_In()
-                    if Show_CBB.get() == 1:
-                        MuxChan = 1
-                        devx.ctrl_transfer(0x40, 0x51, PIO_0, 0, 0, 0, 100) # set PIO 0 to 1
-                        devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
-                        devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO 2 to 0
-                        devx.ctrl_transfer(0x40, PIO3, PIO_3, 0, 0, 0, 100) # set PIO 3 to sync pulse for sweep start
-                        time.sleep(0.002)
-                        devx.ctrl_transfer(0x40, PIO3x, 3, 0, 0, 0, 100) # set PIO 3 to return value
-                        Analog_Time_In()
-                    if Show_CBC.get() == 1:
-                        MuxChan = 2
-                        if DualMuxMode.get() == 1:
-                            devx.ctrl_transfer(0x40, 0x51, PIO_0, 0, 0, 0, 100) # set PIO 0 to 1
-                            devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
-                        else:
-                            devx.ctrl_transfer(0x40, 0x50, PIO_0, 0, 0, 0, 100) # set PIO 0 to 0
-                            devx.ctrl_transfer(0x40, 0x51, PIO_1, 0, 0, 0, 100) # set PIO 1 to 1
-                        devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO 2 to 0
-                        devx.ctrl_transfer(0x40, PIO3, PIO_3, 0, 0, 0, 100) # set PIO 3 to sync pulse for sweep start
-                        time.sleep(0.002)
-                        devx.ctrl_transfer(0x40, PIO3x, PIO_3, 0, 0, 0, 100) # set PIO 3 to return value
-                        Analog_Time_In()
-                    if Show_CBD.get() == 1:
-                        MuxChan = 3
-                        if DualMuxMode.get() == 1:
-                            devx.ctrl_transfer(0x40, 0x50, PIO_0, 0, 0, 0, 100) # set PIO 0 to 0
-                            devx.ctrl_transfer(0x40, 0x50, PIO_1, 0, 0, 0, 100) # set PIO 1 to 0
-                        else:
-                            devx.ctrl_transfer(0x40, 0x51, PIO_0, 0, 0, 0, 100) # set PIO 0 to 1
-                            devx.ctrl_transfer(0x40, 0x51, PIO_1, 0, 0, 0, 100) # set PIO 1 to 1
-                        devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO 2 to 0
-                        devx.ctrl_transfer(0x40, PIO3, PIO_3, 0, 0, 0, 100) # set PIO 3 to sync pulse for sweep start
-                        time.sleep(0.002)
-                        devx.ctrl_transfer(0x40, PIO3x, PIO_3, 0, 0, 0, 100) # set PIO 3 to return value
-                        Analog_Time_In()
-                    if Show_CBA.get() == 0 and Show_CBB.get() == 0 and Show_CBC.get() == 0 and Show_CBD.get() == 0 and ShowC1_V.get() == 1:
+                        devx.ctrl_transfer(0x40, PIO2, PIO_2, 0, 0, 0, 100) # set PIO_2 enable control
+                        if TRACEmodeTime.get() == 0 and TRACEresetTime == False:
+                            TRACEresetTime = True               # Clear the memory for averaging
+                        elif TRACEmodeTime.get() == 1:
+                            if TRACEresetTime == True:
+                                TRACEresetTime = False
+                        # Save previous traces in memory for average trace
+                            VmemoryMuxA = VBuffMA
+                            VmemoryMuxB = VBuffMB
+                            VmemoryMuxC = VBuffMC
+                            VmemoryMuxD = VBuffMD
                         Analog_Time_In()
             if (FreqDisp.get() > 0 and SpectrumScreenStatus.get() == 1) or (IADisp.get() > 0 and IAScreenStatus.get() == 1) or (BodeDisp.get() > 0 and BodeScreenStatus.get() == 1):
                 if IADisp.get() > 0 or BodeDisp.get() > 0:
@@ -3210,7 +3420,7 @@ def Analog_Time_In():
     global CHAIOffsetEntry, CHBIOffsetEntry, CHAIGainEntry, CHBIGainEntry
     global InOffA, InGainA, InOffB, InGainB
     global CurOffA, CurOffB, CurGainA, CurGainB
-    global PhADisp, PhAScreenStatus, MuxScreenStatus
+    global PhADisp, PhAScreenStatus, MuxScreenStatus, ChopMuxMode
     global Show_CBA, Show_CBB, Show_CBC, Show_CBD
 
     # get time scale
@@ -3265,39 +3475,7 @@ def Analog_Time_In():
         Analog_Slow_time() # failed attempt as rolling trace
     else:
         Analog_Fast_time()
-    if MuxScreenStatus.get() > 0:
-        if Show_CBA.get() == 1:
-            # Average mode 1, add difference / TRACEaverage to arrayif :
-            if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
-                try:
-                    VBuffMA = VmemoryMuxA + (VBuffMA - VmemoryMuxA) / TRACEaverage.get()
-                except:
-                # buffer size mismatch so reset memory buffers
-                    VmemoryMuxA = VBuffMA
-        if Show_CBB.get() == 1:
-           # Average mode 1, add difference / TRACEaverage to arrayif :
-            if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
-                try:
-                    VBuffMB = VmemoryMuxB + (VBuffMB - VmemoryMuxB) / TRACEaverage.get()
-                except:
-                # buffer size mismatch so reset memory buffers
-                    VmemoryMuxB = VBuffMB 
-        if Show_CBC.get() == 1:
-            # Average mode 1, add difference / TRACEaverage to arrayif :
-            if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
-                try:
-                    VBuffMC = VmemoryMuxC + (VBuffMC - VmemoryMuxC) / TRACEaverage.get()
-                except:
-                # buffer size mismatch so reset memory buffers
-                    VmemoryMuxC = VBuffMC
-        if Show_CBD.get() == 1:
-            # Average mode 1, add difference / TRACEaverage to arrayif :
-            if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
-                try:
-                    VBuffMD = VmemoryMuxD + (VBuffMD - VmemoryMuxD) / TRACEaverage.get()
-                except:
-                # buffer size mismatch so reset memory buffers
-                    VmemoryMuxD = VBuffMD
+#
     if PhADisp.get() > 0 and PhAScreenStatus.get() == 1:
         Analog_Phase_In()
 #
@@ -3312,7 +3490,8 @@ def Analog_Phase_In():
     global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
     global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2
     global DCVMuxA, DCVMuxB, DCVMuxC, DCVMuxD
-    global SHOWsamples, SMPfft, hldn, MuxScreenStatus, MuxChan
+    global SHOWsamples, SMPfft, hldn, MuxScreenStatus, MuxChan, ChopMuxMode
+    global ShowPB_A, ShowPB_B, ShowPB_C, ShowPB_D
     global FFTwindowshape, ZEROstuffing
 
     if len(VBuffA) < SMPfft: # put up warning to reduce number of FFT Samples or increase Time/Div time base
@@ -3390,8 +3569,8 @@ def Analog_Phase_In():
         PhaseVAB = PhaseVAB[0:le]
         Totalcorr = 7.07106 / SMPfft # For rms VOLTAGE!
         VABresult = Totalcorr * ALL
-    else: # Do FFTs on Mux buffers as needed if MuxScreenStatus.get() == 0:
-        if MuxChan == 0: #
+    else: # Do FFTs on Mux buffers as needed if MuxScreenStatus.get() > 0:
+        if MuxChan == 0 or ChopMuxMode.get() > 0: #
             PhaseVMA = []
             # Now VMuxA array
             REX = numpy.array(VBuffMA[StartSmp:StopSmp]-DCVMuxA)    # Make a numpy arry of the list
@@ -3412,7 +3591,7 @@ def Analog_Phase_In():
             PhaseVMA = PhaseVMA[0:le]
             Totalcorr = 7.07106 / SMPfft # For rms VOLTAGE!
             VMAresult = Totalcorr * ALL
-        if MuxChan == 1: # MuxChan = 1
+        if MuxChan == 1 or ChopMuxMode.get() > 0: # MuxChan = 1
             PhaseVMB = []
             # Now VMuxA array
             REX = numpy.array(VBuffMB[StartSmp:StopSmp]-DCVMuxB)    # Make a numpy arry of the list
@@ -3433,7 +3612,7 @@ def Analog_Phase_In():
             PhaseVMB = PhaseVMB[0:le]
             Totalcorr = 7.07106 / SMPfft # For rms VOLTAGE!
             VMBresult = Totalcorr * ALL
-        if MuxChan == 2: # MuxChan = 2
+        if MuxChan == 2 or ChopMuxMode.get() > 0: # MuxChan = 2
             PhaseVMC = []
             # Now VMuxA array
             REX = numpy.array(VBuffMC[StartSmp:StopSmp]-DCVMuxC)    # Make a numpy arry of the list
@@ -3454,7 +3633,7 @@ def Analog_Phase_In():
             PhaseVMC = PhaseVMC[0:le]
             Totalcorr = 7.07106 / SMPfft # For rms VOLTAGE!
             VMCresult = Totalcorr * ALL
-        if MuxChan == 3: # MuxChan = 3
+        if MuxChan == 3 or ChopMuxMode.get() > 0: # MuxChan = 3
             PhaseVMD = []
             # Now VMuxA array
             REX = numpy.array(VBuffMD[StartSmp:StopSmp]-DCVMuxD)    # Make a numpy arry of the list
@@ -3517,7 +3696,6 @@ def Analog_Phase_In():
 #
     UpdatePhAAll()
 #
-##
 # Right now this is a failed attempt to plot slow sweeps.
 def Analog_Slow_time():
     global ADsignal1, VBuffA, VBuffB, IBuffA, IBuffB, VFilterA, VFilterB
@@ -3654,7 +3832,77 @@ def Analog_Slow_time():
         if XYDisp.get() > 0 and XYScreenStatus.get() > 0:
             UpdateXYScreen()
         # update screens
-##
+#
+def Analog_Chop_Time():
+    global ADsignal1, VBuffMA, VBuffMB, VBuffMC, VBuffMD
+    global DCVMuxA, MinVMuxA, MaxVMuxA, MidVMuxA, PPVMuxA, SVMuxA
+    global DCVMuxB, MinVMuxB, MaxVMuxB, MidVMuxB, PPVMuxB, SVMuxB
+    global DCVMuxC, MinVMuxC, MaxVMuxC, MidVMuxC, PPVMuxC, SVMuxC
+    global DCVMuxD, MinVMuxD, MaxVMuxD, MidVMuxD, PPVMuxD, SVMuxD
+    global SHOWsamples, ChopModeFilter
+
+    VBuffMA = [] # Clear the Mux A array 
+    VBuffMB = [] # Clear the Mux B array
+    VBuffMC = [] # Clear the Mux C array
+    VBuffMD = [] # Clear the Mux D array
+    index = 1
+    while index < SHOWsamples-3: # build arrays VBuffMA, VBuffMB, VBuffMC, VBuffMD
+        pointer = 0
+        while pointer < 4:
+            VBuffMA.append(ADsignal1[index+3][0][0]) # chop AIN into Mux A and B
+            VBuffMB.append(ADsignal1[index+1][0][0])
+            VBuffMC.append(ADsignal1[index+3][1][0]) # chop BIN into Mux C and D
+            VBuffMD.append(ADsignal1[index+1][1][0])
+            pointer = pointer + 1
+        index = index + 4
+    VBuffMA = numpy.array(VBuffMA)
+    VBuffMB = numpy.array(VBuffMB)
+    VBuffMC = numpy.array(VBuffMC)
+    VBuffMD = numpy.array(VBuffMD)
+    # apply a digital filter to interpolate back to 100 KSPS
+    VBuffMA = numpy.pad(VBuffMA, (4, 0), "edge")
+    VBuffMA = numpy.convolve(VBuffMA, ChopModeFilter )
+    VBuffMA = numpy.roll(VBuffMA, -4)
+    VBuffMB = numpy.pad(VBuffMB, (4, 0), "edge")
+    VBuffMB = numpy.convolve(VBuffMB, ChopModeFilter)
+    VBuffMB = numpy.roll(VBuffMB, -6)
+    VBuffMC = numpy.pad(VBuffMC, (4, 0), "edge")
+    VBuffMC = numpy.convolve(VBuffMC, ChopModeFilter )
+    VBuffMC = numpy.roll(VBuffMC, -4)
+    VBuffMD = numpy.pad(VBuffMD, (4, 0), "edge")
+    VBuffMD = numpy.convolve(VBuffMD, ChopModeFilter )
+    VBuffMD = numpy.roll(VBuffMD, -6)
+    # calculate waveform scalers
+    EndSample = SHOWsamples-4
+    DCVMuxA = numpy.mean(VBuffMA[:EndSample])
+    MinVMuxA = numpy.amin(VBuffMA[:EndSample])
+    MaxVMuxA = numpy.amax(VBuffMA[:EndSample])
+    MidVMuxA = (MaxVMuxA+MinVMuxA)/2.0
+    PPVMuxA = MaxVMuxA-MinVMuxA
+#
+    DCVMuxB = numpy.mean(VBuffMB[:EndSample])
+    MinVMuxB = numpy.amin(VBuffMB[:EndSample])
+    MaxVMuxB = numpy.amax(VBuffMB[:EndSample])
+    MidVMuxB = (MaxVMuxB+MinVMuxB)/2.0
+    PPVMuxB = MaxVMuxB-MinVMuxB
+#
+    DCVMuxC = numpy.mean(VBuffMC[:EndSample])
+    MinVMuxC = numpy.amin(VBuffMC[:EndSample])
+    MaxVMuxC = numpy.amax(VBuffMC[:EndSample])
+    MidVMuxC = (MaxVMuxC+MinVMuxC)/2.0
+    PPVMuxC = MaxVMuxC-MinVMuxC
+#
+    DCVMuxD = numpy.mean(VBuffMD[:EndSample])
+    MinVMuxD = numpy.amin(VBuffMD[:EndSample])
+    MaxVMuxD = numpy.amax(VBuffMD[:EndSample])
+    MidVMuxD = (MaxVMuxD+MinVMuxD)/2.0
+    PPVMuxD = MaxVMuxD-MinVMuxD
+    # RMS value = square root of average of the data record squared
+    SVMuxA = numpy.sqrt(numpy.mean(numpy.square(VBuffMA[:EndSample])))
+    SVMuxB = numpy.sqrt(numpy.mean(numpy.square(VBuffMB[:EndSample])))
+    SVMuxC = numpy.sqrt(numpy.mean(numpy.square(VBuffMC[:EndSample])))
+    SVMuxD = numpy.sqrt(numpy.mean(numpy.square(VBuffMD[:EndSample])))
+#
 # routine for time scales faster than 500 mSec/Div
 def Analog_Fast_time():
     global ADsignal1, VBuffA, VBuffB, IBuffA, IBuffB, VFilterA, VFilterB
@@ -3685,8 +3933,9 @@ def Analog_Fast_time():
     global DivXEntry, FOffEntry, FminDisp, FOff, DivX, FMulXEntry, FBase, MaxETSrecord
     global cal, Two_X_Sample, ADC_Mux_Mode, Alternate_Sweep_Mode, Last_ADC_Mux_Mode
     global MeasGateLeft, MeasGateRight, MeasGateNum, MeasGateStatus
-    global VBuffMA, VBuffMB, VBuffMC, VBuffMD, DualMuxMode
+    global VBuffMA, VBuffMB, VBuffMC, VBuffMD, DualMuxMode, ChopMuxMode, ChopTrig
     global VmemoryMuxA, VmemoryMuxB, VmemoryMuxC, VmemoryMuxD
+    global ShowC1_V, ShowC1_I, ShowC2_V, ShowC2_I
     global Show_CBA, Show_CBB, Show_CBC, Show_CBD
     global DCVMuxA, MinVMuxA, MaxVMuxA, MidVMuxA, PPVMuxA, SVMuxA
     global DCVMuxB, MinVMuxB, MaxVMuxB, MidVMuxB, PPVMuxB, SVMuxB
@@ -3837,6 +4086,10 @@ def Analog_Fast_time():
     index = 0
     if SHOWsamples != len(ADsignal1):
         SHOWsamples = len(ADsignal1)
+#
+    if ChopMuxMode.get() > 0 and MuxScreenStatus.get() > 0: # check to see if Mux Chop mode is set
+        Analog_Chop_Time()
+#
     while index < SHOWsamples: # build arrays and decimate if needed
         if Two_X_Sample.get() == 1 and ADC_Mux_Mode.get() < 6:
             if ADC_Mux_Mode.get() == 0: # VA and VB
@@ -3910,8 +4163,28 @@ def Analog_Fast_time():
             IBuffB.append(ADsignal1[index][1][1])
         index = index + increment
 #
-    SHOWsamples = len(VBuffA)
     if Alternate_Sweep_Mode.get() == 1 and Two_X_Sample.get() == 1:
+        if len(VBuffA) < 4:
+            index = 0
+            while index < SHOWsamples:
+                VBuffA.append(0.0) # fill as a place holder
+                index = index + increment
+        if len(VBuffB) < 4:
+            index = 0
+            while index < SHOWsamples:
+                VBuffB.append(0.0) # fill as a place holder
+                index = index + increment
+        if len(IBuffA) < 4:
+            index = 0
+            while index < SHOWsamples:
+                IBuffA.append(0.0) # fill as a place holder
+                index = index + increment
+        if len(IBuffB) < 4:
+            index = 0
+            while index < SHOWsamples:
+                IBuffB.append(0.0) # fill as a place holder
+                index = index + increment
+#
         if ADC_Mux_Mode.get() == 0: # VA and VB
             VBuffA = numpy.array(VBuffA)
             VBuffB = numpy.array(VBuffB)
@@ -3951,6 +4224,7 @@ def Analog_Fast_time():
         IBuffA = (IBuffA - CurOffA) * CurGainA
         IBuffB = (IBuffB - CurOffB) * CurGainB
     TRACESread = 2
+    SHOWsamples = len(VBuffA)
 # temp ETS calculations
     if ETSDisp.get() > 0:
         baseFreq = SAMPLErate/DivX
@@ -4098,62 +4372,91 @@ def Analog_Fast_time():
             VBuffB = numpy.convolve(VBuffB, DFiltBCoef)
 # Find trigger sample point if necessary
     LShift = 0
-    if TgInput.get() == 1:
-        FindTriggerSample(VBuffA)
-    if TgInput.get() == 2:
-        FindTriggerSample(IBuffA)
-    if TgInput.get() == 3:
-        FindTriggerSample(VBuffB)
-    if TgInput.get() == 4:
-        FindTriggerSample(IBuffB)
-    if TgInput.get() == 5:
-        FindTriggerSample(VBuffA)
-        if Is_Triggered == 0: # Trigger event not found for VBuffA so Try VBuffB
-            FindTriggerSample(VBuffB)
-    if TgInput.get() == 6:
-        FindTriggerSample(VBuffA)
-        TRIGGERsampleAltA = TRIGGERsample
-        FindTriggerSample(VBuffB)
-        TRIGGERsampleAltB = TRIGGERsample
-    if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
-        # Average mode 1, add difference / TRACEaverage to array
-        if TgInput.get() > 0: # if triggering left shift all arrays such that trigger point is at index 0
-            LShift = 0 - TRIGGERsample
-            if TgInput.get() == 6:
-                LShift = 0 - TRIGGERsampleA
-                VBuffA = numpy.roll(VBuffA, LShift)
-                IBuffA = numpy.roll(IBuffA, LShift)
-                LShift = 0 - TRIGGERsampleB
-                VBuffB = numpy.roll(VBuffB, LShift)
-                IBuffB = numpy.roll(IBuffB, LShift)
-            else:
-                VBuffA = numpy.roll(VBuffA, LShift)
-                VBuffB = numpy.roll(VBuffB, LShift)
+    if ChopMuxMode.get() > 0 and MuxScreenStatus.get() > 0:
+        if ChopTrig.get() == 1:
+            FindTriggerSample(VBuffMA)
+        if ChopTrig.get() == 2:
+            FindTriggerSample(VBuffMB)
+        if ChopTrig.get() == 3:
+            FindTriggerSample(VBuffMC)
+        if ChopTrig.get() == 4:
+            FindTriggerSample(VBuffMD)
+        if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
+            # Average mode 1, add difference / TRACEaverage to array
+            if ChopMuxMode.get() == 1 and ChopTrig.get() > 0: 
+                LShift = 0 - TRIGGERsample
+                VBuffMA = numpy.roll(VBuffMA, LShift)
+                VBuffMB = numpy.roll(VBuffMB, LShift)
+                VBuffMC = numpy.roll(VBuffMC, LShift)
+                VBuffMD = numpy.roll(VBuffMD, LShift)
                 IBuffA = numpy.roll(IBuffA, LShift)
                 IBuffB = numpy.roll(IBuffB, LShift)
-            TRIGGERsample = hozpos # set trigger sample to index 0 offset by horizontal position
-        try:
-            if DualMuxMode.get() == 0 and MuxScreenStatus.get() == 0: # average A voltage data only if not in dual split I/O Mux Mode
-                VBuffA = VmemoryA + (VBuffA - VmemoryA) / TRACEaverage.get()
-            IBuffA = ImemoryA + (IBuffA - ImemoryA) / TRACEaverage.get()
-            if MuxScreenStatus.get() == 0: # average B voltage data only if not in Mux Mode
-                VBuffB = VmemoryB + (VBuffB - VmemoryB) / TRACEaverage.get()
-            IBuffB = ImemoryB + (IBuffB - ImemoryB) / TRACEaverage.get()
-        except:
-            # buffer size mismatch so reset memory buffers
-            VmemoryA = VBuffA
-            if MuxScreenStatus.get() == 0: # average B voltage data only if not in Mux Mode
-                VmemoryB = VBuffB
-            ImemoryA = IBuffA
-            ImemoryB = IBuffB
-        if TgInput.get() == 1 or TgInput.get() == 5 or TgInput.get() == 6:
-            ReInterploateTrigger(VBuffA)
+                TRIGGERsample = hozpos # set trigger sample to index 0 offset by horizontal position
+        if ChopTrig.get() == 1:
+            ReInterploateTrigger(VBuffMA)
+        if ChopTrig.get() == 2:
+            ReInterploateTrigger(VBuffMB)
+        if ChopTrig.get() == 3:
+            ReInterploateTrigger(VBuffMC)
+        if ChopTrig.get() == 4:
+            ReInterploateTrigger(VBuffMD)
+    else:
+        if TgInput.get() == 1:
+            FindTriggerSample(VBuffA)
         if TgInput.get() == 2:
-            ReInterploateTrigger(IBuffA)
-        if TgInput.get() == 3 or TgInput.get() == 5 or TgInput.get() == 6:
-            ReInterploateTrigger(VBuffB)
+            FindTriggerSample(IBuffA)
+        if TgInput.get() == 3:
+            FindTriggerSample(VBuffB)
         if TgInput.get() == 4:
-            ReInterploateTrigger(IBuffB)
+            FindTriggerSample(IBuffB)
+        if TgInput.get() == 5:
+            FindTriggerSample(VBuffA)
+            if Is_Triggered == 0: # Trigger event not found for VBuffA so Try VBuffB
+                FindTriggerSample(VBuffB)
+        if TgInput.get() == 6:
+            FindTriggerSample(VBuffA)
+            TRIGGERsampleAltA = TRIGGERsample
+            FindTriggerSample(VBuffB)
+            TRIGGERsampleAltB = TRIGGERsample
+        if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
+            # Average mode 1, add difference / TRACEaverage to array
+            if TgInput.get() > 0: # if triggering left shift all arrays such that trigger point is at index 0
+                LShift = 0 - TRIGGERsample
+                if TgInput.get() == 6:
+                    LShift = 0 - TRIGGERsampleAltA
+                    VBuffA = numpy.roll(VBuffA, LShift)
+                    IBuffA = numpy.roll(IBuffA, LShift)
+                    LShift = 0 - TRIGGERsampleAltB
+                    VBuffB = numpy.roll(VBuffB, LShift)
+                    IBuffB = numpy.roll(IBuffB, LShift)
+                else:
+                    VBuffA = numpy.roll(VBuffA, LShift)
+                    VBuffB = numpy.roll(VBuffB, LShift)
+                    IBuffA = numpy.roll(IBuffA, LShift)
+                    IBuffB = numpy.roll(IBuffB, LShift)
+                TRIGGERsample = hozpos # set trigger sample to index 0 offset by horizontal position
+            try:
+                if DualMuxMode.get() == 0: # and MuxScreenStatus.get() == 0: # average A voltage data only if not in dual split I/O Mux Mode
+                    VBuffA = VmemoryA + (VBuffA - VmemoryA) / TRACEaverage.get()
+                IBuffA = ImemoryA + (IBuffA - ImemoryA) / TRACEaverage.get()
+                if MuxScreenStatus.get() == 0: # average B voltage data only if not in Mux Mode
+                    VBuffB = VmemoryB + (VBuffB - VmemoryB) / TRACEaverage.get()
+                IBuffB = ImemoryB + (IBuffB - ImemoryB) / TRACEaverage.get()
+            except:
+                # buffer size mismatch so reset memory buffers
+                VmemoryA = VBuffA
+                if MuxScreenStatus.get() == 0: # average B voltage data only if not in Mux Mode
+                    VmemoryB = VBuffB
+                ImemoryA = IBuffA
+                ImemoryB = IBuffB
+            if TgInput.get() == 1 or TgInput.get() == 5 or TgInput.get() == 6:
+                ReInterploateTrigger(VBuffA)
+            if TgInput.get() == 2:
+                ReInterploateTrigger(IBuffA)
+            if TgInput.get() == 3 or TgInput.get() == 5 or TgInput.get() == 6:
+                ReInterploateTrigger(VBuffB)
+            if TgInput.get() == 4:
+                ReInterploateTrigger(IBuffB)
 # DC value = average of the data record
     if CHA_RC_HP.get() == 1 or CHB_RC_HP.get() == 1:
         Endsample = hldn+onescreen # average over only one screen's worth of samples
@@ -4165,9 +4468,9 @@ def Analog_Fast_time():
             Endsample = int(MeasGateRight * SAMPLErate/1000) + TRIGGERsample
             if Endsample <= hldn:
                 Endsample = hldn + 2
+# Calculate VA scalar values
     DCV1 = numpy.mean(VBuffA[hldn:Endsample])
     DCV2 = numpy.mean(VBuffB[hldn:Endsample])
-    # convert current values to mA
     DCI1 = numpy.mean(IBuffA[hldn:Endsample])
     DCI2 = numpy.mean(IBuffB[hldn:Endsample])
 # find min and max values
@@ -4186,7 +4489,7 @@ def Analog_Fast_time():
     SI2 = numpy.sqrt(numpy.mean(numpy.square(IBuffB[hldn:Endsample])))
     SVA_B = numpy.sqrt(numpy.mean(numpy.square(VBuffA[hldn:Endsample]-VBuffB[hldn:Endsample])))
 # Transfer to mux buffers as necessary
-    if TgInput.get() > 0 and MuxChan > -1 and TRACEmodeTime.get() != 1:
+    if TgInput.get() > 0 and TRACEmodeTime.get() != 1: # and MuxChan > -1
         # if triggering left shift all arrays such that trigger point is at index 0
         LShift = 0 - TRIGGERsample
         VBuffA = numpy.roll(VBuffA, LShift)
@@ -4194,10 +4497,35 @@ def Analog_Fast_time():
         IBuffA = numpy.roll(IBuffA, LShift)
         IBuffB = numpy.roll(IBuffB, LShift)
         TRIGGERsample = hozpos # set trigger sample to index 0 offset by horizontal position
-    if MuxChan > -1:
-        Dval0 = devx.ctrl_transfer( 0xc0, 0x91, PIO_4, 0, 0, 1, 100)
-        Dval1 = devx.ctrl_transfer( 0xc0, 0x91, PIO_5, 0, 0, 1, 100)
-        if Show_CBA.get() == 1 and Dval0[0] == 0 and Dval1[0] == 0:
+    if ChopMuxMode.get() == 1 and ChopTrig.get() > 0 and TRACEmodeTime.get() != 1: 
+        LShift = 0 - TRIGGERsample
+        VBuffMA = numpy.roll(VBuffMA, LShift)
+        VBuffMB = numpy.roll(VBuffMB, LShift)
+        VBuffMC = numpy.roll(VBuffMC, LShift)
+        VBuffMD = numpy.roll(VBuffMD, LShift)
+        IBuffA = numpy.roll(IBuffA, LShift)
+        IBuffB = numpy.roll(IBuffB, LShift)
+        TRIGGERsample = hozpos # set trigger sample to index 0 offset by horizontal position
+    if ChopMuxMode.get() == 1 and TRACEmodeTime.get() == 1: # also if in chop mode cal avaerage
+        # Average mode 1, add difference / TRACEaverage to array
+        try:
+            VBuffMA = VmemoryMuxA + (VBuffMA - VmemoryMuxA) / TRACEaverage.get()
+        except: # buffer size mismatch so reset memory buffers
+            VmemoryMuxA = VBuffMA
+        try:
+            VBuffMB = VmemoryMuxB + (VBuffMB - VmemoryMuxB) / TRACEaverage.get()
+        except: # buffer size mismatch so reset memory buffers
+            VmemoryMuxB = VBuffMB
+        try:
+            VBuffMC = VmemoryMuxC + (VBuffMC - VmemoryMuxC) / TRACEaverage.get()
+        except: # buffer size mismatch so reset memory buffers
+            VmemoryMuxC = VBuffMC
+        try:
+            VBuffMD = VmemoryMuxD + (VBuffMD - VmemoryMuxD) / TRACEaverage.get()
+        except: # buffer size mismatch so reset memory buffers
+            VmemoryMuxD = VBuffMD
+    if MuxChan > -1 and ChopMuxMode.get() == 0: # do this when not in chop mux mode
+        if Show_CBA.get() == 1 and MuxChan == 0: # Dval0[0] == 0 and Dval1[0] == 0 and ChopMuxMode.get() == 0:
             DCVMuxA = DCV2
             MinVMuxA = MinV2
             MaxVMuxA = MaxV2
@@ -4205,7 +4533,14 @@ def Analog_Fast_time():
             PPVMuxA = MaxV2-MinV2
             SVMuxA = SV2
             VBuffMA = VBuffB
-        if Show_CBB.get() == 1 and Dval0[0] == 1 and Dval1[0] == 0:
+            if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
+            # Average mode 1, add difference / TRACEaverage to array
+                try:
+                    VBuffMA = VmemoryMuxA + (VBuffMA - VmemoryMuxA) / TRACEaverage.get()
+                except:
+                # buffer size mismatch so reset memory buffers
+                    VmemoryMuxA = VBuffMA
+        if Show_CBB.get() == 1 and MuxChan == 1: # Dval0[0] == 1 and Dval1[0] == 0 and ChopMuxMode.get() == 0:
             DCVMuxB = DCV2
             MinVMuxB = MinV2
             MaxVMuxB = MaxV2
@@ -4213,8 +4548,15 @@ def Analog_Fast_time():
             PPVMuxB = MaxV2-MinV2
             SVMuxB = SV2
             VBuffMB = VBuffB
-        if Show_CBC.get() == 1 and Dval0[0] == 0 and Dval1[0] == 1:
-            if DualMuxMode.get() == 1:
+            if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
+            # Average mode 1, add difference / TRACEaverage to array
+                try:
+                    VBuffMB = VmemoryMuxB + (VBuffMB - VmemoryMuxB) / TRACEaverage.get()
+                except:
+                # buffer size mismatch so reset memory buffers
+                    VmemoryMuxB = VBuffMB
+        if Show_CBC.get() == 1 and MuxChan == 2: #and Dval0[0] == 0 and Dval1[0] == 1
+            if DualMuxMode.get() == 1 :
                 DCVMuxC = DCV1
                 MinVMuxC = MinV1
                 MaxVMuxC = MaxV1
@@ -4230,8 +4572,15 @@ def Analog_Fast_time():
                 PPVMuxC = MaxV2-MinV2
                 SVMuxC = SV2
                 VBuffMC = VBuffB
-        if Show_CBD.get() == 1 and Dval0[0] == 1 and Dval1[0] == 1:
-            if DualMuxMode.get() == 1:
+            if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
+            # Average mode 1, add difference / TRACEaverage to array
+                try:
+                    VBuffMC = VmemoryMuxC + (VBuffMC - VmemoryMuxC) / TRACEaverage.get()
+                except:
+                # buffer size mismatch so reset memory buffers
+                    VmemoryMuxC = VBuffMC
+        if Show_CBD.get() == 1 and MuxChan == 3: #and Dval0[0] == 1 and Dval1[0] == 1 
+            if DualMuxMode.get() == 1 :
                 DCVMuxD = DCV1
                 MinVMuxD = MinV1
                 MaxVMuxD = MaxV1
@@ -4247,8 +4596,21 @@ def Analog_Fast_time():
                 PPVMuxD = MaxV2-MinV2
                 SVMuxD = SV2
                 VBuffMD = VBuffB
-#
+            if TRACEmodeTime.get() == 1 and TRACEresetTime == False:
+            # Average mode 1, add difference / TRACEaverage to array
+                try:
+                    VBuffMD = VmemoryMuxD + (VBuffMD - VmemoryMuxD) / TRACEaverage.get()
+                except:
+                # buffer size mismatch so reset memory buffers
+                    VmemoryMuxD = VBuffMD
+    # update screens
     if TimeDisp.get() > 0:
+        # Check if in non functional state of 2X samplerate and 3 or more traces amd not enabled AWGSync 
+        NumTraces = ShowC1_V.get() + ShowC1_I.get() + ShowC2_V.get() + ShowC2_I.get()
+        if NumTraces > 2 and AWGSync.get() == 0 and Two_X_Sample.get() == 1:
+            showwarning("WARNING","You need to Select only 2 Traces or Enable AWG Sync Mode!")
+            BStop()
+            # return
         UpdateTimeAll()         # Update Data, trace and time screen
     if XYDisp.get() > 0 and XYScreenStatus.get() > 0:
         UpdateXYAll()         # Update Data, trace and XY screen
@@ -4268,7 +4630,6 @@ def Analog_Fast_time():
             UpdateTimeScreen()
         if XYDisp.get() > 0 and XYScreenStatus.get() > 0:
             UpdateXYScreen()
-        # update screens
 #
 # Function to calculate relative phase angle between two sine waves of the same frequency
 # Removes any DC content
@@ -5251,7 +5612,7 @@ def MakeDacScreen():
         dismissbutton = Button(win1, text="Dismiss", command=DestroyDacScreen)
         dismissbutton.grid(row=1, column=0, columnspan=4, sticky=W)
 ## Update Data, trace and time screen
-def UpdateTimeAll():        
+def UpdateTimeAll():
     
     MakeTimeTrace()         # Update the traces
     UpdateTimeScreen()      # Update the screen 
@@ -5283,7 +5644,7 @@ def UpdateXYScreen():
 ## Make the scope time traces
 def MakeTimeTrace():
     global VBuffA, VBuffB, IBuffA, IBuffB
-    global VBuffMA, VBuffMB, VBuffMC, VBuffMD, MuxScreenStatus
+    global VBuffMA, VBuffMB, VBuffMC, VBuffMD, MuxScreenStatus, ChopMuxMode, ChopTrig
     global VmemoryA, VmemoryB, ImemoryA, ImemoryB
     global VmemoryMuxA, VmemoryMuxB, VmemoryMuxC, VmemoryMuxD
     global FFTBuffA, FFTBuffB, FFTwindowshape
@@ -5320,7 +5681,7 @@ def MakeTimeTrace():
     global HozPoss, HozPossentry
 
     # Set the TRACEsize variable
-    if len(VBuffA) < 100:
+    if len(VBuffA) < 100 and MuxScreenStatus.get() == 0:
         return
     TRACEsize = SHOWsamples               # Set the trace length
     SCstart = 0
@@ -5429,7 +5790,7 @@ def MakeTimeTrace():
         return() 
 
     # set and/or corrected for in range
-    if TgInput.get() > 0:
+    if TgInput.get() > 0 or ChopTrig.get() > 0:
         SCmin = int(-1 * TRIGGERsample)
         SCmax = int(TRACEsize - TRIGGERsample - 0)
     else:
@@ -6271,22 +6632,38 @@ def MakeTimeTrace():
     # Make trigger triangle pointer
     Triggerline = []                # Trigger pointer
     Triggersymbol = []                # Trigger symbol
-    if TgInput.get() > 0:
+    if TgInput.get() > 0 or ChopTrig.get() > 0:
         if TgInput.get() == 1 or TgInput.get() == 5: # triggering on CA-V
             x1 = X0L
-            ytemp = Yconv1 * (float(TRIGGERlevel)-CHAOffset) # / InGainA
+            ytemp = Yconv1 * (float(TRIGGERlevel)-CHAOffset) # 
             y1 = int(c1 - ytemp)
         elif TgInput.get() == 2:  # triggering on CA-I
             x1 = X0L+GRW
             y1 = int(c1 - YIconv1 * (float(TRIGGERlevel) - CHAIOffset))
         elif TgInput.get() == 3:  # triggering on CB-V
             x1 = X0L
-            ytemp = Yconv2 * (float(TRIGGERlevel)-CHBOffset) # / InGainB         
+            ytemp = Yconv2 * (float(TRIGGERlevel)-CHBOffset) #         
             y1 = int(c2 - ytemp)
         elif TgInput.get() == 4: # triggering on CB-I
             x1 = X0L+GRW
             y1 = int(c2 - YIconv2 * (float(TRIGGERlevel) - CHBIOffset))
-            
+        elif ChopTrig.get() == 1: # triggering on Mux A
+            x1 = X0L
+            ytemp = YconvMA * (float(TRIGGERlevel)-CHBAOffset) # 
+            y1 = int(c1 - ytemp)
+        elif ChopTrig.get() == 2: # triggering on Mux B
+            x1 = X0L
+            ytemp = YconvMB * (float(TRIGGERlevel)-CHBBOffset) # 
+            y1 = int(c1 - ytemp)
+        elif ChopTrig.get() == 3: # triggering on Mux A
+            x1 = X0L
+            ytemp = YconvMC * (float(TRIGGERlevel)-CHBCOffset) # 
+            y1 = int(c1 - ytemp)
+        elif ChopTrig.get() == 4: # triggering on Mux A
+            x1 = X0L
+            ytemp = YconvMD * (float(TRIGGERlevel)-CHBDOffset) # 
+            y1 = int(c1 - ytemp)
+        #
         if (y1 < Ymin):
             y1 = Ymin
         if (y1 > Ymax):
@@ -6568,8 +6945,8 @@ def MakeTimeScreen():
     global T1VRline, T2VRline, T1IRline, T2IRline # reference trace lines
     global Triggerline, Triggersymbol, Tmathline, TMRline, TXYRline
     global VBuffA, VBuffB, IBuffA, IBuffB
-    global VBuffMA, VBuffMB, VBuffMC, VBuffMD, MuxScreenStatus
-    global TMAVline, TMBVline, TMCVline, TMDVline, TMCRline, TMBRline
+    global VBuffMA, VBuffMB, VBuffMC, VBuffMD, MuxScreenStatus, ChopMuxMode, ChopTrig
+    global TMAVline, TMBVline, TMCVline, TMDVline, TMARline, TMBRline, TMCRline, TMDRline
     global VmemoryA, VmemoryB, VmemoryA, ImemoryB
     global X0L          # Left top X value
     global Y0T          # Left top Y value
@@ -6584,6 +6961,7 @@ def MakeTimeScreen():
     global ShowC1_V, ShowC1_I, ShowC2_V, ShowC2_I, ShowRXY, Show_MathX, Show_MathY
     global ShowRA_V, ShowRA_I, ShowRB_V, ShowRB_I, ShowMath
     global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MathUnits, MathXUnits, MathYUnits
+    global ShowRMA, ShowRMB, ShowRMC, ShowRMD
     global Xsignal, Ysignal, MathTrace, MathAxis, MathXAxis, MathYAxis
     global RUNstatus, SingleShot, ManualTrigger, session    # 0 stopped, 1 start, 2 running, 3 stop now, 4 stop and restart
     global CHAsb        # V range spinbox Index for channel 1
@@ -6910,6 +7288,14 @@ def MakeTimeScreen():
             TgLabel = "VA or VB"
         if TgInput.get() == 6:
             TgLabel = "Alternate"
+        if ChopTrig.get() == 1:
+            TgLabel = "Mux A"
+        if ChopTrig.get() == 2:
+            TgLabel = "Mux B"
+        if ChopTrig.get() == 3:
+            TgLabel = "Mux C"
+        if ChopTrig.get() == 4:
+            TgLabel = "Mux D"
         if Is_Triggered == 1:
             TgLabel = TgLabel + " Triggered"
         else:
@@ -7090,10 +7476,14 @@ def MakeTimeScreen():
             ca.create_line(TMCVline, fill=COLORtrace7, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
         if len(TMDVline) > 4: # Avoid writing lines with 1 coordinate    
             ca.create_line(TMDVline, fill=COLORtrace4, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
-        if ShowRB_V.get() == 1 and len(TMBRline) > 4:
+        if ShowRMA.get() == 1 and len(TMARline) > 4:
+            ca.create_line(TMARline, fill=COLORtraceR2, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
+        if ShowRMB.get() == 1 and len(TMBRline) > 4:
             ca.create_line(TMBRline, fill=COLORtraceR6, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
-        if ShowRB_I.get() == 1 and len(TMCRline) > 4:
+        if ShowRMC.get() == 1 and len(TMCRline) > 4:
             ca.create_line(TMCRline, fill=COLORtraceR7, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
+        if ShowRMD.get() == 1 and len(TMDRline) > 4:
+            ca.create_line(TMDRline, fill=COLORtraceR4, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
     if ShowRA_V.get() == 1 and len(T1VRline) > 4:
         ca.create_line(T1VRline, fill=COLORtraceR1, smooth=SmoothBool, splinestep=5, width=TRACEwidth.get())
     if ShowRA_I.get() == 1 and len(T1IRline) > 4:
@@ -7198,7 +7588,15 @@ def MakeTimeScreen():
         if ETSDisp.get() > 0:
             FindRisingEdge(VBuffA[:int(DISsamples)],VBuffB[:int(DISsamples)])
         else:
-            FindRisingEdge(VBuffA,VBuffB)
+            if MeasGateStatus.get() == 1:
+                if (MeasGateRight-MeasGateLeft) > 0:
+                    hldn = int(MeasGateLeft * SAMPLErate/1000) + TRIGGERsample
+                    Endsample = int(MeasGateRight * SAMPLErate/1000) + TRIGGERsample
+                    if Endsample <= hldn:
+                        Endsample = hldn + 2
+                    FindRisingEdge(VBuffA[hldn:Endsample],VBuffB[hldn:Endsample])
+            else:
+                FindRisingEdge(VBuffA,VBuffB)
         if ShowC1_V.get() == 1:
             if MeasAHW.get() == 1:
                 txt = txt + " CA Hi Width = " + ' {0:.3f} '.format(CHAHW/Mulx) + " mS "
@@ -9204,17 +9602,27 @@ def BAWGAFreq(temp):
         AWGAFreqEntry.insert(0, AWGAFreqvalue)
     #UpdateAWGA()
 
+def ToggleAWGAPhaseDelay():
+    global AWGAPhaseDelay, phasealab, awgaph, awgadel
+
+    if AWGAPhaseDelay.get() == 1:
+        AWGAPhaseDelay.set(0)
+        awgaph.configure(text="Phase")
+        phasealab.configure(text="Deg")
+    elif AWGAPhaseDelay.get() == 0:
+        AWGAPhaseDelay.set(1)
+        awgaph.configure(text="Delay")
+        phasealab.configure(text="mSec")
+    
 def BAWGAPhaseDelay():
     global AWGAPhaseDelay, phasealab, awgaph, awgadel
 
     if AWGAPhaseDelay.get() == 0:
         phasealab.configure(text="Deg")
-        awgaph.configure(style="WPhase.TRadiobutton")
-        awgadel.configure(style="GPhase.TRadiobutton")
+        awgaph.configure(text="Phase")
     elif AWGAPhaseDelay.get() == 1:
         phasealab.configure(text="mSec")
-        awgaph.configure(style="GPhase.TRadiobutton")
-        awgadel.configure(style="WPhase.TRadiobutton")
+        awgaph.configure(text="Delay")
     
 def BAWGAPhase(temp):
     global AWGAPhaseEntry, AWGAPhasevalue
@@ -9440,7 +9848,7 @@ def AWGAConfigMath():
 def AWGAMakeBodeSine():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
     global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay, AWGAMode
-    global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate, phasealab, AWG_Amp_Mode
+    global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate, phasealab, AWG_Amp_Mode, AWGRecLength
     global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
     
     BAWGAAmpl(0)
@@ -9470,7 +9878,7 @@ def AWGAMakeBodeSine():
             AWGAdelayvalue = 0.0
     elif AWGAPhaseDelay.get() == 1:
         AWGAdelayvalue = AWGAPhasevalue * SAMPLErate / 1000
-    Cycles = int(32768/AWGAperiodvalue)
+    Cycles = int(AWGRecLength/AWGAperiodvalue)
     if Cycles < 1:
         Cycles = 1
     RecLength = int(Cycles * AWGAperiodvalue)
@@ -9505,7 +9913,7 @@ def AWGAMakeFMSine():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
     global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay, AWGAMode
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate, phasealab, AWG_Amp_Mode
-    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset, AWGRecLength
     
     BAWGAAmpl(0)
     BAWGAOffset(0)
@@ -9546,7 +9954,7 @@ def AWGAMakeFMSine():
         AWGADutyCycleEntry.delete(0,"end")
         AWGADutyCycleEntry.insert(0, ModIndex)
         
-    ModCycles = int(32768/MODperiodvalue) # find a whole number of cycles 
+    ModCycles = int(AWGRecLength/MODperiodvalue) # find a whole number of cycles 
     if ModCycles < 1:
         ModCycles = 1
     RecLength = int(ModCycles * MODperiodvalue)
@@ -9579,7 +9987,7 @@ def AWGAMakeAMSine():
     global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
     global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay, AWGAMode
     global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate, phasealab, AWG_Amp_Mode
-    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset, AWGRecLength
     
     BAWGAAmpl(0)
     BAWGAOffset(0)
@@ -9620,7 +10028,7 @@ def AWGAMakeAMSine():
         AWGADutyCycleEntry.delete(0,"end")
         AWGADutyCycleEntry.insert(0, ModIndex)
         
-    ModCycles = int(32768/MODperiodvalue) # find a whole number of cycles 
+    ModCycles = int(AWGRecLength/MODperiodvalue) # find a whole number of cycles 
     if ModCycles < 1:
         ModCycles = 1
     RecLength = int(ModCycles * MODperiodvalue)
@@ -9723,6 +10131,7 @@ def AWGAMakeFourier():
     AWGAwaveform = (AWGAwaveform * amplitude) + offset # scale and offset the waveform
     SplitAWGAwaveform()
     duty1lab.config(text="Harmonics")
+    BAWGAPhaseDelay()
     UpdateAwgCont()
 #
 def AWGAMakeSinc():
@@ -9780,6 +10189,7 @@ def AWGAMakeSinc():
     SplitAWGAwaveform()
     #BAWGAPhaseDelay()
     duty1lab.config(text="Cycles")
+    BAWGAPhaseDelay()
     UpdateAwgCont()
 #
 def AWGAMakeSSQ():
@@ -10107,6 +10517,7 @@ def AWGAMakeUpDownRamp():
     SplitAWGAwaveform()
     BAWGAPhaseDelay()
     duty1lab.config(text = "Symmetry")
+    BAWGAPhaseDelay()
     UpdateAwgCont()
 #
 def AWGAMakeImpulse():
@@ -10161,6 +10572,8 @@ def AWGAMakeImpulse():
         TempDelay = int(AWGABurstDelay*SamplesPermS) # convert mS to samples
         AWGAwaveform = numpy.pad(AWGAwaveform, (TempDelay, 0), 'edge')
     SplitAWGAwaveform()
+    duty1lab.config(text = "Duty Cycle")
+    BAWGAPhaseDelay()
     UpdateAwgCont()
     
 def AWGAMakeUUNoise():
@@ -10205,6 +10618,7 @@ def AWGAMakeUUNoise():
         TempDelay = int(AWGABurstDelay*SamplesPermS) # convert mS to samples
         AWGAwaveform = numpy.pad(AWGAwaveform, (TempDelay, 0), 'constant', constant_values=(Mid))
     SplitAWGAwaveform()
+    BAWGAPhaseDelay()
     UpdateAwgCont()
     
 def AWGAMakeUGNoise():
@@ -10249,6 +10663,7 @@ def AWGAMakeUGNoise():
         TempDelay = int(AWGABurstDelay*SamplesPermS) # convert mS to samples
         AWGAwaveform = numpy.pad(AWGAwaveform, (TempDelay, 0), 'constant', constant_values=(Mid))
     SplitAWGAwaveform()
+    BAWGAPhaseDelay()
     UpdateAwgCont()
     
 def BAWGAModeLabel():
@@ -10407,16 +10822,24 @@ def UpdateAWGA():
 def SetBCompA():
     global AWGAAmplEntry, AWGBAmplEntry, AWGAOffsetEntry, AWGBOffsetEntry, AWGAFreqEntry, AWGBFreqEntry
     global AWGAPhaseEntry, AWGBPhaseEntry, AWGADutyCycleEntry, AWGBDutyCycleEntry, AWGAShape, AWGBShape
-    global BisCompA
+    global BisCompA, AWGAWave
 
     # if BisCompA.get() == 1:
     # sawp Min and Max values
-    AWGBAmplvalue = float(eval(AWGAAmplEntry.get()))
-    AWGBOffsetvalue = float(eval(AWGAOffsetEntry.get()))
-    AWGBAmplEntry.delete(0,"end")
-    AWGBAmplEntry.insert(0, AWGBOffsetvalue)
-    AWGBOffsetEntry.delete(0,"end")
-    AWGBOffsetEntry.insert(0, AWGBAmplvalue)
+    if AWGAWave == 'dc':
+        AWGBAmplvalue = float(eval(AWGAAmplEntry.get()))
+        AWGBOffsetvalue = 2.5 - (float(eval(AWGAOffsetEntry.get()))-2.5)
+        AWGBAmplEntry.delete(0,"end")
+        AWGBAmplEntry.insert(0, AWGBAmplvalue)
+        AWGBOffsetEntry.delete(0,"end")
+        AWGBOffsetEntry.insert(0, AWGBOffsetvalue)
+    else:
+        AWGBAmplvalue = float(eval(AWGAAmplEntry.get()))
+        AWGBOffsetvalue = float(eval(AWGAOffsetEntry.get()))
+        AWGBAmplEntry.delete(0,"end")
+        AWGBAmplEntry.insert(0, AWGBOffsetvalue)
+        AWGBOffsetEntry.delete(0,"end")
+        AWGBOffsetEntry.insert(0, AWGBAmplvalue)
     # copy everything else
     AWGBFreqvalue = float(eval(AWGAFreqEntry.get()))
     AWGBFreqEntry.delete(0,"end")
@@ -10554,17 +10977,27 @@ def BAWGBFreq(temp):
         AWGBFreqEntry.insert(0, AWGBFreqvalue)
     # UpdateAWGB()
 
+def ToggleAWGBPhaseDelay():
+    global AWGBPhaseDelay, phaseblab, awgbph, awgbdel
+
+    if AWGBPhaseDelay.get() == 1:
+        AWGBPhaseDelay.set(0)
+        awgbph.configure(text="Phase")
+        phaseblab.configure(text="Deg")
+    elif AWGBPhaseDelay.get() == 0:
+        AWGBPhaseDelay.set(1)
+        awgbph.configure(text="Delay")
+        phaseblab.configure(text="mSec")
+    
 def BAWGBPhaseDelay():
-    global AWGbPhaseDelay, phaseblab, awgbph, awgbdel
+    global AWGBPhaseDelay, phaseblab, awgbph, awgbdel
 
     if AWGBPhaseDelay.get() == 0:
         phaseblab.configure(text="Deg")
-        awgbph.configure(style="WPhase.TRadiobutton")
-        awgbdel.configure(style="GPhase.TRadiobutton")
+        awgbph.configure(text="Phase")
     elif AWGBPhaseDelay.get() == 1:
         phaseblab.configure(text="mSec")
-        awgbph.configure(style="GPhase.TRadiobutton")
-        awgbdel.configure(style="WPhase.TRadiobutton")
+        awgbph.configure(text="Delay")
         
 def BAWGBPhase(temp):
     global AWGBPhaseEntry, AWGBPhasevalue
@@ -10765,7 +11198,7 @@ def AWGBConfigMath():
 def AWGBMakeFourier():
     global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBFreqvalue, awgwindow
     global AWG_Amp_Mode # 0 = Min/Max mode, 1 = Amp/Offset
-    global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate
+    global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate, duty2lab
     global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
     
     Max_term = int(AWGBDutyCyclevalue*100)
@@ -10794,13 +11227,14 @@ def AWGBMakeFourier():
     AWGBwaveform = (AWGBwaveform * amplitude) + offset # scale and offset the waveform
     SplitAWGBwaveform()
     duty2lab.config(text="Harmonics")
+    BAWGBPhaseDelay()
     UpdateAwgCont()
 #
 def AWGBMakeBodeSine():
     global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBperiodvalue
     global AWGBDutyCyclevalue, AWGBFreqvalue, duty2lab, AWGBgain, AWGBoffset, AWGBPhaseDelay, AWGBMode
     global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate, AWG_Amp_Mode
-    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset, AWGRecLength
 
     BAWGBAmpl(0)
     BAWGBOffset(0)
@@ -10829,7 +11263,7 @@ def AWGBMakeBodeSine():
             AWGBdelayvalue = 0.0
     elif AWGBPhaseDelay.get() == 1:
         AWGBdelayvalue = AWGBPhasevalue * AWGSAMPLErate / 1000
-    Cycles = int(32768/AWGBperiodvalue)
+    Cycles = int(AWGRecLength/AWGBperiodvalue)
     if Cycles < 1:
         Cycles = 1
     RecLength = int(Cycles * AWGBperiodvalue)
@@ -10957,8 +11391,8 @@ def AWGBMakeSinc():
         AWGBwaveform = numpy.pad(AWGBwaveform, (Extend,Extend), 'wrap')
     AWGBwaveform = numpy.roll(AWGBwaveform, int(AWGBdelayvalue))
     SplitAWGBwaveform()
-    #BAWGAPhaseDelay()
     duty2lab.config(text="Cycles")
+    BAWGBPhaseDelay()
     UpdateAwgCont()
 #
 def AWGBMakeSSQ():
@@ -11281,6 +11715,7 @@ def AWGBMakeUpDownRamp():
     SplitAWGBwaveform()
     BAWGBPhaseDelay()
     duty2lab.config(text = "Symmetry")
+    BAWGBPhaseDelay()
     UpdateAwgCont()
 #
 def AWGBMakeImpulse():
@@ -11334,6 +11769,8 @@ def AWGBMakeImpulse():
         TempDelay = int(AWGBBurstDelay*SamplesPermS) # convert mS to samples
         AWGBwaveform = numpy.pad(AWGBwaveform, (TempDelay, 0), 'edge')
     SplitAWGBwaveform()
+    duty2lab.config(text = "Duty Cycle")
+    BAWGBPhaseDelay()
     UpdateAwgCont()
 
 def AWGBMakeUUNoise():
@@ -11376,6 +11813,7 @@ def AWGBMakeUUNoise():
         TempDelay = int(AWGBBurstDelay*SamplesPermS) # convert mS to samples
         AWGBwaveform = numpy.pad(AWGBwaveform, (TempDelay, 0), 'constant', constant_values=(Mid))
     SplitAWGBwaveform()
+    BAWGBPhaseDelay()
     UpdateAwgCont()
     
 def AWGBMakeUGNoise():
@@ -11417,6 +11855,7 @@ def AWGBMakeUGNoise():
         TempDelay = int(AWGBBurstDelay*SamplesPermS) # convert mS to samples
         AWGBwaveform = numpy.pad(AWGBwaveform, (TempDelay, 0), 'constant', constant_values=(Mid))
     SplitAWGBwaveform()
+    BAWGBPhaseDelay()
     UpdateAwgCont()
 
 def BAWGBModeLabel():
@@ -12288,6 +12727,7 @@ def DoFFT():            # Fast Fourier transformation
     global TRACEresetFreq, ZEROstuffing
     global SpectrumScreenStatus, IAScreenStatus, BodeScreenStatus
     global NetworkScreenStatus, NSweepSeriesR, NSweepSeriesX, NSweepSeriesMag, NSweepSeriesAng
+    global NSweepParallelR, NSweepParallelC, NSweepParallelL, NSweepSeriesC, NSweepSeriesL
 
     # T1 = time.time()              # For time measurement of FFT routine
     REX = []
@@ -12498,6 +12938,11 @@ def DoFFT():            # Fast Fourier transformation
             NSweepSeriesX = []
             NSweepSeriesMag = [] # in ohms 
             NSweepSeriesAng = [] # in degrees
+            NSweepParallelR = []
+            NSweepParallelC = []
+            NSweepParallelL = []
+            NSweepSeriesC = []
+            NSweepSeriesL = []
     if FreqTraceMode.get() == 1:      # Normal mode 1, do not change
         if FSweepMode.get() == 1:
             ptmax = numpy.argmax(FFTresultA[STARTsample:TRACEsize])
@@ -13597,7 +14042,7 @@ def MakeIAScreen():       # Update the screen with traces and text
     global PeakfreqA, PeakfreqB, PeakfreqRA, PeakfreqRB
     global PeakxRA, PeakyRA, PeakxRB, PeakyRB, PeakdbRA, PeakdbRB
     global PeakxRM, PeakyRM, PeakRMdb, PeakfreqRM
-    global PeakphaseA, PeakphaseB, PeakRelPhase, PhaseCalEntry
+    global PeakphaseA, PeakphaseB, PeakRelPhase, PhaseCalEntry, CapZeroEntry
     global SmoothCurvesBP, TRACEwidth, GridWidth    # The colors
     global COLORsignalband, COLORtext, COLORgrid, IASweepSaved
     global COLORtrace1, COLORtrace2, COLORtrace5, COLORtrace6
@@ -13607,7 +14052,7 @@ def MakeIAScreen():       # Update the screen with traces and text
     global Y0TIA          # Left top Y value
     global GRWIA          # Screenwidth
     global GRHIA          # Screenheight
-    global FontSize
+    global FontSize, IAGridType
     global RUNstatus    # 0 stopped, 1 start, 2 running, 3 stop now, 4 stop and restart
     global AWGSAMPLErate, SAMPLErate, BaseSampleRate, OverRangeFlagA, OverRangeFlagB
     global SMPfft       # number of FFT samples
@@ -13616,50 +14061,111 @@ def MakeIAScreen():       # Update the screen with traces and text
     global Vdiv         # Number of vertical divisions
     global ImpedanceMagnitude # in ohms 
     global ImpedanceAngle # in degrees 
-    global ImpedanceRseries, ImpedanceXseries # in ohms
+    global ImpedanceRseries, ImpedanceXseries, Cseries # in ohms / uF
     global LoopNum, NetworkScreenStatus, NSweepSeriesR, NSweepSeriesX, NSweepSeriesMag, NSweepSeriesAng
+    global NSweepParallelR, NSweepParallelC, NSweepParallelL, NSweepSeriesC, NSweepSeriesC
 
-    if LoopNum.get() > 1:
-        if NetworkScreenStatus.get() > 0:
-            NSweepSeriesR.append(ImpedanceRseries)
-            NSweepSeriesX.append(ImpedanceXseries)
-            NSweepSeriesMag.append(ImpedanceMagnitude) # in ohms 
-            NSweepSeriesAng.append(ImpedanceAngle) # in degrees
     # Delete all items on the screen
     IAca.delete(ALL) # remove all items
     SmoothBool = SmoothCurvesBP.get()
-    # Draw circular grid lines
-    i = 1
-    xcenter = GRWIA/2
-    ycenter = GRHIA/2 
+    Cparallel = 0.0
+    Rparallel = 0.0
+    Lparallel = 0.0
     Radius = (GRWIA-X0LIA)/(1 + Vdiv.get()*2) # 11
+    xright = 10 + GRWIA/2 + ( Vdiv.get() * Radius ) # 5
     OhmsperPixel = float(ResScale.get())/Radius
     TRadius = Radius * Vdiv.get() # 5
-    x1 = X0LIA
-    x2 = X0LIA + GRWIA
-    xright = 10 + xcenter + ( Vdiv.get() * Radius ) # 5
-    while (i <= Vdiv.get()):
-        x0 = xcenter - ( i * Radius )
-        x1 = xcenter + ( i * Radius )
-        y0 = ycenter - ( i * Radius )
-        y1 = ycenter + ( i * Radius )
-        ResTxt = '{0:.1f}'.format(float(ResScale.get()) * i)
-        IAca.create_oval( x0, y0, x1, y1, outline=COLORgrid, width=GridWidth.get())
-        IAca.create_line(xcenter, y0, xright, y0, fill=COLORgrid, width=GridWidth.get(), dash=(4,3))
-        IAca.create_text(xright, y0, text=str(ResTxt), fill=COLORgrid, anchor="w", font=("arial", FontSize+2 ))
-        # 
-        i = i + 1
-    IAca.create_line(xcenter, y0, xcenter, y1, fill=COLORgrid, width=GridWidth.get())
-    IAca.create_line(x0, ycenter, x1, ycenter, fill=COLORgrid, width=GridWidth.get())
-    RAngle = math.radians(45)
-    y = TRadius*math.sin(RAngle)
-    x = TRadius*math.cos(RAngle)
-    IAca.create_line(xcenter-x, ycenter-y, xcenter+x, ycenter+y, fill=COLORgrid, width=GridWidth.get())
-    IAca.create_line(xcenter+x, ycenter-y, xcenter-x, ycenter+y, fill=COLORgrid, width=GridWidth.get())
-    IAca.create_text(x0, ycenter, text="180", fill=COLORgrid, anchor="e", font=("arial", FontSize+2 ))
-    IAca.create_text(x1, ycenter, text="0.0", fill=COLORgrid, anchor="w", font=("arial", FontSize+2 ))
-    IAca.create_text(xcenter, y0, text="90", fill=COLORgrid, anchor="s", font=("arial", FontSize+2 ))
-    IAca.create_text(xcenter, y1, text="-90", fill=COLORgrid, anchor="n", font=("arial", FontSize+2 ))
+    xcenter = GRWIA/2
+    ycenter = GRHIA/2
+    if IAGridType.get() == 0:
+        # Draw circular grid lines
+        i = 1
+        xcenter = GRWIA/2
+        ycenter = GRHIA/2 
+        Radius = (GRWIA-X0LIA)/(1 + Vdiv.get()*2) # 11
+        OhmsperPixel = float(ResScale.get())/Radius
+        TRadius = Radius * Vdiv.get() # 5
+        xright = 10 + xcenter + ( Vdiv.get() * Radius ) # 5
+        while (i <= Vdiv.get()):
+            x0 = xcenter - ( i * Radius )
+            x1 = xcenter + ( i * Radius )
+            y0 = ycenter - ( i * Radius )
+            y1 = ycenter + ( i * Radius )
+            axisvalue = float(ResScale.get()) * i
+            if axisvalue >= 1000.0 or axisvalue <= -1000.0:
+                axisvalue = axisvalue / 1000
+                ResTxt = '{0:.1f}'.format(axisvalue)
+                axis_label = str(ResTxt) + "K"
+            else:
+                ResTxt = '{0:.0f}'.format(axisvalue)
+                axis_label = str(ResTxt)
+            IAca.create_oval( x0, y0, x1, y1, outline=COLORgrid, width=GridWidth.get())
+            IAca.create_line(xcenter, y0, xright, y0, fill=COLORgrid, width=GridWidth.get(), dash=(4,3))
+            IAca.create_text(xright, y0, text=axis_label, fill=COLORgrid, anchor="w", font=("arial", FontSize+2 ))
+            # 
+            i = i + 1
+        IAca.create_line(xcenter, y0, xcenter, y1, fill=COLORgrid, width=GridWidth.get())
+        IAca.create_line(x0, ycenter, x1, ycenter, fill=COLORgrid, width=GridWidth.get())
+        RAngle = math.radians(45)
+        y = TRadius*math.sin(RAngle)
+        x = TRadius*math.cos(RAngle)
+        IAca.create_line(xcenter-x, ycenter-y, xcenter+x, ycenter+y, fill=COLORgrid, width=GridWidth.get())
+        IAca.create_line(xcenter+x, ycenter-y, xcenter-x, ycenter+y, fill=COLORgrid, width=GridWidth.get())
+        IAca.create_text(x0, ycenter, text="180", fill=COLORgrid, anchor="e", font=("arial", FontSize+2 ))
+        IAca.create_text(x1, ycenter, text="0.0", fill=COLORgrid, anchor="w", font=("arial", FontSize+2 ))
+        IAca.create_text(xcenter, y0, text="90", fill=COLORgrid, anchor="s", font=("arial", FontSize+2 ))
+        IAca.create_text(xcenter, y1, text="-90", fill=COLORgrid, anchor="n", font=("arial", FontSize+2 ))
+    else:
+        # Draw horizontal grid lines
+        i = 0 - Vdiv.get()
+        j = 0
+        x1 = X0LIA
+        x2 = X0LIA + TRadius * 2
+        xcenter = x1 + (TRadius)
+        OhmsperPixel = float(ResScale.get())/Radius
+        while (i <= Vdiv.get()):
+            y = Y0TIA + j * (TRadius/Vdiv.get())
+            Dline = [x1,y,x2,y]
+            if i == 0 or i == Vdiv.get() or i == -Vdiv.get():
+                IAca.create_line(Dline, fill=COLORgrid, width=GridWidth.get())
+            else:
+                IAca.create_line(Dline, dash=(4,3), fill=COLORgrid, width=GridWidth.get())
+            axisvalue = float(ResScale.get()) * -i
+            if axisvalue >= 1000.0 or axisvalue <= -1000.0:
+                axisvalue = axisvalue / 1000
+                ResTxt = '{0:.1f}'.format(axisvalue)
+                axis_label = str(ResTxt) + "K"
+            else:
+                ResTxt = '{0:.0f}'.format(axisvalue)
+                axis_label = str(ResTxt)
+            IAca.create_text(x1-3, y, text=axis_label, fill=COLORtrace6, anchor="e", font=("arial", FontSize ))
+            i = i + 1
+            j = j + 1
+        # Draw vertical grid lines
+        i = 0 - Vdiv.get()
+        j = 0
+        y1 = Y0TIA
+        y2 = Y0TIA + TRadius * 2
+        ycenter = y1 + (TRadius)
+        #    "\n".join(axis_label)
+        while (i <= Vdiv.get()): #
+            x = x1 + j * (TRadius/Vdiv.get())
+            Dline = [x,y1,x,y2]
+            if i == 0 or i == Vdiv.get() or i == -Vdiv.get():
+                IAca.create_line(Dline, fill=COLORgrid, width=GridWidth.get())
+            else:
+                IAca.create_line(Dline, dash=(4,3), fill=COLORgrid, width=GridWidth.get())
+            axisvalue = float(ResScale.get()) * i
+            if axisvalue >= 1000.0 or axisvalue <= -1000.0:
+                axisvalue = axisvalue / 1000
+                ResTxt = '{0:.1f}'.format(axisvalue)
+                axis_label = str(ResTxt) + "K"
+            else:
+                ResTxt = '{0:.0f}'.format(axisvalue)
+                axis_label = str(ResTxt)
+            IAca.create_text(x, y2+3, text=axis_label, fill=COLORtrace1, anchor="n", font=("arial", FontSize ))
+            i = i + 1
+            j = j + 1 
 # Draw traces
     # Add saved line if there
     if IASweepSaved.get() > 0:
@@ -13769,6 +14275,11 @@ def MakeIAScreen():       # Update the screen with traces and text
     txt = ' {0:.1f} '.format(ImpedanceXseries)
     TXT8 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
 #
+    Cseries = 0.0
+    Cparallel = 0.0
+    Lseries = 0.0
+    Lparallel = 0.0
+    Rparallel = 0.0
     if ImpedanceXseries < 0: # calculate series capacitance
         y = y + 24
         try:
@@ -13785,12 +14296,13 @@ def MakeIAScreen():       # Update the screen with traces and text
             IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
             y = y + 20
             if Cseries < 1:
-                Cseries = Cseries * 1E3
-                if Cseries < 1:
-                    Cseries = Cseries * 1E3
-                    txt = ' {0:.1f} '.format(Cseries) + "pF"
+                Ctext = Cseries * 1E3
+                if Ctext < 1:
+                    Ctext = Ctext * 1E3
+                    CtextDis = Ctext + float(CapZeroEntry.get())
+                    txt = ' {0:.1f} '.format(CtextDis) + "pF"
                 else:
-                    txt = ' {0:.3f} '.format(Cseries) + "nF"
+                    txt = ' {0:.3f} '.format(Ctext) + "nF"
             else:
                 txt = ' {0:.3f} '.format(Cseries) + "uF"
             IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
@@ -13799,12 +14311,12 @@ def MakeIAScreen():       # Update the screen with traces and text
             IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
             y = y + 20
             if Cparallel < 1:
-                Cparallel = Cparallel * 1E3
-                if Cparallel < 1:
-                    Cparallel = Cparallel * 1E3
-                    txt = "Capacitance " + ' {0:.1f} '.format(Cparallel) + "pF"
+                Ctext = Cparallel * 1E3
+                if Ctext < 1:
+                    Ctext = Ctext * 1E3
+                    txt = "Capacitance " + ' {0:.1f} '.format(Ctext) + "pF"
                 else:
-                    txt = "Capacitance " + ' {0:.3f} '.format(Cparallel) + "nF"
+                    txt = "Capacitance " + ' {0:.3f} '.format(Ctext) + "nF"
             else:
                 txt = "Capacitance " + ' {0:.3f} '.format(Cparallel) + "uF"
             IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
@@ -13834,8 +14346,8 @@ def MakeIAScreen():       # Update the screen with traces and text
             IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
             y = y + 22
             if Lseries < 1:
-                Lseries = Lseries * 1E3
-                txt = ' {0:.2f} '.format(Lseries) + "uH"
+                Ltext = Lseries * 1E3
+                txt = ' {0:.2f} '.format(Ltext) + "uH"
             else:
                 txt = ' {0:.2f} '.format(Lseries) + "mH"
             IAca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
@@ -13844,8 +14356,8 @@ def MakeIAScreen():       # Update the screen with traces and text
             IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
             y = y + 20
             if Lparallel < 1:
-                Lparallel = Lparallel * 1E3
-                txt = "Inductance " + ' {0:.2f} '.format(Lparallel) + "uH"
+                Ltext = Lparallel * 1E3
+                txt = "Inductance " + ' {0:.2f} '.format(Ltext) + "uH"
             else:
                 txt = "Inductance " + ' {0:.2f} '.format(Lparallel) + "mH"
             IAca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
@@ -13856,6 +14368,18 @@ def MakeIAScreen():       # Update the screen with traces and text
         qf = abs(ImpedanceXseries/ImpedanceRseries) * 100 # Quality Factor is ratio of XL to XR
         txt = 'Q =  {0:.2f} '.format(qf)
         IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
+    #
+    if LoopNum.get() > 1:
+        if NetworkScreenStatus.get() > 0:
+            NSweepSeriesR.append(ImpedanceRseries)
+            NSweepSeriesX.append(ImpedanceXseries)
+            NSweepSeriesMag.append(ImpedanceMagnitude) # in ohms 
+            NSweepSeriesAng.append(ImpedanceAngle) # in degrees
+            NSweepParallelR.append(Rparallel)
+            NSweepParallelC.append(Cparallel) # in uF
+            NSweepParallelL.append(Lparallel) # in mH
+            NSweepSeriesC.append(Cseries) # in uF
+            NSweepSeriesL.append(Lseries) # in mH
     # Start and stop frequency and trace mode
     if Two_X_Sample.get() == 0:
         txt = "0.0 to 45000 Hz"
@@ -13898,10 +14422,10 @@ def IACaresize(event):
 # ================ Make IA Window ==========================
 def MakeIAWindow():
     global iawindow, IAca, logo, IAScreenStatus, RsystemEntry, IADisp, AWGSync, IASource
-    global COLORcanvas, CANVASwidthIA, CANVASheightIA, RevDate, AWGAMode, AWGAShape, AWGBMode
+    global COLORcanvas, CANVASwidthIA, CANVASheightIA, RevDate, AWGAMode, AWGAShape, AWGBMode, AWG_2X
     global FFTwindow, CutDC, ColorMode, ResScale, GainCorEntry, PhaseCorEntry, DisplaySeries
-    global GRWIA, X0LIA, GRHIA, Y0TIA, IA_Ext_Conf, DeBugMode, SWRev
-    global NetworkScreenStatus, IASweepSaved
+    global GRWIA, X0LIA, GRHIA, Y0TIA, IA_Ext_Conf, DeBugMode, SWRev, CapZeroEntry
+    global NetworkScreenStatus, IASweepSaved, IAGridType
     global FrameRefief, BorderSize
 
     if IAScreenStatus.get() == 0:
@@ -13912,8 +14436,14 @@ def MakeIAWindow():
         CANVASwidthIA = 170 + GRWIA + 2 * X0LIA     # The canvas width
         CANVASheightIA = GRHIA + Y0TIA + 10         # The canvas height
         AWGAMode.set(0) # Set AWG A to SVMI
-        AWGAShape.set(1) # Set Shape to Sine
-        AWGBMode.set(2) # Set AWG B to Hi-Z
+        AWGAShape.set(18) # Set Shape to Bode Sine
+        ReMakeAWGwaves()
+        if AWG_2X.get == 1:
+            AWGBMode.set(0) # Set AWG B to SVMI
+        else:
+            AWGBMode.set(2) # Set AWG B to Hi-Z
+        BAWGAModeLabel()
+        BAWGBModeLabel()
         AWGSync.set(1) # Set AWGs to run sync
         iawindow = Toplevel()
         iawindow.title("Impedance Analyzer " + SWRev + RevDate)
@@ -14047,13 +14577,38 @@ def MakeIAWindow():
         PhaseCorEntry.delete(0,"end")
         PhaseCorEntry.insert(4,0.0)
         #
+        capofflab = Label(frame2iar, text="Capacitance Offset")
+        capofflab.pack(side=TOP)
+        CapZero = Frame( frame2iar )
+        CapZero.pack(side=TOP)
+        CapZerobutton = Button(CapZero, text="Zero", style="W4.TButton", command=IACapZero)
+        CapZerobutton.pack(side=LEFT, anchor=W)
+        CapResetbutton = Button(CapZero, text="Reset", style="W5.TButton", command=IACapReset)
+        CapResetbutton.pack(side=LEFT, anchor=W)
+        CapZeroEntry = Entry(CapZero, width=6, cursor='double_arrow')
+        CapZeroEntry.bind('<Return>', onTextKey)
+        CapZeroEntry.bind('<MouseWheel>', onTextScroll)
+        CapZeroEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+        CapZeroEntry.bind("<Button-5>", onTextScroll)
+        CapZeroEntry.bind('<Key>', onTextKey)
+        CapZeroEntry.pack(side=LEFT, anchor=W)
+        CapZeroEntry.delete(0,"end")
+        CapZeroEntry.insert(4,0.0)
+        #
         srclab = Label(frame2iar, text="Source")
         srclab.pack(side=TOP)
         extsrc1 = Radiobutton(frame2iar, text="Internal", variable=IASource, value=0, command=IASourceSet)
         extsrc1.pack(side=TOP)
         extsrc2 = Radiobutton(frame2iar, text="External", variable=IASource, value=1, command=IASourceSet)
         extsrc2.pack(side=TOP)
-        
+        #
+        gridmenu = Frame( frame2iar )
+        gridmenu.pack(side=TOP)
+        iagrid1= Radiobutton(frame2iar, text="Polar Grid", variable=IAGridType, value=0) #, command=IAGridSet)
+        iagrid1.pack(side=TOP)
+        iagrid2 = Radiobutton(frame2iar, text="Rect Grid", variable=IAGridType, value=1) #, command=IAGridSet)
+        iagrid2.pack(side=TOP)
+        #
         dismiss1button = Button(frame2iar, text="Dismiss", style="W8.TButton", command=DestroyIAScreen)
         dismiss1button.pack(side=TOP)
         # add ADI logo 
@@ -14073,6 +14628,19 @@ def BSaveIASweep():
 
     if IASweepSaved.get() > 0:
         TIAMRline = TIAMline
+#
+def IACapZero():
+    global Cseries, CapZeroEntry
+
+    Ctext = ' {0:.1f} '.format(-Cseries * 1E6)
+    CapZeroEntry.delete(0,"end")
+    CapZeroEntry.insert(6,Ctext)
+#
+def IACapReset():
+    global CapZeroEntry
+
+    CapZeroEntry.delete(0,"end")
+    CapZeroEntry.insert(4,0.0)
 #
 def MakeNyquistPlot():
     global nqpwindow, NqPca, logo, NqPScreenStatus, NqPDisp
@@ -14480,6 +15048,10 @@ def MakePhAWindow():
         PhAca.bind("<space>", onCanvasSpaceBar)
         PhAca.pack(side=TOP, expand=YES, fill=BOTH)
 
+        if MuxScreenStatus.get() == 0:
+            RefPhase = ("CA-V", "CB-V", "CA-I", "CB-I")
+        else:
+            RefPhase = ("CA-V", "CB-A", "CB-B", "CB-C", "CB-D","CA-I", "CB-I")
         # menu buttons
         # right side drop down menu buttons
         dropmenu = Frame( frame2phar )
@@ -14558,6 +15130,7 @@ def MakePhAWindow():
         vbtb = Frame( frame2phar )
         vbtb.pack(side=TOP)
         if MuxScreenStatus.get() == 0:
+            #RefPhase = ("CA-V", "CB-V", "CA-I", "CB-I")
             vbtblab = Label(vbtb, text="CB-V ")
             vbtblab.pack(side=LEFT)
             vbt_btn = Button(vbtb, text="OFF", style="Stop.TButton", width=4, command=VBtoggle)
@@ -14569,7 +15142,8 @@ def MakePhAWindow():
             vabt_btn = Button(vabtb, text="OFF", style="Stop.TButton", width=4, command=VABtoggle)
             vabt_btn.pack(side=LEFT)
         else:
-            RefphEntry.configure(state=DISABLED)
+            #RefphEntry.configure(state=DISABLED)
+            #RefPhase = ("CA-V", "CB-A", "CB-B", "CB-C", "CB-D","CA-I", "CB-I")
             amuxlab = Label(frame2phar, text="Analog Mux In")
             amuxlab.pack(side=TOP)
             phbt1 = Checkbutton(frame2phar, text='CB-A ', style="Strace2.TCheckbutton", variable=ShowPB_A)
@@ -14666,11 +15240,12 @@ def MakePhATrace():        # Update the grid and trace
     global PeakfreqVA, PeakfreqVB, PeakfreqIA, PeakfreqIB
     global PeakphaseVA, PeakphaseVB, PeakphaseIA, PeakphaseIB, PeakphaseVAB
     global PeakphaseVMA, PeakphaseVMB, PeakphaseVMC, PeakphaseVMD
+    global PeakfreqVMA, PeakfreqVMB, PeakfreqVMC, PeakfreqVMD
     global GRHPhA          # Screenheight
     global GRWPhA          # Screenwidth
     global AWGSAMPLErate, SAMPLErate, BaseSampleRate
     global STARTsample, STOPsample, LoopNum, FSweepMode
-    global TRACEmode, Two_X_Sample, MuxScreenStatus, MuxChan 
+    global TRACEmode, Two_X_Sample, MuxScreenStatus, MuxChan, ChopMuxMode
     global Vdiv         # Number of vertical divisions
     global X0LPhA          # Left top X value
     global Y0TPhA          # Left top Y value  
@@ -14703,25 +15278,27 @@ def MakePhATrace():        # Update the grid and trace
     PeakphaseVA = PhaseVA[n]
     if MuxScreenStatus.get() == 0:
         PeakphaseVB = PhaseVB[n]
+    else:
+        PeakphaseVMA = PeakphaseVMB = PeakphaseVMC = PeakphaseVMD = 0.0
     PeakphaseIA = PhaseIA[n]
     PeakphaseIB = PhaseIB[n]
     PeakSampleVB = PeakSampleVA = PeakSampleIA = PeakSampleIB = n
-    if MuxChan == 0: #
+    if MuxChan == 0 or ChopMuxMode.get() > 0: #
         PeakVMA = 0
         PeakphaseVMA = PhaseVMA[n]
         PeakSampleVMA = 0
         PeakfreqVMA = PeakfreqVA
-    if MuxChan == 1: #
+    if MuxChan == 1 or ChopMuxMode.get() > 0: #
         PeakVMB = 0
         PeakphaseVMB = PhaseVMB[n]
         PeakSampleVMB = 0
         PeakfreqVMB = PeakfreqVA
-    if MuxChan == 2: #
+    if MuxChan == 2 or ChopMuxMode.get() > 0: #
         PeakVMC = 0
         PeakphaseVMC = PhaseVMC[n]
         PeakSampleVMC = 0
         PeakfreqVMC = PeakfreqVA
-    if MuxChan == 3: #
+    if MuxChan == 3 or ChopMuxMode.get() > 0: #
         PeakVMD = 0
         PeakphaseVMD = PhaseVMD[n]
         PeakSampleVMD = 0
@@ -14760,7 +15337,7 @@ def MakePhATrace():        # Update the grid and trace
                 PeakphaseVB = PhaseVB[n]
                 PeakSampleVB = n
         else:
-            if MuxChan == 0: #
+            if MuxChan == 0 or ChopMuxMode.get() > 0: #
                 try:
                     VMA = float(VMAresult[n])   #
                 except:
@@ -14770,7 +15347,7 @@ def MakePhATrace():        # Update the grid and trace
                     PeakfreqVMA = F
                     PeakphaseVMA = PhaseVMA[n]
                     PeakSampleVMA = n
-            if MuxChan == 1: #
+            if MuxChan == 1 or ChopMuxMode.get() > 0: #
                 try:
                     VMB = float(VMBresult[n])   #
                 except:
@@ -14780,7 +15357,7 @@ def MakePhATrace():        # Update the grid and trace
                     PeakfreqVMB = F
                     PeakphaseVMB = PhaseVMB[n]
                     PeakSampleVMB = n
-            if MuxChan == 2: #
+            if MuxChan == 2 or ChopMuxMode.get() > 0: #
                 try:
                     VMC = float(VMCresult[n])   #
                 except:
@@ -14790,7 +15367,7 @@ def MakePhATrace():        # Update the grid and trace
                     PeakfreqVMC = F
                     PeakphaseVMC = PhaseVMC[n]
                     PeakSampleVMC = n
-            if MuxChan == 3: #
+            if MuxChan == 3 or ChopMuxMode.get() > 0: #
                 try:
                     VMD = float(VMDresult[n])   #
                 except:
@@ -14825,7 +15402,7 @@ def MakePhATrace():        # Update the grid and trace
     if PeakSampleVA != PeakSampleIA:
         PeakphaseIA = PhaseIA[PeakSampleVA]
         PeakIA = IAresult[PeakSampleVA]
-    if PeakSampleVB != PeakSampleIB:
+    if PeakSampleVB != PeakSampleIB and MuxScreenStatus.get() == 0:
         PeakphaseIB = PhaseIB[PeakSampleVB]
         PeakIB = IBresult[PeakSampleVB]
 #
@@ -14836,6 +15413,7 @@ def MakePhAScreen():       # Update the screen with traces and text
     global PeakphaseVA, PeakphaseVB, PeakphaseIA, PeakphaseIB
     global PeakVMA, PeakVMB, PeakVMC, PeakVMD
     global PeakphaseVMA, PeakphaseVMB, PeakphaseVMC, PeakphaseVMD
+    global PeakfreqVMA, PeakfreqVMB, PeakfreqVMC, PeakfreqVMD
     global CAVphase, CBVphase, CAIphase, CBIphase, CABVphase
     global CMAphase, CMBphase, CMCphase, CMDphase
     global CANVASheightPhA, CANVASwidthPhA, PhAca, TRACEwidth, GridWidth
@@ -14846,7 +15424,7 @@ def MakePhAScreen():       # Update the screen with traces and text
     global Y0TPhA          # Left top Y value
     global GRWPhA          # Screenwidth
     global GRHPhA          # Screenheight
-    global FontSize, MuxScreenStatus, MuxChan, Mulx
+    global FontSize, MuxScreenStatus, MuxChan, Mulx, ChopMuxMode
     global RUNstatus    # 0 stopped, 1 start, 2 running, 3 stop now, 4 stop and restart
     global AWGSAMPLErate, SAMPLErate, BaseSampleRate, OverRangeFlagA, OverRangeFlagB
     global SMPfft       # number of FFT samples
@@ -14919,10 +15497,27 @@ def MakePhAScreen():       # Update the screen with traces and text
     if Two_X_Sample.get() == 0:
         if AWGBMode.get() == 2 or AWGBIOMode.get() > 0:
             PhErr = 0.001675 * PeakfreqVA
+            PhErrMA = PhErr
+            PhErrMB = PhErr
+            PhErrMC = PhErr
+            PhErrMD = PhErr
         else:
             PhErr = 0.0
+            PhErrMA = PhErr
+            PhErrMB = PhErr
+            PhErrMC = PhErr
+            PhErrMD = PhErr
     else:
         PhErr = 0.0
+        PhErrMA = PhErr
+        PhErrMB = PhErr
+        PhErrMC = PhErr
+        PhErrMD = PhErr
+    if ChopMuxMode.get() > 0:
+        PhErrMB = 0.0072 * PeakfreqVMB
+        PhErrMA = 0.0016 * PeakfreqVMA #
+        PhErrMD = 0.0054 * PeakfreqVMD
+        PhErrMC = 0.0016 * PeakfreqVMC #
 # Draw traces
 #
     if RefphEntry.get() == "CA-V":
@@ -14950,6 +15545,49 @@ def MakePhAScreen():       # Update the screen with traces and text
         CAIphase = PeakphaseIB - PeakphaseIA - PhErr
         CABVphase = PeakphaseIB - PeakphaseVAB
     #
+    if MuxScreenStatus.get() > 0:
+        CBVphase = 0.0
+        if RefphEntry.get() == "CA-V":
+            CAVphase = 0.0
+            CMAphase = PeakphaseVA - PeakphaseVMA + PhErr
+            CMBphase = PeakphaseVA - PeakphaseVMB + PhErr
+            CMCphase = PeakphaseVA - PeakphaseVMC + PhErr
+            CMDphase = PeakphaseVA - PeakphaseVMD + PhErr
+            CAIphase = PeakphaseVA - PeakphaseIA
+            CBIphase = PeakphaseVA - PeakphaseIB + PhErr
+        elif RefphEntry.get() == "CB-A":
+            CMAphase = 0.0
+            CAVphase = PeakphaseVMA - PeakphaseVA + PhErr
+            CMBphase = PeakphaseVMA - PeakphaseVMB - PhErrMB
+            CMCphase = PeakphaseVMA - PeakphaseVMC + PhErrMC
+            CMDphase = PeakphaseVMA - PeakphaseVMD - PhErrMD
+            CAIphase = PeakphaseVMA - PeakphaseIA
+            CBIphase = PeakphaseVMA - PeakphaseIB + PhErr
+        elif RefphEntry.get() == "CB-B":
+            CMBphase = 0.0
+            CAVphase = PeakphaseVMB - PeakphaseVA + PhErr
+            CMAphase = PeakphaseVMB - PeakphaseVMA + PhErrMD
+            CMCphase = PeakphaseVMB - PeakphaseVMC + PhErrMB
+            CMDphase = PeakphaseVMB - PeakphaseVMD + PhErrMC
+            CAIphase = PeakphaseVMB - PeakphaseIA
+            CBIphase = PeakphaseVMB - PeakphaseIB + PhErr
+        elif RefphEntry.get() == "CB-C":
+            CMCphase = 0.0
+            CAVphase = PeakphaseVMC - PeakphaseVA + PhErr
+            CMAphase = PeakphaseVMC - PeakphaseVMA + PhErrMC
+            CMBphase = PeakphaseVMC - PeakphaseVMB - PhErrMB
+            CMDphase = PeakphaseVMC - PeakphaseVMD - PhErrMD
+            CAIphase = PeakphaseVMC - PeakphaseIA
+            CBIphase = PeakphaseVMC - PeakphaseIB + PhErr
+        elif RefphEntry.get() == "CB-D":
+            CMDphase = 0.0
+            CAVphase = PeakphaseVMD - PeakphaseVA + PhErr
+            CMAphase = PeakphaseVMD - PeakphaseVMA + PhErrMD
+            CMBphase = PeakphaseVMD - PeakphaseVMB + PhErrMC
+            CMCphase = PeakphaseVMD - PeakphaseVMC + PhErrMD
+            CAIphase = PeakphaseVMD - PeakphaseIA
+            CBIphase = PeakphaseVMD - PeakphaseIB + PhErr
+            
     if CAVphase > 180:
         CAVphase = CAVphase - 360
     elif CAVphase < -180:
@@ -14969,7 +15607,6 @@ def MakePhAScreen():       # Update the screen with traces and text
     #
     if vat_btn.config('text')[-1] == 'ON':
         MagRadius = PeakVA / VoltsperPixel
-        
         y1 = ycenter - MagRadius*math.sin(math.radians(CAVphase))
         if y1 > 1500:
             y1 = xright
@@ -14997,7 +15634,6 @@ def MakePhAScreen():       # Update the screen with traces and text
             PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace2, arrow="last", width=TRACEwidth.get())
     else:
         if ShowPB_A.get() > 0:
-            CMAphase = PeakphaseVA - PeakphaseVMA + PhErr
             if CMAphase > 180:
                 CMAphase = CMAphase - 360
             elif CMAphase < -180:
@@ -15015,7 +15651,6 @@ def MakePhAScreen():       # Update the screen with traces and text
                 x1 = xcenter - xright
             PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace2, arrow="last", width=TRACEwidth.get())#
         if ShowPB_B.get() > 0:
-            CMBphase = PeakphaseVA - PeakphaseVMB + PhErr
             if CMBphase > 180:
                 CMBphase = CMBphase - 360
             elif CMBphase < -180:
@@ -15033,7 +15668,6 @@ def MakePhAScreen():       # Update the screen with traces and text
                 x1 = xcenter - xright
             PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace6, arrow="last", width=TRACEwidth.get())#
         if ShowPB_C.get() > 0:
-            CMCphase = PeakphaseVA - PeakphaseVMC + PhErr
             if CMCphase > 180:
                 CMCphase = CMCphase - 360
             elif CMCphase < -180:
@@ -15051,7 +15685,6 @@ def MakePhAScreen():       # Update the screen with traces and text
                 x1 = xcenter - xright
             PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace7, arrow="last", width=TRACEwidth.get())#
         if ShowPB_D.get() > 0:
-            CMDphase = PeakphaseVA - PeakphaseVMD + PhErr
             if CMDphase > 180:
                 CMDphase = CMDphase - 360
             elif CMDphase < -180:
@@ -15131,9 +15764,10 @@ def MakePhAScreen():       # Update the screen with traces and text
     #
     x = X0LPhA + GRWPhA + 4
     y = 24
-    txt = "CA " + ' {0:.3f} '.format(PeakVA) + " RMS V" 
-    TXT9  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace1, font=("arial", FontSize+4 ))
-    y = y + 24
+    if ChopMuxMode.get() == 0:
+        txt = "CA " + ' {0:.3f} '.format(PeakVA) + " RMS V" 
+        TXT9  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace1, font=("arial", FontSize+4 ))
+        y = y + 24
     if MuxScreenStatus.get() == 0:
         txt = "CB " + ' {0:.3f} '.format(PeakVB) + " RMS V" 
         TXT10  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace2, font=("arial", FontSize+4 ))
@@ -15163,9 +15797,10 @@ def MakePhAScreen():       # Update the screen with traces and text
         txt = "CB " + ' {0:.2f} '.format(PeakIB) + " RMS mA" 
         TXT12  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace4, font=("arial", FontSize+4 ))
         y = y + 24
-    txt = "CA V Phase " + ' {0:.1f} '.format(CAVphase) + " Degrees"
-    TXT13  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace1, font=("arial", FontSize+4 ))
-    y = y + 24
+    if ChopMuxMode.get() == 0:
+        txt = "CA V Phase " + ' {0:.1f} '.format(CAVphase) + " Degrees"
+        TXT13  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace1, font=("arial", FontSize+4 ))
+        y = y + 24
     if MuxScreenStatus.get() == 0:
         txt = "CB V Phase " + ' {0:.1f} '.format(CBVphase) + " Degrees"
         TXT14  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace2, font=("arial", FontSize+4 ))
@@ -15196,9 +15831,14 @@ def MakePhAScreen():       # Update the screen with traces and text
         TXT16  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace4, font=("arial", FontSize+4 ))
         y = y + 24
     #
-    txt = "CA-V Freq " + ' {0:.1f} '.format(PeakfreqVA) + " Hertz"
-    TXT17  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
-    y = y + 24
+    if ChopMuxMode.get() == 0:
+        txt = "CA-V Freq " + ' {0:.1f} '.format(PeakfreqVA) + " Hertz"
+        TXT17  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
+        y = y + 24
+    else:
+        txt = "Mux A Freq " + ' {0:.1f} '.format(PeakfreqVMA) + " Hertz"
+        TXT17  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+4 ))
+        y = y + 24
 #
     txt = " "
 # print time domin measured period and frequency of displayed channels
@@ -16699,16 +17339,12 @@ def MakeAWGWindow():
         freq1lab = Label(awg1freq, text="Freq Ch A")
         freq1lab.pack(side=LEFT, anchor=W)
         # AWG Phase or delay select sub frame
-        awgadelay = Frame( frame2 )
-        awgadelay.pack(side=TOP)
-        awgaph = Radiobutton(awgadelay, text="Phase", style="WPhase.TRadiobutton", variable=AWGAPhaseDelay, value=0, command=BAWGAPhaseDelay)
-        awgaph.pack(side=LEFT, anchor=W)
-        awgadel = Radiobutton(awgadelay, text="Delay", style="GPhase.TRadiobutton", variable=AWGAPhaseDelay, value=1, command=BAWGAPhaseDelay)
-        awgadel.pack(side=LEFT, anchor=W)
         # AWG Phase entry sub frame
         awg1phase = Frame( frame2 )
         awg1phase.pack(side=TOP)
-        AWGAPhaseEntry = Entry(awg1phase, width=5, cursor='double_arrow')
+        awgaph = Button(awg1phase, text="Phase", style="W5.TButton", command=ToggleAWGAPhaseDelay)
+        awgaph.pack(side=LEFT, anchor=W)
+        AWGAPhaseEntry = Entry(awg1phase, width=4, cursor='double_arrow')
         AWGAPhaseEntry.bind("<Return>", UpdateAwgContRet)
         AWGAPhaseEntry.bind('<MouseWheel>', onAWGAscroll)
         AWGAPhaseEntry.bind("<Button-4>", onAWGAscroll)# with Linux OS
@@ -16851,16 +17487,12 @@ def MakeAWGWindow():
         freq2lab = Label(awg2freq, text="Freq Ch B")
         freq2lab.pack(side=LEFT, anchor=W)
         # AWG Phase or delay select sub frame
-        awgbdelay = Frame( frame3 )
-        awgbdelay.pack(side=TOP)
-        awgbph = Radiobutton(awgbdelay, text="Phase", style="WPhase.TRadiobutton", variable=AWGBPhaseDelay, value=0, command=BAWGBPhaseDelay)
-        awgbph.pack(side=LEFT, anchor=W)
-        awgbdel = Radiobutton(awgbdelay, text="Delay", style="GPhase.TRadiobutton", variable=AWGBPhaseDelay, value=1, command=BAWGBPhaseDelay)
-        awgbdel.pack(side=LEFT, anchor=W)
         # AWG Phase sub frame
         awg2phase = Frame( frame3 )
         awg2phase.pack(side=TOP)
-        AWGBPhaseEntry = Entry(awg2phase, width=5, cursor='double_arrow')
+        awgbph = Button(awg2phase, text="Phase", style="W5.TButton", command=ToggleAWGBPhaseDelay)
+        awgbph.pack(side=LEFT, anchor=W)
+        AWGBPhaseEntry = Entry(awg2phase, width=4, cursor='double_arrow')
         AWGBPhaseEntry.bind("<Return>", UpdateAwgContRet)
         AWGBPhaseEntry.bind('<MouseWheel>', onAWGBscroll)
         AWGBPhaseEntry.bind("<Button-4>", onAWGBscroll)# with Linux OS
@@ -16897,6 +17529,15 @@ def MakeAWGWindow():
         #
         dismissbutton = Button(frame3, text="Minimize", style="W8.TButton", command=DestroyAWGScreen)
         dismissbutton.pack(side=TOP)
+        if ShowBallonHelp > 0:
+            BuildAWGAPhase_tip = CreateToolTip(awgaph, 'Toggle between degrees and time')
+            BuildAWGBPhase_tip = CreateToolTip(awgbph, 'Toggle between degrees and time')
+            BuildAWGSync_tip = CreateToolTip(awgsync, 'Toggle between continuous and discontinuous modes')
+            BuildBComp_tip = CreateToolTip(bcompa, 'Lock CH B to be the inverse of CH A')
+            BuildModeAMenu_tip = CreateToolTip(ModeAMenu, 'Configure channel output mode')
+            BuildModeBMenu_tip = CreateToolTip(ModeBMenu, 'Configure channel output mode')
+            BuildShapeAMenu_tip = CreateToolTip(ShapeAMenu, 'Set channel waveform shape')
+            BuildShapeBMenu_tip = CreateToolTip(ShapeBMenu, 'Set channel waveform shape')
     else:
         awgwindow.deiconify()
 #
@@ -16934,8 +17575,11 @@ def MakeMuxModeWindow():
     global CHB_Asb, CHB_APosEntry, CHB_Bsb, CHB_BPosEntry
     global CHB_Csb, CHB_CPosEntry, CHB_Dsb, CHB_DPosEntry, SyncButton
     global CHB_Alab, CHB_Blab, CHB_Clab, CHB_Dlab, CHBlab, CHBofflab
+    global CHB_cba, CHB_cbb, CHB_cbc, CHB_cbd
     global CHB_Cofflab, CHB_Dofflab, awgsync, SWRev, BorderSize
-    global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MuxEnb, MuxSync, hipulseimg, lowpulseimg, DualMuxMode
+    global Show_CBA, Show_CBB, Show_CBC, Show_CBD, MuxEnb, MuxSync, hipulseimg, lowpulseimg
+    global ShowRMA, ShowRMB, ShowRMC, ShowRMD
+    global ChopMuxMode, ChopTrig, DualMuxMode, ShowBallonHelp
     
     if MuxScreenStatus.get() == 0 and DacScreenStatus.get() == 0 and DigScreenStatus.get() == 0:
         MuxScreenStatus.set(1)
@@ -16943,18 +17587,18 @@ def MakeMuxModeWindow():
         BAWGEnab() # update AWG settings
         #
         muxwindow = Toplevel()
-        muxwindow.title("CH-B Mux " + SWRev + RevDate)
+        muxwindow.title("External Mux " + SWRev + RevDate)
         muxwindow.resizable(FALSE,FALSE)
         muxwindow.protocol("WM_DELETE_WINDOW", DestroyMuxScreen)
         #
-        frameM = LabelFrame(muxwindow, text="CH B Mux", style="A10B.TLabel") #, font="Arial 10 bold", borderwidth=5, relief=RIDGE)
-        frameM.pack(side=LEFT, expand=1, fill=Y)
+        frameM = LabelFrame(muxwindow, text="External Analog Mux", style="A10.TLabelframe") #
+        frameM.pack(side=LEFT, expand=1, fill=X)
         #
         # Voltage channel CHB-A
         frameA = Frame(frameM)
         frameA.pack(side=TOP)
-        cba = Checkbutton(frameA, text='CB-A', variable=Show_CBA, command=UpdateTimeTrace)
-        cba.pack(side=LEFT, anchor=W)
+        CHB_cba = Checkbutton(frameA, text='CB-A', style="Strace2.TCheckbutton", variable=Show_CBA, command=UpdateTimeTrace)
+        CHB_cba.pack(side=LEFT, anchor=W)
         CHB_Asb = Spinbox(frameA, width=4, cursor='double_arrow', values=CHvpdiv, command=UpdateTimeTrace)
         CHB_Asb.bind('<MouseWheel>', onSpinBoxScroll)
         CHB_Asb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
@@ -16979,8 +17623,8 @@ def MakeMuxModeWindow():
         # Voltage channel CHB-B
         frameB = Frame(frameM)
         frameB.pack(side=TOP)
-        cbb = Checkbutton(frameB, text='CB-B', variable=Show_CBB, command=UpdateTimeTrace)
-        cbb.pack(side=LEFT, anchor=W)
+        CHB_cbb = Checkbutton(frameB, text='CB-B', style="Strace6.TCheckbutton", variable=Show_CBB, command=UpdateTimeTrace)
+        CHB_cbb.pack(side=LEFT, anchor=W)
         CHB_Bsb = Spinbox(frameB, width=4, cursor='double_arrow', values=CHvpdiv, command=UpdateTimeTrace)
         CHB_Bsb.bind('<MouseWheel>', onSpinBoxScroll)
         CHB_Bsb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
@@ -17004,8 +17648,8 @@ def MakeMuxModeWindow():
         # Voltage channel B-C
         frameC = Frame(frameM)
         frameC.pack(side=TOP)
-        cbc = Checkbutton(frameC, text='CB-C', variable=Show_CBC, command=UpdateTimeTrace)
-        cbc.pack(side=LEFT, anchor=W)
+        CHB_cbc = Checkbutton(frameC, text='CB-C', style="Strace7.TCheckbutton", variable=Show_CBC, command=UpdateTimeTrace)
+        CHB_cbc.pack(side=LEFT, anchor=W)
         CHB_Csb = Spinbox(frameC, width=4, cursor='double_arrow', values=CHvpdiv, command=UpdateTimeTrace)
         CHB_Csb.bind('<MouseWheel>', onSpinBoxScroll)
         CHB_Csb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
@@ -17030,8 +17674,8 @@ def MakeMuxModeWindow():
         # Voltage channel B-D
         frameD = Frame(frameM)
         frameD.pack(side=TOP)
-        cbd = Checkbutton(frameD, text='CB-D', variable=Show_CBD, command=UpdateTimeTrace)
-        cbd.pack(side=LEFT, anchor=W)
+        CHB_cbd = Checkbutton(frameD, text='CB-D', style="Strace4.TCheckbutton", variable=Show_CBD, command=UpdateTimeTrace)
+        CHB_cbd.pack(side=LEFT, anchor=W)
         CHB_Dsb = Spinbox(frameD, width=4, cursor='double_arrow', values=CHvpdiv, command=UpdateTimeTrace)
         CHB_Dsb.bind('<MouseWheel>', onSpinBoxScroll)
         CHB_Dsb.bind("<Button-4>", onSpinBoxScroll)# with Linux OS
@@ -17052,10 +17696,22 @@ def MakeMuxModeWindow():
         CHB_DPosEntry.insert(0,2.5)
         CHB_Dofflab = Button(frameD, text="CB-D Pos", style="Rtrace4.TButton", command=SetMuxDPoss)
         CHB_Dofflab.pack(side=LEFT)
+        #
+        frameR = Frame(frameM)
+        frameR.pack(side=TOP)
+        RefTraceMenu = Menubutton(frameR, text="Reference Traces", width=17, style="W17.TButton")
+        RefTraceMenu.menu = Menu(RefTraceMenu, tearoff = 0 )
+        RefTraceMenu["menu"] = RefTraceMenu.menu
+        RefTraceMenu.menu.add_command(label="-Take Snap Shot", command=BSnapShot)
+        RefTraceMenu.menu.add_command(label="-Ref MUX trace-", foreground="blue", command=donothing)
+        RefTraceMenu.menu.add_checkbutton(label='RMuxA', background=COLORtraceR2, variable=ShowRMA, command=UpdateTimeTrace)
+        RefTraceMenu.menu.add_checkbutton(label='RMuxB', background=COLORtraceR6, variable=ShowRMB, command=UpdateTimeTrace)
+        RefTraceMenu.menu.add_checkbutton(label='RMuxC', background=COLORtraceR7, variable=ShowRMC, command=UpdateTimeTrace)
+        RefTraceMenu.menu.add_checkbutton(label='RMuxD', background=COLORtraceR4, variable=ShowRMD, command=UpdateTimeTrace)
+        RefTraceMenu.pack(side=LEFT)
+        #
         frameE = Frame(frameM)
         frameE.pack(side=TOP)
-        MuxEnb = IntVar(0)
-        MuxSync = IntVar(0)
         muxenab = Checkbutton(frameE, text="Mux-Enb", variable=MuxEnb)
         muxenab.pack(side=LEFT)
         SyncButton = Checkbutton(frameE, compound=TOP, image=hipulseimg, variable=MuxSync, command=SyncImage)
@@ -17066,18 +17722,60 @@ def MakeMuxModeWindow():
         frameF.pack(side=TOP)
         dmx = Checkbutton(frameF, text='Dual Mux Split I/O mode', variable=DualMuxMode, command=SetDualMuxMode)
         dmx.pack(side=LEFT)
+        frameCH = Frame(frameM)
+        frameCH.pack(side=TOP)
+        altmx = Radiobutton(frameCH, text='Alternate Sweep', variable=ChopMuxMode, value=0, command=SetChopMuxMode)
+        altmx.pack(side=LEFT)
+        chopmx = Radiobutton(frameCH, text='Chop Sweep', variable=ChopMuxMode, value=1, command=SetChopMuxMode)
+        chopmx.pack(side=LEFT)
+        frameCT = Frame(frameM)
+        frameCT.pack(side=TOP)
+        # Chope Mode trigger drop-down
+        ChopTrigMenu = Menubutton(frameCT, text="Chop Mode Trigger", width=17, style="W17.TButton")
+        ChopTrigMenu.menu = Menu(ChopTrigMenu, tearoff = 0 )
+        ChopTrigMenu["menu"] = ChopTrigMenu.menu
+        ChopTrigMenu.menu.add_command(label="-MUX Chan-", foreground="blue", command=donothing)
+        ChopTrigMenu.menu.add_radiobutton(label="None", variable=ChopTrig, value=0) #, command=BAWGBModeLabel)
+        ChopTrigMenu.menu.add_radiobutton(label="Mux A", variable=ChopTrig, value=1) #, command=BAWGBModeLabel)
+        ChopTrigMenu.menu.add_radiobutton(label="Mux B", variable=ChopTrig, value=2) #, command=BAWGBModeLabel)
+        ChopTrigMenu.menu.add_radiobutton(label="Mux C", variable=ChopTrig, value=3) #, command=BAWGBModeLabel)
+        ChopTrigMenu.menu.add_radiobutton(label="Mux D", variable=ChopTrig, value=4) #, command=BAWGBModeLabel)
+        ChopTrigMenu.pack(side=LEFT)
+        #
+        SaveMuxmenu = Menubutton(frameCT, text="Export csv", width=10, style="W17.TButton")
+        SaveMuxmenu.menu = Menu(ChopTrigMenu, tearoff = 0 )
+        SaveMuxmenu["menu"] = SaveMuxmenu.menu
+        SaveMuxmenu.menu.add_command(label="Save Mux traces", command=BSaveMuxData)
+        SaveMuxmenu.menu.add_command(label="Save single channel", command=BSaveChannelData)
+        SaveMuxmenu.pack(side=LEFT)
         # Gray out main Channel B controls
         CHBlab.config(style="SGray.TButton")
         CHBofflab.config(style="SGray.TButton")
+        
+        #
+        if ShowBallonHelp > 0:
+            CHB_Alab_tip = CreateToolTip(CHB_Alab, 'Select CB-A vertical range/position axis to be used for markers and drawn color')
+            CHB_Blab_tip = CreateToolTip(CHB_Blab, 'Select CB-B vertical range/position axis to be used for markers and drawn color')
+            CHB_Clab_tip = CreateToolTip(CHB_Clab, 'Select CB-C vertical range/position axis to be used for markers and drawn color')
+            CHB_Dlab_tip = CreateToolTip(CHB_Dlab, 'Select CB-D vertical range/position axis to be used for markers and drawn color')
+            CHB_Aofflab_tip = CreateToolTip(CHB_Aofflab, 'Set CB-A position to DC average of signal')
+            CHB_Bofflab_tip = CreateToolTip(CHB_Bofflab, 'Set CB-B position to DC average of signal')
+            CHB_Cofflab_tip = CreateToolTip(CHB_Cofflab, 'Set CB-C position to DC average of signal')
+            CHB_Dofflab_tip = CreateToolTip(CHB_Dofflab, 'Set CB-D position to DC average of signal')
+            ChopTrigMenu_tip = CreateToolTip(ChopTrigMenu, 'Menu to Select Trigger Source')
+            RefTraceMenu_tip = CreateToolTip(RefTraceMenu, 'Menu to Select Mux Reference Traces')
+            SaveMuxmenu_tip = CreateToolTip(SaveMuxmenu, 'Menu to Export Mux Trace Data to .csv file')
 #
 def SetDualMuxMode():
     global AWGAIOMode, AWGBIOMode, ShowC1_V, DualMuxMode, CHAlab, CHAofflab
-    global CHB_Clab, CHB_Dlab, CHB_Cofflab, CHB_Dofflab
+    global CHB_Clab, CHB_Dlab, CHB_Cofflab, CHB_Dofflab, CHB_cbc, CHB_cbd
 
     if DualMuxMode.get() == 1:
         AWGAIOMode.set(1) # force awg A split I/O mode
-        AWGBIOMode.set(1) # force awg A split I/O mode
+        AWGBIOMode.set(1) # force awg B split I/O mode
         ShowC1_V.set(0) # force A voltage trace off
+        CHB_cbc.config(text="CA-C")
+        CHB_cbd.config(text="CA-D")
         CHB_Clab.config(text="CA-C V/Div")
         CHB_Dlab.config(text="CA-D V/Div")
         CHB_Cofflab.config(text="CA-C Pos")
@@ -17088,6 +17786,8 @@ def SetDualMuxMode():
         CHAofflab.config(style="SGray.TButton")
     else:
         ShowC1_V.set(1) # force A voltage trace on
+        CHB_cbc.config(text="CB-C")
+        CHB_cbd.config(text="CB-D")
         CHB_Clab.config(text="CB-C V/Div")
         CHB_Dlab.config(text="CB-D V/Div")
         CHB_Cofflab.config(text="CB-C Pos")
@@ -17096,6 +17796,35 @@ def SetDualMuxMode():
         CHAlab.config(style="Rtrace1.TButton")
         CHAofflab.config(style="Rtrace1.TButton")
 #
+def SetChopMuxMode():
+    global ChopMuxMode, AWGAIOMode, AWGBIOMode, AWGAMode, AWGAAmplEntry, AWGAOffsetEntry, AWGAFreqEntry
+    global AWGAPhaseEntry, SAMPLErate, ShowC1_V, ShowC2_V, TgInput
+
+    if ChopMuxMode.get() > 0: # set AWG A to a square wave at 25 KHz 0.5 to 4.5 V, mode = SVMI_SPLIT
+        AWGAIOMode.set(1) # force awg A split I/O mode
+        AWGAMode.set(0) # force awg A mode to SVMI
+        BAWGAModeLabel()
+        AWGAShape.set(4) # force awg A to square shape
+        AWGAAmplEntry.delete(0,"end")
+        AWGAAmplEntry.insert(0,0.5) # force awg A Min value to 0.5 V
+        AWGAOffsetEntry.delete(0,"end")
+        AWGAOffsetEntry.insert(0,4.5) # force awg A Max value to 4.5 V
+        AWGAFreqEntry.delete(0,"end")
+        AWGAFreqEntry.insert(0,SAMPLErate/4) # force awg A Freg value to 25000 (1/4 base sample rate)
+        AWGAPhaseEntry.delete(0,"end")
+        AWGAPhaseEntry.insert(0,0) # force awg A Phase value to 0
+        ReMakeAWGwaves()
+        AWGBIOMode.set(1) # force awg A split I/O mode
+        BAWGBModeLabel()
+        ShowC1_V.set(0) # force A voltage trace off
+        ShowC2_V.set(0) # force B voltage trace off
+        TgInput.set(0) # force main Trigger source to none
+        CHAlab.config(style="SGray.TButton")
+        CHAofflab.config(style="SGray.TButton")
+    else:
+        CHAlab.config(style="Rtrace1.TButton")
+        CHAofflab.config(style="Rtrace1.TButton")
+    
 def SyncImage():
     global MuxSync, hipulseimg, lowpulseimg, SyncButton
 
@@ -17106,9 +17835,13 @@ def SyncImage():
         
 def DestroyMuxScreen():
     global muxwindow, awgsync, MuxScreenStatus, CHAlab, CHAofflab, CHBlab, CHBofflab
+    global ChopTrig, ChopMuxMode, MarkerScale
     
     MuxScreenStatus.set(0)
     awgsync.config(state=NORMAL)
+    ChopMuxMode.set(0)
+    ChopTrig.set(0)
+    MarkerScale.set(0)
     # Reset main Channel B control colors
     CHBlab.config(style="Rtrace2.TButton")
     CHBofflab.config(style="Rtrace2.TButton")
@@ -19749,6 +20482,7 @@ def ConnectDevice():
             print( 'No Device plugged IN!')
             DevID = "No Device"
             FWRevOne = 0.0
+            HWRevOne = "?"
             bcon.configure(text="Recon", style="RConn.TButton")
             return
         session.configure(sample_rate=SAMPLErate)
@@ -20013,7 +20747,8 @@ def onStopBodeScroll(event):
 def SetADC_Mux():
     global devx, SAMPLErate, BaseSampleRate, Two_X_Sample, ADC_Mux_Mode, CHA, CHB
     global v1_adc_conf, i1_adc_conf, v2_adc_conf, i2_adc_conf
-    
+    global AWGSync, discontloop, session, ADsignal1
+
     if Two_X_Sample.get() == 1:
         if ADC_Mux_Mode.get() == 0: # VA and VB
             devx.set_adc_mux(1)
@@ -20039,9 +20774,37 @@ def SetADC_Mux():
             devx.ctrl_transfer(0x40, 0x22, i2_adc_conf, 0, 0, 0, 100) # U11
             time.sleep(0.1)
         elif ADC_Mux_Mode.get() == 4: # VA and IA
+            # cycle trhough default mux values as starting point
+            devx.set_adc_mux(2)
+            if AWGSync.get() > 0: # awg syn flag set so run in discontinuous mode
+                if discontloop > 0:
+                    session.flush()
+                else:
+                    discontloop = 1
+                time.sleep(0.01)
+                BAWGEnab()
+                ADsignal1 = devx.get_samples(1000) # get samples for both channel A and B
+
+            else: # running in continuous mode
+                if session.continuous:
+                    ADsignal1 = devx.read(1000, -1, True) # get samples for both channel A and B
             # now set new mux values
             devx.set_adc_mux(4)
         elif ADC_Mux_Mode.get() == 5: # VB and IB
+            # cycle trhough default mux values as starting point
+            devx.set_adc_mux(2)
+            if AWGSync.get() > 0: # awg syn flag set so run in discontinuous mode
+                if discontloop > 0:
+                    session.flush()
+                else:
+                    discontloop = 1
+                time.sleep(0.01)
+                BAWGEnab()
+                ADsignal1 = devx.get_samples(1000) # get samples for both channel A and B
+
+            else: # running in continuous mode
+                if session.continuous:
+                    ADsignal1 = devx.read(1000, -1, True) # get samples for both channel A and B
             # now set new mux values
             devx.set_adc_mux(5)
         SAMPLErate = BaseSampleRate * 2 # set to 2X sample mode
@@ -20998,7 +21761,7 @@ def ReSetBIGO():
 #
 def OpenOtherTools():
     global EnablePhaseAnalizer, EnableSpectrumAnalizer, EnableBodePlotter, EnableImpedanceAnalizer
-    global EnableOhmMeter, OOTphckb, OOTBuildPhAScreen, OOTckb3, OOTBuildSpectrumScreen, OOTckb5
+    global EnableOhmMeter, OOTphckb, OOTBuildPhAScreen, OOTckb3, OOTBuildSpectrumScreen, OOTckb5, ckb1
     global OOTBuildBodeScreen, OOTckb4, OOTBuildIAScreen, OOTckb6, OOTBuildOhmScreen, OOTScreenStatus
     global OOTwindow, SWRev, RevDate, BorderSize, FrameRefief, OOTdismissclbutton, EnableDigIO
     global EnablePIODACMode, EnableMuxMode, EnableMinigenMode, EnablePmodDA1Mode, EnableDigPotMode, EnableGenericSerialMode
@@ -21012,7 +21775,15 @@ def OpenOtherTools():
         OOTwindow.protocol("WM_DELETE_WINDOW", DestroyOOTwindow)
         frame1 = Frame(OOTwindow, borderwidth=BorderSize, relief=FrameRefief)
         frame1.grid(row=0, column=0, sticky=W)
+        #
         nextrow = 1
+        timebtn = Frame( frame1 )
+        timebtn.grid(row=nextrow, column=0, sticky=W)
+        ckb1 = Checkbutton(timebtn, text="Enab", style="Disab.TCheckbutton", variable=TimeDisp, command=TimeCheckBox)
+        ckb1.pack(side=LEFT)
+        timelab = Label(timebtn, text="Time Plot")
+        timelab.pack(side=LEFT)
+        nextrow = nextrow + 1
         if EnablePhaseAnalizer > 0:
             phasebtn = Frame( frame1 )
             phasebtn.grid(row=nextrow, column=0, sticky=W)
@@ -21259,7 +22030,11 @@ DacScreenStatus = IntVar(0)
 DacScreenStatus.set(0)
 MuxScreenStatus = IntVar(0)
 MuxScreenStatus.set(0)
+MuxEnb = IntVar(0)
+MuxSync = IntVar(0)
 DualMuxMode = IntVar(0)
+ChopMuxMode = IntVar(0)
+ChopTrig = IntVar(0)
 MinigenScreenStatus = IntVar(0)
 MinigenScreenStatus.set(0)
 DA1ScreenStatus = IntVar(0)
@@ -21346,6 +22121,8 @@ root.style.configure("A10R1.TLabelframe.Label", background=FrameBG, foreground=C
 root.style.configure("A10R1.TLabelframe", borderwidth=BorderSize, relief=FrameRefief)
 root.style.configure("A10R2.TLabelframe.Label", background=FrameBG, foreground=COLORtraceR2, font=('Arial', 10, 'bold'))
 root.style.configure("A10R2.TLabelframe", borderwidth=BorderSize, relief=FrameRefief)
+root.style.configure("A10.TLabelframe.Label", background=FrameBG, font=('Arial', 10, 'bold'))
+root.style.configure("A10.TLabelframe", borderwidth=BorderSize, relief=FrameRefief)
 root.style.configure("A10B.TLabel", foreground=ButtonText, font="Arial 10 bold") # Black text
 root.style.configure("A10R.TLabel", foreground=ButtonRed, font="Arial 10 bold") # Red text
 root.style.configure("A10G.TLabel", foreground=ButtonGreen, font="Arial 10 bold") # Red text
@@ -21451,7 +22228,7 @@ PwrBt.pack(side=RIGHT)
 Showmenu = Menubutton(frame1, text="Curves", style="W7.TButton")
 Showmenu.menu = Menu(Showmenu, tearoff = 0 )
 Showmenu["menu"] = Showmenu.menu
-Showmenu.menu.add_command(label="-Show-", foreground="blue", command=donothing)
+Showmenu.menu.add_command(label="-Show Traces-", foreground="blue", command=donothing)
 Showmenu.menu.add_command(label="All", command=BShowCurvesAll)
 Showmenu.menu.add_command(label="None", command=BShowCurvesNone)
 Showmenu.menu.add_checkbutton(label='CA-V (1)', background=COLORtrace1, variable=ShowC1_V, command=TraceSelectADC_Mux)
@@ -21469,7 +22246,7 @@ Showmenu.menu.add_checkbutton(label='Comp CB-V', variable=CHB_RC_HP)
 if EnableHSsampling > 0:
     Showmenu.menu.add_checkbutton(label='Comp CA-I', variable=CHAI_RC_HP)
     Showmenu.menu.add_checkbutton(label='Comp CB-I', variable=CHBI_RC_HP)
-Showmenu.menu.add_separator()  
+Showmenu.menu.add_separator()
 Showmenu.menu.add_checkbutton(label='RA-V', background=COLORtraceR1, variable=ShowRA_V, command=UpdateTimeTrace)
 Showmenu.menu.add_checkbutton(label='RA-I', background=COLORtraceR3, variable=ShowRA_I, command=UpdateTimeTrace)
 Showmenu.menu.add_checkbutton(label='RB-V', background=COLORtraceR2, variable=ShowRB_V, command=UpdateTimeTrace)
@@ -21679,6 +22456,10 @@ MeasmenuB.menu.add_checkbutton(label='Period', variable=MeasBPER)
 MeasmenuB.menu.add_checkbutton(label='Freq', variable=MeasBFREQ)
 MeasmenuB.menu.add_checkbutton(label='B-A Delay', variable=MeasDelay)
 MeasmenuB.pack(side=LEFT)
+if ShowBallonHelp > 0:
+    math_tip = CreateToolTip(mathbt, 'Open Math window')
+    options_tip = CreateToolTip(Optionmenu, 'Select Optional Settings')
+    file_tip = CreateToolTip(Filemenu, 'Select File operations')
 #
 DigScreenStatus = IntVar(0)
 DigScreenStatus.set(0)
@@ -21742,24 +22523,51 @@ if EnableScopeOnly == 0:
         BuildOhmScreen.pack(side=LEFT)
     #
     if ShowTraceControls > 0:
-        ckbt1 = Checkbutton(frame2r, text='CA-V (1)', style="Strace1.TCheckbutton", variable=ShowC1_V, command=TraceSelectADC_Mux)
-        ckbt1.pack(side=TOP,fill=X)
-        ckbt2 = Checkbutton(frame2r, text='CA-I (3)', style="Strace3.TCheckbutton", variable=ShowC1_I, command=TraceSelectADC_Mux)
-        ckbt2.pack(side=TOP,fill=X)
-        ckbt3 = Checkbutton(frame2r, text='CB-V (2)', style="Strace2.TCheckbutton", variable=ShowC2_V, command=TraceSelectADC_Mux)
-        ckbt3.pack(side=TOP,fill=X)
-        ckbt4 = Checkbutton(frame2r, text='CB-I (4)', style="Strace4.TCheckbutton", variable=ShowC2_I, command=TraceSelectADC_Mux)
-        ckbt4.pack(side=TOP,fill=X)
+        Labelfonttext = "Arial " + str(FontSize) + " bold"
+        tracelab = Label(frame2r, text="Traces", font= Labelfonttext)
+        tracelab.pack(side=TOP)
+        trctrla = Frame( frame2r )
+        trctrla.pack(side=TOP)
+        ckbt1 = Checkbutton(trctrla, text='CA-V (1)', style="Strace1.TCheckbutton", variable=ShowC1_V, command=TraceSelectADC_Mux)
+        ckbt1.pack(side=LEFT,fill=X)
+        ckbt2 = Checkbutton(trctrla, text='CA-I (3)', style="Strace3.TCheckbutton", variable=ShowC1_I, command=TraceSelectADC_Mux)
+        ckbt2.pack(side=LEFT,fill=X)
+        trctrlb = Frame( frame2r )
+        trctrlb.pack(side=TOP)
+        ckbt3 = Checkbutton(trctrlb, text='CB-V (2)', style="Strace2.TCheckbutton", variable=ShowC2_V, command=TraceSelectADC_Mux)
+        ckbt3.pack(side=LEFT,fill=X)
+        ckbt4 = Checkbutton(trctrlb, text='CB-I (4)', style="Strace4.TCheckbutton", variable=ShowC2_I, command=TraceSelectADC_Mux)
+        ckbt4.pack(side=LEFT,fill=X)
 
     if ShowBallonHelp > 0:
-        math_tip = CreateToolTip(mathbt, 'Open Math window')
-        BuildAWGScreen_tip = CreateToolTip(BuildAWGScreen, 'Surface AWG Controls window')
-        BuildXYScreen_tip = CreateToolTip(BuildXYScreen, 'Open X vs Y plot window')
-        BuildPhAScreen_tip = CreateToolTip(BuildPhAScreen, 'Open Phase Analyzer window')
-        BuildSpectrumScreen_tip = CreateToolTip(BuildSpectrumScreen, 'Open Spectrum Analyzer window')
-        BuildBodeScreen_tip = CreateToolTip(BuildBodeScreen, 'Open Bode plot window')
-        BuildIAScreen_tip = CreateToolTip(BuildIAScreen, 'Open Impedance Analyzer window')
-        BuildOhmScreen_tip = CreateToolTip(BuildOhmScreen, 'Open DC Ohmmeter window')
+        try:
+            BuildAWGScreen_tip = CreateToolTip(BuildAWGScreen, 'Surface AWG Controls window')
+        except:
+            donothing()
+        try:
+            BuildXYScreen_tip = CreateToolTip(BuildXYScreen, 'Open X vs Y plot window')
+        except:
+            donothing()
+        try:
+            BuildPhAScreen_tip = CreateToolTip(BuildPhAScreen, 'Open Phase Analyzer window')
+        except:
+            donothing()
+        try:
+            BuildSpectrumScreen_tip = CreateToolTip(BuildSpectrumScreen, 'Open Spectrum Analyzer window')
+        except:
+            donothing()
+        try:
+            BuildBodeScreen_tip = CreateToolTip(BuildBodeScreen, 'Open Bode plot window')
+        except:
+            donothing()
+        try:
+            BuildIAScreen_tip = CreateToolTip(BuildIAScreen, 'Open Impedance Analyzer window')
+        except:
+            donothing()
+        try:
+            BuildOhmScreen_tip = CreateToolTip(BuildOhmScreen, 'Open DC Ohmmeter window')
+        except:
+            donothing()
     # Digital Input / Output Option screens
     if EnableDigIO > 0:
         BuildDigScreen = Button(frame2r, text="Digital I/O Screen", style="W17.TButton", command=MakeDigScreen)
@@ -21800,12 +22608,6 @@ if EnableScopeOnly == 0:
         ETSScreen.pack(side=TOP)
 else:
 # Mode selector
-    timebtn = Frame( frame2r )
-    timebtn.pack(side=TOP)
-    ckb1 = Checkbutton(timebtn, text="Enab", style="Disab.TCheckbutton", variable=TimeDisp, command=TimeCheckBox)
-    ckb1.pack(side=LEFT)
-    timelab = Label(timebtn, text="Time Plot")
-    timelab.pack(side=LEFT)
     if EnableXYPlotter > 0:
         xybtn = Frame( frame2r )
         xybtn.pack(side=TOP)
@@ -21813,6 +22615,23 @@ else:
         ckb2.pack(side=LEFT)
         BuildXYScreen = Button(xybtn, text="X-Y Plot", style="W11.TButton", command=MakeXYWindow)
         BuildXYScreen.pack(side=TOP)
+    #
+    if ShowTraceControls > 0:
+        Labelfonttext = "Arial " + str(FontSize) + " bold"
+        tracelab = Label(frame2r, text="Traces", font= Labelfonttext)
+        tracelab.pack(side=TOP)
+        trctrla = Frame( frame2r )
+        trctrla.pack(side=TOP)
+        ckbt1 = Checkbutton(trctrla, text='CA-V (1)', style="Strace1.TCheckbutton", variable=ShowC1_V, command=TraceSelectADC_Mux)
+        ckbt1.pack(side=LEFT,fill=X)
+        ckbt2 = Checkbutton(trctrla, text='CA-I (3)', style="Strace3.TCheckbutton", variable=ShowC1_I, command=TraceSelectADC_Mux)
+        ckbt2.pack(side=LEFT,fill=X)
+        trctrlb = Frame( frame2r )
+        trctrlb.pack(side=TOP)
+        ckbt3 = Checkbutton(trctrlb, text='CB-V (2)', style="Strace2.TCheckbutton", variable=ShowC2_V, command=TraceSelectADC_Mux)
+        ckbt3.pack(side=LEFT,fill=X)
+        ckbt4 = Checkbutton(trctrlb, text='CB-I (4)', style="Strace4.TCheckbutton", variable=ShowC2_I, command=TraceSelectADC_Mux)
+        ckbt4.pack(side=LEFT,fill=X)
     #
     awg1eb = Frame( frame2r )
     awg1eb.pack(side=TOP)
@@ -21917,17 +22736,12 @@ else:
     AWGAFreqEntry.insert(0,100.0)
     freq1lab = Label(awg1freq, text="Freq Ch A")
     freq1lab.pack(side=LEFT, anchor=W)
-    # AWG Phase or delay select sub frame
-     
-    awgadelay = Frame( frame2r )
-    awgadelay.pack(side=TOP)
-    awgaph = Radiobutton(awgadelay, text="Phase", style="WPhase.TRadiobutton", variable=AWGAPhaseDelay, value=0, command=BAWGAPhaseDelay)
-    awgaph.pack(side=LEFT, anchor=W)
-    awgadel = Radiobutton(awgadelay, text="Delay", style="GPhase.TRadiobutton", variable=AWGAPhaseDelay, value=1, command=BAWGAPhaseDelay)
-    awgadel.pack(side=LEFT, anchor=W)
+    # AWG Phase or delay select sub frame 
     # AWG Phase entry sub frame
     awg1phase = Frame( frame2r )
     awg1phase.pack(side=TOP)
+    awgaph = Button(awg1phase, text="Phase", style="W5.TButton", command=ToggleAWGAPhaseDelay)
+    awgaph.pack(side=LEFT, anchor=W)
     AWGAPhaseEntry = Entry(awg1phase, width=4, cursor='double_arrow')
     AWGAPhaseEntry.bind("<Return>", UpdateAwgContRet)
     AWGAPhaseEntry.bind('<MouseWheel>', onAWGAscroll)
@@ -21940,7 +22754,9 @@ else:
     phasealab = Label(awg1phase, text="Deg")
     phasealab.pack(side=LEFT, anchor=W)
     # AWG duty cycle frame
-    AWGADutyCycleEntry = Entry(awg1phase, width=4, cursor='double_arrow')
+    awg1dc = Frame( frame2r )
+    awg1dc.pack(side=TOP)
+    AWGADutyCycleEntry = Entry(awg1dc, width=5, cursor='double_arrow')
     AWGADutyCycleEntry.bind("<Return>", UpdateAwgContRet)
     AWGADutyCycleEntry.bind('<MouseWheel>', onAWGAscroll)
     AWGADutyCycleEntry.bind("<Button-4>", onAWGAscroll)# with Linux OS
@@ -21949,7 +22765,7 @@ else:
     AWGADutyCycleEntry.pack(side=LEFT, anchor=W)
     AWGADutyCycleEntry.delete(0,"end")
     AWGADutyCycleEntry.insert(0,50)
-    duty1lab = Label(awg1phase, text="%")
+    duty1lab = Label(awg1dc, text="%")
     duty1lab.pack(side=LEFT, anchor=W)
 ##    #
 ##    if FWRevOne > 2.16:
@@ -22066,15 +22882,11 @@ else:
     freq2lab = Label(awg2freq, text="Freq Ch B")
     freq2lab.pack(side=LEFT, anchor=W)
     # AWG Phase or delay select sub frame
-    awgbdelay = Frame( frame2r )
-    awgbdelay.pack(side=TOP)
-    awgbph = Radiobutton(awgbdelay, text="Phase", style="WPhase.TRadiobutton", variable=AWGBPhaseDelay, value=0, command=BAWGBPhaseDelay)
-    awgbph.pack(side=LEFT, anchor=W)
-    awgbdel = Radiobutton(awgbdelay, text="Delay", style="GPhase.TRadiobutton", variable=AWGBPhaseDelay, value=1, command=BAWGBPhaseDelay)
-    awgbdel.pack(side=LEFT, anchor=W)
     # AWG Phase sub frame
     awg2phase = Frame( frame2r )
     awg2phase.pack(side=TOP)
+    awgbph = Button(awg2phase, text="Phase", style="W5.TButton", command=ToggleAWGBPhaseDelay)
+    awgbph.pack(side=LEFT, anchor=W)
     AWGBPhaseEntry = Entry(awg2phase, width=5, cursor='double_arrow')
     AWGBPhaseEntry.bind("<Return>", UpdateAwgContRet)
     AWGBPhaseEntry.bind('<MouseWheel>', onAWGBscroll)
@@ -22087,7 +22899,9 @@ else:
     phaseblab = Label(awg2phase, text="Deg")
     phaseblab.pack(side=LEFT, anchor=W)
     # AWG duty cycle frame
-    AWGBDutyCycleEntry = Entry(awg2phase, width=5, cursor='double_arrow')
+    awg2dc = Frame( frame2r )
+    awg2dc.pack(side=TOP)
+    AWGBDutyCycleEntry = Entry(awg2dc, width=5, cursor='double_arrow')
     AWGBDutyCycleEntry.bind("<Return>", UpdateAwgContRet)
     AWGBDutyCycleEntry.bind('<MouseWheel>', onAWGBscroll)
     AWGBDutyCycleEntry.bind("<Button-4>", onAWGBscroll)# with Linux OS
@@ -22096,7 +22910,7 @@ else:
     AWGBDutyCycleEntry.pack(side=LEFT, anchor=W)
     AWGBDutyCycleEntry.delete(0,"end")
     AWGBDutyCycleEntry.insert(0,50)
-    duty2lab = Label(awg2phase, text="%")
+    duty2lab = Label(awg2dc, text="%")
     duty2lab.pack(side=LEFT, anchor=W)
     #
     bcompa = Checkbutton(frame2r, text="B = Comp A", variable=BisCompA, command=ReMakeAWGwaves)
@@ -22104,6 +22918,15 @@ else:
 
     awgsync = Checkbutton(frame2r, text="Sync AWG", variable=AWGSync, command=BAWGSync)
     awgsync.pack(side=TOP)
+    if ShowBallonHelp > 0:
+        BuildAWGAPhase_tip = CreateToolTip(awgaph, 'Toggle between degrees and time')
+        BuildAWGBPhase_tip = CreateToolTip(awgbph, 'Toggle between degrees and time')
+        BuildAWGSync_tip = CreateToolTip(awgsync, 'Toggle between continuous and discontinuous modes')
+        BuildBComp_tip = CreateToolTip(bcompa, 'Lock CH B to be the inverse of CH A')
+        BuildModeAMenu_tip = CreateToolTip(ModeAMenu, 'Configure channel output mode')
+        BuildModeBMenu_tip = CreateToolTip(ModeBMenu, 'Configure channel output mode')
+        BuildShapeAMenu_tip = CreateToolTip(ShapeAMenu, 'Set channel waveform shape')
+        BuildShapeBMenu_tip = CreateToolTip(ShapeBMenu, 'Set channel waveform shape')
 
 # input probe wigets
 prlab = Label(frame2r, text="Adjust Gain / Offset")

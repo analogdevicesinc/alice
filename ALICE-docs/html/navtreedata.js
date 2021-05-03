@@ -50,7 +50,12 @@ var NAVTREE =
       ] ]
     ] ],
     [ "Files", "files.html", [
-      [ "File List", "files.html", "files_dup" ]
+      [ "File List", "files.html", "files_dup" ],
+      [ "Globals", "globals.html", [
+        [ "All", "globals.html", null ],
+        [ "Functions", "globals_func.html", null ],
+        [ "Variables", "globals_vars.html", null ]
+      ] ]
     ] ]
   ] ]
 ];
@@ -58,11 +63,12 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "alice-desktop-1_83_8pyw.html",
-"alice-desktop-1_83_8pyw.html#a301151fa76efb4b2c5db3198aaf3d2f8",
-"alice-desktop-1_83_8pyw.html#a5eb9e7fbba2984a6278431dd4acabb58",
-"alice-desktop-1_83_8pyw.html#a8cd24ec8324f2ae0d9be294940cf8333",
-"alice-desktop-1_83_8pyw.html#ab93c921f0491fcbb35a9c675e18ed1bc",
-"alice-desktop-1_83_8pyw.html#aead71ba022329402c6c27d3664fa4973"
+"alice-desktop-1_83_8pyw.html#a2e5bd9ca77baa490592aa634ea4dd511",
+"alice-desktop-1_83_8pyw.html#a5b567e7421218bccf1fdc09b264d43c3",
+"alice-desktop-1_83_8pyw.html#a88b2e7d5c7e5933020f0bc537679f2f1",
+"alice-desktop-1_83_8pyw.html#ab42f8b60865f7ba76c338647dc85870a",
+"alice-desktop-1_83_8pyw.html#ae33c718055a8c8dfafebde0619c4ccd3",
+"namespacemembers_x.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

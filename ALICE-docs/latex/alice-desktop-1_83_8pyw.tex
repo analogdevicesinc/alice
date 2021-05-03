@@ -9,8 +9,6 @@ class \mbox{\hyperlink{classalice-desktop-1_1_1_create_tool_tip}{Create\+Tool\+T
 \begin{DoxyCompactItemize}
 \item 
  \mbox{\hyperlink{namespacealice-desktop-1}{alice-\/desktop-\/1}}
-\item 
- \mbox{\hyperlink{namespacealice}{alice}}
 \end{DoxyCompactItemize}
 \doxysubsection*{Functions}
 \begin{DoxyCompactItemize}
@@ -50,6 +48,8 @@ def \mbox{\hyperlink{namespacealice-desktop-1_af3488d7fd37a7e3497409f975e62f601}
 \begin{DoxyCompactList}\small\item\em Save Bode canvas as encapsulated postscript file. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a7677809bfef88d5496ff74a53fac73b5}{B\+Save\+Data}} ()
 \begin{DoxyCompactList}\small\item\em Save scope all time array data to file. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a3ec4349b2ff62bed7d1d5785470bcb98}{B\+Save\+Mux\+Data}} ()
+\begin{DoxyCompactList}\small\item\em Save External Mux data to file. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a5eaae385eb75e8dd3fb78390b92182b8}{B\+Save\+Channel\+Data}} ()
 \begin{DoxyCompactList}\small\item\em Save selected scope time array data to file. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a1bb84c88fa837acdcd6d777914103e12}{B\+Read\+Data}} ()
@@ -203,9 +203,11 @@ def \mbox{\hyperlink{namespacealice-desktop-1_a59f52a1ef5d1ade76bdacaee8fb3d3ad}
 def \mbox{\hyperlink{namespacealice-desktop-1_a3eff0f42f6a17a6e51b5d7860a609110}{Analog\+\_\+\+Phase\+\_\+\+In}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a5b0c9517662fadcdd3c2c1cd03231cad}{Analog\+\_\+\+Slow\+\_\+time}} ()
-\begin{DoxyCompactList}\small\item\em Right now this is a failed attempt to plot slow sweeps. \end{DoxyCompactList}\item 
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a067728124e44741a9e293e73bb793fcf}{Analog\+\_\+\+Chop\+\_\+\+Time}} ()
+\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_ab943ab2074de8f51139ccd79cced0905}{Analog\+\_\+\+Fast\+\_\+time}} ()
-\begin{DoxyCompactList}\small\item\em routine for time scales faster than 500 m\+Sec/\+Div \end{DoxyCompactList}\item 
+\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a9a733d7a85e7969402821e697395ab17}{Sine\+\_\+\+Phase}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a932770f19be63458d10faed3aac22fe9}{Digital\+\_\+\+R\+C\+\_\+\+High\+\_\+\+Pass}} (In\+Buff, T\+C1, Gain)
@@ -346,6 +348,8 @@ def \mbox{\hyperlink{namespacealice-desktop-1_a6db80e6e657e8875544a441a5dfc7984}
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a7eb18051bc673ac3d497c5c76486947a}{B\+A\+W\+G\+A\+Freq}} (temp)
 \item 
+def \mbox{\hyperlink{namespacealice-desktop-1_ab276a3f222eb50091d8e8e0fb2dda5ab}{Toggle\+A\+W\+G\+A\+Phase\+Delay}} ()
+\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_aa705623a08702fe2946969a323f55a65}{B\+A\+W\+G\+A\+Phase\+Delay}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_af0ab8e38cd694587b5f3b9258bc0ecdf}{B\+A\+W\+G\+A\+Phase}} (temp)
@@ -413,6 +417,8 @@ def \mbox{\hyperlink{namespacealice-desktop-1_ad9a4bba87a9c1267ce087546d2b4d1ad}
 def \mbox{\hyperlink{namespacealice-desktop-1_a3849823b17ba421d0cfe1ec434229c22}{B\+A\+W\+G\+B\+Offset}} (temp)
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a20e9f52d5206b4e070f17473996153a9}{B\+A\+W\+G\+B\+Freq}} (temp)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_aa96017dd3016a6891015751628e6bc00}{Toggle\+A\+W\+G\+B\+Phase\+Delay}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a5a932bce0d371a66738098d059bab0ad}{B\+A\+W\+G\+B\+Phase\+Delay}} ()
 \item 
@@ -577,6 +583,10 @@ def \mbox{\hyperlink{namespacealice-desktop-1_addbea614ae68db10b5a2bfbc6fd30c04}
 def \mbox{\hyperlink{namespacealice-desktop-1_a6a2319068faf3a24070e9338dfa77c04}{Destroy\+I\+A\+Screen}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a19549defba732a11acfa932da2c32f92}{B\+Save\+I\+A\+Sweep}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a027ccb2cde502e4a9034e10498d7ee54}{I\+A\+Cap\+Zero}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a0981816d1b95b84dc3c6198086650444}{I\+A\+Cap\+Reset}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a408575fa2073390edafe1bab86c64e5a}{Make\+Nyquist\+Plot}} ()
 \item 
@@ -749,6 +759,8 @@ def \mbox{\hyperlink{namespacealice-desktop-1_a1bb494719c6ea067bf450f7d2a9eee55}
 def \mbox{\hyperlink{namespacealice-desktop-1_aa68706528de8e4d838ed36caf4e19e2f}{Make\+Mux\+Mode\+Window}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_af18d261067aa43ac339af625f74c21af}{Set\+Dual\+Mux\+Mode}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a67be515a5596704de9a1f74a7beb47ef}{Set\+Chop\+Mux\+Mode}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a8aeea6e6e75b3e5ad175c9a624126d12}{Sync\+Image}} ()
 \item 
@@ -945,13 +957,15 @@ def \mbox{\hyperlink{namespacealice-desktop-1_abfa183e8e7374d2b8ce89ddafa80d17b}
 \item 
 bool \mbox{\hyperlink{namespacealice-desktop-1_a5c9735e26d5274d7035c88034fa8c534}{numpy\+\_\+found}} = True
 \item 
+\mbox{\hyperlink{namespacealice-desktop-1_ab029cb1313e77ce2871468c600154dcb}{Init\+File\+Name}} = str(sys.\+argv\mbox{[}1\mbox{]})
+\item 
 bool \mbox{\hyperlink{namespacealice-desktop-1_ab8e08090e16c7cdf9941025cd2048fad}{pysmu\+\_\+found}} = True
 \item 
-string \mbox{\hyperlink{namespacealice-desktop-1_ae0c8ae67d76fdcc9ac130ff1f9aee267}{Rev\+Date}} = \char`\"{}(5 Dec 2020)\char`\"{}
+string \mbox{\hyperlink{namespacealice-desktop-1_ae0c8ae67d76fdcc9ac130ff1f9aee267}{Rev\+Date}} = \char`\"{}(7 May 2021)\char`\"{}
 \item 
 string \mbox{\hyperlink{namespacealice-desktop-1_a74a32b436fbe54b17b6fff4496aab869}{S\+W\+Rev}} = \char`\"{}1.\+3 \char`\"{}
 \item 
-string \mbox{\hyperlink{namespacealice-desktop-1_a76cd5721b0043b4b6758ba6cd84ba29d}{Version\+\_\+url}} = \textquotesingle{}https\+://github.\+com/analogdevicesinc/alice/releases/download/1.\+3.\+9/alice-\/desktop-\/1.\+3-\/setup.\+exe\textquotesingle{}
+string \mbox{\hyperlink{namespacealice-desktop-1_a76cd5721b0043b4b6758ba6cd84ba29d}{Version\+\_\+url}} = \textquotesingle{}https\+://github.\+com/analogdevicesinc/alice/releases/download/1.\+3.\+10/alice-\/desktop-\/1.\+3-\/setup.\+exe\textquotesingle{}
 \item 
 string \mbox{\hyperlink{namespacealice-desktop-1_a5dac667b2c0310f9108b5330bbc53277}{T\+Bicon}}
 \item 
@@ -1115,11 +1129,13 @@ int \mbox{\hyperlink{namespacealice-desktop-1_aadaa89cf0c4771361d1130da1101e247}
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_ae82210e4c1891b7a545f418f14b476da}{E\+T\+Srecord}} = 2000
 \item 
+int \mbox{\hyperlink{namespacealice-desktop-1_a85373474ea79714f2c0f51da1409f971}{A\+W\+G\+Rec\+Length}} = 32768
+\item 
 int \mbox{\hyperlink{namespacealice-desktop-1_a21147ac41e5fdf908af6555d5da79983}{D\+I\+Ssamples}} = G\+RW
 \item 
 float \mbox{\hyperlink{namespacealice-desktop-1_a8514a4815524c3cbc99c36f097c8cbc6}{T\+R\+I\+G\+G\+E\+Rlevel}} = 2.\+5
 \item 
-string \mbox{\hyperlink{namespacealice-desktop-1_ac6b9b8fe81fc99ea1d20f167a0a1f0d4}{Math\+String}} = \char`\"{}V\+BuffA\mbox{[}t\mbox{]} + V\+BuffB\mbox{[}t\mbox{]}\char`\"{}
+string \mbox{\hyperlink{namespacealice-desktop-1_ac6b9b8fe81fc99ea1d20f167a0a1f0d4}{Math\+String}} = \char`\"{}V\+BuffA\mbox{[}t\mbox{]} + \mbox{\hyperlink{change-log_8txt_a58d48d7a3bc67404837055f1060e3b4d}{V\+BuffB}}\mbox{[}t\mbox{]}\char`\"{}
 \begin{DoxyCompactList}\small\item\em default math equations \end{DoxyCompactList}\item 
 string \mbox{\hyperlink{namespacealice-desktop-1_ab80f874af99f1871c9c5e09490ab818a}{Math\+Units}} = \char`\"{} V\char`\"{}
 \item 
@@ -1145,9 +1161,9 @@ string \mbox{\hyperlink{namespacealice-desktop-1_afd08654fc55fa8c27ddd590b7006bf
 \item 
 string \mbox{\hyperlink{namespacealice-desktop-1_a831ee20022b5d153f50c42023415fe19}{Math\+Y\+Axis}} = \char`\"{}V-\/B\char`\"{}
 \item 
-string \mbox{\hyperlink{namespacealice-desktop-1_a6629caf56d1f408be4906d17abdd63ed}{A\+W\+G\+A\+Math\+String}} = \char`\"{}(V\+BuffA + V\+BuffB)/2\char`\"{}
+string \mbox{\hyperlink{namespacealice-desktop-1_a6629caf56d1f408be4906d17abdd63ed}{A\+W\+G\+A\+Math\+String}} = \char`\"{}(V\+BuffA + \mbox{\hyperlink{change-log_8txt_a58d48d7a3bc67404837055f1060e3b4d}{V\+BuffB}})/2\char`\"{}
 \item 
-string \mbox{\hyperlink{namespacealice-desktop-1_a89782e4ea5f65f50bbebb620295ec535}{A\+W\+G\+B\+Math\+String}} = \char`\"{}(V\+BuffA + V\+BuffB)/2\char`\"{}
+string \mbox{\hyperlink{namespacealice-desktop-1_a89782e4ea5f65f50bbebb620295ec535}{A\+W\+G\+B\+Math\+String}} = \char`\"{}(V\+BuffA + \mbox{\hyperlink{change-log_8txt_a58d48d7a3bc67404837055f1060e3b4d}{V\+BuffB}})/2\char`\"{}
 \item 
 string \mbox{\hyperlink{namespacealice-desktop-1_a505a3b6c792040615f8e5b29d1068eac}{A\+W\+G\+Acsv\+File}} = \char`\"{}examplea.\+csv\char`\"{}
 \item 
@@ -1250,6 +1266,8 @@ string \mbox{\hyperlink{namespacealice-desktop-1_a877f56d84e06d3a97d7e55f09494c5
 int \mbox{\hyperlink{namespacealice-desktop-1_aef7fdaa10ae5400da13cb698430a2803}{Last\+\_\+\+A\+D\+C\+\_\+\+Mux\+\_\+\+Mode}} = 0
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_acab35ce579c274c89619bbca970dd4c0}{Alternate\+\_\+\+Sweep\+\_\+\+Mode}} = Int\+Var(0)
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a8167c6818926f0204c3da7399c787474}{Chop\+Mode\+Filter}} = \mbox{[}0.\+25, 0.\+25, 0.\+25, 0.\+25\mbox{]}
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_ada4e9a12543221acbd2b5d4aaca5ac35}{Z\+E\+R\+Ostuffing}} = Int\+Var(0)
 \item 
@@ -1365,6 +1383,10 @@ int \mbox{\hyperlink{namespacealice-desktop-1_a900c62af2500a84c6f9eb922431ebfae}
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a4a3610bdae2c617eef5ab2c9ca83f13c}{windowingsystem}} = root.\+tk.\+call(\textquotesingle{}tk\textquotesingle{}, \textquotesingle{}windowingsystem\textquotesingle{})
 \item 
+\mbox{\hyperlink{namespacealice-desktop-1_a94a4a1a4d77e505b2f6715482adf548f}{Screen\+Width}} = root.\+winfo\+\_\+screenwidth()
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a0050b9b87296cbd108ba6223e43cbc60}{Screen\+Height}} = root.\+winfo\+\_\+screenheight()
+\item 
 string \mbox{\hyperlink{namespacealice-desktop-1_a7b8eb696ef6d1335a16f6f69b70a6de3}{Style\+\_\+\+String}} = \textquotesingle{}aqua\textquotesingle{}
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_af99c01ec786e50a2fffc9a3493860b5d}{menubar}} = t\+Kinter.\+Menu(root)
@@ -1373,7 +1395,11 @@ string \mbox{\hyperlink{namespacealice-desktop-1_a7b8eb696ef6d1335a16f6f69b70a6d
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a905479d79c2aa8410d2fc374bc75cc5b}{menu}}
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a805db03232153c0604de4776930374e9}{Init\+File}} = open(\char`\"{}alice\+\_\+init.\+ini\char`\"{})
+\mbox{\hyperlink{namespacealice-desktop-1_aa28dc103258589d9cb421197fe2de90b}{path}} = pathlib.\+Path(alice.\+\_\+\+\_\+file\+\_\+\+\_\+).parent.\+absolute()
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a2ff994e16bf9521154de4cf659a3b689}{filename}} = os.\+path.\+join(path, \char`\"{}resources\char`\"{}, Init\+File\+Name)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a805db03232153c0604de4776930374e9}{Init\+File}} = open(filename)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a8929306b5492608c2b59e39a172ce26c}{X\+O\+LF}} = int(Font\+Size $\ast$ 4.\+625)
 \item 
@@ -1593,9 +1619,13 @@ list \mbox{\hyperlink{namespacealice-desktop-1_a4ef340233f98435c485fa230eb509c71
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_a2073290993cbf1bc9827819f9db32eaf}{T\+M\+D\+Vline}} = \mbox{[}$\,$\mbox{]}
 \item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a728eb751fdaf3114ebe2ead735cea5b0}{T\+M\+A\+Rline}} = \mbox{[}$\,$\mbox{]}
+\item 
 list \mbox{\hyperlink{namespacealice-desktop-1_a912f876716fc90f2d345cbb95bd6e6a2}{T\+M\+B\+Rline}} = \mbox{[}$\,$\mbox{]}
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_a179fb8cf99aae35add670dfdfa19bb4b}{T\+M\+C\+Rline}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_ab7d3cadca1413ef7f9dc3ad83fafa05e}{T\+M\+D\+Rline}} = \mbox{[}$\,$\mbox{]}
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_a6f2effe94ff97c78ccce079ed5396469}{T\+X\+Yline}} = \mbox{[}$\,$\mbox{]}
 \item 
@@ -1698,6 +1728,16 @@ list \mbox{\hyperlink{namespacealice-desktop-1_aa79fba2dc4cd227fa80f668b48b542bf
 list \mbox{\hyperlink{namespacealice-desktop-1_a9b7079c8b58ed5b8e1ae817a2da8a688}{N\+Sweep\+Series\+Mag}} = \mbox{[}$\,$\mbox{]}
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_ab09e69fca9ebba9027fd1704d3f16a77}{N\+Sweep\+Series\+Ang}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a1c3fc6c90e6c57ded31f94daefc75bcf}{N\+Sweep\+ParallelR}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a8c3fc2bd534f9e5349f4a355e0ded659}{N\+Sweep\+ParallelC}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a54a02c2f1ca0c935179f5ea2aa35725e}{N\+Sweep\+ParallelL}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a6b457b21427c801a41e0f6968c78d15d}{N\+Sweep\+SeriesC}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a3938947c83bd9079517c0b94a6521c2a}{N\+Sweep\+SeriesL}} = \mbox{[}$\,$\mbox{]}
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a8efd0fdd1d27adf264f41acb682faeec}{Network\+Screen\+Status}} = Int\+Var(0)
 \item 
@@ -1816,6 +1856,8 @@ list \mbox{\hyperlink{namespacealice-desktop-1_a6cb76a1c4d19eae4ee97b1812d47c3e6
 list \mbox{\hyperlink{namespacealice-desktop-1_a0308edb8ed3b0758735d9aeaf798ad7c}{Ref\+I\+A\+Angline}} = \mbox{[}$\,$\mbox{]}
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a72d08be7b346f6460447903422f266be}{I\+A\+Source}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_aa3ae7f0ad4395ff99eee2b891d410f2c}{I\+A\+Grid\+Type}} = Int\+Var(0)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_afe5bfc89219d526330263fab9d7cbe8e}{Display\+Series}} = Int\+Var(0)
 \begin{DoxyCompactList}\small\item\em In IA display series or parallel values. \end{DoxyCompactList}\item 
@@ -1938,6 +1980,14 @@ int \mbox{\hyperlink{namespacealice-desktop-1_ab43a83726085075f8e4534a3d6fa4ef3}
 \mbox{\hyperlink{namespacealice-desktop-1_a38956d876e05af0b59fe41901226cfb6}{Show\+\_\+\+C\+BC}} = Int\+Var(0)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_ab93c921f0491fcbb35a9c675e18ed1bc}{Show\+\_\+\+C\+BD}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a68538aeed9bd3e0d3389de70d5b55ca8}{Show\+R\+MA}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a82cab36fb30cf6ac561a94289617261b}{Show\+R\+MB}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a8ed68bd811993a6a7188401d092b8ab1}{Show\+R\+MC}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a445a360ff2c16d45bfb0e61c00a63716}{Show\+R\+MD}} = Int\+Var(0)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a04e29d41a3544d0d7f62a00b06c7f197}{D0}} = Int\+Var(0)
 \item 
@@ -2283,7 +2333,15 @@ string \mbox{\hyperlink{namespacealice-desktop-1_a38879c713343b278bc3bc7d9bc6b30
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a932247ddc8c8b350a7d618a3886689ff}{Mux\+Screen\+Status}} = Int\+Var(0)
 \item 
+\mbox{\hyperlink{namespacealice-desktop-1_a264a7ff7f0fafd6ff5aa66c3af6c171c}{Mux\+Enb}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a9cc6c343b0e5a36d45e0f11631e2a7ce}{Mux\+Sync}} = Int\+Var(0)
+\item 
 \mbox{\hyperlink{namespacealice-desktop-1_abc3dc4e2ba6623baf0e21d2539cea136}{Dual\+Mux\+Mode}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a196d539e7787a52d535f78659d3bda41}{Chop\+Mux\+Mode}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a1af88eefe14e732149003bdb6b4598ad}{Chop\+Trig}} = Int\+Var(0)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a7832edafceb84619f301933f11b8f7dc}{Minigen\+Screen\+Status}} = Int\+Var(0)
 \item 
@@ -2453,6 +2511,12 @@ string \mbox{\hyperlink{namespacealice-desktop-1_aa90d39166172d1d06f991e61aa6409
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a97dea6c9d7bacd902dbaae6e4c6a30c8}{MeasmenuB}} = Menubutton(dropmenu2, text=\char`\"{}CB\char`\"{}, style=\char`\"{}W3.\+T\+Button\char`\"{})
 \item 
+\mbox{\hyperlink{namespacealice-desktop-1_af84c41ce111f48e355defbb0dce9e2a2}{math\+\_\+tip}} = Create\+Tool\+Tip(mathbt, \textquotesingle{}Open Math window\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a898ed0a99b0e4902b9ec6a3821c27afc}{options\+\_\+tip}} = Create\+Tool\+Tip(Optionmenu, \textquotesingle{}Select Optional Settings\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a83ba60a64e1897d3e78c6d11c0e6ccfc}{file\+\_\+tip}} = Create\+Tool\+Tip(Filemenu, \textquotesingle{}Select File operations\textquotesingle{})
+\item 
 \mbox{\hyperlink{namespacealice-desktop-1_a690ae72a0d238bb12b136c7926015e29}{Build\+A\+W\+G\+Screen}} = Button(frame2r, text=\char`\"{}A\+WG Window\char`\"{}, style=\char`\"{}W16.\+T\+Button\char`\"{}, command=Make\+A\+W\+G\+Window)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a8c28ec1c44456d02307533723553ccf6}{timebtn}} = Frame( frame2r )
@@ -2497,15 +2561,21 @@ string \mbox{\hyperlink{namespacealice-desktop-1_aa90d39166172d1d06f991e61aa6409
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a511b2df5ed0723a47be5b39e05418610}{Build\+Ohm\+Screen}} = Button(dcohmbtn, text=\char`\"{}Ohmmeter\char`\"{}, style=\char`\"{}W11.\+T\+Button\char`\"{}, command=Make\+Ohm\+Window)
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_acc3408b2c21aaa21d3f8619afd86217d}{ckbt1}} = Checkbutton(frame2r, text=\textquotesingle{}CA-\/V (1)\textquotesingle{}, style=\char`\"{}Strace1.\+T\+Checkbutton\char`\"{}, variable=Show\+C1\+\_\+V, command=Trace\+Select\+A\+D\+C\+\_\+\+Mux)
+string \mbox{\hyperlink{namespacealice-desktop-1_a9d19d4b03af98ae67103ae7b747d6b0c}{Labelfonttext}} = \char`\"{}Arial \char`\"{} + str(Font\+Size) + \char`\"{} bold\char`\"{}
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_abff059e4a2e2557a54328bd18e28f087}{ckbt2}} = Checkbutton(frame2r, text=\textquotesingle{}CA-\/I (3)\textquotesingle{}, style=\char`\"{}Strace3.\+T\+Checkbutton\char`\"{}, variable=Show\+C1\+\_\+I, command=Trace\+Select\+A\+D\+C\+\_\+\+Mux)
+\mbox{\hyperlink{namespacealice-desktop-1_ae720cfec419d60c5a63f9b576a4fb7c9}{tracelab}} = Label(frame2r, text=\char`\"{}Traces\char`\"{}, font= Labelfonttext)
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a95763fdd92e05ff72c648ed9f3433b16}{ckbt3}} = Checkbutton(frame2r, text=\textquotesingle{}CB-\/V (2)\textquotesingle{}, style=\char`\"{}Strace2.\+T\+Checkbutton\char`\"{}, variable=Show\+C2\+\_\+V, command=Trace\+Select\+A\+D\+C\+\_\+\+Mux)
+\mbox{\hyperlink{namespacealice-desktop-1_a42dcee7da0d3918b43237986a7da9371}{trctrla}} = Frame( frame2r )
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a6e7b736ed9345cdbb135b4aa30908e97}{ckbt4}} = Checkbutton(frame2r, text=\textquotesingle{}CB-\/I (4)\textquotesingle{}, style=\char`\"{}Strace4.\+T\+Checkbutton\char`\"{}, variable=Show\+C2\+\_\+I, command=Trace\+Select\+A\+D\+C\+\_\+\+Mux)
+\mbox{\hyperlink{namespacealice-desktop-1_acc3408b2c21aaa21d3f8619afd86217d}{ckbt1}} = Checkbutton(trctrla, text=\textquotesingle{}CA-\/V (1)\textquotesingle{}, style=\char`\"{}Strace1.\+T\+Checkbutton\char`\"{}, variable=Show\+C1\+\_\+V, command=Trace\+Select\+A\+D\+C\+\_\+\+Mux)
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_af84c41ce111f48e355defbb0dce9e2a2}{math\+\_\+tip}} = Create\+Tool\+Tip(mathbt, \textquotesingle{}Open Math window\textquotesingle{})
+\mbox{\hyperlink{namespacealice-desktop-1_abff059e4a2e2557a54328bd18e28f087}{ckbt2}} = Checkbutton(trctrla, text=\textquotesingle{}CA-\/I (3)\textquotesingle{}, style=\char`\"{}Strace3.\+T\+Checkbutton\char`\"{}, variable=Show\+C1\+\_\+I, command=Trace\+Select\+A\+D\+C\+\_\+\+Mux)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ad1032d89a810b99685ce7098088c9b0e}{trctrlb}} = Frame( frame2r )
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a95763fdd92e05ff72c648ed9f3433b16}{ckbt3}} = Checkbutton(trctrlb, text=\textquotesingle{}CB-\/V (2)\textquotesingle{}, style=\char`\"{}Strace2.\+T\+Checkbutton\char`\"{}, variable=Show\+C2\+\_\+V, command=Trace\+Select\+A\+D\+C\+\_\+\+Mux)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a6e7b736ed9345cdbb135b4aa30908e97}{ckbt4}} = Checkbutton(trctrlb, text=\textquotesingle{}CB-\/I (4)\textquotesingle{}, style=\char`\"{}Strace4.\+T\+Checkbutton\char`\"{}, variable=Show\+C2\+\_\+I, command=Trace\+Select\+A\+D\+C\+\_\+\+Mux)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a25d70c40ded7f4a0b4822aa2280e1b7c}{Build\+A\+W\+G\+Screen\+\_\+tip}} = Create\+Tool\+Tip(Build\+A\+W\+G\+Screen, \textquotesingle{}Surface A\+WG Controls window\textquotesingle{})
 \item 
@@ -2575,21 +2645,19 @@ string \mbox{\hyperlink{namespacealice-desktop-1_aa90d39166172d1d06f991e61aa6409
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_ab8486ad3567f0009bc86fb8955615018}{freq1lab}} = Label(awg1freq, text=\char`\"{}Freq Ch A\char`\"{})
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a68e4663b60958792333f2103ee7de61a}{awgadelay}} = Frame( frame2r )
-\item 
-\mbox{\hyperlink{namespacealice-desktop-1_ac9e3924f5ab5430c178eef8f99a419f5}{awgaph}} = Radiobutton(awgadelay, text=\char`\"{}Phase\char`\"{}, style=\char`\"{}W\+Phase.\+T\+Radiobutton\char`\"{}, variable=A\+W\+G\+A\+Phase\+Delay, value=0, command=B\+A\+W\+G\+A\+Phase\+Delay)
-\item 
-\mbox{\hyperlink{namespacealice-desktop-1_af3b2da123e3469754714279e9f0b0da2}{awgadel}} = Radiobutton(awgadelay, text=\char`\"{}Delay\char`\"{}, style=\char`\"{}G\+Phase.\+T\+Radiobutton\char`\"{}, variable=A\+W\+G\+A\+Phase\+Delay, value=1, command=B\+A\+W\+G\+A\+Phase\+Delay)
-\item 
 \mbox{\hyperlink{namespacealice-desktop-1_ac41ed515e3e3adbb14c9208f56eb32be}{awg1phase}} = Frame( frame2r )
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ac9e3924f5ab5430c178eef8f99a419f5}{awgaph}} = Button(awg1phase, text=\char`\"{}Phase\char`\"{}, style=\char`\"{}W5.\+T\+Button\char`\"{}, command=Toggle\+A\+W\+G\+A\+Phase\+Delay)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a100957feb8b781db9cd373ed81ccd0f2}{A\+W\+G\+A\+Phase\+Entry}} = Entry(awg1phase, width=4, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a382462bd308639642d3b38461d0ac7c9}{phasealab}} = Label(awg1phase, text=\char`\"{}Deg\char`\"{})
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_af5ca71f1d40a5e9023d6e39aa3a60c29}{A\+W\+G\+A\+Duty\+Cycle\+Entry}} = Entry(awg1phase, width=4, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
+\mbox{\hyperlink{namespacealice-desktop-1_ad1199304b212d39bcb0dfd48855051be}{awg1dc}} = Frame( frame2r )
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_aa8e9a859e45f523fedfa4e81327185e8}{duty1lab}} = Label(awg1phase, text=\char`\"{}\%\char`\"{})
+\mbox{\hyperlink{namespacealice-desktop-1_af5ca71f1d40a5e9023d6e39aa3a60c29}{A\+W\+G\+A\+Duty\+Cycle\+Entry}} = Entry(awg1dc, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_aa8e9a859e45f523fedfa4e81327185e8}{duty1lab}} = Label(awg1dc, text=\char`\"{}\%\char`\"{})
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a3e5cb7e40751490a254c8a5e264cafe5}{awg2eb}} = Frame( frame2r )
 \begin{DoxyCompactList}\small\item\em \# if F\+W\+Rev\+One $>$ 2.\+16\+: awg2x1 = Radiobutton(frame2r, text=\char`\"{}\+Both C\+H 1\+X\char`\"{}, variable=A\+W\+G\+\_\+2X, value=0, command=B\+A\+W\+G2X) awg2x1.\+pack(side=T\+OP) awg2x2 = Radiobutton(frame2r, text=\char`\"{}\+C\+H A 2\+X\char`\"{}, variable=A\+W\+G\+\_\+2X, value=1, command=B\+A\+W\+G2X) awg2x2.\+pack(side=T\+OP) awg2x3 = Radiobutton(frame2r, text=\char`\"{}\+C\+H B 2\+X\char`\"{}, variable=A\+W\+G\+\_\+2X, value=2, command=B\+A\+W\+G2X) awg2x3.\+pack(side=T\+OP) else\+: awgsync = Checkbutton(frame2r, text=\char`\"{}\+Sync A\+W\+G\char`\"{}, variable=A\+W\+G\+Sync, command=B\+A\+W\+G\+Sync) awgsync.\+pack(side=T\+OP) now A\+WG B A\+WG enable sub frame \end{DoxyCompactList}\item 
@@ -2619,25 +2687,39 @@ string \mbox{\hyperlink{namespacealice-desktop-1_aa90d39166172d1d06f991e61aa6409
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_adfa5b670131c88f7d4bbead264b22228}{freq2lab}} = Label(awg2freq, text=\char`\"{}Freq Ch B\char`\"{})
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a5573239b739be065125433ba62177327}{awgbdelay}} = Frame( frame2r )
-\item 
-\mbox{\hyperlink{namespacealice-desktop-1_a0e77505ed0641295c91d0c35e46b8972}{awgbph}} = Radiobutton(awgbdelay, text=\char`\"{}Phase\char`\"{}, style=\char`\"{}W\+Phase.\+T\+Radiobutton\char`\"{}, variable=A\+W\+G\+B\+Phase\+Delay, value=0, command=B\+A\+W\+G\+B\+Phase\+Delay)
-\item 
-\mbox{\hyperlink{namespacealice-desktop-1_a420dd4f84d7aa7f01bfdeb17b9232b02}{awgbdel}} = Radiobutton(awgbdelay, text=\char`\"{}Delay\char`\"{}, style=\char`\"{}G\+Phase.\+T\+Radiobutton\char`\"{}, variable=A\+W\+G\+B\+Phase\+Delay, value=1, command=B\+A\+W\+G\+B\+Phase\+Delay)
-\item 
 \mbox{\hyperlink{namespacealice-desktop-1_ac97f83a733c6c32ba11e34e0d6dd8dc1}{awg2phase}} = Frame( frame2r )
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a0e77505ed0641295c91d0c35e46b8972}{awgbph}} = Button(awg2phase, text=\char`\"{}Phase\char`\"{}, style=\char`\"{}W5.\+T\+Button\char`\"{}, command=Toggle\+A\+W\+G\+B\+Phase\+Delay)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a8ae77f87cf255c42383108240dddf3eb}{A\+W\+G\+B\+Phase\+Entry}} = Entry(awg2phase, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_abc542447a2c5294dff0e4902687350be}{phaseblab}} = Label(awg2phase, text=\char`\"{}Deg\char`\"{})
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a559d47fe291e17a29128d1e29fba011c}{A\+W\+G\+B\+Duty\+Cycle\+Entry}} = Entry(awg2phase, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
+\mbox{\hyperlink{namespacealice-desktop-1_af0251e2011fb3c16f56842845926b52b}{awg2dc}} = Frame( frame2r )
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_aa749c71b6291f05276959b5138e10e62}{duty2lab}} = Label(awg2phase, text=\char`\"{}\%\char`\"{})
+\mbox{\hyperlink{namespacealice-desktop-1_a559d47fe291e17a29128d1e29fba011c}{A\+W\+G\+B\+Duty\+Cycle\+Entry}} = Entry(awg2dc, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_aa749c71b6291f05276959b5138e10e62}{duty2lab}} = Label(awg2dc, text=\char`\"{}\%\char`\"{})
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a869faf4581a0c38d7c1dff01d9c44cae}{bcompa}} = Checkbutton(frame2r, text=\char`\"{}B = Comp A\char`\"{}, variable=Bis\+CompA, command=Re\+Make\+A\+W\+Gwaves)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a1f448a876473519a7d192806561940b6}{awgsync}} = Checkbutton(frame2r, text=\char`\"{}Sync A\+WG\char`\"{}, variable=A\+W\+G\+Sync, command=B\+A\+W\+G\+Sync)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a30238b3a159d492fe107cae7a1f5b488}{Build\+A\+W\+G\+A\+Phase\+\_\+tip}} = Create\+Tool\+Tip(awgaph, \textquotesingle{}Toggle between degrees and time\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a8394185ac8715167504c1977cf77b1f7}{Build\+A\+W\+G\+B\+Phase\+\_\+tip}} = Create\+Tool\+Tip(awgbph, \textquotesingle{}Toggle between degrees and time\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a4586aad12d0576c0cd763c2073500145}{Build\+A\+W\+G\+Sync\+\_\+tip}} = Create\+Tool\+Tip(awgsync, \textquotesingle{}Toggle between continuous and discontinuous modes\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a16daee9a6912e54cbfd5ea381f676468}{Build\+B\+Comp\+\_\+tip}} = Create\+Tool\+Tip(bcompa, \textquotesingle{}Lock CH B to be the inverse of CH A\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ad949ad78b699830790dcd61648f0a500}{Build\+Mode\+A\+Menu\+\_\+tip}} = Create\+Tool\+Tip(Mode\+A\+Menu, \textquotesingle{}Configure channel output mode\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a11daa1e770a394b6933fa7230b080630}{Build\+Mode\+B\+Menu\+\_\+tip}} = Create\+Tool\+Tip(Mode\+B\+Menu, \textquotesingle{}Configure channel output mode\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a031cbe6f4a227c767caf638b985a09f5}{Build\+Shape\+A\+Menu\+\_\+tip}} = Create\+Tool\+Tip(Shape\+A\+Menu, \textquotesingle{}Set channel waveform shape\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ae367daf98118f9c9e81e9c6428437944}{Build\+Shape\+B\+Menu\+\_\+tip}} = Create\+Tool\+Tip(Shape\+B\+Menu, \textquotesingle{}Set channel waveform shape\textquotesingle{})
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_aabf4f9e899c52d4cc6bf0a66de9b8078}{prlab}} = Label(frame2r, text=\char`\"{}Adjust Gain / Offset\char`\"{})
 \item 
