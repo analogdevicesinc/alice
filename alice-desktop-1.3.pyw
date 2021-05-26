@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
 #
-# ADALM1000 alice-desktop 1.3.py(w) (5-7-2021)
+# ADALM1000 alice-desktop 1.3.py(w) (5-26-2021)
 # For Python version 2.7 or 3.7, Windows OS and Linux OS
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -63,7 +63,7 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "(7 May 2021)"
+RevDate = "(26 May 2021)"
 SWRev = "1.3 "
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.10/alice-desktop-1.3-setup.exe'
 # small bit map of ADI logo for window icon
@@ -15283,6 +15283,7 @@ def MakePhATrace():        # Update the grid and trace
     PeakphaseIA = PhaseIA[n]
     PeakphaseIB = PhaseIB[n]
     PeakSampleVB = PeakSampleVA = PeakSampleIA = PeakSampleIB = n
+    PeakSampleVMA = PeakSampleVMB = PeakSampleVMC = PeakSampleVMD = n
     if MuxChan == 0 or ChopMuxMode.get() > 0: #
         PeakVMA = 0
         PeakphaseVMA = PhaseVMA[n]
@@ -15398,13 +15399,38 @@ def MakePhATrace():        # Update the grid and trace
             PeakSampleIB = n
 
         n = n + 1
-    # Check to see that V and I peaks are in same frequency bin?
+    # Check to see that V, Vnux and I peaks are in same frequency bin?
     if PeakSampleVA != PeakSampleIA:
         PeakphaseIA = PhaseIA[PeakSampleVA]
         PeakIA = IAresult[PeakSampleVA]
     if PeakSampleVB != PeakSampleIB and MuxScreenStatus.get() == 0:
         PeakphaseIB = PhaseIB[PeakSampleVB]
         PeakIB = IBresult[PeakSampleVB]
+    if MuxScreenStatus.get() > 0:
+        if PeakSampleVA != PeakSampleVMA:
+            try:
+                PeakphaseVMA = PhaseVMA[PeakSampleVA]
+                PeakVMA = float(VMAresult[PeakSampleVA])
+            except:
+                donothing()
+        if PeakSampleVA != PeakSampleVMB:
+            try:
+                PeakphaseVMB = PhaseVMB[PeakSampleVA]
+                PeakVMB = float(VMBresult[PeakSampleVA])
+            except:
+                donothing()
+        if PeakSampleVA != PeakSampleVMC:
+            try:
+                PeakphaseVMC = PhaseVMC[PeakSampleVA]
+                PeakVMC = float(VMCresult[PeakSampleVA])
+            except:
+                donothing()
+        if PeakSampleVA != PeakSampleVMD:
+            try: 
+                PeakphaseVMD = PhaseVMD[PeakSampleVA]
+                PeakVMD = float(VMDresult[PeakSampleVA])
+            except:
+                donothing()
 #
 # Draw the Phase Analyzer screen
 def MakePhAScreen():       # Update the screen with traces and text
