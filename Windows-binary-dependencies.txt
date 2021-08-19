@@ -1,0 +1,20 @@
+*** binary dependencies ***
+The Windows executavble(s) also depend on these dlls which may not be included,
+you may or may not need to add them to your system.
+
+   OLEAUT32.dll - C:\WINDOWS\system32\OLEAUT32.dll
+   USER32.dll - C:\WINDOWS\system32\USER32.dll
+   IMM32.dll - C:\WINDOWS\system32\IMM32.dll
+   MSVCP90.dll - MSVCP90.dll
+   ole32.dll - C:\WINDOWS\system32\ole32.dll
+   COMDLG32.dll - C:\WINDOWS\system32\COMDLG32.dll
+   COMCTL32.dll - C:\WINDOWS\system32\COMCTL32.dll
+   ADVAPI32.dll - C:\WINDOWS\system32\ADVAPI32.dll
+   NETAPI32.dll - C:\WINDOWS\system32\NETAPI32.dll
+   WS2_32.dll - C:\WINDOWS\system32\WS2_32.dll
+   WINSPOOL.DRV - C:\WINDOWS\system32\WINSPOOL.DRV
+   GDI32.dll - C:\WINDOWS\system32\GDI32.dll
+   WINMM.dll - C:\WINDOWS\system32\WINMM.dll
+   VERSION.dll - C:\WINDOWS\system32\VERSION.dll
+   KERNEL32.dll - C:\WINDOWS\system32\KERNEL32.dll
+   SHELL32.dll - C:\WINDOWS\system32\SHELL32.dll

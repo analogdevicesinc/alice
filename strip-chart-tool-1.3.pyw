@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 Strip chart recorder tool (8-4-2020)
+# ADALM1000 Strip chart recorder tool (7-17-2021)
 # For Python version > = 2.7.8 and 3.7
 # With external module pysmu (libsmu > = 1.0 ADALM1000 )
 # Created by D Mercer ()
@@ -44,7 +44,8 @@ try:
     InitFile = open("stripchart_init.ini")
     for line in InitFile:
         try:
-            exec( line.rstrip() )
+            exec( line.rstrip(), globals(), globals())
+            #exec( line.rstrip() )
         except:
             print( "Skiping " + line.rstrip())
     InitFile.close()
@@ -249,7 +250,7 @@ class StripChart:
         if Run_For.get() == 0 and (loop_end <= loop_count):
             loop_end = loop_count + 1
         while self.go and (loop_count < loop_end): # loop forever or till sample count reached
-            Analog_in()
+            Analog_Strip_Chart()
             #
             if DCVB0 > 5.0:
                 DCVB0 = 5.0
@@ -413,7 +414,7 @@ def open_out():
     DlogFile.write( 'Time, CA-V, CB-V \n' )
     Dlog_open.set(1)
     
-def Analog_in():
+def Analog_Strip_Chart():
     global DevID, CHA, CHB, devx, session, dlog, DlogFile, SampleNum
     global DCVA0, DCVB0, Ztime, SampleDelayEntry, ADsignal1
     global InOffA, InOffB, InGainA, InGainB, chalab, chblab
@@ -510,7 +511,8 @@ def BLoadCal():
     CalFile = open(filename)
     for line in CalFile:
         try:
-            exec( line.rstrip() )
+            exec( line.rstrip(), globals(), globals())
+            #exec( line.rstrip() )
         except:
             print( "Skipping " + line.rstrip())
     CalFile.close()
@@ -539,7 +541,7 @@ def main():
     """
     #
     root = Tk()
-    root.title("ALICE 1.2 (4 Aug 2019): ALM1000 StripChart")
+    root.title("ALICE 1.3 (17 July 2021): ALM1000 StripChart")
     img = PhotoImage(data=TBicon)
     root.call('wm', 'iconphoto', root._w, img)
     #

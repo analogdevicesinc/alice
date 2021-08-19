@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 data logger tool (8-4-2020)
+# ADALM1000 data logger tool (7-17-2021)
 # For Python version > = 2.7.8 and 3.7
 # With external module pysmu (libsmu > = 1.0 ADALM1000 )
 # Created by D Mercer ()
@@ -30,8 +30,14 @@ if sys.version_info[0] == 3:
 import math, random, threading, time
 from pysmu import *
 from time import gmtime, strftime
+# Check to see if user passed init file name on command line
+if len(sys.argv) > 1:
+    InitFileName = str(sys.argv[1])
+    print( 'Init file name: ' + InitFileName )
+else:
+    InitFileName = "datalogger_init.ini"
 #
-RevDate = "(8 Aug 2020)"
+RevDate = "(17 July 2021)"
 MouseFocus = 0
 # Colors that can be modified
 COLORframes = "#000080"   # Color = "#rrggbb" rr=red gg=green bb=blue, Hexadecimal values 00 - ff
@@ -70,16 +76,33 @@ SampleRate = 50
 SampRates = (10, 25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500)
 RunStatus = 0
 # Check if there is an init.ini file to read in
+# Check if there is an alice_init.ini file to read in
 try:
-    InitFile = open("datalogger_init.ini")
+    import alice
+    import pathlib
+# pathlib only available as standard in Python 3.4 and higher. For Python 2.7 must manually install package
+    path = pathlib.Path(alice.__file__).parent.absolute()
+    filename = os.path.join(path, "resources", InitFileName) # "datalogger_init.ini"
+    InitFile = open(filename)
     for line in InitFile:
         try:
-            exec( line.rstrip() )
+            exec( line.rstrip(), globals(), globals())
+            #exec( line.rstrip() )
         except:
-            print( "Skiping " + line.rstrip())
+            print("Skiping " + line.rstrip()) 
     InitFile.close()
 except:
-    print( "No Init File Read")
+    try:
+        InitFile = open(InitFileName) # "datalogger_init.ini"
+        for line in InitFile:
+            try:
+                exec( line.rstrip(), globals(), globals())
+                #exec( line.rstrip() )
+            except:
+                print("Skiping " + line.rstrip()) 
+        InitFile.close()
+    except:
+        print( "No Init File Read. " + InitFileName + " Not Found")
 #
 # samll bit map of ADI logo for window icon
 TBicon = """
@@ -722,8 +745,8 @@ def BSaveCal():
     # Save Window placements
     CalFile.write("root.geometry('+" + str(root.winfo_x()) + '+' + str(root.winfo_y()) + "')\n")
     CalFile.write("mswindow.geometry('+" + str(mswindow.winfo_x()) + '+' + str(mswindow.winfo_y()) + "')\n")
-    CalFile.write('global CANVASwidth; CANVASwidth = ' + str(CANVASwidth) + '\n')
-    CalFile.write('global CANVASheight; CANVASheight = ' + str(CANVASheight) + '\n')
+    CalFile.write('CANVASwidth = ' + str(CANVASwidth) + '\n')
+    CalFile.write('CANVASheight = ' + str(CANVASheight) + '\n')
     #
     CalFile.write('NumGrid.set(' + str(NumGrid.get()) + ')\n')
     CalFile.write('SelCHA.set(' + str(SelCHA.get()) + ')\n')
@@ -796,7 +819,8 @@ def BLoadCal():
     CalFile = open(filename)
     for line in CalFile:
         try:
-            exec( line.rstrip() )
+            exec( line.rstrip(), globals(), globals())
+            #exec( line.rstrip() )
         except:
             print( "Skipping " + line.rstrip())
     CalFile.close()

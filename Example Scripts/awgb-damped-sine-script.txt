@@ -1,0 +1,4 @@
+AWGBShape.set(6)
+AWGBwaveform = numpy.sin(numpy.linspace(0, 10*numpy.pi, 1000))
+AWGBwaveform = AWGBwaveform * numpy.logspace(2.7, 0.0, 1000, 2.7)
+AWGBwaveform = (AWGBwaveform*(3.0/(numpy.amax(AWGBwaveform)-numpy.amin(AWGBwaveform)))) + 2.5

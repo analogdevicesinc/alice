@@ -1,0 +1,5 @@
+AWGBShape.set(6)
+DFiltACoef = numpy.array([1, 0, 0, 0, 0, 0, 0, 0])
+DFiltACoef = numpy.resize(DFiltACoef, len(AWGAwaveform))
+AWGBwaveform = (numpy.multiply(AWGAwaveform-2.5, DFiltACoef))+2.5
+CHB.arbitrary(AWGBwaveform, AWGBRepeatFlag.get()) 

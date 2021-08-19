@@ -1,0 +1,6 @@
+DFiltACoef = numpy.sin(numpy.linspace(0, 8*numpy.pi, 256))
+DFiltACoef = numpy.roll(DFiltACoef, 32)
+DFiltACoef = DFiltACoef * numpy.logspace(2.7, 0.0, 256, 2.7)
+DFiltACoef = DFiltACoef / numpy.sum(DFiltACoef)
+DFiltACoef = numpy.array(DFiltACoef)
+numpy.savetxt('damped-sine-coef4.csv', DFiltACoef, delimiter=',', fmt='%2.4f') 

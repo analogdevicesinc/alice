@@ -1,0 +1,4 @@
+AWGAShape.set(6)
+AWGAwaveform = numpy.sin(numpy.linspace(0, 10*numpy.pi, 1000))
+AWGAwaveform = AWGAwaveform * numpy.logspace(2.7, 0.0, 1000, 2.7)
+AWGAwaveform = (AWGAwaveform*(-3.0/(numpy.amax(AWGAwaveform)-numpy.amin(AWGAwaveform)))) + 2.5

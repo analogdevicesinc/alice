@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 DC Ohmmeter Tool 1.3 8-4-2020
+# ADALM1000 DC Ohmmeter Tool 1.3 7-17-2021
 # For pysmu ( libsmu.rework > = 1.0 )
 #For Python version > = 2.7.8 and 3.7
 import __future__
@@ -185,7 +185,8 @@ def BLoadCal():
         CalFile = open(filename)
         for line in CalFile:
             try:
-                exec( line.rstrip() )
+                exec( line.rstrip(), globals(), globals())
+                #exec( line.rstrip() )
             except:
                 print( "Skipping " + line.rstrip())
         CalFile.close()
@@ -195,7 +196,8 @@ def BLoadCal():
             CalFile = open(filename)
             for line in CalFile:
                 try:
-                    exec( line.rstrip() )
+                    exec( line.rstrip(), globals(), globals())
+                    #exec( line.rstrip() )
                 except:
                     print( "Skipping " + line.rstrip())
             CalFile.close()
@@ -263,7 +265,7 @@ i8fUAgA7
 """
 
 root = Tk()
-root.title("ALM1000 Ohmmeter V Div 1.3 (14 Aug 2020)")
+root.title("ALM1000 Ohmmeter V Div 1.3 (17 July 2021)")
 img = PhotoImage(data=TBicon)
 root.call('wm', 'iconphoto', root._w, img)
 root.tk_focusFollowsMouse()

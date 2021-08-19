@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 DC Voltmeter Tool 1.3 5-15-2021
+# ADALM1000 DC Voltmeter Tool 1.3 7-17-2021
 # For pysmu ( libsmu > = 1.0 )
 #For Python version > = 2.7.8 and 3.7
 import __future__
@@ -39,7 +39,7 @@ except:
     pysmu_found = False
 #
 root = Tk()
-RevDate = "(16 May 2021)"
+RevDate = "17 July 2021)"
 SWRev = "1.3 "
 # small bit map of ADI logo for window icon
 TBicon = """
@@ -127,7 +127,8 @@ try:
     InitFile = open(InitFileName) # "analog_meter_init.ini"
     for line in InitFile:
         try:
-            exec( line.rstrip() )
+            exec( line.rstrip(), globals(), globals())
+            #exec( line.rstrip() )
         except:
             print("Skiping " + line.rstrip()) 
     InitFile.close()
@@ -241,7 +242,7 @@ def Build_meter():
             # Add Text Label
             Increment = MajorDiv/MScale
             axis_value = float((tick/Increment)+Mmin)
-            axis_label = str(axis_value)
+            axis_label = "{0: .2f}".format(axis_value)
             MAca.create_text(MXcenter+xt, MYcenter-yt, text = axis_label, fill=COLORtext, font=("arial", FontSize ))
             # Add minor Ticks
             TIradius = 1.05 * MRadius
@@ -384,7 +385,7 @@ def MakeMeterDial():
         # Add Text Label
         Increment = MajorDiv/MScale
         axis_value = float((tick/Increment)+Mmin)
-        axis_label = str(axis_value)
+        axis_label = "{0: .2f}".format(axis_value)
         MAca.create_text(MXcenter+xt, MYcenter-yt, text = axis_label, fill=COLORtext, font=("arial", FontSize ))
         # Add minor Ticks
         TIradius = 1.05 * MRadius
@@ -645,7 +646,8 @@ def BLoadCal():
     CalFile = open(filename)
     for line in CalFile:
         try:
-            exec( line.rstrip() )
+            exec( line.rstrip(), globals(), globals())
+            #exec( line.rstrip() )
         except:
             print ("Skipping " + line.rstrip())
     CalFile.close()

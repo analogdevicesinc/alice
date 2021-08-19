@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 DC volt meter / source tool 8-4-2020
+# ADALM1000 DC volt meter / source tool 7-17-2021
 # For use with pysmu / libsmu.rework >= 1.0
 # For Python version > = 2.7.8 and 3.7
 import __future__
@@ -23,7 +23,7 @@ from pysmu import *
 
 # define button actions
 loopnum = 0
-RevDate = "14 Aug 2020)"
+RevDate = "17 July 2021)"
 PIO_0 = 28
 PIO_1 = 29
 PIO_2 = 47
@@ -400,7 +400,8 @@ def BLoadCal():
     CalFile = open(filename)
     for line in CalFile:
         try:
-            exec( line.rstrip() )
+            exec( line.rstrip(), globals(), globals())
+            #exec( line.rstrip() )
         except:
             print( "Skipping " + line.rstrip())
     CalFile.close()
@@ -420,99 +421,99 @@ def sel():
     if D0.get() > 0:
         devx.ctrl_transfer( 0x40, D0.get(), PIO_0, 0, 0, 0, 100) # set PIO 0
         if D0.get() == 0x50:
-            digin0.configure(text="Low", bg="GREEN")
+            digin0.configure(text="Low", bg="#00ff00")
         else:
-            digin0.configure(text="Hi", bg="RED")
+            digin0.configure(text="Hi", bg="#ff0000")
     else:
         Dval = devx.ctrl_transfer( 0xc0, 0x91, PIO_0, 0, 0, 1, 100)
         if Dval[0] == 0:
-            digin0.configure(text="Low", bg="GREEN")
+            digin0.configure(text="Low", bg="#00ff00")
         else:
-            digin0.configure(text="Hi", bg="RED")
+            digin0.configure(text="Hi", bg="#ff0000")
     if D1.get() > 0:
         devx.ctrl_transfer( 0x40, D1.get(), PIO_1, 0, 0, 0, 100) # set PIO 1
         if D1.get() == 0x50:
-            digin1.configure(text="Low", bg="GREEN")
+            digin1.configure(text="Low", bg="#00ff00")
         else:
-            digin1.configure(text="Hi", bg="RED")
+            digin1.configure(text="Hi", bg="#ff0000")
     else:
         Dval = devx.ctrl_transfer( 0xc0, 0x91, PIO_1, 0, 0, 1, 100)
         if Dval[0] == 0:
-            digin1.configure(text="Low", bg="GREEN")
+            digin1.configure(text="Low", bg="#00ff00")
         else:
-            digin1.configure(text="Hi", bg="RED")
+            digin1.configure(text="Hi", bg="#ff0000")
     if D2.get() > 0:
         devx.ctrl_transfer( 0x40, D2.get(), PIO_2, 0, 0, 0, 100) # set PIO 2
         if D2.get() == 0x50:
-            digin2.configure(text="Low", bg="GREEN")
+            digin2.configure(text="Low", bg="#00ff00")
         else:
-            digin2.configure(text="Hi", bg="RED")
+            digin2.configure(text="Hi", bg="#ff0000")
     else:
         Dval = devx.ctrl_transfer( 0xc0, 0x91, PIO_2, 0, 0, 1, 100)
         if Dval[0] == 0:
-            digin2.configure(text="Low", bg="GREEN")
+            digin2.configure(text="Low", bg="#00ff00")
         else:
-            digin2.configure(text="Hi", bg="RED")
+            digin2.configure(text="Hi", bg="#ff0000")
     if D3.get() > 0:
         devx.ctrl_transfer( 0x40, D3.get(), PIO_3, 0, 0, 0, 100) # set PIO 3
         if D3.get() == 0x50:
-            digin3.configure(text="Low", bg="GREEN")
+            digin3.configure(text="Low", bg="#00ff00")
         else:
-            digin3.configure(text="Hi", bg="RED")
+            digin3.configure(text="Hi", bg="#ff0000")
     else:
         Dval = devx.ctrl_transfer( 0xc0, 0x91, PIO_3, 0, 0, 1, 100)
         if Dval[0] == 0:
-            digin3.configure(text="Low", bg="GREEN")
+            digin3.configure(text="Low", bg="#00ff00")
         else:
-            digin3.configure(text="Hi", bg="RED")
+            digin3.configure(text="Hi", bg="#ff0000")
     if D4.get() > 0:
         devx.ctrl_transfer( 0x40, D4.get(), 4, 0, 0, 0, 100) # set PIO 4
         if D4.get() == 0x50:
-            digin4.configure(text="Low", bg="GREEN")
+            digin4.configure(text="Low", bg="#00ff00")
         else:
-            digin4.configure(text="Hi", bg="RED")
+            digin4.configure(text="Hi", bg="#ff0000")
     else:
         Dval = devx.ctrl_transfer( 0xc0, 0x91, 4, 0, 0, 1, 100)
         if Dval[0] == 0:
-            digin4.configure(text="Low", bg="GREEN")
+            digin4.configure(text="Low", bg="#00ff00")
         else:
-            digin4.configure(text="Hi", bg="RED")
+            digin4.configure(text="Hi", bg="#ff0000")
     if D5.get() > 0:
         devx.ctrl_transfer( 0x40, D5.get(), 5, 0, 0, 0, 100) # set PIO 5
         if D5.get() == 0x50:
-            digin5.configure(text="Low", bg="GREEN")
+            digin5.configure(text="Low", bg="#00ff00")
         else:
-            digin5.configure(text="Hi", bg="RED")
+            digin5.configure(text="Hi", bg="#ff0000")
     else:
         Dval = devx.ctrl_transfer( 0xc0, 0x91, 5, 0, 0, 1, 100)
         if Dval[0] == 0:
-            digin5.configure(text="Low", bg="GREEN")
+            digin5.configure(text="Low", bg="#00ff00")
         else:
-            digin5.configure(text="Hi", bg="RED")
+            digin5.configure(text="Hi", bg="#ff0000")
     if D6.get() > 0:
         devx.ctrl_transfer( 0x40, D6.get(), 6, 0, 0, 0, 100) # set PIO 6
         if D6.get() == 0x50:
-            digin6.configure(text="Low", bg="GREEN")
+            digin6.configure(text="Low", bg="#00ff00")
         else:
-            digin6.configure(text="Hi", bg="RED")
+            digin6.configure(text="Hi", bg="#ff0000")
     else:
         Dval = devx.ctrl_transfer( 0xc0, 0x91, 6, 0, 0, 1, 100)
         if Dval[0] == 0:
-            digin6.configure(text="Low", bg="GREEN")
+            digin6.configure(text="Low", bg="#00ff00")
         else:
-            digin6.configure(text="Hi", bg="RED")
+            digin6.configure(text="Hi", bg="#ff0000")
     if D7.get() > 0:
         devx.ctrl_transfer( 0x40, D7.get(), 7, 0, 0, 0, 100) # set PIO 7
         if D7.get() == 0x50:
-            digin7.configure(text="Low", bg="GREEN")
+            digin7.configure(text="Low", bg="#00ff00")
         else:
-            digin7.configure(text="Hi", bg="RED")
+            digin7.configure(text="Hi", bg="#ff0000")
     else:
         Dval = devx.ctrl_transfer( 0xc0, 0x91, 7, 0, 0, 1, 100)
         if Dval[0] == 0:
-            digin7.configure(text="Low", bg="GREEN")
+            digin7.configure(text="Low", bg="#00ff00")
         else:
-            digin7.configure(text="Hi", bg="RED")
+            digin7.configure(text="Hi", bg="#ff0000")
 
 def MakeDigScreen():
     global D0, D1, D2, D3, D4, D5, D6, D7
@@ -539,7 +540,7 @@ def MakeDigScreen():
         rb0z.grid(row=2, column=1, sticky=W)
         rb2 = Radiobutton(win1, text="D0-1", variable=D0, value=0x51, command=sel )
         rb2.grid(row=2, column=2, sticky=W)
-        digin0 = Label(win1, text="Low", bg = "GREEN")
+        digin0 = Label(win1, text="Low", bg = "#00ff00")
         digin0.grid(row=2, column=3, sticky=W)
         rb3 = Radiobutton(win1, text="D1-0", variable=D1, value=0x50, command=sel )
         rb3.grid(row=3, column=0, sticky=W)
@@ -547,7 +548,7 @@ def MakeDigScreen():
         rb3z.grid(row=3, column=1, sticky=W)
         rb4 = Radiobutton(win1, text="D1-1", variable=D1, value=0x51, command=sel )
         rb4.grid(row=3, column=2, sticky=W)
-        digin1 = Label(win1, text="Low", bg = "GREEN")
+        digin1 = Label(win1, text="Low", bg = "#00ff00")
         digin1.grid(row=3, column=3, sticky=W)
         rb5 = Radiobutton(win1, text="D2-0", variable=D2, value=0x50, command=sel )
         rb5.grid(row=4, column=0, sticky=W)
@@ -555,7 +556,7 @@ def MakeDigScreen():
         rb5z.grid(row=4, column=1, sticky=W)
         rb6 = Radiobutton(win1, text="D2-1", variable=D2, value=0x51, command=sel )
         rb6.grid(row=4, column=2, sticky=W)
-        digin2 = Label(win1, text="Low", bg = "GREEN")
+        digin2 = Label(win1, text="Low", bg = "#00ff00")
         digin2.grid(row=4, column=3, sticky=W)
         rb7 = Radiobutton(win1, text="D3-0", variable=D3, value=0x50, command=sel )
         rb7.grid(row=5, column=0, sticky=W)
@@ -563,7 +564,7 @@ def MakeDigScreen():
         rb7z.grid(row=5, column=1, sticky=W)
         rb8 = Radiobutton(win1, text="D3-1", variable=D3, value=0x51, command=sel )
         rb8.grid(row=5, column=2, sticky=W)
-        digin3 = Label(win1, text="Low", bg = "GREEN")
+        digin3 = Label(win1, text="Low", bg = "#00ff00")
         digin3.grid(row=5, column=3, sticky=W)
         rb9 = Radiobutton(win1, text="D4-0", variable=D4, value=0x50, command=sel )
         rb9.grid(row=6, column=0, sticky=W)
@@ -571,7 +572,7 @@ def MakeDigScreen():
         rb9z.grid(row=6, column=1, sticky=W)
         rb10 = Radiobutton(win1, text="D4-1", variable=D4, value=0x51, command=sel )
         rb10.grid(row=6, column=2, sticky=W)
-        digin4 = Label(win1, text="Low", bg = "GREEN")
+        digin4 = Label(win1, text="Low", bg = "#00ff00")
         digin4.grid(row=6, column=3, sticky=W)
         rb11 = Radiobutton(win1, text="D5-0", variable=D5, value=0x50, command=sel )
         rb11.grid(row=7, column=0, sticky=W)
@@ -579,7 +580,7 @@ def MakeDigScreen():
         rb11z.grid(row=7, column=1, sticky=W)
         rb12 = Radiobutton(win1, text="D5-1", variable=D5, value=0x51, command=sel )
         rb12.grid(row=7, column=2, sticky=W)
-        digin5 = Label(win1, text="Low", bg = "GREEN")
+        digin5 = Label(win1, text="Low", bg = "#00ff00")
         digin5.grid(row=7, column=3, sticky=W)
         rb13 = Radiobutton(win1, text="D6-0", variable=D6, value=0x50, command=sel )
         rb13.grid(row=8, column=0, sticky=W)
@@ -587,7 +588,7 @@ def MakeDigScreen():
         rb13z.grid(row=8, column=1, sticky=W)
         rb13 = Radiobutton(win1, text="D6-1", variable=D6, value=0x51, command=sel )
         rb13.grid(row=8, column=2, sticky=W)
-        digin6 = Label(win1, text="Low", bg = "GREEN")
+        digin6 = Label(win1, text="Low", bg = "#00ff00")
         digin6.grid(row=8, column=3, sticky=W)
         rb14 = Radiobutton(win1, text="D7-0", variable=D7, value=0x50, command=sel )
         rb14.grid(row=9, column=0, sticky=W)
@@ -595,7 +596,7 @@ def MakeDigScreen():
         rb14z.grid(row=9, column=1, sticky=W)
         rb15 = Radiobutton(win1, text="D7-1", variable=D7, value=0x51, command=sel )
         rb15.grid(row=9, column=2, sticky=W)
-        digin7 = Label(win1, text="Low", bg = "GREEN")
+        digin7 = Label(win1, text="Low", bg = "#00ff00")
         digin7.grid(row=9, column=3, sticky=W)
 
         dismissbutton = Button(win1, text="Dismiss", command=DestroyDigScreen)
@@ -838,6 +839,23 @@ root.call('wm', 'iconphoto', root._w, '-default', img)
 #
 root.tk_focusFollowsMouse()
 root.protocol("WM_DELETE_WINDOW", Bcloseexit)
+windowingsystem = root.tk.call('tk', 'windowingsystem')
+# 'aqua' built-in native Mac OS X only; Native Mac OS X
+if (root.tk.call('tk', 'windowingsystem')=='aqua'):
+    Style_String = 'aqua'
+    # On Macs, allow the dock icon to deiconify.
+    root.createcommand('::tk::mac::ReopenApplication', root.deiconify)
+    root.createcommand('::tk::mac::Quit', Bcloseexit)
+    # On Macs, set up menu bar to be minimal.
+    root.option_add('*tearOff', False)
+    menubar = tk.Menu(root)
+    appmenu = tk.Menu(menubar, name='apple')
+    menubar.add_cascade(menu=appmenu)
+    # appmenu.add_command(label='Exit', command=Bcloseexit)
+    root['menu'] = menubar
+else:
+    Style_String = 'alt'
+print("Windowing System is " + str(windowingsystem))
 #root.style.configure("Stop.TRadiobutton", background="red")
 #root.style.configure("Run.TRadiobutton", background="green")
 RUNstatus = IntVar(0)
@@ -854,6 +872,8 @@ rb1 = Radiobutton(buttons, text="Stop", bg = "#ff0000", variable=RUNstatus, valu
 rb1.pack(side=LEFT)
 rb2 = Radiobutton(buttons, text="Run", bg = "#00ff00", variable=RUNstatus, value=1, command=BStart )
 rb2.pack(side=LEFT)
+b3 = Button(buttons, text='Exit', command=Bcloseexit)
+b3.pack(side=LEFT)
 b1 = Button(buttons, text='Save Confg', command=BSaveCal)
 b1.pack(side=LEFT)
 b2 = Button(buttons, text='Load Confg', command=BLoadCal)

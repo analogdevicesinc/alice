@@ -1,0 +1,1 @@
+DFiltBCoef = numpy.loadtxt('damped-sine-coef.csv') 

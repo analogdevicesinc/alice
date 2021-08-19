@@ -36,6 +36,8 @@ def \mbox{\hyperlink{namespacealice-desktop-1_a3741f919733bc1196c6422d1a71a2e19}
 \begin{DoxyCompactList}\small\item\em Load confirfuration from Bode window button. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a5271262467edd8fa5320d2025a2dab71}{B\+Load\+Config\+Time}} ()
 \begin{DoxyCompactList}\small\item\em Load confirfuration from Scope window button. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_add698f9137b1dc21d8e7caaaff135fe4}{Run\+Script}} ()
+\begin{DoxyCompactList}\small\item\em Run a script file. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_ab1afcbc491cbb3bad4a3dd2053cb5098}{Bg\+Color}} ()
 \begin{DoxyCompactList}\small\item\em Toggle the Background and text colors based on Color\+Mode. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_af7d9579fd1275f8804e1e5e2d4ae3f1a}{B\+Save\+Screen}} ()
@@ -60,6 +62,8 @@ def \mbox{\hyperlink{namespacealice-desktop-1_aa0262b31c611b379f43237646f14fda9}
 \begin{DoxyCompactList}\small\item\em Show info on software / firmware / hardware. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a985a4824e07e3202f4125da6cff9d57a}{B\+Snap\+Shot}} ()
 \begin{DoxyCompactList}\small\item\em Take snap shot of displayed time waveforms. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_aac2b3bdee3466ce4a43294f1f3658578}{B\+Snap\+Shot\+XY}} ()
+\begin{DoxyCompactList}\small\item\em Take snap shot of displayed XY Traces. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a9f4cbdd5f911ac99c38c1a1ee0a96dde}{B\+Save\+Cal}} ()
 \begin{DoxyCompactList}\small\item\em Save gain, offset and filter variables for external dividers. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a2a4ff5d90764075243ed42e81236ec78}{B\+Load\+Cal}} ()
@@ -160,6 +164,8 @@ def \mbox{\hyperlink{namespacealice-desktop-1_a3ed95a93749a9d9fd477bd584c57781f}
 \begin{DoxyCompactList}\small\item\em Stop (pause) scope tool. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a2a69ab97b2323ab02aab42edaaf7c9be}{B\+Power}} ()
 \begin{DoxyCompactList}\small\item\em Toggel on/off analog power. \end{DoxyCompactList}\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a57868d28ca8a12be8cfa237bdb66f943}{B\+Roll}} ()
+\begin{DoxyCompactList}\small\item\em Toggel on/off Roll Sweep Mode. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a9b98ff37080bb30f82436e34635d2d71}{B\+Time}} ()
 \begin{DoxyCompactList}\small\item\em Set Hor time scale from entry widget. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_ad4d686ad2430891192536979390b745a}{B\+C\+H\+Alevel}} ()
@@ -202,7 +208,7 @@ def \mbox{\hyperlink{namespacealice-desktop-1_a59f52a1ef5d1ade76bdacaee8fb3d3ad}
 \begin{DoxyCompactList}\small\item\em Scope time main loop Read the analog data and store the data into the arrays. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a3eff0f42f6a17a6e51b5d7860a609110}{Analog\+\_\+\+Phase\+\_\+\+In}} ()
 \item 
-def \mbox{\hyperlink{namespacealice-desktop-1_a5b0c9517662fadcdd3c2c1cd03231cad}{Analog\+\_\+\+Slow\+\_\+time}} ()
+def \mbox{\hyperlink{namespacealice-desktop-1_a6fec3d2e292e462518c5ff2c123a1835}{Analog\+\_\+\+Roll\+\_\+time}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a067728124e44741a9e293e73bb793fcf}{Analog\+\_\+\+Chop\+\_\+\+Time}} ()
 \item 
@@ -211,7 +217,7 @@ def \mbox{\hyperlink{namespacealice-desktop-1_ab943ab2074de8f51139ccd79cced0905}
 def \mbox{\hyperlink{namespacealice-desktop-1_a9a733d7a85e7969402821e697395ab17}{Sine\+\_\+\+Phase}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a932770f19be63458d10faed3aac22fe9}{Digital\+\_\+\+R\+C\+\_\+\+High\+\_\+\+Pass}} (In\+Buff, T\+C1, Gain)
-\begin{DoxyCompactList}\small\item\em Digital filter function for input divider frequency compensation T\+C1 is in micro seconds. \end{DoxyCompactList}\item 
+\begin{DoxyCompactList}\small\item\em Digital RC filter function for input divider frequency compensation T\+C1 is in micro seconds. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_aa32c3bdf884a2b3544e5591ce5824572}{Digital\+\_\+\+R\+C\+\_\+\+Low\+\_\+\+Pass}} (In\+Buff, T\+C1, Gain)
 \begin{DoxyCompactList}\small\item\em Digital filter function for input divider frequency compensation T\+C1 is in micro seconds. \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a68435c78ee22a4ff750e824e486790b0}{shift\+\_\+buffer}} (arr, num, fill\+\_\+value=numpy.\+nan)
@@ -334,6 +340,20 @@ def \mbox{\hyperlink{namespacealice-desktop-1_aae85cae0799f06db40f062e4da1b65fd}
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a1c655acfc1d85c8f69601bb24ee52c93}{on\+Canvas\+X\+Y\+Left\+Click}} (event)
 \item 
+def \mbox{\hyperlink{namespacealice-desktop-1_af3ffce8af48670e681a5b18fdbf028d2}{time\+\_\+points\+\_\+from\+\_\+freq}} (freq, fs=1, density=False)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_afd4ab9c414e622a715b974737a6c3a6d}{Time\+Series\+Noise}} (n, Fsample, mag, b=4)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_abc47464d7efb9cd9e84fbf059bf20dff}{Time\+Series\+Single\+Tone}} (n, Bin\+Num, Fsample, mag)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a1f5f9081bbe378eff1c9d917fd9d9563}{Pink\+Noise}} (N, mag)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_ae6272113915df6ab5694366a85e04dec}{Blue\+Noise}} (N, mag)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_afdf64a41b92abbb8075f083b80c4baf2}{Brown\+Noise}} (N, mag)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_abf60767d2f2a26105a45908987384671}{Violet\+Noise}} (N, mag)
+\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a430b335870f8ee88c96b21ea10c50a98}{Schroeder\+Phase}} (Length, Nr\+Tones, Ampl)
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a49fab4605e41c15bb7a4bd5850b1ccc2}{Wrap}} (In\+Array, Wr\+Factor)
@@ -408,6 +428,8 @@ def \mbox{\hyperlink{namespacealice-desktop-1_a29c82a8fbd8f64b7544c128c3dd1082c}
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a179ef1e3dced2e77a3a4cbc4dda25e74}{Update\+A\+W\+GA}} ()
 \item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a7e52828358325b3c94c3d280821eeff4}{Add\+A\+W\+G\+A\+Noise}} ()
+\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_aacc773164949a4a66f21a1e8a9be25b9}{Set\+B\+CompA}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a3336cb1b98417ccbcbdf1f0b8289b383}{A\+W\+G\+B\+Num\+Cycles}} ()
@@ -471,6 +493,8 @@ def \mbox{\hyperlink{namespacealice-desktop-1_af0376c77226cdf0a137f40b4cad10e51}
 def \mbox{\hyperlink{namespacealice-desktop-1_a99a48fded015853ffc4ba1736c44152f}{B\+A\+W\+G\+B\+Mode\+Label}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a9fa974ad5c76c5784d4ae106261c6157}{Update\+A\+W\+GB}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a2317384964369df1ae45352b47a4cf42}{Add\+A\+W\+G\+B\+Noise}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a537879314c4c2dd896bfd890f58a18e0}{Update\+Awg\+Cont}} ()
 \item 
@@ -860,6 +884,30 @@ def \mbox{\hyperlink{namespacealice-desktop-1_a6546f220a01ea6600afcb1f2bb6c8a29}
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a8dac3a0f59d7ac7ed97cabaff8809134}{B\+D\+Filt\+B\+Math}} ()
 \item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a43e7a01eeecb45b71ea798312b90813a}{on\+Ret\+A\+W\+G\+FiltA}} (event)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_ad97f9448ac7099b4f56e7b8571f54b84}{on\+A\+W\+G\+Filt\+A\+Scroll}} (event)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_ab06f601740d38adc56d24cf9ccebafcc}{Build\+A\+W\+G\+Box\+CarA}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_aeef8965b4e8f13daee765ce3978c219e}{on\+Ret\+A\+W\+G\+FiltB}} (event)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a1cae6a68247991815e5020b29e7a6468}{on\+A\+W\+G\+Filt\+B\+Scroll}} (event)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_af18d90c3eff9c8e110e046b48d07410d}{Build\+A\+W\+G\+Box\+CarB}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a97337bb6ca75848a055854e61527c451}{B\+Load\+A\+W\+G\+FiltA}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a50b90922461781a4d9d5ac2a00dce1d1}{B\+A\+W\+G\+Filt\+A\+Math}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_ad9aafba317dbaaefc5aedcff06525c09}{B\+Load\+A\+W\+G\+FiltB}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a96723a3868b51f09a775d55f8fa7932c}{B\+A\+W\+G\+Filt\+B\+Math}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a2cdaf6501da12f0f78e1209a37d4a92d}{Build\+Reject\+Filter}} (Order, Freject, Fsample)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a5e4c7128729dbd712b623e06894e12b5}{fit\+\_\+exp}} (xs, ys)
+\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a0c28a49337944b462cae923f1d800044}{Make\+Command\+Screen}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a52129256a7702987ee366b4e86071195}{Destroy\+Command\+Screen}} ()
@@ -957,15 +1005,17 @@ def \mbox{\hyperlink{namespacealice-desktop-1_abfa183e8e7374d2b8ce89ddafa80d17b}
 \item 
 bool \mbox{\hyperlink{namespacealice-desktop-1_a5c9735e26d5274d7035c88034fa8c534}{numpy\+\_\+found}} = True
 \item 
+bool \mbox{\hyperlink{namespacealice-desktop-1_a0e98c5b09457a3122637f49c044105e1}{matplot\+\_\+found}} = True
+\item 
 \mbox{\hyperlink{namespacealice-desktop-1_ab029cb1313e77ce2871468c600154dcb}{Init\+File\+Name}} = str(sys.\+argv\mbox{[}1\mbox{]})
 \item 
 bool \mbox{\hyperlink{namespacealice-desktop-1_ab8e08090e16c7cdf9941025cd2048fad}{pysmu\+\_\+found}} = True
 \item 
-string \mbox{\hyperlink{namespacealice-desktop-1_ae0c8ae67d76fdcc9ac130ff1f9aee267}{Rev\+Date}} = \char`\"{}(7 May 2021)\char`\"{}
+string \mbox{\hyperlink{namespacealice-desktop-1_ae0c8ae67d76fdcc9ac130ff1f9aee267}{Rev\+Date}} = \char`\"{}20 Aug 2021\char`\"{}
 \item 
 string \mbox{\hyperlink{namespacealice-desktop-1_a74a32b436fbe54b17b6fff4496aab869}{S\+W\+Rev}} = \char`\"{}1.\+3 \char`\"{}
 \item 
-string \mbox{\hyperlink{namespacealice-desktop-1_a76cd5721b0043b4b6758ba6cd84ba29d}{Version\+\_\+url}} = \textquotesingle{}https\+://github.\+com/analogdevicesinc/alice/releases/download/1.\+3.\+10/alice-\/desktop-\/1.\+3-\/setup.\+exe\textquotesingle{}
+string \mbox{\hyperlink{namespacealice-desktop-1_a76cd5721b0043b4b6758ba6cd84ba29d}{Version\+\_\+url}} = \textquotesingle{}https\+://github.\+com/analogdevicesinc/alice/releases/download/1.\+3.\+11/alice-\/desktop-\/1.\+3-\/setup.\+exe\textquotesingle{}
 \item 
 string \mbox{\hyperlink{namespacealice-desktop-1_a5dac667b2c0310f9108b5330bbc53277}{T\+Bicon}}
 \item 
@@ -985,7 +1035,7 @@ int \mbox{\hyperlink{namespacealice-desktop-1_aba97f4c63ef3978c4e8b20ac962472bd}
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_a4e98e7d1ca7ae170da0e38bf305e025b}{G\+R\+HF}} = 390
 \item 
-int \mbox{\hyperlink{namespacealice-desktop-1_a7a05ba6c8e051a7bdb8f177b7abefa76}{X0\+LF}} = 37
+int \mbox{\hyperlink{namespacealice-desktop-1_a7a05ba6c8e051a7bdb8f177b7abefa76}{X0\+LF}} = 45
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_a1643424fc2dc56823818206316d33c55}{Y0\+TF}} = 25
 \item 
@@ -993,7 +1043,7 @@ int \mbox{\hyperlink{namespacealice-desktop-1_ad4dacf55b8671ab0199add9ea44816e6}
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_a3b8dc7e280d7b303aabcf3e6fbb6808e}{G\+R\+H\+BP}} = 390
 \item 
-int \mbox{\hyperlink{namespacealice-desktop-1_a05087b42cdb1e113bd9fd0862d4905b0}{X0\+L\+BP}} = 37
+int \mbox{\hyperlink{namespacealice-desktop-1_a05087b42cdb1e113bd9fd0862d4905b0}{X0\+L\+BP}} = 45
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_aa057c0b51f201783e7410d3da0f867d3}{Y0\+T\+BP}} = 25
 \item 
@@ -1001,7 +1051,7 @@ int \mbox{\hyperlink{namespacealice-desktop-1_a4d05b15567cf92f194dd226ca8e471d3}
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_a8aa5fc34658ed40325bbb8f677689042}{G\+R\+H\+XY}} = 390
 \item 
-int \mbox{\hyperlink{namespacealice-desktop-1_aa9e01320b795f2295014d86f5ddbfe62}{X0\+L\+XY}} = 37
+int \mbox{\hyperlink{namespacealice-desktop-1_aa9e01320b795f2295014d86f5ddbfe62}{X0\+L\+XY}} = 55
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_aabace5780904fd561d4367d9226abf68}{Y0\+T\+XY}} = 25
 \item 
@@ -1095,6 +1145,10 @@ string \mbox{\hyperlink{namespacealice-desktop-1_adcf96ad82d1f9fc09d9e8cca301b9e
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_a45feee60d6c807af3172dd0928f2ab4d}{Button\+Order}} = 0
 \item 
+int \mbox{\hyperlink{namespacealice-desktop-1_a334e3fb3e917f5a6177c7ad76fe6cf92}{S\+Boxarrow}} = 11
+\item 
+int \mbox{\hyperlink{namespacealice-desktop-1_a2b0b1a8ea75e0e6951e90892d1f3f084}{Closed}} = 0
+\item 
 \mbox{\hyperlink{namespacealice-desktop-1_a0e887cb85702e0dccbf34d7dbe40443f}{Color\+Mode}} = Int\+Var(0)
 \item 
 string \mbox{\hyperlink{namespacealice-desktop-1_ab4ec51a55286f96b7a4547ce030b23ee}{Frame\+BG}} = \char`\"{}\#d7d7d7\char`\"{}
@@ -1133,9 +1187,13 @@ int \mbox{\hyperlink{namespacealice-desktop-1_a85373474ea79714f2c0f51da1409f971}
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_a21147ac41e5fdf908af6555d5da79983}{D\+I\+Ssamples}} = G\+RW
 \item 
+int \mbox{\hyperlink{namespacealice-desktop-1_adbeabddcd7a120829e741ab9419e9fe8}{First\+\_\+\+Slow\+\_\+sweep}} = 0
+\item 
+int \mbox{\hyperlink{namespacealice-desktop-1_a89e46ca67ef5dba2b8121f62f11dcc85}{Slow\+\_\+\+Sweep\+\_\+\+Limit}} = 200
+\item 
 float \mbox{\hyperlink{namespacealice-desktop-1_a8514a4815524c3cbc99c36f097c8cbc6}{T\+R\+I\+G\+G\+E\+Rlevel}} = 2.\+5
 \item 
-string \mbox{\hyperlink{namespacealice-desktop-1_ac6b9b8fe81fc99ea1d20f167a0a1f0d4}{Math\+String}} = \char`\"{}V\+BuffA\mbox{[}t\mbox{]} + \mbox{\hyperlink{change-log_8txt_a58d48d7a3bc67404837055f1060e3b4d}{V\+BuffB}}\mbox{[}t\mbox{]}\char`\"{}
+string \mbox{\hyperlink{namespacealice-desktop-1_ac6b9b8fe81fc99ea1d20f167a0a1f0d4}{Math\+String}} = \char`\"{}V\+BuffA\mbox{[}t\mbox{]} + \mbox{\hyperlink{change-log_8txt_aa237a2e9b5c37fab65ec477005758405}{V\+BuffB}}\mbox{[}t\mbox{]}\char`\"{}
 \begin{DoxyCompactList}\small\item\em default math equations \end{DoxyCompactList}\item 
 string \mbox{\hyperlink{namespacealice-desktop-1_ab80f874af99f1871c9c5e09490ab818a}{Math\+Units}} = \char`\"{} V\char`\"{}
 \item 
@@ -1161,9 +1219,9 @@ string \mbox{\hyperlink{namespacealice-desktop-1_afd08654fc55fa8c27ddd590b7006bf
 \item 
 string \mbox{\hyperlink{namespacealice-desktop-1_a831ee20022b5d153f50c42023415fe19}{Math\+Y\+Axis}} = \char`\"{}V-\/B\char`\"{}
 \item 
-string \mbox{\hyperlink{namespacealice-desktop-1_a6629caf56d1f408be4906d17abdd63ed}{A\+W\+G\+A\+Math\+String}} = \char`\"{}(V\+BuffA + \mbox{\hyperlink{change-log_8txt_a58d48d7a3bc67404837055f1060e3b4d}{V\+BuffB}})/2\char`\"{}
+string \mbox{\hyperlink{namespacealice-desktop-1_a6629caf56d1f408be4906d17abdd63ed}{A\+W\+G\+A\+Math\+String}} = \char`\"{}(V\+BuffA + \mbox{\hyperlink{change-log_8txt_aa237a2e9b5c37fab65ec477005758405}{V\+BuffB}})/2\char`\"{}
 \item 
-string \mbox{\hyperlink{namespacealice-desktop-1_a89782e4ea5f65f50bbebb620295ec535}{A\+W\+G\+B\+Math\+String}} = \char`\"{}(V\+BuffA + \mbox{\hyperlink{change-log_8txt_a58d48d7a3bc67404837055f1060e3b4d}{V\+BuffB}})/2\char`\"{}
+string \mbox{\hyperlink{namespacealice-desktop-1_a89782e4ea5f65f50bbebb620295ec535}{A\+W\+G\+B\+Math\+String}} = \char`\"{}(V\+BuffA + \mbox{\hyperlink{change-log_8txt_aa237a2e9b5c37fab65ec477005758405}{V\+BuffB}})/2\char`\"{}
 \item 
 string \mbox{\hyperlink{namespacealice-desktop-1_a505a3b6c792040615f8e5b29d1068eac}{A\+W\+G\+Acsv\+File}} = \char`\"{}examplea.\+csv\char`\"{}
 \item 
@@ -1178,6 +1236,10 @@ string \mbox{\hyperlink{namespacealice-desktop-1_ad4505731bdd9e18a8c9723f10a0d7e
 string \mbox{\hyperlink{namespacealice-desktop-1_a45d6448d58dd197d940287230df76ef0}{Dig\+Filter\+A\+String}} = \char`\"{}numpy.\+sinc(numpy.\+linspace(-\/1, 1, 91))\char`\"{}
 \item 
 string \mbox{\hyperlink{namespacealice-desktop-1_a55d568fab0ecaffa41dd4f3a919da557}{Dig\+Filter\+B\+String}} = \char`\"{}numpy.\+sinc(numpy.\+linspace(-\/1, 1, 91))\char`\"{}
+\item 
+string \mbox{\hyperlink{namespacealice-desktop-1_a123405ea84688b352b1d1f20aac19567}{A\+W\+G\+Filter\+A\+String}} = \char`\"{}numpy.\+sinc(numpy.\+linspace(-\/1, 1, 91))\char`\"{}
+\item 
+string \mbox{\hyperlink{namespacealice-desktop-1_a1271224c4d2a5b9f5fc5f83dbff37709}{A\+W\+G\+Filter\+B\+String}} = \char`\"{}numpy.\+sinc(numpy.\+linspace(-\/1, 1, 91))\char`\"{}
 \item 
 string \mbox{\hyperlink{namespacealice-desktop-1_a89d023d333083aefc6274aa6f5d65465}{Cha\+Meas\+String1}} = \char`\"{}D\+C\+V1\char`\"{}
 \item 
@@ -1269,6 +1331,8 @@ int \mbox{\hyperlink{namespacealice-desktop-1_aef7fdaa10ae5400da13cb698430a2803}
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_a8167c6818926f0204c3da7399c787474}{Chop\+Mode\+Filter}} = \mbox{[}0.\+25, 0.\+25, 0.\+25, 0.\+25\mbox{]}
 \item 
+\mbox{\hyperlink{namespacealice-desktop-1_a244a2fc081fe2fa74cb31c57a066616c}{Roll\+\_\+\+Mode}} = Int\+Var(0)
+\item 
 \mbox{\hyperlink{namespacealice-desktop-1_ada4e9a12543221acbd2b5d4aaca5ac35}{Z\+E\+R\+Ostuffing}} = Int\+Var(0)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_ab2046551e0f58b63b5c539cf9a35fecf}{F\+F\+Twindow}} = Int\+Var(0)
@@ -1322,6 +1386,8 @@ int \mbox{\hyperlink{namespacealice-desktop-1_aafffe5103a9760382b6350bd7f0fcd1a}
 int \mbox{\hyperlink{namespacealice-desktop-1_a1f3f94f279e427f202b71677e96253a5}{Enable\+E\+T\+S\+Screen}} = 0
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_a26d51504a13db5597b1ad9ebd1590d14}{Enable\+H\+Ssampling}} = 0
+\item 
+int \mbox{\hyperlink{namespacealice-desktop-1_ad6b21df7ed2e7c0b85b614bcd037890d}{Enable\+User\+Entries}} = 0
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_a9a0c0aeb30674b07765fbfbd8bfc4453}{Allow\+Flash\+Firmware}} = 0
 \item 
@@ -1391,7 +1457,7 @@ string \mbox{\hyperlink{namespacealice-desktop-1_a7b8eb696ef6d1335a16f6f69b70a6d
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_af99c01ec786e50a2fffc9a3493860b5d}{menubar}} = t\+Kinter.\+Menu(root)
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a8028fdd2fa444bf3e2f9da6e8a30c1cf}{appmenu}} = t\+Kinter.\+Menu(menubar, name=\textquotesingle{}apple\textquotesingle{})
+\mbox{\hyperlink{namespacealice-desktop-1_a8028fdd2fa444bf3e2f9da6e8a30c1cf}{appmenu}} = t\+Kinter.\+Menu(menubar, \mbox{\hyperlink{change-log_8txt_a2565e90092fc8c83137b4f205c751b43}{name}}=\textquotesingle{}apple\textquotesingle{})
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a905479d79c2aa8410d2fc374bc75cc5b}{menu}}
 \item 
@@ -1400,6 +1466,8 @@ string \mbox{\hyperlink{namespacealice-desktop-1_a7b8eb696ef6d1335a16f6f69b70a6d
 \mbox{\hyperlink{namespacealice-desktop-1_a2ff994e16bf9521154de4cf659a3b689}{filename}} = os.\+path.\+join(path, \char`\"{}resources\char`\"{}, Init\+File\+Name)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a805db03232153c0604de4776930374e9}{Init\+File}} = open(filename)
+\item 
+int \mbox{\hyperlink{namespacealice-desktop-1_a406ae65d7aa2a6ff9898ee1aa378e4c1}{X\+O\+L\+XY}} = Font\+Size $\ast$ 7
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a8929306b5492608c2b59e39a172ce26c}{X\+O\+LF}} = int(Font\+Size $\ast$ 4.\+625)
 \item 
@@ -1417,11 +1485,15 @@ tuple \mbox{\hyperlink{namespacealice-desktop-1_a4dced8094f8b34062e4a310b2a385a9
 \begin{DoxyCompactList}\small\item\em Vertical Sensitivity list in v/div. \end{DoxyCompactList}\item 
 tuple \mbox{\hyperlink{namespacealice-desktop-1_a4dcc2cb8e96d10a8601014b869892c33}{C\+Hipdiv}} = (0.\+1, 0.\+2, 0.\+5, 1.\+0, 2.\+0, 5.\+0, 10.\+0, 20.\+0, 50.\+0, 100.\+0, 200.\+0)
 \begin{DoxyCompactList}\small\item\em Vertical Sensitivity list in m\+A/div. \end{DoxyCompactList}\item 
+tuple \mbox{\hyperlink{namespacealice-desktop-1_a2bae1e3ed2f84ea6e989b0a356897719}{S\+A\+Magdiv}} = (\char`\"{}10nV\char`\"{}, \char`\"{}100nV\char`\"{}, \char`\"{}1uV\char`\"{}, \char`\"{}10uV\char`\"{}, \char`\"{}100uV\char`\"{}, \char`\"{}1mV\char`\"{}, \char`\"{}10mV\char`\"{}, \char`\"{}0.\+1\char`\"{}, \char`\"{}1.\+0\char`\"{}, \char`\"{}10.\+0\char`\"{})
+\begin{DoxyCompactList}\small\item\em SA Lin scale Max Min values. \end{DoxyCompactList}\item 
 tuple \mbox{\hyperlink{namespacealice-desktop-1_af4f6a682a44974f5bc81b18e8fe14df2}{T\+Mpdiv}} = (0.\+01, 0.\+02, 0.\+05, 0.\+1, 0.\+2, 0.\+5, 1.\+0, 2.\+0, 5.\+0, 10.\+0, 20.\+0, 50.\+0, 100.\+0, 200.\+0)
 \begin{DoxyCompactList}\small\item\em Time list in ms/div. \end{DoxyCompactList}\item 
 tuple \mbox{\hyperlink{namespacealice-desktop-1_a0db753784bc5ddbdef3d2887075d43c3}{Res\+Scalediv}} = (1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000)
 \item 
 tuple \mbox{\hyperlink{namespacealice-desktop-1_af4b0c26abe6bce711409da9c61c209c8}{Samp\+Rate\+List}}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a9c1f90b0e65187d604dbf6be359b7b85}{Noise\+List}} = \mbox{[} \char`\"{}None\char`\"{}, \char`\"{}Uniform\char`\"{}, \char`\"{}Gaussian\char`\"{}\mbox{]}
 \item 
 float \mbox{\hyperlink{namespacealice-desktop-1_af5e2cb34338153fc360c3fa9b4baa95e}{T\+I\+M\+Ediv}} = 0.\+5
 \item 
@@ -1473,7 +1545,7 @@ int \mbox{\hyperlink{namespacealice-desktop-1_ab675058936ed48f8e3a32ef4dc806967}
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a95f3504fd3bbb821bbdc8ce6c482d8fb}{Meas\+Gate\+Status}} = Int\+Var(0)
 \item 
-int \mbox{\hyperlink{namespacealice-desktop-1_abbebf6b8b1c8926fb760f5d1e3a418c7}{D\+C\+V1}} = 0
+int \mbox{\hyperlink{namespacealice-desktop-1_a0fde4f95327849e0b6bde6afeb400742}{D\+C\+V1}} = 0
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_ae80cd6d5b84ab6de0f55157b4ba73f3b}{D\+C\+V\+MuxA}} = 0
 \begin{DoxyCompactList}\small\item\em Analog Mux channel measurement variables. \end{DoxyCompactList}\item 
@@ -1495,7 +1567,7 @@ float \mbox{\hyperlink{namespacealice-desktop-1_a2558a24be86496952532108b140f846
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_ae79ac1990450925549a8677df6f46b14}{C\+H\+A\+D\+Cy}} = 0
 \item 
-int \mbox{\hyperlink{namespacealice-desktop-1_a0db412229ba6a89908d85da6109cdde0}{D\+C\+I1}} = 0
+int \mbox{\hyperlink{namespacealice-desktop-1_af0c6ed9bfee577979aa3d095baba649f}{D\+C\+I1}} = 0
 \item 
 int \mbox{\hyperlink{namespacealice-desktop-1_a41524a161798c58feff9a9e6a45be998}{C\+H\+Aperiod}} = 0
 \item 
@@ -1513,13 +1585,13 @@ int \mbox{\hyperlink{namespacealice-desktop-1_a16f7f4a81611750ddc51c3dff6d84569}
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_a7f13838459e399eee104341e0c94c762}{A\+Dsignal1}} = \mbox{[}$\,$\mbox{]}
 \item 
-list \mbox{\hyperlink{namespacealice-desktop-1_ab56cdca4e3c93efa2f1f524e61c26af7}{V\+BuffA}} = \mbox{[}$\,$\mbox{]}
+list \mbox{\hyperlink{namespacealice-desktop-1_ac6b1ea37d77521b6259cf947ffd3dd86}{V\+BuffA}} = \mbox{[}$\,$\mbox{]}
+\begin{DoxyCompactList}\small\item\em V\+BuffA\mbox{[}0\mbox{]} = D\+C\+V\+A0 V\+BuffB\mbox{[}0\mbox{]} = D\+C\+V\+B0 I\+BuffA\mbox{[}0\mbox{]} = D\+C\+I\+A0 I\+BuffB\mbox{[}0\mbox{]} = D\+C\+I\+B0. \end{DoxyCompactList}\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_ada6539f92018ea7770a8fcd1b37405e1}{V\+BuffB}} = \mbox{[}$\,$\mbox{]}
 \item 
-list \mbox{\hyperlink{namespacealice-desktop-1_afdf282c2f87dcbc29b4c4513e4c37031}{V\+BuffB}} = \mbox{[}$\,$\mbox{]}
+list \mbox{\hyperlink{namespacealice-desktop-1_ae1f7c8ff71bd528cd010bbdddfeb2f9c}{I\+BuffA}} = \mbox{[}$\,$\mbox{]}
 \item 
-list \mbox{\hyperlink{namespacealice-desktop-1_a6b7dfbfc80bcc62f73b363cc3092643c}{I\+BuffA}} = \mbox{[}$\,$\mbox{]}
-\item 
-list \mbox{\hyperlink{namespacealice-desktop-1_a56be7bd289494383fc9c2bc5e47f17cc}{I\+BuffB}} = \mbox{[}$\,$\mbox{]}
+list \mbox{\hyperlink{namespacealice-desktop-1_a080bd33365905acefbc5905041dbfb1e}{I\+BuffB}} = \mbox{[}$\,$\mbox{]}
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_a79149af363519450fccd3083c2a9c698}{V\+Buff\+MA}} = \mbox{[}$\,$\mbox{]}
 \item 
@@ -1536,6 +1608,14 @@ list \mbox{\hyperlink{namespacealice-desktop-1_a49e50067f65c6f8749e9c1de58384aaf
 list \mbox{\hyperlink{namespacealice-desktop-1_ab24f3e2328de2738d240a7968096e654}{Vmemory\+MuxC}} = \mbox{[}$\,$\mbox{]}
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_a8e906deca638bc7a85e778331f5ff84f}{Vmemory\+MuxD}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a2fca6cfa3db8475e7972c3e793a149b3}{D\+Buff0}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a7a689bfd159718f067845056adfeb051}{D\+Buff1}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_ab8e64ed43b560c62d7b319402a0c892e}{D\+Buff2}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a653933fbd50f6e4788b9dabc9859d1a5}{D\+Buff3}} = \mbox{[}$\,$\mbox{]}
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_a6599dcc44a91e99bb3aa5633c041f952}{V\+Aresult}} = \mbox{[}$\,$\mbox{]}
 \item 
@@ -1563,11 +1643,27 @@ list \mbox{\hyperlink{namespacealice-desktop-1_a415ab19e741dbec8ab38d3335e693271
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a1e63a88b97cc0a308457393d5e05ccc5}{Dig\+Filt\+B\+Box\+Car}} = Int\+Var(0)
 \item 
+\mbox{\hyperlink{namespacealice-desktop-1_a9b4abf0725a319ea952d63e08323286e}{Dig\+De\+SkewA}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_abcd054150b996df96e99e5e73a88454e}{Dig\+De\+SkewB}} = Int\+Var(0)
+\item 
 \mbox{\hyperlink{namespacealice-desktop-1_a6824830c334a49834961b1174311ffbb}{Dig\+FiltB}} = Int\+Var(0)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a79de6d6f7184d5d3df3d76ad8612b811}{Dig\+BuffA}} = Int\+Var(0)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a07a91ee7870b0c7bfd1b691531194585}{Dig\+BuffB}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a11787beeb0de284ddee38f36596c4e9a}{A\+W\+G\+FiltA}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a567ed9fdaeaf0db4401333abfff672e0}{A\+W\+G\+FiltB}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a5d786c8771aab7fc81b96bb55ffaad9f}{A\+W\+G\+Filt\+A\+Box\+Car}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a13c2705a699b1ced9ba1aa5e924577b8}{A\+W\+G\+Filt\+B\+Box\+Car}} = Int\+Var(0)
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a8fe1588c19096195133fe41ca8a3fe9b}{A\+W\+G\+Filt\+A\+Coef}} = \mbox{[}1\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a00543d803bc7a7654b846700d56b84da}{A\+W\+G\+Filt\+B\+Coef}} = \mbox{[}1\mbox{]}
 \item 
 dictionary \mbox{\hyperlink{namespacealice-desktop-1_a945e1ffddbf806f7642b8a28f2a98d33}{V\+FilterA}} = \{\}
 \item 
@@ -1627,9 +1723,33 @@ list \mbox{\hyperlink{namespacealice-desktop-1_a179fb8cf99aae35add670dfdfa19bb4b
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_ab7d3cadca1413ef7f9dc3ad83fafa05e}{T\+M\+D\+Rline}} = \mbox{[}$\,$\mbox{]}
 \item 
-list \mbox{\hyperlink{namespacealice-desktop-1_a6f2effe94ff97c78ccce079ed5396469}{T\+X\+Yline}} = \mbox{[}$\,$\mbox{]}
+list \mbox{\hyperlink{namespacealice-desktop-1_ab1e157d2675f3f56ab8e801d202ea630}{X\+Yline\+VA}} = \mbox{[}$\,$\mbox{]}
 \item 
-list \mbox{\hyperlink{namespacealice-desktop-1_a2ff6576c74540194590815e0ba7b1466}{T\+X\+Y\+Rline}} = \mbox{[}$\,$\mbox{]}
+list \mbox{\hyperlink{namespacealice-desktop-1_a1bdcb4c997ae5a431a7a976cfb90d475}{X\+Yline\+VB}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a48338fc69843da95bc16a1c6824e8210}{X\+Yline\+IA}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a6da5d856d2e76312341f2619023f2be7}{X\+Yline\+IB}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_aa78a3cffc2ff7eb1c3492a3e105176b3}{X\+YlineM}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a84e0900f0ffd9c6069477d2d9ef022a4}{X\+Yline\+MX}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_ad70b771aae76e34ed3949592f9daea91}{X\+Yline\+MY}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a5b3616a792fc9a6d9bce4e9827fb617f}{X\+Y\+Rline\+VA}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a8ce5cea543e1083d9accd5935170681d}{X\+Y\+Rline\+VB}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a0dc4a94bdac913e6df86b21cde96e581}{X\+Y\+Rline\+IA}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_ad4010edb9b206dfba5a1ecf75d8280da}{X\+Y\+Rline\+IB}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a716b01614a875f8628975cfae7a0f4e9}{X\+Y\+RlineM}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_ac1dd7c29cd37db5aee8e0cb19912e2f8}{X\+Y\+Rline\+MX}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a49acb574bcbb02e67cd72dce1890ebdd}{X\+Y\+Rline\+MY}} = \mbox{[}$\,$\mbox{]}
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_a7825215759cd124747c252e63d6593f2}{Tmathline}} = \mbox{[}$\,$\mbox{]}
 \item 
@@ -1646,6 +1766,14 @@ list \mbox{\hyperlink{namespacealice-desktop-1_a881219e48a9af481f1565ab28b6398ca
 list \mbox{\hyperlink{namespacealice-desktop-1_a9111eb7ed4bb4bebf4682de1d30709fd}{T2\+I\+Rline}} = \mbox{[}$\,$\mbox{]}
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_a1b3089ccec790df5b6cdeb75ae89de5b}{T\+M\+Rline}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a85b9da844a28e832e894da0014ac998e}{D0line}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a7ac7610211e25e6ccb29c51e4c055ab8}{D1line}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_aa97d501c222f23fd772bf287d5590101}{D2line}} = \mbox{[}$\,$\mbox{]}
+\item 
+list \mbox{\hyperlink{namespacealice-desktop-1_a9d7324b0879f3dfaf1dfc8ad6d221b52}{D3line}} = \mbox{[}$\,$\mbox{]}
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_ad5bb50ec53fc0bf29797838506499c38}{Triggerline}} = \mbox{[}$\,$\mbox{]}
 \item 
@@ -1969,9 +2097,33 @@ int \mbox{\hyperlink{namespacealice-desktop-1_ab43a83726085075f8e4534a3d6fa4ef3}
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_ad8013831670e0d266c63e01514617042}{Xsignal}} = Int\+Var(0)
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a35b0da693a337d9df0e8d866930dc53a}{Ysignal}} = Int\+Var(0)
+\mbox{\hyperlink{namespacealice-desktop-1_a2b5794f3d205f32c06c4fe78723ac280}{Ysignal\+VA}} = Int\+Var(0)
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_ab606d49279c9add84e9053be59eed666}{Show\+R\+XY}} = Int\+Var(0)
+\mbox{\hyperlink{namespacealice-desktop-1_a4f3dd15a06dd9316cd9a7795fafbd3ba}{Ysignal\+VB}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_aa881c2d62f5cdf7b5b9498a2642b7aa2}{Ysignal\+IA}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a1987167fbdb7d7228872b1199a985454}{Ysignal\+IB}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a68abf96e8a79d5d316313686216fa51a}{YsignalM}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a319d641d8039def85114a8e6bb1e96e2}{Ysignal\+MX}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a543aef3c95313511fad752c1efb5d813}{Ysignal\+MY}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a203bc5be51850e678e4e30cf3f519c0f}{X\+Y\+Ref\+AV}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ae643838c9aa3e864134926a34f4fb484}{X\+Y\+Ref\+BV}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ad79fabf201e7ff0503ee3c315d05ff69}{X\+Y\+Ref\+AI}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a293af21eda19edc691a77699aae8595b}{X\+Y\+Ref\+BI}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a6ddb659475831bf9289cce37866c192f}{X\+Y\+RefM}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_afcd9f79a2d749a775301eb29c863367b}{X\+Y\+Ref\+MX}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ad0542f118b0144deaafebf1a2ec515bd}{X\+Y\+Ref\+MY}} = Int\+Var(0)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_ac89826c34fff89267d72bb52ade880ba}{Show\+\_\+\+C\+BA}} = Int\+Var(0)
 \item 
@@ -2035,7 +2187,43 @@ string \mbox{\hyperlink{namespacealice-desktop-1_a09d13e80b5df4d5cba78ea4f25f4cd
 \begin{DoxyCompactList}\small\item\em 25x25 bit map of low going pulse in .gif \end{DoxyCompactList}\item 
 \mbox{\hyperlink{namespacealice-desktop-1_aa7d88540a08adb5cbe9b3a30b9b7387e}{lowpulseimg}} = Photo\+Image(data=lowpulse)
 \item 
-int \mbox{\hyperlink{namespacealice-desktop-1_adbeabddcd7a120829e741ab9419e9fe8}{First\+\_\+\+Slow\+\_\+sweep}} = 0
+\mbox{\hyperlink{namespacealice-desktop-1_a9950f1f09b1e4bd684c1eba6160b3b4b}{D\+C\+V\+A0}} = D\+C\+V\+A0/(Num\+Samples)
+\begin{DoxyCompactList}\small\item\em V\+BuffA = numpy.\+roll(\+V\+Buff\+A, 1) V\+BuffB = numpy.\+roll(\+V\+Buff\+B, 1) I\+BuffA = numpy.\+roll(\+I\+Buff\+A, 1) I\+BuffB = numpy.\+roll(\+I\+Buff\+B, 1) get\+\_\+samples returns a list of values for voltage \mbox{[}0\mbox{]} and current \mbox{[}1\mbox{]}. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a52a61264cd4212214b8c57fb71508c25}{D\+C\+V\+B0}} = D\+C\+V\+B0/(Num\+Samples)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a31788514be68b0a5c217255a96266a61}{D\+C\+I\+A0}} = D\+C\+I\+A0/(Num\+Samples)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_acad9ec7d3115c07d18474d78e67b59f4}{D\+C\+I\+B0}} = D\+C\+I\+B0/(Num\+Samples)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a3c885826aba58607e747fb6d2c79b45d}{D\+C\+V2}} = numpy.\+mean(\mbox{\hyperlink{change-log_8txt_aa237a2e9b5c37fab65ec477005758405}{V\+BuffB}})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ab6009750a19d33d8fe39f6713c021ffc}{D\+C\+I2}} = numpy.\+mean(I\+BuffB)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a889787e0f5518f037f51d57f524a2e49}{Min\+V1}} = numpy.\+amin(V\+BuffA)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a9dc299257b4da7509723325b0bacd200}{Max\+V1}} = numpy.\+amax(V\+BuffA)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a5159f9ef62ad7d6579b41273de0cc0d6}{Min\+V2}} = numpy.\+amin(\mbox{\hyperlink{change-log_8txt_aa237a2e9b5c37fab65ec477005758405}{V\+BuffB}})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a28cae02f85bd4716926d70ce34700df2}{Max\+V2}} = numpy.\+amax(\mbox{\hyperlink{change-log_8txt_aa237a2e9b5c37fab65ec477005758405}{V\+BuffB}})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a5cee25116557c2bb582b8d432f863fe1}{Min\+I1}} = numpy.\+amin(I\+BuffA)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_aa97e5a333f19099ab73b01866643b8f4}{Max\+I1}} = numpy.\+amax(I\+BuffA)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a9ded3ac2dab063abfedc038445a7d4b9}{Min\+I2}} = numpy.\+amin(I\+BuffB)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a83a9d899f7912b081d8a970ec03db723}{Max\+I2}} = numpy.\+amax(I\+BuffB)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a0e76ac249855a6147318864a3cf62978}{S\+V1}} = numpy.\+sqrt(numpy.\+mean(numpy.\+square(V\+BuffA)))
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a61513f46e381105959cf2f2a3f354c58}{S\+I1}} = numpy.\+sqrt(numpy.\+mean(numpy.\+square(I\+BuffA)))
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a99b5b7f02c99b9238a389e824bd43915}{S\+V2}} = numpy.\+sqrt(numpy.\+mean(numpy.\+square(\mbox{\hyperlink{change-log_8txt_aa237a2e9b5c37fab65ec477005758405}{V\+BuffB}})))
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a6c10fdfc9bfef303e9f7e8d55cc9b102}{S\+I2}} = numpy.\+sqrt(numpy.\+mean(numpy.\+square(I\+BuffB)))
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a5d81247e88a5c8a0190aca391a90cc61}{S\+V\+A\+\_\+B}} = numpy.\+sqrt(numpy.\+mean(numpy.\+square(V\+BuffA-\/\mbox{\hyperlink{change-log_8txt_aa237a2e9b5c37fab65ec477005758405}{V\+BuffB}})))
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_a15959083558bee87267292c1857afef1}{Arising}} = \mbox{[}i for (i, val) in enumerate(Trace1) if val $>$= Mid\+V1 and Trace1\mbox{[}i-\/1\mbox{]} $<$ Mid\+V1\mbox{]}
 \begin{DoxyCompactList}\small\item\em if E\+T\+S\+Disp.\+get() $>$ 0\+: \end{DoxyCompactList}\item 
@@ -2093,6 +2281,114 @@ float \mbox{\hyperlink{namespacealice-desktop-1_a1f597b81365ab40520f0bfaef2e5021
 \item 
 tuple \mbox{\hyperlink{namespacealice-desktop-1_a64b568878876685251d6c61858407fa5}{Tstep}} = (T\+I\+M\+Ediv / G\+RW) / 10
 \begin{DoxyCompactList}\small\item\em if Show\+T\+Cur.\+get() $>$ 0 and Shift\+Key\+Dwn == 0\+: T\+Cursor = T\+Cursor + event.\+delta/100 elif Show\+V\+Cur.\+get() $>$ 0 or Shift\+Key\+Dwn == 1\+: V\+Cursor = V\+Cursor -\/ event.\+delta/100 \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ac20082436d12fc48b2614e9cd272ce3b}{vertmin}} = Frame( frame2fr )
+\begin{DoxyCompactList}\small\item\em S\+Avertmax\+Entry = Entry(vertmax, width=7, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{}) S\+Avertmax\+Entry.\+bind(\textquotesingle{}$<$\+Return$>$\textquotesingle{}, on\+Text\+Key) S\+Avertmax\+Entry.\+bind(\textquotesingle{}$<$\+Mouse\+Wheel$>$\textquotesingle{}, on\+Text\+Scroll) S\+Avertmax\+Entry.\+bind(\char`\"{}$<$\+Button-\/4$>$\char`\"{}, on\+Text\+Scroll)\# with Linux OS S\+Avertmax\+Entry.\+bind(\char`\"{}$<$\+Button-\/5$>$\char`\"{}, on\+Text\+Scroll) S\+Avertmax\+Entry.\+bind(\textquotesingle{}$<$\+Key$>$\textquotesingle{}, on\+Text\+Key) S\+Avertmax\+Entry.\+pack(side=L\+E\+FT) S\+Avertmax\+Entry.\+delete(0,\char`\"{}end\char`\"{}) S\+Avertmax\+Entry.\+insert(0,1.\+0) \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespacealice-desktop-1_afc015eff6557e84151d2e53b94375445}{side}}
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ad023b1516197fd4cda007a512a6df5ad}{vertminlab}} = Label(vertmin, text=\char`\"{}V\+R\+MS Min\char`\"{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a8436464e818d6a8fbe21de8786f3e13e}{S\+Avertmin\+Entry}} = Spinbox(vertmin, width=6, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{}, values=S\+A\+Magdiv, command=B\+C\+H\+B\+Ilevel)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a64d1312c2afe3ecd5f54a4b4792050d6}{sadismiss1button}} = Button(frame2fr, text=\char`\"{}Dismiss\char`\"{}, style=\char`\"{}W8.\+T\+Button\char`\"{}, command=Destroy\+Spectrum\+Screen)
+\begin{DoxyCompactList}\small\item\em S\+Avertmin\+Entry = Entry(vertmin, width=7, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{}) S\+Avertmin\+Entry.\+bind(\textquotesingle{}$<$\+Return$>$\textquotesingle{}, on\+Text\+Key) S\+Avertmin\+Entry.\+bind(\textquotesingle{}$<$\+Mouse\+Wheel$>$\textquotesingle{}, on\+Text\+Scroll) S\+Avertmin\+Entry.\+bind(\char`\"{}$<$\+Button-\/4$>$\char`\"{}, on\+Text\+Scroll)\# with Linux OS S\+Avertmin\+Entry.\+bind(\char`\"{}$<$\+Button-\/5$>$\char`\"{}, on\+Text\+Scroll) S\+Avertmin\+Entry.\+bind(\textquotesingle{}$<$\+Key$>$\textquotesingle{}, on\+Text\+Key) S\+Avertmin\+Entry.\+pack(side=L\+E\+FT) S\+Avertmin\+Entry.\+delete(0,\char`\"{}end\char`\"{}) S\+Avertmin\+Entry.\+insert(0,0.\+0001) \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ac3682023547c4a34897917f29124b291}{A\+D\+I2}} = Label(frame2fr, image=logo, anchor= \char`\"{}sw\char`\"{}, compound=\char`\"{}top\char`\"{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ab7af3d983d38b9c8eaec3e0e6e28bd33}{sb\+\_\+tip}} = Create\+Tool\+Tip(sasb, \textquotesingle{}Stop acquiring data\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a15a998dcb13715cc573683dc3a957f5b}{rb\+\_\+tip}} = Create\+Tool\+Tip(sarb, \textquotesingle{}Start acquiring data\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ad95a278277f99e0d2add6f2114c072a8}{bless\+\_\+tip}} = Create\+Tool\+Tip(bless, \textquotesingle{}Decrease F\+FT samples\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a3e04e2fef330a4ed2bccc2bc1bb4fafa}{bmore\+\_\+tip}} = Create\+Tool\+Tip(bmore, \textquotesingle{}Increase F\+FT samples\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a265646b336b1ee18cecaaf5aa52f8c55}{b3\+\_\+tip}} = Create\+Tool\+Tip(sab3, \textquotesingle{}Increase number of dB/Div\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ade8ad36d733c39638d8065fede6fab20}{b4\+\_\+tip}} = Create\+Tool\+Tip(sab4, \textquotesingle{}Decrease number of dB/Div\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a1774a80b42a454cd8389a3db84074814}{b5\+\_\+tip}} = Create\+Tool\+Tip(sab5, \textquotesingle{}Increase Ref Level by 10 dB\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ac67063f64418d875eac1ca43a78b469b}{b6\+\_\+tip}} = Create\+Tool\+Tip(sab6, \textquotesingle{}Decrease Ref Level by 10 dB\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a6d91e67f3f173f6cf41426424df074c4}{b7\+\_\+tip}} = Create\+Tool\+Tip(sab7, \textquotesingle{}Increase Ref Level by 1 dB\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a8c652104143e36933967243764278e99}{b8\+\_\+tip}} = Create\+Tool\+Tip(sab8, \textquotesingle{}Decrease Ref Level by 1 dB\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a5e5411270e0a67de37b04a146715ed4e}{sadismiss1button\+\_\+tip}} = Create\+Tool\+Tip(sadismiss1button, \textquotesingle{}Dismiss Spectrum Analyzer window\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a9db2035fcd0fc373fa7d74cccde9ceba}{dismissxybutton}} = Button(frame2xyr, style=\char`\"{}W7.\+T\+Button\char`\"{}, text=\char`\"{}Dismiss\char`\"{}, command=Destroy\+X\+Y\+Screen)
+\begin{DoxyCompactList}\small\item\em savebutton = Button(frame2xyr, style=\char`\"{}\+W11.\+T\+Button\char`\"{}, text=\char`\"{}\+Save Screen\char`\"{}, command=B\+Save\+Screen\+XY) savebutton.\+pack(side=T\+OP) \end{DoxyCompactList}\item 
+\mbox{\hyperlink{namespacealice-desktop-1_aa28f4177887b1768260f81119c45e913}{User\+Ent}} = Frame( frame2xyr )
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a2644409e4d307848e0658745b67c7203}{userentlab}} = Button(User\+Ent, text=\char`\"{}User\char`\"{}, width=4, style=\char`\"{}W4.\+T\+Button\char`\"{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a2349c85ca7362adcde4c67fbd81a4432}{L\+E\+FT}}
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a23b3ecc690a716b53e9d0146b78d5ef2}{fill}}
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a99877ef7aca7ed56a26440c9dec072b1}{User3\+Entry}} = Entry(User\+Ent, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_aee7853e47f8fa56674b07bdb34d989e9}{User4\+Entry}} = Entry(User\+Ent, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ae559e5378f62108bfda135aed2413586}{A\+D\+I1xy}} = Label(frame2xyr, image=logo, anchor= \char`\"{}sw\char`\"{}, compound=\char`\"{}top\char`\"{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a0b9fdbcc1569fe4f36d4765a38182049}{Marker\+X\+Y\+Scale}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a0703cc6eba86010767c32c3b83aa7520}{C\+H\+Asbxy}} = Spinbox(frame3xy, width=4, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{}, values=C\+Hvpdiv)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ae5478016d5c53f166f307bacf0f792cb}{C\+H\+Axylab}} = Button(frame3xy, text=\char`\"{}CA V/Div\char`\"{}, style=\char`\"{}Rtrace1.\+T\+Button\char`\"{}, command=Set\+X\+Y\+ScaleA)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a8bb8769675303906defec847af6ba744}{C\+H\+A\+V\+Pos\+Entryxy}} = Entry(frame3xy, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a7c47c3340dd2532a087c3ec54063ca5a}{C\+H\+Aofflabxy}} = Button(frame3xy, text=\char`\"{}CA V Pos\char`\"{}, style=\char`\"{}Rtrace1.\+T\+Button\char`\"{}, command=Set\+X\+Y\+V\+A\+Poss)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ac4e8a398fcd5c9bc0c07fa2365e8b765}{C\+H\+A\+Isbxy}} = Spinbox(frame3xy, width=4, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{}, values=C\+Hipdiv)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a1bb9d8d3a2761cec44dd4edfdf1e33c0}{C\+H\+A\+Ilabxy}} = Label(frame3xy, text=\char`\"{}CA mA/Div\char`\"{}, style=\char`\"{}Strace3.\+T\+Button\char`\"{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a222f57f9c1211cc892fac5773fb88a85}{C\+H\+A\+I\+Pos\+Entryxy}} = Entry(frame3xy, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a992cf1fdb211bf731b99de190527b63f}{C\+H\+A\+Iofflabxy}} = Button(frame3xy, text=\char`\"{}CA I Pos\char`\"{}, style=\char`\"{}Rtrace3.\+T\+Button\char`\"{}, command=Set\+X\+Y\+I\+A\+Poss)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ae039dcfd2adf0ef60e2f55fa80fb1837}{C\+H\+Bsbxy}} = Spinbox(frame4xy, width=4, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{}, values=C\+Hvpdiv)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a567ce7edeeacd305656c598fe70cbb44}{C\+H\+Bxylab}} = Button(frame4xy, text=\char`\"{}CB V/Div\char`\"{}, style=\char`\"{}Strace2.\+T\+Button\char`\"{}, command=Set\+X\+Y\+ScaleB)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_acd585eaa49d19d5d212840c3d33c2491}{C\+H\+B\+V\+Pos\+Entryxy}} = Entry(frame4xy, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a9cfb7e11af9932f3050b521952956b88}{C\+H\+Bofflabxy}} = Button(frame4xy, text=\char`\"{}CB V Pos\char`\"{}, style=\char`\"{}Rtrace2.\+T\+Button\char`\"{}, command=Set\+X\+Y\+V\+B\+Poss)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_afaf76b26cd70e0bfe11e5f848b39cd63}{C\+H\+B\+Isbxy}} = Spinbox(frame4xy, width=4, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{}, values=C\+Hipdiv)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a8d903e2a50bd678124e42530a9c4db76}{C\+H\+B\+Ilabxy}} = Label(frame4xy, text=\char`\"{}CB mA/Div\char`\"{}, style=\char`\"{}Strace4.\+T\+Button\char`\"{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_aeef389d0bfe7172704148186f9afd9a4}{C\+H\+B\+I\+Pos\+Entryxy}} = Entry(frame4xy, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ab9276e4c933e1f482df2f8a22c909a8d}{C\+H\+B\+Iofflabxy}} = Button(frame4xy, text=\char`\"{}CB I Pos\char`\"{}, style=\char`\"{}Rtrace4.\+T\+Button\char`\"{}, command=Set\+X\+Y\+I\+B\+Poss)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_af84c41ce111f48e355defbb0dce9e2a2}{math\+\_\+tip}} = Create\+Tool\+Tip(mathbt, \textquotesingle{}Open Math window\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a1a19abb16706d4097bafd2d423f22fbd}{bsxy\+\_\+tip}} = Create\+Tool\+Tip(sbxy, \textquotesingle{}Stop acquiring data\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_abe1fc29c79187c9b07d29455978b6f2e}{brxy\+\_\+tip}} = Create\+Tool\+Tip(rbxy, \textquotesingle{}Start acquiring data\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a37bfafac3fac24b1fc1518676b03c7e4}{snapbutton\+\_\+tip}} = Create\+Tool\+Tip(snapbutton, \textquotesingle{}Take snap shot of current trace\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a106ed0bd5fa5a4d9bd6271f8a3f175d1}{savebutton\+\_\+tip}} = Create\+Tool\+Tip(savebutton, \textquotesingle{}Save current trace to E\+PS file\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a3067be4a9992dee76b5af250b1173d3d}{dismissxybutton\+\_\+tip}} = Create\+Tool\+Tip(dismissxybutton, \textquotesingle{}Diamiss X-\/Y plot window\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a1dbc67f70a06a0ad9fbb5f650f5036af}{C\+H\+Axylab\+\_\+tip}} = Create\+Tool\+Tip(C\+H\+Axylab, \textquotesingle{}Select C\+HA-\/V vertical range/position axis to be used for markers and drawn color\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a9451f9d06dcf8d54802df4d3f3f48dbe}{C\+H\+Bxylab\+\_\+tip}} = Create\+Tool\+Tip(C\+H\+Bxylab, \textquotesingle{}Select C\+HB-\/V vertical range/position axis to be used for markers and drawn color\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a6f5909701170734181f24ac46717804f}{C\+H\+Axyofflab\+\_\+tip}} = Create\+Tool\+Tip(C\+H\+Aofflabxy, \textquotesingle{}Set C\+HA-\/V position to DC average of signal\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a60ea41f9a819ab5d2408cfdf90f4143b}{C\+H\+Bxyofflab\+\_\+tip}} = Create\+Tool\+Tip(C\+H\+Bofflabxy, \textquotesingle{}Set C\+HB-\/V position to DC average of signal\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ae195af546461f2b33007be3285dd0fb2}{C\+H\+A\+Ixyofflab\+\_\+tip}} = Create\+Tool\+Tip(C\+H\+A\+Iofflabxy, \textquotesingle{}Set C\+HA-\/I position to DC average of signal\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_adc159accdb28e9e844373f851d86cf44}{C\+H\+B\+Ixyofflab\+\_\+tip}} = Create\+Tool\+Tip(C\+H\+B\+Iofflabxy, \textquotesingle{}Set C\+HB-\/I position to DC average of signal\textquotesingle{})
+\item 
 \mbox{\hyperlink{namespacealice-desktop-1_a594189a8d36a9aa3312c8d29e823c4ec}{Tg\+Input}} = Int\+Var(0)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a19a39b5cf5625d9ad5d6c12b19ba7c80}{Single\+Shot}} = Int\+Var(0)
@@ -2371,6 +2667,16 @@ string \mbox{\hyperlink{namespacealice-desktop-1_a38879c713343b278bc3bc7d9bc6b30
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a57317c8118f3456cd1fee11582413636}{C\+H\+B\+I\+\_\+\+R\+C\+\_\+\+HP}} = Int\+Var(0)
 \item 
+\mbox{\hyperlink{namespacealice-desktop-1_ade42aa77e81b23589de26a76aefc163a}{H\+Scale}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_aef4ea90c3e089b78ca8f8b14adb79da7}{S\+A\+V\+Scale}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a2aa0d6e763e2dde84f07db85566d73cd}{S\+A\+V\+P\+SD}} = Int\+Var(0)
+\item 
+float \mbox{\hyperlink{namespacealice-desktop-1_a15a408bab970600f17cbc3b3acc5da42}{S\+Avertmax}} = 1.\+0
+\item 
+float \mbox{\hyperlink{namespacealice-desktop-1_abd22587a94f9edfe26873c291400f178}{S\+Avertmin}} = 1.\+0E-\/6
+\item 
 string \mbox{\hyperlink{namespacealice-desktop-1_a176119a74c6dd917e85242f18d53fa47}{Entry\+Text}} = \char`\"{}\#000000\char`\"{}
 \item 
 string \mbox{\hyperlink{namespacealice-desktop-1_aa90d39166172d1d06f991e61aa6409e0}{Box\+Color}} = \char`\"{}\#0000ff\char`\"{}
@@ -2395,11 +2701,7 @@ string \mbox{\hyperlink{namespacealice-desktop-1_aa90d39166172d1d06f991e61aa6409
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a18c3b46dc2e6639679e0546ee24f90f9}{frame2r}} = Frame(root, borderwidth=Border\+Size, relief=Frame\+Refief)
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_afc015eff6557e84151d2e53b94375445}{side}}
-\item 
 \mbox{\hyperlink{namespacealice-desktop-1_a2d192e0d040aa72b0c0e855aaf9462e5}{R\+I\+G\+HT}}
-\item 
-\mbox{\hyperlink{namespacealice-desktop-1_a23b3ecc690a716b53e9d0146b78d5ef2}{fill}}
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_aefcc093e62f2ff3c7a087ca9e017a3b6}{B\+O\+TH}}
 \item 
@@ -2481,6 +2783,8 @@ string \mbox{\hyperlink{namespacealice-desktop-1_aa90d39166172d1d06f991e61aa6409
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_aead71ba022329402c6c27d3664fa4973}{mulxlab}} = Label( frame1, text = \char`\"{}Mul X\char`\"{})
 \item 
+\mbox{\hyperlink{namespacealice-desktop-1_aaf00709feda26bf3caed7a2801bc1e6e}{Roll\+Bt}} = Button(frame1, text=\char`\"{}Roll-\/Off\char`\"{}, style=\char`\"{}Roll\+Off.\+T\+Button\char`\"{}, command=B\+Roll)
+\item 
 \mbox{\hyperlink{namespacealice-desktop-1_a5afdc0f672d87b44966ddfce844cfb18}{T\+Msb}} = Spinbox(frame1, width=5, values= T\+Mpdiv, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{}, command=B\+Time)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a59f20b6739408f919750c062da002fa8}{T\+Mlab}} = Label(frame1, text=\char`\"{}Time mS/Div\char`\"{})
@@ -2492,8 +2796,6 @@ string \mbox{\hyperlink{namespacealice-desktop-1_aa90d39166172d1d06f991e61aa6409
 \mbox{\hyperlink{namespacealice-desktop-1_a53ac671de77e2a34f757ecd1d3bc6d32}{dropmenu}} = Frame( frame2r )
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a5716d41f85175e72a2560fb35808c590}{bcon}} = Button(dropmenu, text=\char`\"{}Recon\char`\"{}, style=\char`\"{}R\+Conn.\+T\+Button\char`\"{}, command=Connect\+Device)
-\item 
-\mbox{\hyperlink{namespacealice-desktop-1_a2349c85ca7362adcde4c67fbd81a4432}{L\+E\+FT}}
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_ae36a9c05d9f2c7f048e270ef38565cc4}{anchor}}
 \item 
@@ -2510,8 +2812,6 @@ string \mbox{\hyperlink{namespacealice-desktop-1_aa90d39166172d1d06f991e61aa6409
 \mbox{\hyperlink{namespacealice-desktop-1_aee6f50d09766fab336861acf1c277710}{MeasmenuA}} = Menubutton(dropmenu2, text=\char`\"{}CA\char`\"{}, style=\char`\"{}W3.\+T\+Button\char`\"{})
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a97dea6c9d7bacd902dbaae6e4c6a30c8}{MeasmenuB}} = Menubutton(dropmenu2, text=\char`\"{}CB\char`\"{}, style=\char`\"{}W3.\+T\+Button\char`\"{})
-\item 
-\mbox{\hyperlink{namespacealice-desktop-1_af84c41ce111f48e355defbb0dce9e2a2}{math\+\_\+tip}} = Create\+Tool\+Tip(mathbt, \textquotesingle{}Open Math window\textquotesingle{})
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a898ed0a99b0e4902b9ec6a3821c27afc}{options\+\_\+tip}} = Create\+Tool\+Tip(Optionmenu, \textquotesingle{}Select Optional Settings\textquotesingle{})
 \item 
@@ -2621,29 +2921,33 @@ string \mbox{\hyperlink{namespacealice-desktop-1_a9d19d4b03af98ae67103ae7b747d6b
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_adfaec7efbf2d7c4f3c67da96a1733e5a}{Shape\+A\+Menu}} = Menubutton(awg1eb, text=\char`\"{}Shape\char`\"{}, width=6, style=\char`\"{}Ctrace1.\+T\+Button\char`\"{})
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_aea6768f76feab775ff905fb9df5b8f25}{A\+W\+G\+A\+Mode\+Label}} = Label(frame2r, text=\char`\"{}A\+WG A Mode\char`\"{}, background=C\+O\+L\+O\+Rtrace1, font=(\textquotesingle{}Arial\textquotesingle{}, Font\+Size, \textquotesingle{}bold\textquotesingle{}))
+\mbox{\hyperlink{namespacealice-desktop-1_ae79571f18e3b5fdce576dffc3ac8b06c}{awg1model}} = Frame( frame2r )
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_aee5547575bbf73ee6d00f57d154e644f}{A\+W\+G\+A\+Shape\+Label}} = Label(frame2r, text=\char`\"{}A\+WG A Shape\char`\"{}, background=C\+O\+L\+O\+Rtrace1, font=(\textquotesingle{}Arial\textquotesingle{}, Font\+Size, \textquotesingle{}bold\textquotesingle{}))
+\mbox{\hyperlink{namespacealice-desktop-1_aea6768f76feab775ff905fb9df5b8f25}{A\+W\+G\+A\+Mode\+Label}} = Label(awg1model, text=\char`\"{}A\+WG A Mode\char`\"{}, background=C\+O\+L\+O\+Rtrace1, font=(\textquotesingle{}Arial\textquotesingle{}, Font\+Size, \textquotesingle{}bold\textquotesingle{}))
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_aee5547575bbf73ee6d00f57d154e644f}{A\+W\+G\+A\+Shape\+Label}} = Label(awg1model, text=\char`\"{}A\+WG A Shape\char`\"{}, background=C\+O\+L\+O\+Rtrace1, font=(\textquotesingle{}Arial\textquotesingle{}, Font\+Size, \textquotesingle{}bold\textquotesingle{}))
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a880b61ab6c7505b61f390a3f7e8858bf}{awg1ampl}} = Frame( frame2r )
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a11d9a214bf0fcbd51d55b86893bd8d2a}{A\+W\+G\+A\+Ampl\+Entry}} = Entry(awg1ampl, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
-\item 
 \mbox{\hyperlink{namespacealice-desktop-1_aac7d2202923daff4e6e97c838f55d368}{amp1lab}} = Label(awg1ampl)
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a6d30b1625d0d068ea2383cc59c86373b}{awg1off}} = Frame( frame2r )
+\mbox{\hyperlink{namespacealice-desktop-1_ad42e2d1ad172100a2cd1338656cf0425}{row}}
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a114fbce0ca428660c7a964002a24e295}{A\+W\+G\+A\+Offset\+Entry}} = Entry(awg1off, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
+\mbox{\hyperlink{namespacealice-desktop-1_ae78e6e11a40e6dba1bae097358f97d15}{column}}
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a9b424174a9bfda7742e5b9868a48a7d9}{off1lab}} = Label(awg1off)
+\mbox{\hyperlink{namespacealice-desktop-1_a56bf4260587baa1f272837175342b62a}{sticky}}
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a9b424174a9bfda7742e5b9868a48a7d9}{off1lab}} = Label(awg1ampl)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ab8486ad3567f0009bc86fb8955615018}{freq1lab}} = Label(awg1ampl, text=\char`\"{}Freq\char`\"{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a11d9a214bf0fcbd51d55b86893bd8d2a}{A\+W\+G\+A\+Ampl\+Entry}} = Entry(awg1ampl, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a114fbce0ca428660c7a964002a24e295}{A\+W\+G\+A\+Offset\+Entry}} = Entry(awg1ampl, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_af575f17e6be3f269b86b041a60560dbf}{text}}
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a96504e7a26e170fb5364ef21165b0247}{awg1freq}} = Frame( frame2r )
-\item 
-\mbox{\hyperlink{namespacealice-desktop-1_a749691a2218756c747f1fbb1e7c86b03}{A\+W\+G\+A\+Freq\+Entry}} = Entry(awg1freq, width=7, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
-\item 
-\mbox{\hyperlink{namespacealice-desktop-1_ab8486ad3567f0009bc86fb8955615018}{freq1lab}} = Label(awg1freq, text=\char`\"{}Freq Ch A\char`\"{})
+\mbox{\hyperlink{namespacealice-desktop-1_a749691a2218756c747f1fbb1e7c86b03}{A\+W\+G\+A\+Freq\+Entry}} = Entry(awg1ampl, width=7, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_ac41ed515e3e3adbb14c9208f56eb32be}{awg1phase}} = Frame( frame2r )
 \item 
@@ -2665,27 +2969,25 @@ string \mbox{\hyperlink{namespacealice-desktop-1_a9d19d4b03af98ae67103ae7b747d6b
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a49ade0b0df91a59b745a1bd105f778c8}{Shape\+B\+Menu}} = Menubutton(awg2eb, text=\char`\"{}Shape\char`\"{}, width=6, style=\char`\"{}Ctrace2.\+T\+Button\char`\"{})
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a2ff19e16d08adaa8341388110c9cf4c5}{A\+W\+G\+B\+Mode\+Label}} = Label(frame2r, text=\char`\"{}A\+WG B Mode\char`\"{}, background=C\+O\+L\+O\+Rtrace2, font=(\textquotesingle{}Arial\textquotesingle{}, Font\+Size, \textquotesingle{}bold\textquotesingle{}))
+\mbox{\hyperlink{namespacealice-desktop-1_a740f9bcca57fddd082030d667feeedf1}{awg2model}} = Frame( frame2r )
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a177dfdeddc5fe55bffd653863e47a515}{A\+W\+G\+B\+Shape\+Label}} = Label(frame2r, text=\char`\"{}A\+WG B Shape\char`\"{}, background=C\+O\+L\+O\+Rtrace2, font=(\textquotesingle{}Arial\textquotesingle{}, Font\+Size, \textquotesingle{}bold\textquotesingle{}))
+\mbox{\hyperlink{namespacealice-desktop-1_a2ff19e16d08adaa8341388110c9cf4c5}{A\+W\+G\+B\+Mode\+Label}} = Label(awg2model, text=\char`\"{}A\+WG B Mode\char`\"{}, background=C\+O\+L\+O\+Rtrace2, font=(\textquotesingle{}Arial\textquotesingle{}, Font\+Size, \textquotesingle{}bold\textquotesingle{}))
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a177dfdeddc5fe55bffd653863e47a515}{A\+W\+G\+B\+Shape\+Label}} = Label(awg2model, text=\char`\"{}A\+WG B Shape\char`\"{}, background=C\+O\+L\+O\+Rtrace2, font=(\textquotesingle{}Arial\textquotesingle{}, Font\+Size, \textquotesingle{}bold\textquotesingle{}))
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_af79c9d6f54e7d012b3e5337eb7f012ea}{awg2ampl}} = Frame( frame2r )
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a0d082f4efe88070f1f587b9994d44374}{A\+W\+G\+B\+Ampl\+Entry}} = Entry(awg2ampl, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
-\item 
 \mbox{\hyperlink{namespacealice-desktop-1_aedd6384deace549ad0c0a84e95801223}{amp2lab}} = Label(awg2ampl)
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_afa29953dcdf59c5932f5d43eac9a0d20}{awg2off}} = Frame( frame2r )
+\mbox{\hyperlink{namespacealice-desktop-1_a46f07d3f44e9bd08c60fb3e551e0f45f}{off2lab}} = Label(awg2ampl)
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a9468c0668a48d9547c3467aa530d59fc}{A\+W\+G\+B\+Offset\+Entry}} = Entry(awg2off, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
+\mbox{\hyperlink{namespacealice-desktop-1_adfa5b670131c88f7d4bbead264b22228}{freq2lab}} = Label(awg2ampl, text=\char`\"{}Freq\char`\"{})
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a46f07d3f44e9bd08c60fb3e551e0f45f}{off2lab}} = Label(awg2off)
+\mbox{\hyperlink{namespacealice-desktop-1_a0d082f4efe88070f1f587b9994d44374}{A\+W\+G\+B\+Ampl\+Entry}} = Entry(awg2ampl, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a84651f7f481419a4c1ec4d558549f5ec}{awg2freq}} = Frame( frame2r )
+\mbox{\hyperlink{namespacealice-desktop-1_a9468c0668a48d9547c3467aa530d59fc}{A\+W\+G\+B\+Offset\+Entry}} = Entry(awg2ampl, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_ae0c2d0970360d2b4ea436816a9a18268}{A\+W\+G\+B\+Freq\+Entry}} = Entry(awg2freq, width=7, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
-\item 
-\mbox{\hyperlink{namespacealice-desktop-1_adfa5b670131c88f7d4bbead264b22228}{freq2lab}} = Label(awg2freq, text=\char`\"{}Freq Ch B\char`\"{})
+\mbox{\hyperlink{namespacealice-desktop-1_ae0c2d0970360d2b4ea436816a9a18268}{A\+W\+G\+B\+Freq\+Entry}} = Entry(awg2ampl, width=7, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_ac97f83a733c6c32ba11e34e0d6dd8dc1}{awg2phase}} = Frame( frame2r )
 \item 
@@ -2755,6 +3057,10 @@ string \mbox{\hyperlink{namespacealice-desktop-1_a9d19d4b03af98ae67103ae7b747d6b
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a571d80484872c2527b3e84238ca52341}{C\+H\+B\+I\+Offset\+Entry}} = Entry(Probe\+BI, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
 \item 
+\mbox{\hyperlink{namespacealice-desktop-1_a4aab84f7602eafd36d574603b59010b7}{User1\+Entry}} = Entry(User\+Ent, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ad1460928155949f17d12823c880883ca}{User2\+Entry}} = Entry(User\+Ent, width=5, cursor=\textquotesingle{}double\+\_\+arrow\textquotesingle{})
+\item 
 string \mbox{\hyperlink{namespacealice-desktop-1_aad37cbc96795846e0ee55f27d55e8a43}{A\+D\+Ilogo}}
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a4a09ca97a0b39816294aa85f6210443c}{logo}} = Photo\+Image(data=A\+D\+Ilogo)
@@ -2809,13 +3115,13 @@ string \mbox{\hyperlink{namespacealice-desktop-1_aad37cbc96795846e0ee55f27d55e8a
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a7a02738afd9c742f999c2ae4e2415469}{C\+H\+B\+Iofflab\+\_\+tip}} = Create\+Tool\+Tip(C\+H\+B\+Iofflab, \textquotesingle{}Set C\+HB-\/I position to DC average of signal\textquotesingle{})
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_ac4cacbcb1ee60191b9367e08e523a651}{gain1lab\+\_\+tip}} = Create\+Tool\+Tip(gain1lab, \textquotesingle{}Reset Gain to 1.\+0 and Ovvset to 0.\+0\textquotesingle{})
+\mbox{\hyperlink{namespacealice-desktop-1_ac4cacbcb1ee60191b9367e08e523a651}{gain1lab\+\_\+tip}} = Create\+Tool\+Tip(gain1lab, \textquotesingle{}Reset Gain to 1.\+0 and Offset to 0.\+0\textquotesingle{})
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_a5a0dc882a73750c868ef9eba1bf2688c}{gain2lab\+\_\+tip}} = Create\+Tool\+Tip(gain2lab, \textquotesingle{}Reset Gain to 1.\+0 and Ovvset to 0.\+0\textquotesingle{})
+\mbox{\hyperlink{namespacealice-desktop-1_a5a0dc882a73750c868ef9eba1bf2688c}{gain2lab\+\_\+tip}} = Create\+Tool\+Tip(gain2lab, \textquotesingle{}Reset Gain to 1.\+0 and Offset to 0.\+0\textquotesingle{})
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_acb19dcf0e970ed0254a9e5c46625946c}{gainailab\+\_\+tip}} = Create\+Tool\+Tip(gainailab, \textquotesingle{}Reset Gain to 1.\+0 and Ovvset to 0.\+0\textquotesingle{})
+\mbox{\hyperlink{namespacealice-desktop-1_acb19dcf0e970ed0254a9e5c46625946c}{gainailab\+\_\+tip}} = Create\+Tool\+Tip(gainailab, \textquotesingle{}Reset Gain to 1.\+0 and Offset to 0.\+0\textquotesingle{})
 \item 
-\mbox{\hyperlink{namespacealice-desktop-1_ac0d651e5c30b56a51de3f8ae49619d80}{gainbilab\+\_\+tip}} = Create\+Tool\+Tip(gainbilab, \textquotesingle{}Reset Gain to 1.\+0 and Ovvset to 0.\+0\textquotesingle{})
+\mbox{\hyperlink{namespacealice-desktop-1_ac0d651e5c30b56a51de3f8ae49619d80}{gainbilab\+\_\+tip}} = Create\+Tool\+Tip(gainbilab, \textquotesingle{}Reset Gain to 1.\+0 and Offset to 0.\+0\textquotesingle{})
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a105b5e26eac7f9ba591bdfb5b485f2db}{Brd\+Sel}} = Int\+Var(0)
 \item 
