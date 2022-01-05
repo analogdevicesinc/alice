@@ -1,0 +1,38 @@
+xs = VBuffB[50:500] # diode voltage
+ys = IBuffA[50:500] # diode current
+ys = ys / 1000.0 # convert mA to Amps
+ys = numpy.absolute(ys) # make all y values positive for taking ln
+ys = ys - numpy.amin(ys) + 2.2e-9 # add offset and Is guess
+
+# Function to fit data I_d(x) + I_s = I_s * exp(x/(n*Vt))
+# note that I_d + I_s is approx I_d since I_s is small
+
+(A, B) = fit_exp(xs, ys)
+
+# some constants
+# Saturation current I_s = 1.0e-9
+# Ideality factor n = 2
+# Thermal voltage, KT/q
+Vt = 0.0259
+# guess values for Is and n
+# Iguess(x) = 5.0e-9*(exp(x/(2*Vt))-1.0)
+#print( "{Is} A = ", A, "B = ", B )
+Fit_N = 1.0/(Vt*B) # Fit n with Vt at 25 C
+Is_String = ' {0:.2e} '.format(A)
+AmA = A * 1000.0
+User3Entry.delete(0,END)
+User3Entry.insert(5, Is_String)
+N_String = ' {0:.2f} '.format(Fit_N)
+User4Entry.delete(0,END)
+User4Entry.insert(5, N_String)
+#print ("Vt = ", Vt, "Fit Vt = ", Fit_Vt)
+plt.figure()
+plt.plot(VBuffB[0:500], IBuffA[0:500], 'g', label='Raw Data')
+plt.plot(VBuffB[0:500], [AmA * (numpy.exp(B*x)-1) for x in VBuffB[0:500]], 'b', label='Fit')
+#plt.plot(xs, [2.2e-9 * (numpy.exp(x/(2.0*0.0259))-1) for x in xs], 'r', label='Guess')
+plt.title('Exponential Diode Fit')
+plt.xlabel('Volts')
+plt.ylabel('Amps')
+plt.legend(loc='best')
+plt.tight_layout()
+plt.show(block=False)

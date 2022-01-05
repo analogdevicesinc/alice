@@ -1,0 +1,12 @@
+SR = numpy.array(NSweepSeriesR) * 1000.0 # convert ohms to miliohms
+SX = numpy.array(NSweepSeriesX) * -1000.0 # convert ohms to negative miliohms
+
+plt.figure()
+plt.grid()
+plt.plot(SR, SX, 'g', label='Impedance')
+plt.title('Battery Impedance')
+plt.xlabel('Real mOhms')
+plt.ylabel('-Imaginary mOhms')
+plt.legend(loc='best')
+plt.tight_layout()
+plt.show(block=False)

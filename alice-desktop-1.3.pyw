@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
 #
-# ADALM1000 alice-desktop 1.3.py(w) (8-20-2021)
+# ADALM1000 alice-desktop 1.3.py(w) (1-3-2022)
 # For Python version 2.7 or 3.7, Windows OS and Linux OS
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -71,9 +71,9 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "20 Aug 2021"
+RevDate = "3 Jan 2022"
 SWRev = "1.3 "
-Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.11/alice-desktop-1.3-setup.exe'
+Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.12/alice-desktop-1.3-setup.exe'
 # small bit map of ADI logo for window icon
 TBicon = """
 R0lGODlhIAAgAHAAACH5BAEAAAIALAAAAAAgACAAgQAAAP///wAAAAAAAAJJhI+py+0PYwtBWkDp
@@ -435,7 +435,7 @@ CHipdiv = (0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0)
 SAMagdiv = ("10nV", "100nV", "1uV", "10uV", "100uV", "1mV", "10mV", "0.1", "1.0", "10.0")
 ## Time list in ms/div
 TMpdiv = (0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0)
-ResScalediv = (1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000)
+ResScalediv = (0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000)
 SampRateList = (1024, 2048, 4096, 8192, 16384, 32765, 64000, 93023, 93385, 93750, 94118,
                 96385, 96774, 97166, 97561, 97959, 98361, 98765, 99174, 99585, 100000)
 NoiseList =[ "None", "Uniform", "Gaussian"]
@@ -3048,7 +3048,7 @@ def BStartOhm():
             session.end() # end continuous session mode
 ## Start Impedance Tool               
 def BStartIA():
-    global AWGAFreqEntry, AWGAFreqvalue, Two_X_Sample, FWRevOne
+    global AWGAFreqEntry, AWGAFreqvalue, Two_X_Sample, FWRevOne, NetworkScreenStatus
     
     try:
         AWGAFreqvalue = float(eval(AWGAFreqEntry.get()))
@@ -3062,7 +3062,10 @@ def BStartIA():
             Two_X_Sample.set(0)
         SetADC_Mux()
     IASourceSet()
-    BStart()
+    if NetworkScreenStatus.get() > 0:
+        BStartBP()
+    else:
+        BStart()
 ## Set up IA AWG sources
 def IASourceSet():
     global  IASource, CHA, CHB, AWGAMode, AWGBMode, AWGBIOMode, AWGSync
@@ -3496,7 +3499,11 @@ def Analog_In():
                 if BodeDisp.get() > 0:
                     if LoopNum.get() <= len(FStep):
                         FregPoint = FBins[int(FStep[LoopNum.get()-1])] # look up next frequency from list of bins
-                        if FregPoint < 100.0:
+                        if FregPoint <= 5.0:
+                            SMPfft = 32768*2
+                        elif FregPoint <= 10.0:
+                            SMPfft = 32768
+                        elif FregPoint < 100.0:
                             SMPfft = 16384
                         elif FregPoint < 500.0:
                             SMPfft = 8192
@@ -8128,7 +8135,7 @@ def MakeTimeScreen():
             PPI1 = MaxI1-MinI1 
             txt = txt +  " P-PI = " + ' {0:.2f} '.format(PPI1)
         if MeasRMSI1.get() == 1:
-            txt = txt +  " RMS = " + ' {0:.4f} '.format(SI1)
+            txt = txt +  " RMS = " + ' {0:.2f} '.format(SI1)
         
     x = X0L
     y = Y0T+GRH+(4*FontSize) # 32
@@ -8217,7 +8224,7 @@ def MakeTimeScreen():
             PPI2 = MaxI2-MinI2
             txt = txt +  " P-PI = " + ' {0:.2f} '.format(PPI2)
         if MeasRMSI2.get() == 1:
-            txt = txt +  " RMS = " + ' {0:.4f} '.format(SI2)
+            txt = txt +  " RMS = " + ' {0:.2f} '.format(SI2)
             
     x = X0L
     y = Y0T+GRH+int(5.5*FontSize) # 44
@@ -10174,7 +10181,7 @@ def BAWGAOffset(temp):
 #
 def BAWGAFreq(temp):
     global AWGAFreqEntry, AWGAFreqvalue, AWG_2X
-    global BodeScreenStatus, BodeDisp
+    global BodeScreenStatus, BodeDisp, AWGRecLength
 
     try:
         AWGAFreqvalue = float(eval(AWGAFreqEntry.get()))
@@ -10197,7 +10204,11 @@ def BAWGAFreq(temp):
             AWGAFreqvalue = 25000
             AWGAFreqEntry.delete(0,"end")
             AWGAFreqEntry.insert(0, AWGAFreqvalue)
-    if AWGAFreqvalue < 0: # Set negative frequency entry to 0
+    if AWGAFreqvalue < 4.0:
+        AWGRecLength = 32768*2
+    else:
+        AWGRecLength = 32768
+    if AWGAFreqvalue < 0: # Set negative frequency entry to 10
         AWGAFreqvalue = 10
         AWGAFreqEntry.delete(0,"end")
         AWGAFreqEntry.insert(0, AWGAFreqvalue)
@@ -10302,8 +10313,9 @@ def AWGAReadFile():
     AWGALoadCSV()
 #
 def AWGALoadCSV():
-    global AWGAwaveform, AWGALength, awgwindow, AWG_2X, AWGA2X, AWGAcsvFile
-    
+    global AWGAwaveform, AWGALength, awgwindow, AWG_2X, AWGA2X, AWGAcsvFile, AWGAOffsetvalue
+
+    BAWGAOffset(0)
     try:
         CSVFile = open(AWGAcsvFile)
         # dialect = csv.Sniffer().sniff(CSVFile.read(128))
@@ -10334,6 +10346,7 @@ def AWGALoadCSV():
             print( 'skipping non-numeric row', RowNum)
         RowNum += 1
     AWGAwaveform = numpy.array(AWGAwaveform)
+    AWGAwaveform = AWGAwaveform + AWGAOffsetvalue # add DC offset from Max entry
     SplitAWGAwaveform()
     CSVFile.close()
     UpdateAwgCont()
@@ -10472,7 +10485,7 @@ def AWGAMakeBodeSine():
     BAWGAPhase(0)
     BAWGADutyCycle(0)
 
-    if AWGAFreqvalue < 10.0: # if frequency is less than 10 Hz use libsmu sine function
+    if AWGAFreqvalue < 1.53: # if frequency is less than 1.53 Hz use libsmu sine function
         AWGAShape.set(1)
         BAWGAShape()
         UpdateAwgCont()
@@ -11594,7 +11607,7 @@ def BAWGBOffset(temp):
 #
 def BAWGBFreq(temp):
     global AWGBFreqEntry, AWGBFreqvalue, AWG_2X
-    global BodeScreenStatus, BodeDisp
+    global BodeScreenStatus, BodeDisp, AWGRecLength
 
     try:
         AWGBFreqvalue = float(eval(AWGBFreqEntry.get()))
@@ -11617,6 +11630,10 @@ def BAWGBFreq(temp):
             AWGBFreqvalue = 25000
             AWGBFreqEntry.delete(0,"end")
             AWGBFreqEntry.insert(0, AWGBFreqvalue)
+    if AWGBFreqvalue < 4.0:
+        AWGRecLength = 32768*2
+    else:
+        AWGRecLength = 32768
     if AWGBFreqvalue < 0: # Set negative frequency entry to 0
         AWGBFreqvalue = 10
         AWGBFreqEntry.delete(0,"end")
@@ -11725,8 +11742,9 @@ def AWGBReadFile():
     AWGBLoadCSV()
 #
 def AWGBLoadCSV():
-    global AWGBwaveform, AWGBLength, awgwindow, AWG_2X, AWGB2X, AWGBcsvFile
-    
+    global AWGBwaveform, AWGBLength, awgwindow, AWG_2X, AWGB2X, AWGBcsvFile, AWGBOffsetvalue
+
+    BAWGBOffset(0)
     try:
         CSVFile = open(AWGBcsvFile)
         # dialect = csv.Sniffer().sniff(CSVFile.read(128), delimiters=None)
@@ -11755,6 +11773,7 @@ def AWGBLoadCSV():
             print( 'skipping non-numeric row', RowNum)
         RowNum += 1
     AWGBwaveform = numpy.array(AWGBwaveform)
+    AWGBwaveform = AWGBwaveform + AWGBOffsetvalue # add DC offset from Max entry
     SplitAWGBwaveform()
     CSVFile.close()
     UpdateAwgCont()
@@ -11902,7 +11921,7 @@ def AWGBMakeBodeSine():
     BAWGBPhase(0)
     BAWGBDutyCycle(0)
 
-    if AWGBFreqvalue < 10.0: # if frequency is less than 10 Hz use libsmu sine function
+    if AWGBFreqvalue < 1.53 : # if frequency is less than 1.53 Hz use libsmu sine function
         AWGBShape.set(1)
         BAWGBShape()
         UpdateAwgCont()
@@ -12904,7 +12923,7 @@ def BSTOREtraceBP():
 #
 def BCSVfile(): # Store the trace as CSV file [frequency, magnitude or dB value]
     global FSweepAdB, FSweepBdB, FSweepAPh, FSweepBPh, FStep, FBins, bodewindow
-    global SAMPLErate, ShowCA_VdB, ShowCA_P, ShowCB_VdB, ShowCB_P
+    global SAMPLErate, ShowCA_VdB, ShowCA_P, ShowCB_VdB, ShowCB_P, TRACEsize
     
     # Set the TRACEsize variable
     if ShowCA_VdB.get() == 1:
@@ -12988,13 +13007,13 @@ def BSaveDataIA():
         filename = asksaveasfilename(initialfile = filename, defaultextension = ".csv",
                                      filetypes=[("Comma Separated Values", "*.csv")], parent=iawindow)
         DataFile = open(filename,'a')  # Open output file
-        HeaderString = 'Frequency, Series R, Seriec X, Series Z, Series Angle'
+        HeaderString = 'Frequency, Series R, Series X, Series Z, Series Angle'
         HeaderString = HeaderString + '\n'
         DataFile.write( HeaderString )
 
         n = 0
         while n < len(NSweepSeriesR):
-            F = FBins[FStep[n]] # look up frequency bin in list of bins
+            F = FBins[int(FStep[n])] # look up frequency bin in list of bins
             txt = str(F) + "," + str(NSweepSeriesR[n]) + "," + str(NSweepSeriesX[n]) + "," + str(NSweepSeriesMag[n]) + "," + str(NSweepSeriesAng[n])
             txt = txt + "\n"
             DataFile.write(txt)
@@ -13208,10 +13227,10 @@ def BStartBP():
         if FWRevOne > 2.16:
             if EndFreq >= 20000:
                 Two_X_Sample.set(1)
-                FBins = numpy.linspace(0, 100000, num=16384)
+                FBins = numpy.linspace(0, 100000, num=32768) #16384)
             else:
                 Two_X_Sample.set(0)
-                FBins = numpy.linspace(0, 50000, num=16384)
+                FBins = numpy.linspace(0, 50000, num=32768) #16384)
             ADC_Mux_Mode.set(0)
             SetADC_Mux()
         try:
@@ -13259,8 +13278,8 @@ def BStartBP():
             BAWGBModeLabel()
             LoopNum.set(1)
             NyquistFreq = SAMPLErate/2
-            BeginIndex = int((BeginFreq/NyquistFreq)*16384)
-            EndIndex = int((EndFreq/NyquistFreq)*16384)
+            BeginIndex = int((BeginFreq/NyquistFreq)*32768)#16384)
+            EndIndex = int((EndFreq/NyquistFreq)*32768)#16384)
             if NSteps.get() < 5:
                 NSteps.set(5)
             if HScaleBP.get() == 1:
@@ -13268,10 +13287,11 @@ def BStartBP():
                 try:
                     LogFStart = math.log10(BeginIndex)
                 except:
-                    LogFStart = 1.0
+                    LogFStart = 0.1
                 FStep = numpy.logspace(LogFStart, LogFStop, num=NSteps.get(), base=10.0)
             else:
                 FStep = numpy.linspace(BeginIndex, EndIndex, num=NSteps.get())
+            
         BStart()
         # UpdateBodeAll()          # Always Update
 #
@@ -14136,7 +14156,7 @@ def MakeBodeTrace():        # Update the grid and trace
         StartBodeEntry.insert(0,100)
         BeginFreq = 100
     try:
-        Phasecenter = int(PhCenBodeEntry.get())
+        Phasecenter = float(PhCenBodeEntry.get())
         RelPhaseCenter.set(Phasecenter)
     except:
         PhCenBodeEntry.delete(0,"end")
@@ -14144,7 +14164,7 @@ def MakeBodeTrace():        # Update the grid and trace
         RelPhaseCenter.set(0)
         Phasecenter = 0
     try:
-        Impedcenter = int(ImCenBodeEntry.get())
+        Impedcenter = float(ImCenBodeEntry.get())
         ImpedanceCenter.set(Impedcenter)
     except:
         ImCenBodeEntry.delete(0,"end")
@@ -14391,7 +14411,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
         StartBodeEntry.insert(0,100)
         BeginFreq = 100
     try:
-        Phasecenter = int(PhCenBodeEntry.get())
+        Phasecenter = float(PhCenBodeEntry.get())
         RelPhaseCenter.set(Phasecenter)
     except:
         PhCenBodeEntry.delete(0,"end")
@@ -14399,7 +14419,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
         RelPhaseCenter.set(0)
         Phasecenter = 0
     try:
-        Impedcenter = int(ImCenBodeEntry.get())
+        Impedcenter = float(ImCenBodeEntry.get())
         ImpedanceCenter.set(Impedcenter)
     except:
         ImCenBodeEntry.delete(0,"end")
@@ -14435,8 +14455,12 @@ def MakeBodeScreen():       # Update the screen with traces and text
                         Vaxis_label = ' {0:.0f}'.format(Vaxis_value) + 'K'
                     else:
                         Vaxis_label = ' {0:.1f}'.format(Vaxis_value) + 'K'
+                elif Vaxis_value > 50 or Vaxis_value < -50:
+                    Vaxis_label = ' {0:.1f} '.format(Vaxis_value)
+                elif Vaxis_value > 5 or Vaxis_value < -55:
+                    Vaxis_label = ' {0:.2f} '.format(Vaxis_value)
                 else:
-                    Vaxis_label = ' {0:.0f} '.format(Vaxis_value)
+                    Vaxis_label = ' {0:.3f} '.format(Vaxis_value)
                 Bodeca.create_text(x1-23, y, text=Vaxis_label, fill=COLORtrace5, anchor="e", font=("arial", FontSize ))
         i = i + 1
     # Draw vertical grid lines
@@ -14907,8 +14931,14 @@ def MakeIAScreen():       # Update the screen with traces and text
                 axisvalue = axisvalue / 1000
                 ResTxt = '{0:.1f}'.format(axisvalue)
                 axis_label = str(ResTxt) + "K"
+            elif axisvalue >= 100.0 or axisvalue <= -100.0:
+                ResTxt = '{0:.1f}'.format(axisvalue)
+                axis_label = str(ResTxt)
+            elif axisvalue >= 10.0 or axisvalue <= -10.0:
+                ResTxt = '{0:.2f}'.format(axisvalue)
+                axis_label = str(ResTxt)
             else:
-                ResTxt = '{0:.0f}'.format(axisvalue)
+                ResTxt = '{0:.3f}'.format(axisvalue)
                 axis_label = str(ResTxt)
             IAca.create_oval( x0, y0, x1, y1, outline=COLORgrid, width=GridWidth.get())
             IAca.create_line(xcenter, y0, xright, y0, fill=COLORgrid, width=GridWidth.get(), dash=(4,3))
@@ -15042,11 +15072,14 @@ def MakeIAScreen():       # Update the screen with traces and text
         IAca.create_text (x+12, y, text="CHB Over Range", anchor=W, fill="#ff0000", font=("arial", FontSize+4 ))
     # General information on top of the grid
 
-    txt = "    Sample rate: " + str(SAMPLErate)
-    txt = txt + "    FFT samples: " + str(SMPfft)
+    txt = " Sample rate: " + str(SAMPLErate)
+    txt = txt + " FFT samples: " + str(SMPfft)
 
-    txt = txt + "   " + FFTwindowname
-        
+    txt = txt + " " + FFTwindowname
+    if NetworkScreenStatus.get() > 0:
+        txt = txt + " Sweep ON"
+    else:
+        txt = txt + " Sweep OFF"
     x = X0LIA
     y = 12
     idTXT = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext)
@@ -15065,7 +15098,16 @@ def MakeIAScreen():       # Update the screen with traces and text
     txt = "Impedance Magnitude"
     TXT1 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
     y = y + 24
-    txt = ' {0:.1f} '.format(ImpedanceMagnitude)
+    if ImpedanceMagnitude >= 1000.0 or ImpedanceMagnitude <= -1000.0:
+        ImpedanceMagnitude = ImpedanceMagnitude / 1000
+        txt = '{0:.2f}'.format(ImpedanceMagnitude)
+        txt = str(txt) + "K"
+    elif ImpedanceMagnitude >= 100.0 or ImpedanceMagnitude <= -100.0:
+        txt = ' {0:.1f} '.format(ImpedanceMagnitude)
+    elif ImpedanceMagnitude >= 10.0 or ImpedanceMagnitude <= -10.0:
+        txt = ' {0:.2f} '.format(ImpedanceMagnitude)
+    else:
+        txt = ' {0:.3f} '.format(ImpedanceMagnitude)
     TXT2 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
     y = y + 24
     txt = "Impedance Angle" 
@@ -15077,13 +15119,31 @@ def MakeIAScreen():       # Update the screen with traces and text
     txt = "Impedance R series"
     TXT5 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
     y = y + 24
-    txt = ' {0:.1f} '.format(ImpedanceRseries)
+    if ImpedanceRseries >= 1000.0 or ImpedanceRseries <= -1000.0:
+        ImpedanceRseries = ImpedanceRseries / 1000
+        txt = '{0:.2f}'.format(ImpedanceRseries)
+        txt = str(txt) + "K"
+    elif ImpedanceRseries >= 100.0 or ImpedanceRseries <= -100.0:
+        txt = ' {0:.1f} '.format(ImpedanceRseries)
+    elif ImpedanceRseries >= 10.0 or ImpedanceRseries <= -10.0:
+        txt = ' {0:.2f} '.format(ImpedanceRseries)
+    else:
+        txt = ' {0:.3f} '.format(ImpedanceRseries)
     TXT6 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
     y = y + 24
     txt = "Impedance X series"
     TXT7 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
     y = y + 24
-    txt = ' {0:.1f} '.format(ImpedanceXseries)
+    if ImpedanceXseries >= 1000.0 or ImpedanceXseries <= -1000.0:
+        ImpedanceXseries = ImpedanceXseries / 1000
+        txt = '{0:.2f}'.format(ImpedanceXseries)
+        txt = str(txt) + "K"
+    if ImpedanceXseries >= 100.0 or ImpedanceXseries <= -100.0:
+        txt = ' {0:.1f} '.format(ImpedanceXseries)
+    elif ImpedanceXseries >= 10.0 or ImpedanceXseries <= -10.0:
+        txt = ' {0:.2f} '.format(ImpedanceXseries)
+    else:
+        txt = ' {0:.3f} '.format(ImpedanceXseries)
     TXT8 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
 #
     Cseries = 0.0

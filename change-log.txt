@@ -1,3 +1,9 @@
+Version 1.3.12 Jan 3 2022
+* Extend Bode frequency sweep lowest frequency to 1.6 Hz (100KSPS/65536)
+* Extend resistance/div ploting display lowest range to 0.01 ohms/div
+* When loading AWG waveform data from CSV files the AWG channel Max value is added as an offset to the data values in the file. Set Max to 0 to add no offset.
+* Misc. typographical errors fixed
+
 Version 1.3.11 Aug 20 2021
 * New slow rolling time sweep mode implemented, similar to strip-chart. Sample rate varies depending on host computer speed.
 * In Spectrum Analyzer, vertical amplitude scale can now be in dB or RMS volts as well as Power Spectral Density (PSD) dB/rtHz or mV/rtHz (useful for noise testing).
