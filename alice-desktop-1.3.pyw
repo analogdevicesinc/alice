@@ -3048,7 +3048,7 @@ def BStartOhm():
             session.end() # end continuous session mode
 ## Start Impedance Tool               
 def BStartIA():
-    global AWGAFreqEntry, AWGAFreqvalue, Two_X_Sample, FWRevOne, NetworkScreenStatus
+    global AWGAFreqEntry, AWGAFreqvalue, Two_X_Sample, FWRevOne, NetworkScreenStatus, BodeDisp
     
     try:
         AWGAFreqvalue = float(eval(AWGAFreqEntry.get()))
@@ -3062,7 +3062,7 @@ def BStartIA():
             Two_X_Sample.set(0)
         SetADC_Mux()
     IASourceSet()
-    if NetworkScreenStatus.get() > 0:
+    if NetworkScreenStatus.get() > 0 and BodeDisp.get() > 0:
         BStartBP()
     else:
         BStart()
@@ -10484,8 +10484,8 @@ def AWGAMakeBodeSine():
     BAWGAFreq(0)
     BAWGAPhase(0)
     BAWGADutyCycle(0)
-
-    if AWGAFreqvalue < 1.53: # if frequency is less than 1.53 Hz use libsmu sine function
+    MinFreq = float(AWGSAMPLErate)/float(AWGRecLength)
+    if AWGAFreqvalue < MinFreq: # if frequency is less than 1 cycle in record length Hz use libsmu sine function
         AWGAShape.set(1)
         BAWGAShape()
         UpdateAwgCont()
@@ -11920,8 +11920,8 @@ def AWGBMakeBodeSine():
     BAWGBFreq(0)
     BAWGBPhase(0)
     BAWGBDutyCycle(0)
-
-    if AWGBFreqvalue < 1.53 : # if frequency is less than 1.53 Hz use libsmu sine function
+    MinFreq = float(AWGSAMPLErate)/float(AWGRecLength)
+    if AWGBFreqvalue < MinFreq: # if frequency is less than 1 cycle in record length Hz use libsmu sine function
         AWGBShape.set(1)
         BAWGBShape()
         UpdateAwgCont()
@@ -14769,14 +14769,15 @@ def MakeIATrace():        # Update the grid and trace
 
     # Set the TRACEsize variable
     TRACEsize = len(FFTresultA)     # Set the trace length
+    
     Fsample = float(SAMPLErate / 2) / (TRACEsize - 1)
     # Horizontal conversion factors (frequency Hz) and border limits
     STARTsample = 0     # First sample in FFTresult[] that is used
     STARTsample = int(math.ceil(STARTsample))               # First within screen range
     if Two_X_Sample.get() == 0:
-        STOPsample = 45000 / Fsample       # Last sample in FFTresult[] that is used
+        STOPsample = (SAMPLErate * 0.45) / Fsample       # Last sample in FFTresult[] that is used
     else:
-        STOPsample = 90000 / Fsample
+        STOPsample = (SAMPLErate * 0.45) / Fsample
     STOPsample = int(math.floor(STOPsample))    # Last within screen range, math.floor actually not necessary, part of int
 #
     RMScorr = 1.0 / SMPfft # For VOLTAGE!
@@ -14798,8 +14799,8 @@ def MakeIATrace():        # Update the grid and trace
         STARTsample = MAXsample - 1
 
     if STOPsample > MAXsample:
-        STOPsample = MAXsample
-
+        STOPsample = MAXsample - 1
+    
     n = STARTsample
     PeakfreqA = PeakfreqB = PeakfreqM = F = n * Fsample
     PeakphaseA = PhaseA[n]
@@ -15252,10 +15253,13 @@ def MakeIAScreen():       # Update the screen with traces and text
             NSweepSeriesC.append(Cseries) # in uF
             NSweepSeriesL.append(Lseries) # in mH
     # Start and stop frequency and trace mode
-    if Two_X_Sample.get() == 0:
-        txt = "0.0 to 45000 Hz"
-    else:
-        txt = "0.0 to 90000 Hz"
+    Fmax = int(SAMPLErate * 0.45)
+    txt = "0.0 to " + str(Fmax) + " Hz"
+##    if Two_X_Sample.get() == 0:
+##        Fmax = int(SAMPLErate * 0.45)
+##        txt = "0.0 to " + str(Fmax) + " Hz"
+##    else:
+##        txt = "0.0 to 90000 Hz"
     txt = txt + "  FFT Bandwidth =" + ' {0:.2f} '.format(FFTbandwidth)
         
     x = X0LIA
