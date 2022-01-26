@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
 #
-# ADALM1000 alice-desktop 1.3.py(w) (1-3-2022)
+# ADALM1000 alice-desktop 1.3.py(w) (1-26-2022)
 # For Python version 2.7 or 3.7, Windows OS and Linux OS
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -71,7 +71,7 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "3 Jan 2022"
+RevDate = "26 Jan 2022"
 SWRev = "1.3 "
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.12/alice-desktop-1.3-setup.exe'
 # small bit map of ADI logo for window icon
@@ -278,6 +278,8 @@ ChopModeFilter = [0.25, 0.25, 0.25, 0.25] # [0.25, 0.25, 0.25, 0.25]
 Roll_Mode = IntVar(0) # select roll sweep (slow) mode
 Roll_Mode.set(0)
 #
+UnAvgSav = IntVar(0) # Flag to save un trace averaged buffers
+UnAvgSav.set(0)
 ZEROstuffing = IntVar(0) # The zero stuffing value is 2 ** ZERO stuffing, calculated on initialize
 ZEROstuffing.set(1)
 FFTwindow = IntVar(0)   # FFT window function variable
@@ -435,8 +437,8 @@ CHipdiv = (0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0)
 SAMagdiv = ("10nV", "100nV", "1uV", "10uV", "100uV", "1mV", "10mV", "0.1", "1.0", "10.0")
 ## Time list in ms/div
 TMpdiv = (0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0)
-ResScalediv = (0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000)
-SampRateList = (1024, 2048, 4096, 8192, 16384, 32765, 64000, 93023, 93385, 93750, 94118,
+ResScalediv = (0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000)
+SampRateList = (1024, 2048, 4096, 8194, 16393, 32787, 65574, 93023, 93385, 93750, 94118,
                 96385, 96774, 97166, 97561, 97959, 98361, 98765, 99174, 99585, 100000)
 NoiseList =[ "None", "Uniform", "Gaussian"]
 TIMEdiv = 0.5
@@ -505,6 +507,11 @@ VmemoryMuxA = []
 VmemoryMuxB = []
 VmemoryMuxC = []
 VmemoryMuxD = []
+#
+VUnAvgA = []
+VUnAvgB = []
+IUnAvgA = []
+IUnAvgB = []
 #
 DBuff0 = []
 DBuff1 = []
@@ -1913,6 +1920,7 @@ def BLoadConfigTime():
 def RunScript():
     global VBuffA, VBuffB, IBuffA, IBuffB, VFilterA, VFilterB
     global VmemoryA, VmemoryB, ImemoryA, ImemoryB, AWGAwaveform, AWGBwaveform
+    global VUnAvgA, VUnAvgB, IUnAvgA, IUnAvgB, UnAvgSav
     global TgInput, TgEdge, SingleShot, AutoLevel, SingleShotSA, ManualTrigger
     global root, freqwindow, awgwindow, iawindow, xywindow, win1, win2
     global TRIGGERentry, TMsb, Xsignal, AutoCenterA, AutoCenterB
@@ -2587,6 +2595,7 @@ def CheckMathString():
     global VBuffA, VBuffB, IBuffA, IBuffB
     global VBuffMA, VBuffMB, VBuffMC, VBuffMD
     global VmemoryA, VmemoryB, ImemoryA, ImemoryB
+    global VUnAvgA, VUnAvgB, IUnAvgA, IUnAvgB, UnAvgSav
     global FFTBuffA, FFTBuffB, FFTwindowshape
     global AWGAwaveform, AWGBwaveform
     global Show_MathX, Show_MathY
@@ -2606,6 +2615,7 @@ def CheckMathXString():
     global VBuffA, VBuffB, IBuffA, IBuffB
     global VBuffMA, VBuffMB, VBuffMC, VBuffMD
     global VmemoryA, VmemoryB, ImemoryA, ImemoryB
+    global VUnAvgA, VUnAvgB, IUnAvgA, IUnAvgB, UnAvgSav
     global FFTBuffA, FFTBuffB, FFTwindowshape
     global AWGAwaveform, AWGBwaveform
     global Show_MathX, Show_MathY
@@ -2625,6 +2635,7 @@ def CheckMathYString():
     global VBuffA, VBuffB, IBuffA, IBuffB
     global VBuffMA, VBuffMB, VBuffMC, VBuffMD
     global VmemoryA, VmemoryB, ImemoryA, ImemoryB
+    global VUnAvgA, VUnAvgB, IUnAvgA, IUnAvgB, UnAvgSav
     global FFTBuffA, FFTBuffB, FFTwindowshape
     global AWGAwaveform, AWGBwaveform
     global Show_MathX, Show_MathY
@@ -3931,6 +3942,7 @@ def Analog_Phase_In():
 def Analog_Roll_time():
     global ADsignal1, VBuffA, VBuffB, IBuffA, IBuffB, VFilterA, VFilterB
     global VmemoryA, VmemoryB, ImemoryA, ImemoryB
+    global VUnAvgA, VUnAvgB, IUnAvgA, IUnAvgB, UnAvgSav
     global DBuff0, DBuff1, DBuff2, DBuff3, D0, D1, D2, D3
     global AWGSync, AWGAMode, AWGBMode, TMsb, HoldOff, HoldOffentry, HozPoss, HozPossentry
     global AWGAIOMode, AWGBIOMode, DecimateOption, DualMuxMode, MuxChan
@@ -4017,11 +4029,6 @@ def Analog_Roll_time():
     #
     else:
         ADsignal1 = devx.get_samples(NumSamples) # , True) # get samples for both channel A and B
-    # Shift one sample
-##    VBuffA = numpy.roll(VBuffA, 1)
-##    VBuffB = numpy.roll(VBuffB, 1)
-##    IBuffA = numpy.roll(IBuffA, 1)
-##    IBuffB = numpy.roll(IBuffB, 1)
     # get_samples returns a list of values for voltage [0] and current [1]
     for index in range(NumSamples): # calculate average
         DCVA0 += ADsignal1[index][0][0] # Sum for average CA voltage 
@@ -4041,19 +4048,6 @@ def Analog_Roll_time():
     DCIA0 = DCIA0 * 1000 # convert to mA
     DCIB0 = DCIB0 * 1000 # convert to mA
 # next new sample
-##    VBuffA[0] = DCVA0
-##    VBuffB[0] = DCVB0
-##    IBuffA[0] = DCIA0
-##    IBuffB[0] = DCIB0
-#
-##    VBuffA = numpy.append(VBuffA, DCVA0)
-##    VBuffA = VBuffA[-GRW:]
-##    VBuffB = numpy.append(VBuffB, DCVB0)
-##    VBuffB = VBuffB[-GRW:]
-##    IBuffA = numpy.append(IBuffA, DCIA0)
-##    IBuffA = IBuffA[-GRW:]
-##    IBuffB = numpy.append(IBuffB, DCIB0)
-##    IBuffB = IBuffB[-GRW:]
     VBuffA = shift_buffer(VBuffA, -1, DCVA0)
     VBuffB = shift_buffer(VBuffB, -1, DCVB0)
     IBuffA = shift_buffer(IBuffA, -1, DCIA0)
@@ -4068,25 +4062,8 @@ def Analog_Roll_time():
     if D3.get() == 0:
         DBuff3 = shift_buffer(DBuff3, -1, devx.ctrl_transfer( 0xc0, 0x91, PIO_3, 0, 0, 1, 100))
 # Calculate measurement values
-    DCV1 = numpy.mean(VBuffA)
-    DCV2 = numpy.mean(VBuffB)
-    DCI1 = numpy.mean(IBuffA)
-    DCI2 = numpy.mean(IBuffB)
-# find min and max values
-    MinV1 = numpy.amin(VBuffA)
-    MaxV1 = numpy.amax(VBuffA)
-    MinV2 = numpy.amin(VBuffB)
-    MaxV2 = numpy.amax(VBuffB)
-    MinI1 = numpy.amin(IBuffA)
-    MaxI1 = numpy.amax(IBuffA)
-    MinI2 = numpy.amin(IBuffB)
-    MaxI2 = numpy.amax(IBuffB)
-# RMS value = square root of average of the data record squared
-    SV1 = numpy.sqrt(numpy.mean(numpy.square(VBuffA)))
-    SI1 = numpy.sqrt(numpy.mean(numpy.square(IBuffA)))
-    SV2 = numpy.sqrt(numpy.mean(numpy.square(VBuffB)))
-    SI2 = numpy.sqrt(numpy.mean(numpy.square(IBuffB)))
-    SVA_B = numpy.sqrt(numpy.mean(numpy.square(VBuffA-VBuffB)))
+    SampleEnd = len(VBuffA) - 1
+    Cal_trace_scalars(0, SampleEnd)
 #
     if TimeDisp.get() > 0:
         MakeTimeTrace()         # Update the traces
@@ -4171,6 +4148,7 @@ def Analog_Chop_Time():
 def Analog_Fast_time():
     global ADsignal1, VBuffA, VBuffB, IBuffA, IBuffB, VFilterA, VFilterB
     global VmemoryA, VmemoryB, ImemoryA, ImemoryB
+    global VUnAvgA, VUnAvgB, IUnAvgA, IUnAvgB, UnAvgSav
     global AWGSync, AWGAMode, AWGBMode, TMsb, HoldOff, HoldOffentry, HozPoss, HozPossentry
     global AWGAIOMode, AWGBIOMode, DecimateOption, DualMuxMode, MuxChan
     global TRACEresetTime, TRACEmodeTime, TRACEaverage, TRIGGERsample, TgInput, LShift
@@ -4709,6 +4687,11 @@ def Analog_Fast_time():
                     IBuffA = numpy.roll(IBuffA, LShift)
                     IBuffB = numpy.roll(IBuffB, LShift)
                 TRIGGERsample = hozpos # set trigger sample to index 0 offset by horizontal position
+            if UnAvgSav.get() == 1: # copy un averaged trace to buffer
+                VUnAvgA = VBuffA
+                VUnAvgB = VBuffB
+                IUnAvgA = IBuffA
+                IUnAvgB = IBuffB
             try:
                 if DualMuxMode.get() == 0: # and MuxScreenStatus.get() == 0: # average A voltage data only if not in dual split I/O Mux Mode
                     VBuffA = VmemoryA + (VBuffA - VmemoryA) / TRACEaverage.get()
@@ -4742,26 +4725,8 @@ def Analog_Fast_time():
             Endsample = int(MeasGateRight * SAMPLErate/1000) + TRIGGERsample
             if Endsample <= hldn:
                 Endsample = hldn + 2
-# Calculate VA scalar values
-    DCV1 = numpy.mean(VBuffA[hldn:Endsample])
-    DCV2 = numpy.mean(VBuffB[hldn:Endsample])
-    DCI1 = numpy.mean(IBuffA[hldn:Endsample])
-    DCI2 = numpy.mean(IBuffB[hldn:Endsample])
-# find min and max values
-    MinV1 = numpy.amin(VBuffA[hldn:Endsample])
-    MaxV1 = numpy.amax(VBuffA[hldn:Endsample])
-    MinV2 = numpy.amin(VBuffB[hldn:Endsample])
-    MaxV2 = numpy.amax(VBuffB[hldn:Endsample])
-    MinI1 = numpy.amin(IBuffA[hldn:Endsample])
-    MaxI1 = numpy.amax(IBuffA[hldn:Endsample])
-    MinI2 = numpy.amin(IBuffB[hldn:Endsample])
-    MaxI2 = numpy.amax(IBuffB[hldn:Endsample])
-# RMS value = square root of average of the data record squared
-    SV1 = numpy.sqrt(numpy.mean(numpy.square(VBuffA[hldn:Endsample])))
-    SI1 = numpy.sqrt(numpy.mean(numpy.square(IBuffA[hldn:Endsample])))
-    SV2 = numpy.sqrt(numpy.mean(numpy.square(VBuffB[hldn:Endsample])))
-    SI2 = numpy.sqrt(numpy.mean(numpy.square(IBuffB[hldn:Endsample])))
-    SVA_B = numpy.sqrt(numpy.mean(numpy.square(VBuffA[hldn:Endsample]-VBuffB[hldn:Endsample])))
+# Calculate scalar values
+    Cal_trace_scalars(hldn, Endsample)
 # Transfer to mux buffers as necessary
     if TgInput.get() > 0 and TRACEmodeTime.get() != 1: # and MuxChan > -1
         # if triggering left shift all arrays such that trigger point is at index 0
@@ -4879,7 +4844,7 @@ def Analog_Fast_time():
                     VmemoryMuxD = VBuffMD
     # update screens
     if TimeDisp.get() > 0:
-        # Check if in non functional state of 2X samplerate and 3 or more traces amd not enabled AWGSync 
+        # Check if in non functional state of 2X samplerate and 3 or more traces and not enabled AWGSync 
         NumTraces = ShowC1_V.get() + ShowC1_I.get() + ShowC2_V.get() + ShowC2_I.get()
         if NumTraces > 2 and AWGSync.get() == 0 and Two_X_Sample.get() == 1:
             showwarning("WARNING","You need to Select only 2 Traces or Enable AWG Sync Mode!")
@@ -4895,6 +4860,33 @@ def Analog_Fast_time():
         BStop() # 
     if MeasureStatus.get() > 0:
         UpdateMeasureScreen()
+#
+# Calculate waveform scalar values
+def Cal_trace_scalars(SampleStart, SampleEnd):
+    global VBuffA, VBuffB, IBuffA, IBuffB
+    global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
+    global DCI1, DCI2, MinI1, MaxI1, MinI2, MaxI2
+    global SV1, SI1, SV2, SI2, SVA_B
+    
+    DCV1 = numpy.mean(VBuffA[SampleStart:SampleEnd])
+    DCV2 = numpy.mean(VBuffB[SampleStart:SampleEnd])
+    DCI1 = numpy.mean(IBuffA[SampleStart:SampleEnd])
+    DCI2 = numpy.mean(IBuffB[SampleStart:SampleEnd])
+# find min and max values
+    MinV1 = numpy.amin(VBuffA[SampleStart:SampleEnd])
+    MaxV1 = numpy.amax(VBuffA[SampleStart:SampleEnd])
+    MinV2 = numpy.amin(VBuffB[SampleStart:SampleEnd])
+    MaxV2 = numpy.amax(VBuffB[SampleStart:SampleEnd])
+    MinI1 = numpy.amin(IBuffA[SampleStart:SampleEnd])
+    MaxI1 = numpy.amax(IBuffA[SampleStart:SampleEnd])
+    MinI2 = numpy.amin(IBuffB[SampleStart:SampleEnd])
+    MaxI2 = numpy.amax(IBuffB[SampleStart:SampleEnd])
+# RMS value = square root of average of the data record squared
+    SV1 = numpy.sqrt(numpy.mean(numpy.square(VBuffA[SampleStart:SampleEnd])))
+    SI1 = numpy.sqrt(numpy.mean(numpy.square(IBuffA[SampleStart:SampleEnd])))
+    SV2 = numpy.sqrt(numpy.mean(numpy.square(VBuffB[SampleStart:SampleEnd])))
+    SI2 = numpy.sqrt(numpy.mean(numpy.square(IBuffB[SampleStart:SampleEnd])))
+    SVA_B = numpy.sqrt(numpy.mean(numpy.square(VBuffA[SampleStart:SampleEnd]-VBuffB[SampleStart:SampleEnd])))
 #
 # Function to calculate relative phase angle between two sine waves of the same frequency
 # Removes any DC content
@@ -5987,6 +5979,7 @@ def MakeTimeTrace():
     global VBuffA, VBuffB, IBuffA, IBuffB
     global VBuffMA, VBuffMB, VBuffMC, VBuffMD, MuxScreenStatus, ChopMuxMode, ChopTrig
     global VmemoryA, VmemoryB, ImemoryA, ImemoryB
+    global VUnAvgA, VUnAvgB, IUnAvgA, IUnAvgB, UnAvgSav
     global VmemoryMuxA, VmemoryMuxB, VmemoryMuxC, VmemoryMuxD
     global DBuff0, DBuff1, DBuff2, DBuff3, D0, D1, D2, D3
     global D0line, D1line, D2line, D3line
@@ -7064,6 +7057,7 @@ def MakeTimeTrace():
 def MakeXYTrace():    
     global VBuffA, VBuffB, IBuffA, IBuffB
     global VmemoryA, VmemoryB, ImemoryA, ImemoryB
+    global VUnAvgA, VUnAvgB, IUnAvgA, IUnAvgB, UnAvgSav
     global XYlineVA, XYlineVB, XYlineIA, XYlineIB, XYlineM, XYlineMX, XYlineMY
     global MathXString, MathYString, MathAxis, MathXAxis, MathYAxis
     global HoldOff, HoldOffentry
@@ -7346,6 +7340,7 @@ def MakeTimeScreen():
     global VBuffMA, VBuffMB, VBuffMC, VBuffMD, MuxScreenStatus, ChopMuxMode, ChopTrig
     global TMAVline, TMBVline, TMCVline, TMDVline, TMARline, TMBRline, TMCRline, TMDRline
     global VmemoryA, VmemoryB, VmemoryA, ImemoryB
+    global VUnAvgA, VUnAvgB, IUnAvgA, IUnAvgB, UnAvgSav
     global X0L          # Left top X value
     global Y0T          # Left top Y value
     global GRW          # Screenwidth
@@ -15100,8 +15095,7 @@ def MakeIAScreen():       # Update the screen with traces and text
     TXT1 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
     y = y + 24
     if ImpedanceMagnitude >= 1000.0 or ImpedanceMagnitude <= -1000.0:
-        ImpedanceMagnitude = ImpedanceMagnitude / 1000
-        txt = '{0:.2f}'.format(ImpedanceMagnitude)
+        txt = '{0:.2f}'.format(ImpedanceMagnitude/1000.0)
         txt = str(txt) + "K"
     elif ImpedanceMagnitude >= 100.0 or ImpedanceMagnitude <= -100.0:
         txt = ' {0:.1f} '.format(ImpedanceMagnitude)
@@ -15121,8 +15115,7 @@ def MakeIAScreen():       # Update the screen with traces and text
     TXT5 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
     y = y + 24
     if ImpedanceRseries >= 1000.0 or ImpedanceRseries <= -1000.0:
-        ImpedanceRseries = ImpedanceRseries / 1000
-        txt = '{0:.2f}'.format(ImpedanceRseries)
+        txt = '{0:.2f}'.format(ImpedanceRseries/1000.0)
         txt = str(txt) + "K"
     elif ImpedanceRseries >= 100.0 or ImpedanceRseries <= -100.0:
         txt = ' {0:.1f} '.format(ImpedanceRseries)
@@ -15136,10 +15129,9 @@ def MakeIAScreen():       # Update the screen with traces and text
     TXT7 = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize+6 ))
     y = y + 24
     if ImpedanceXseries >= 1000.0 or ImpedanceXseries <= -1000.0:
-        ImpedanceXseries = ImpedanceXseries / 1000
-        txt = '{0:.2f}'.format(ImpedanceXseries)
+        txt = '{0:.2f}'.format(ImpedanceXseries/1000.0)
         txt = str(txt) + "K"
-    if ImpedanceXseries >= 100.0 or ImpedanceXseries <= -100.0:
+    elif ImpedanceXseries >= 100.0 or ImpedanceXseries <= -100.0:
         txt = ' {0:.1f} '.format(ImpedanceXseries)
     elif ImpedanceXseries >= 10.0 or ImpedanceXseries <= -10.0:
         txt = ' {0:.2f} '.format(ImpedanceXseries)
@@ -15255,11 +15247,7 @@ def MakeIAScreen():       # Update the screen with traces and text
     # Start and stop frequency and trace mode
     Fmax = int(SAMPLErate * 0.45)
     txt = "0.0 to " + str(Fmax) + " Hz"
-##    if Two_X_Sample.get() == 0:
-##        Fmax = int(SAMPLErate * 0.45)
-##        txt = "0.0 to " + str(Fmax) + " Hz"
-##    else:
-##        txt = "0.0 to 90000 Hz"
+
     txt = txt + "  FFT Bandwidth =" + ' {0:.2f} '.format(FFTbandwidth)
         
     x = X0LIA
@@ -21808,6 +21796,7 @@ def BExecuteFromString(): # global VBuffA,AWGAwaveform;VBuffA=AWGAwaveform
     global ExecString, LastCommand
     global VBuffA, VBuffB, IBuffA, IBuffB, VFilterA, VFilterB
     global VmemoryA, VmemoryB, ImemoryA, ImemoryB, AWGAwaveform, AWGBwaveform
+    global VUnAvgA, VUnAvgB, IUnAvgA, IUnAvgB, UnAvgSav
     global TgInput, TgEdge, SingleShot, AutoLevel, SingleShotSA, ManualTrigger
     global root, freqwindow, awgwindow, iawindow, xywindow, win1, win2
     global TRIGGERentry, TMsb, Xsignal, Ysignal, AutoCenterA, AutoCenterB
