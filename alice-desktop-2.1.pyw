@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM2000 alice-desktop 2.1.0.py(w) (10-10-2019)
+# ADALM2000 alice-desktop 2.1.0.py(w) (5-1-2021)
 # For Python version > = 3.7.4
 # With external module libm2k.py 
 # 
@@ -35,8 +35,8 @@ try:
 except:
     libm2k_found = False
 #
-RevDate = "(10 Octt 2019)"
-SwRev = "2.1.0 "
+RevDate = "(1 May 2021)"
+SwRev = "2.1.1 "
 SwTitle = "ALICE DeskTop "
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/2.0.2/alice-desktop-2.0-setup.exe'
 # small bit map of ADI logo for window icon
@@ -117,9 +117,9 @@ FWRev = 0.14
 HWRev = 0.2
 # Set sample buffer size
 HoldOff = 0.0
-AWGASampleRate = 750000         # Sample rate of the AWG A channel
-AWGBSampleRate = 750000         # Sample rate of the AWG B channel
-SAMPLErate = 100000 # Scope sample rate
+AWGASampleRate = 7500000.0         # Sample rate of the AWG A channel
+AWGBSampleRate = 7500000.0         # Sample rate of the AWG B channel
+SAMPLErate = 100000.0 # Scope sample rate
 DigPatSampleRate = 100000000 # digital pattern sample rate
 HalfSAMPLErate = SAMPLErate/2.0
 OverSampleRate = 1 # Scope sample rate multiplier ( OSR )
@@ -570,9 +570,6 @@ DEnab14 = IntVar(0)
 DEnab15 = IntVar(0)
 DEnab8 = IntVar(0)
 DEnab9 = IntVar(0)
-# defins some temporary stuf
-AWGAgain7M = AWGAgain75M = AWGAgain75K = AWGAgain750K = 1.0
-AWGBgain7M = AWGBgain75M = AWGBgain75K = AWGBgain750K = 1.0
 # 25x25 bit map of high going pulse in .gif
 hipulse = """
 R0lGODlhGQAYAPcAAAAAAIAAAACAAICAAAAAgIAAgACAgICAgMDAwP8AAAD/AP//AAAA//8A/wD/
@@ -2061,8 +2058,8 @@ def SetTriggerPoss():
         TMsb.delete(0,"end")
         TMsb.insert(0,TIMEdiv)
     # prevent divide by zero error
-    if TIMEdiv < 0.00005:
-        TIMEdiv = 0.00005
+    if TIMEdiv < 0.00001:
+        TIMEdiv = 0.00001
     if TgInput.get() > 0:
         HozPoss = -5 * TIMEdiv
         HozPossentry.delete(0,END)
@@ -2079,8 +2076,8 @@ def IncHoldOff():
         TMsb.delete(0,"end")
         TMsb.insert(0,TIMEdiv)
     # prevent divide by zero error
-    if TIMEdiv < 0.00005:
-        TIMEdiv = 0.00005
+    if TIMEdiv < 0.00001:
+        TIMEdiv = 0.00001
     if TgInput.get() == 0:
         HoldOff = HoldOff + TIMEdiv
         HoldOffentry.delete(0,END)
@@ -2192,7 +2189,7 @@ def Bcloseexit():
     try:
         aout.enableChannel(0, False)
         aout.enableChannel(1, False)
-        libm2k.deviceClose(ctx)
+        libm2k.contextClose(ctx) # deviceClose(ctx)
     except:
         print("closing anyway")
     root.destroy()
@@ -2727,8 +2724,8 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
         TIMEdiv = 0.5
         TMsb.delete(0,"end")
         TMsb.insert(0,TIMEdiv)
-    if TIMEdiv < 0.00005:
-        TIMEdiv = 0.00005
+    if TIMEdiv < 0.00001:
+        TIMEdiv = 0.00001
     #
     if TRACEmodeTime.get() == 0 and TRACEresetTime == False:
         TRACEresetTime = True   # Clear the memory for averaging
@@ -2858,8 +2855,14 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
         HozPossentry.delete(0,END)
         HozPossentry.insert(0, HozPoss)
 #
+    hldn = int(HoldOff * SAMPLErate/1000 )
+    hozpos = int(HozPoss * SAMPLErate/1000 )
+##    if hozpos < 0:
+##        hozpos = 0
     if TriggerMethod.get() == 1: # Using Hardware triggering
         TRIGGERsample = 0 # reset pointer to zero when using HW trigger
+        Is_Triggered = 1
+        trig.setAnalogDelay(hozpos)
         if TgInput.get() == 0:
             trig.setAnalogMode(0,libm2k.ALWAYS)
             trig.setAnalogMode(1,libm2k.ALWAYS)
@@ -2872,19 +2875,15 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
             trig.setAnalogMode(1,libm2k.ANALOG)
             trig.setAnalogLevel(1,TRIGGERlevel)
         if TgEdge.get() == 0:
-            trig.setAnalogCondition(0,libm2k.RISING_EDGE)
-            trig.setAnalogCondition(1,libm2k.RISING_EDGE)
+            trig.setAnalogCondition(0,libm2k.RISING_EDGE_ANALOG)
+            trig.setAnalogCondition(1,libm2k.RISING_EDGE_ANALOG)
         else:
-            trig.setAnalogCondition(0,libm2k.FALLING_EDGE) # RISING_EDGE)
-            trig.setAnalogCondition(1,libm2k.FALLING_EDGE) # RISING_EDGE)
+            trig.setAnalogCondition(0,libm2k.FALLING_EDGE_ANALOG) # RISING_EDGE)
+            trig.setAnalogCondition(1,libm2k.FALLING_EDGE_ANALOG) # RISING_EDGE)
     else:
         trig.setAnalogMode(0,libm2k.ALWAYS)
         trig.setAnalogMode(1,libm2k.ALWAYS)
 #
-    hldn = int(HoldOff * SAMPLErate/1000 )
-    hozpos = int(HozPoss * SAMPLErate/1000 )
-    if hozpos < 0:
-        hozpos = 0
     twoscreens = int(SAMPLErate * 20.0 * TIMEdiv / 1000.0) # number of samples to acquire, 2 screen widths
     onescreen = int(twoscreens/2)
 ##    if hldn+hozpos > MaxSamples-twoscreens:
@@ -2905,85 +2904,86 @@ def Analog_Time_In():   # Read the analog data and store the data into the array
     #time.sleep(0.05)
 ##    if MuxScreenStatus.get() > 0: # if external mux mode dummy read to empty buffer
 ##        ADsignal1 = ain.getSamples(SHOWsamples*2) # read the buffer
-    ADsignal1 = ain.getSamples(SHOWsamples) # read the buffer
-    #
-    VBuffA = ADsignal1[0] # make the V Buff array for trace A
-    VBuffB = ADsignal1[1] # make the V Buff array for trace B
-#
-    SHOWsamples = len(VBuffA)
-    VBuffA = numpy.array(VBuffA)
-    VBuffB = numpy.array(VBuffB)
-    if CH1pdvRange < 1.0:
-        VBuffA = VBuffA # + CHAOffset till HW pos setting available
-    if CH2pdvRange < 1.0:
-        VBuffB = VBuffB # + CHBOffset
-    VBuffA = (VBuffA - InOffA) * InGainA
-    VBuffB = (VBuffB - InOffB) * InGainB
-    TRACESread = 2
+    try:
+        ADsignal1 = ain.getSamples(SHOWsamples) # read the buffer
+        #
+        VBuffA = ADsignal1[0] # make the V Buff array for trace A
+        VBuffB = ADsignal1[1] # make the V Buff array for trace B
+        SHOWsamples = len(VBuffA)
+        VBuffA = numpy.array(VBuffA)
+        VBuffB = numpy.array(VBuffB)
+        VBuffA = (VBuffA - InOffA) * InGainA
+        VBuffB = (VBuffB - InOffB) * InGainB
+        TRACESread = 2
 # Check if Input channel RC high pass compensation checked
-    if ShowLoopBack.get() == 0: # don't correct input divider frequency resonse if in loop back mode
-        if CHA_RC_HP.get() == 1:
-            try:
-                TC1A = float(cha_TC1Entry.get())
-                if TC1A < 0:
-                    TC1A = 0
-                    cha_TC1Entry.delete(0,END)
-                    cha_TC1Entry.insert(0, TC1A)
-            except:
-                TC1A = CHA_TC1.get()
-            try:
-                TC2A = float(cha_TC2Entry.get())
-                if TC2A < 0:
-                    TC2A = 0
-                    cha_TC2Entry.delete(0,END)
-                    cha_TC2Entry.insert(0, TC2A)
-            except:
-                TC2A = CHA_TC2.get()
-            #
-            try:
-                Gain1A = float(cha_A1Entry.get())
-            except:
-                Gain1A = CHA_A1.get()
-            try:
-                Gain2A = float(cha_A2Entry.get())
-            except:
-                Gain2A = CHA_A2.get()
-            #
-            if CH1pdvRange > 0.5:
-                VBuffA = Digital_RC_High_Pass( VBuffA, TC1A, Gain1A )
-            else:
-                VBuffA = Digital_RC_High_Pass( VBuffA, TC2A, Gain2A )
-        if CHB_RC_HP.get() == 1:
-            try:
-                TC1B = float(chb_TC1Entry.get())
-                if TC1B < 0:
-                    TC1B = 0
-                    chb_TC1Entry.delete(0, END)
-                    chb_TC1Entry.insert(0, TC1B)
-            except:
-                TC1B = CHB_TC1.get()
-            try:
-                TC2B = float(chb_TC2Entry.get())
-                if TC2B < 0:
-                    TC2B = 0
-                    chb_TC2Entry.delete(0, END)
-                    chb_TC2Entry.insert(0, TC2B)
-            except:
-                TC2B = CHB_TC2.get()
-            #
-            try:
-                Gain1B = float(chb_A1Entry.get())
-            except:
-                Gain1B = CHB_A1.get()
-            try:
-                Gain2B = float(chb_A2Entry.get())
-            except:
-                Gain2B = CHB_A2.get()
-            #
-            if CH2pdvRange > 0.5:
-                VBuffB = Digital_RC_High_Pass( VBuffB, TC1B, Gain1B )
-            else:
-                VBuffB = Digital_RC_High_Pass( VBuffB, TC2B, Gain2B )
+        if ShowLoopBack.get() == 0: # don't correct input divider frequency resonse if in loop back mode
+            if CHA_RC_HP.get() == 1:
+                try:
+                    TC1A = float(cha_TC1Entry.get())
+                    if TC1A < 0:
+                        TC1A = 0
+                        cha_TC1Entry.delete(0,END)
+                        cha_TC1Entry.insert(0, TC1A)
+                except:
+                    TC1A = CHA_TC1.get()
+                try:
+                    TC2A = float(cha_TC2Entry.get())
+                    if TC2A < 0:
+                        TC2A = 0
+                        cha_TC2Entry.delete(0,END)
+                        cha_TC2Entry.insert(0, TC2A)
+                except:
+                    TC2A = CHA_TC2.get()
+                #
+                try:
+                    Gain1A = float(cha_A1Entry.get())
+                except:
+                    Gain1A = CHA_A1.get()
+                try:
+                    Gain2A = float(cha_A2Entry.get())
+                except:
+                    Gain2A = CHA_A2.get()
+                #
+                if CH1pdvRange > 0.5:
+                    VBuffA = Digital_RC_High_Pass( VBuffA, TC1A, Gain1A )
+                else:
+                    VBuffA = Digital_RC_High_Pass( VBuffA, TC2A, Gain2A )
+            if CHB_RC_HP.get() == 1:
+                try:
+                    TC1B = float(chb_TC1Entry.get())
+                    if TC1B < 0:
+                        TC1B = 0
+                        chb_TC1Entry.delete(0, END)
+                        chb_TC1Entry.insert(0, TC1B)
+                except:
+                    TC1B = CHB_TC1.get()
+                try:
+                    TC2B = float(chb_TC2Entry.get())
+                    if TC2B < 0:
+                        TC2B = 0
+                        chb_TC2Entry.delete(0, END)
+                        chb_TC2Entry.insert(0, TC2B)
+                except:
+                    TC2B = CHB_TC2.get()
+                #
+                try:
+                    Gain1B = float(chb_A1Entry.get())
+                except:
+                    Gain1B = CHB_A1.get()
+                try:
+                    Gain2B = float(chb_A2Entry.get())
+                except:
+                    Gain2B = CHB_A2.get()
+                #
+                if CH2pdvRange > 0.5:
+                    VBuffB = Digital_RC_High_Pass( VBuffB, TC1B, Gain1B )
+                else:
+                    VBuffB = Digital_RC_High_Pass( VBuffB, TC2B, Gain2B )
+    except:
+        ain.flushBuffer()
+        Is_Triggered = 0
+        ADsignal1 = []
+#
 # check if digital filter box checked
     if DigFiltA.get() == 1:
         if len(DFiltACoef) > 1:
@@ -4950,13 +4950,13 @@ def MakeTimeTrace():    # Make the traces
     xlo = 0.0
     # get time scale
     try:
-        TIMEdiv = eval(TMsb.get())
+        TIMEdiv = float(eval(TMsb.get()))
     except:
         TIMEdiv = 0.5
         TMsb.delete(0,"end")
         TMsb.insert(0,TIMEdiv)
-    if TIMEdiv < 0.00005:
-        TIMEdiv = 0.00005
+    if TIMEdiv < 0.00001:
+        TIMEdiv = 0.00001
     #
     # Check for Auto Centering
     if AutoCenterA.get() > 0:
@@ -5935,13 +5935,13 @@ def MakeTimeScreen():     # Update the screen with traces and text
         CHBVGainEntry.insert(0, InGainB)
     # get time scale
     try:
-        TIMEdiv = eval(TMsb.get())
+        TIMEdiv = float(eval(TMsb.get()))
     except:
         TIMEdiv = 0.5
         TMsb.delete(0,"end")
         TMsb.insert(0,TIMEdiv)
-    if TIMEdiv < 0.00005:
-        TIMEdiv = 0.00005
+    if TIMEdiv < 0.00001:
+        TIMEdiv = 0.00001
     #
     # get the vertical ranges
     try:
@@ -7585,8 +7585,8 @@ def onCanvasClickLeft(event):
             TMsb.delete(0,"end")
             TMsb.insert(0,TIMEdiv)
         # prevent divide by zero error
-        if TIMEdiv < 0.00005:
-            TIMEdiv = 0.00005
+        if TIMEdiv < 0.00001:
+            TIMEdiv = 0.00001
         # get the vertical ranges
         # slide trace left right by HozPoss
         try:
@@ -8117,7 +8117,7 @@ def ReConnectDevice():
     
 def ConnectDevice():
     global ctx, DevID, bcon, FWRev, HWRev, UserPS, ProductName
-    global ain, aout, trig, dig
+    global ain, aout, trig, dig, AWGASampleRate, AWGBSampleRate
     
     ctx=libm2k.m2kOpen()
 
@@ -8142,8 +8142,9 @@ def ConnectDevice():
     FWRev = ctx.getContextAttributeValue('fw_version')
     print(FWRev)
 # do a selp calibration
-    ctx.calibrateADC()
-    ctx.calibrateDAC()
+    adc_calib=ctx.calibrateADC()
+    dac_calib=ctx.calibrateDAC()
+    ctx.setTimeout(1000)
 # define analog inputs and outputs
     ain=ctx.getAnalogIn()
     aout=ctx.getAnalogOut()
@@ -8154,32 +8155,18 @@ def ConnectDevice():
     ain.setSampleRate(100000)
     ain.setRange(0,-10,10)
 
-    trig.setAnalogSource(0) # Channel 0 as source
-    trig.setAnalogCondition(0,libm2k.RISING_EDGE)
-    trig.setAnalogLevel(0,0.5)  # Set trigger level at 0.5
-    trig.setAnalogDelay(0) # Trigger is centered
-    trig.setAnalogMode(1,libm2k.ANALOG)
+##    trig.setAnalogSource(0) # Channel 0 as source
+##    trig.setAnalogCondition(0,libm2k.RISING_EDGE_ANALOG) # RISING_EDGE)
+##    trig.setAnalogLevel(0,0.5)  # Set trigger level at 0.5
+##    trig.setAnalogDelay(0) # Trigger is centered
+##    trig.setAnalogMode(1,libm2k.ANALOG)
 
-    aout.setSampleRate(0, 750000)
-    aout.setSampleRate(1, 750000)
+    aout.setSampleRate(0, AWGASampleRate)
+    aout.setSampleRate(1, AWGBSampleRate)
     aout.enableChannel(0, True)
     aout.enableChannel(1, True)
 # User power supply
     UserPS = ctx.getPowerSupply()
-    
-# AD9963 AUX channels
-
-# Offset DACs
-
-# set offset DACs to mid range
-
-#
-
-# Power up M2K outputs
-
-# Scope HW trigger stuff
-
-# AWG DAC stuff
 
 # Digital Input / OutPut channels
     dig=ctx.getDigital()
@@ -8273,8 +8260,7 @@ def BAWGAOffset(temp):
         AWGAOffsetEntry.insert(0, AWGAOffsetvalue)
 #
 def BAWGAFreq(temp):
-    global aout, AWGAFreqEntry, AWGAFreqvalue, AWGASampleRate, m2k_dac_a, AWGAgain
-    global AWGAgain7M, AWGAgain75M, AWGAgain75K, AWGAgain750K
+    global aout, AWGAFreqEntry, AWGAFreqvalue, AWGASampleRate
 
     try:
         AWGAFreqvalue = float(eval(AWGAFreqEntry.get()))
@@ -8292,14 +8278,14 @@ def BAWGAFreq(temp):
         AWGAFreqEntry.insert(0, AWGAFreqvalue)
     if AWGAFreqvalue <= 10000: # 10 times 7500
         AWGASampleRate = 7500000
-        AWGAgain = AWGAgain7M
 ##    elif AWGAFreqvalue > 7500 and AWGAFreqvalue < 75000: # 10 times 75000
 ##        AWGASampleRate = 7500000
     elif AWGAFreqvalue > 10000 and AWGAFreqvalue < 25000000: # 10 times 750000
         AWGASampleRate = 75000000
-        AWGAgain = AWGAgain75M
     aout.setSampleRate(0, AWGASampleRate) # m2k_dac_a.attrs["sampling_frequency"].value = str(AWGASampleRate)
-
+#    print(aout.getSampleRate(0))
+#    print(aout.getOversamplingRatio(0))
+    
 def BAWGAPhaseDelay():
     global AWGAPhaseDelay, phasealab, awgaph, awgadel
 
@@ -8349,8 +8335,7 @@ def BAWGADutyCycle(temp):
         AWGADutyCycleEntry.insert(0, AWGADutyCyclevalue)
 
 def AWGAReadFile():
-    global aout, AWGAwaveform, AWGALength, awgwindow, AWGAgain, AWGASampleRate
-    global AWGAgain75M, AWGAgain7M, AWGAgain750K, AWGAgain75K
+    global aout, AWGAwaveform, AWGALength, awgwindow, AWGASampleRate
 
     # Read values from CVS file
     filename = askopenfilename(defaultextension = ".csv", filetypes=[("CSV files", "*.csv")], parent=awgwindow)
@@ -8366,14 +8351,6 @@ def AWGAReadFile():
         AWGASampleRate = int(RequestRate)
     except:
         AWGASampleRate = 75000
-    if AWGASampleRate == 75000000:
-        AWGAgain = AWGAgain75M
-    if AWGASampleRate == 7500000:
-        AWGAgain = AWGAgain7M
-    if AWGASampleRate == 750000:
-        AWGAgain = AWGAgain750K
-    if AWGASampleRate == 75000:
-        AWGAgain = AWGAgain75K
     aout.setSampleRate(0, AWGASampleRate) # m2k_dac_a.attrs["sampling_frequency"].value = str(AWGASampleRate)
     AWGAwaveform = []
     ColumnNum = 0
@@ -8394,8 +8371,6 @@ def AWGAReadWAV():
     global aout, AWGAwaveform, AWGALength, AWGAShape, awgwindow, AWGBwaveform, AWGBLength, AWGBShape
     global AWGASampleRate, m2k_dac_a, AWGBSampleRate, m2k_dac_b, AWGAOffsetvalue, AWGAAmplvalue
     global AWGBModeLabel, AWGBbinform
-    global AWGAgain75M, AWGAgain7M, AWGAgain750K, AWGAgain75K, AWGAgain
-    global AWGBgain75M, AWGBgain7M, AWGBgain750K, AWGBgain75K, AWGBgain
 
     temp = 0
     BAWGAAmpl(temp)
@@ -8415,14 +8390,6 @@ def AWGAReadWAV():
         AWGASampleRate = int(RequestRate)
     except:
         AWGASampleRate = 75000
-    if AWGASampleRate == 75000000:
-        AWGAgain = AWGAgain75M
-    if AWGASampleRate == 7500000:
-        AWGAgain == AWGAgain7M
-    if AWGASampleRate == 750000:
-        AWGAgain = AWGAgain750K
-    if AWGASampleRate == 75000:
-        AWGAgain = AWGAgain75K
     aout.setSampleRate(0, AWGASampleRate) # m2k_dac_a.attrs["sampling_frequency"].value = str(AWGASampleRate)
     AWGAwaveform = []
     AWGBwaveform = []
@@ -8442,14 +8409,6 @@ def AWGAReadWAV():
             n = n + 1
         AWGBShape.set(AWGAShape.get())
         AWGBSampleRate = AWGASampleRate
-        if AWGBSampleRate == 75000000:
-            AWGBgain = AWGBgain75M
-        if AWGBSampleRate == 7500000:
-            AWGBgain = AWGBgain7M
-        if AWGBSampleRate == 750000:
-            AWGBgain = AWGBgain750K
-        if AWGBSampleRate == 75000:
-            AWGBgain = AWGBgain75K
         m2k_dac_b.attrs["sampling_frequency"].value = str(AWGBSampleRate)
         AWGAwaveform = numpy.array(AWGAwaveform)
         AWGBwaveform = numpy.array(AWGBwaveform)
@@ -8478,7 +8437,7 @@ def AWGAEnterMath():
     global AWGAwaveform, AWGASampleRate, VBuffA, VBuffB, VFilterA, VFilterB
     global AWGBwaveform, VmemoryA, VmemoryB, ImemoryA, ImemoryB, AWGAMathString
     global FFTBuffA, FFTBuffB, FFTwindowshape, AWGALength, awgwindow
-    global DFiltACoef, DFiltBCoef, AWGAgain, AWGAoffset
+    global DFiltACoef, DFiltBCoef, AWGAoffset
 
     TempString = AWGAMathString
     AWGAMathString = askstring("AWG 1 Math Formula", "Current Formula: " + AWGAMathString + "\n\nNew Formula:\n", initialvalue=AWGAMathString, parent=awgwindow)
@@ -8490,7 +8449,7 @@ def AWGAMakeMath():
     global AWGAwaveform, AWGASampleRate, VBuffA, VBuffB, VFilterA, VFilterB
     global AWGBwaveform, VmemoryA, VmemoryB, ImemoryA, ImemoryB, AWGAMathString
     global FFTBuffA, FFTBuffB, FFTwindowshape, AWGALength, awgwindow
-    global DFiltACoef, DFiltBCoef, AWGAgain, AWGAoffset
+    global DFiltACoef, DFiltBCoef, AWGAoffset
 
     AWGAwaveform = eval(AWGAMathString)
     AWGAwaveform = numpy.array(AWGAwaveform)
@@ -8498,7 +8457,7 @@ def AWGAMakeMath():
 def AWGAMakeDC():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay
     global AWGAFreqvalue, AWGAperiodvalue, AWGASampleRate, AWGADutyCyclevalue, AWGAPhasevalue
-    global AWGAgain, AWGAoffset, phasealab, duty1lab
+    global AWGAoffset, phasealab, duty1lab
     
     temp = 0
     BAWGAAmpl(temp)
@@ -8522,7 +8481,7 @@ def AWGAMakeDC():
 #
 def AWGAMakeSine():
     global AWGAwaveform, AWGASampleRate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
-    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay, phasealab
+    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAoffset, AWGAPhaseDelay, phasealab
     
     temp = 0
     BAWGAAmpl(temp)
@@ -8546,7 +8505,7 @@ def AWGAMakeSine():
     Cycles = int(37500/AWGAperiodvalue)
     if Cycles < 1:
         Cycles = 1
-    RecLength = Cycles * AWGAperiodvalue
+    RecLength = int(Cycles * AWGAperiodvalue)
     AWGAwaveform = []
     AWGAwaveform = numpy.cos(numpy.linspace(0, 2*Cycles*numpy.pi, RecLength))
     amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / 2.0
@@ -8559,7 +8518,7 @@ def AWGAMakeSine():
 #
 def AWGAMakeFMSine():
     global AWGAwaveform, AWGASampleRate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
-    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay, phasealab
+    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAoffset, AWGAPhaseDelay, phasealab
     
     temp = 0
     BAWGAAmpl(temp)
@@ -8611,7 +8570,7 @@ def AWGAMakeFMSine():
 #
 def AWGAMakeAMSine():
     global AWGAwaveform, AWGASampleRate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
-    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay, phasealab
+    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAoffset, AWGAPhaseDelay, phasealab
     
     temp = 0
     BAWGAAmpl(temp)
@@ -8663,7 +8622,7 @@ def AWGAMakeAMSine():
 #
 def AWGAMakeFourier():
     global AWGAwaveform, AWGASampleRate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength
-    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset
+    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAoffset
     
     temp = 0
     BAWGAAmpl(temp)
@@ -8687,7 +8646,7 @@ def AWGAMakeFourier():
 #
 def AWGAMakeSinc():
     global AWGAwaveform, AWGASampleRate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
-    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay
+    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAoffset, AWGAPhaseDelay
     
     temp = 0
     BAWGAAmpl(temp)
@@ -8762,7 +8721,7 @@ def AWGAMakePWMSine():
 def AWGAMakeSSQ():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay
     global AWGAFreqvalue, AWGAperiodvalue, AWGASampleRate, AWGADutyCyclevalue, AWGAPhasevalue
-    global AWGAgain, AWGAoffset, phasealab, duty1lab
+    global AWGAoffset, phasealab, duty1lab
     
     temp = 0
     BAWGAAmpl(temp)
@@ -8816,7 +8775,7 @@ def AWGAMakeSSQ():
 def AWGAMakeSquare():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay
     global AWGAFreqvalue, AWGAperiodvalue, AWGASampleRate, AWGADutyCyclevalue, AWGAPhasevalue
-    global AWGAgain, AWGAoffset, phasealab, duty1lab
+    global AWGAoffset, phasealab, duty1lab
     
     temp = 0
     BAWGAAmpl(temp)
@@ -8862,7 +8821,7 @@ def AWGAMakeSquare():
 def AWGAMakeTrapazoid():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay
     global AWGAFreqvalue, AWGAperiodvalue, AWGASampleRate, AWGADutyCyclevalue, AWGAPhasevalue
-    global AWGAgain, AWGAoffset, phasealab, duty1lab
+    global AWGAoffset, phasealab, duty1lab
     
     temp = 0
     BAWGAAmpl(temp)
@@ -8921,7 +8880,7 @@ def AWGAMakeTrapazoid():
 def AWGAMakeRamp():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay
     global AWGAFreqvalue, AWGAperiodvalue, AWGASampleRate, AWGADutyCyclevalue, AWGAPhasevalue
-    global AWGAgain, AWGAoffset, phasealab, duty1lab
+    global AWGAoffset, phasealab, duty1lab
     
     temp = 0
     BAWGAAmpl(temp)
@@ -8978,7 +8937,7 @@ def AWGAMakeRamp():
 def AWGAMakeUpDownRamp():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay
     global AWGAFreqvalue, AWGAperiodvalue, AWGASampleRate, AWGADutyCyclevalue, AWGAPhasevalue
-    global AWGAgain, AWGAoffset, duty1lab
+    global AWGAoffset, duty1lab
     
     temp = 0
     BAWGAAmpl(temp)
@@ -9043,7 +9002,7 @@ def AWGAMakeSawtooth():
 def AWGAMakeImpulse():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay
     global AWGAFreqvalue, AWGAperiodvalue, AWGASampleRate, AWGADutyCyclevalue, AWGAPhasevalue
-    global AWGAgain, AWGAoffset
+    global AWGAoffset
     
     temp = 0
     BAWGAAmpl(temp)
@@ -9079,7 +9038,7 @@ def AWGAMakeImpulse():
 def AWGAMakeStair():
     global AWGAwaveform, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAPhaseDelay
     global AWGAFreqvalue, AWGAperiodvalue, AWGASampleRate, AWGADutyCyclevalue, AWGAPhasevalue
-    global AWGAgain, AWGAoffset, duty1lab
+    global AWGAoffset, duty1lab
     
     temp = 0
     BAWGAAmpl(temp)
@@ -9121,7 +9080,7 @@ def AWGAMakeStair():
     
 def AWGAMakeUUNoise():
     global AWGAwaveform, AWGASampleRate, AWGAAmplvalue, AWGAOffsetvalue, AWGAFreqvalue
-    global AWGALength, AWGAperiodvalue, AWGAgain, AWGAoffset
+    global AWGALength, AWGAperiodvalue, AWGAoffset
 
     temp = 0
     BAWGAAmpl(temp)
@@ -9144,7 +9103,7 @@ def AWGAMakeUUNoise():
     
 def AWGAMakeUGNoise():
     global AWGAwaveform, AWGASampleRate, AWGAAmplvalue, AWGAOffsetvalue, AWGAFreqvalue
-    global AWGALength, AWGAperiodvalue, AWGAgain, AWGAoffset
+    global AWGALength, AWGAperiodvalue, AWGAoffset
 
     temp = 0
     BAWGAAmpl(temp)
@@ -9170,8 +9129,8 @@ def UpdateAWGA():
     global AWGAFreqvalue, AWGAPhasevalue, AWGAPhaseDelay
     global AWGADutyCyclevalue, FSweepMode, AWGARepeatFlag
     global AWGAWave, AWGAMode, AWGAwaveform, AWGAIOMode
-    global AWGASampleRate, AWG1Offset, ctx, ad5625, m2k_AWG1pd, m2k_fabric, dac_a_pd
-    global AWGAgain, AWGAoffset, AWGBgain, AWGBoffset, m2k_dac_a, m2k_dac_b, Buff0, Buff1
+    global AWGASampleRate, AWG1Offset #, ctx, ad5625, m2k_AWG1pd, m2k_fabric, dac_a_pd
+    global AWGAoffset, AWGBgain, AWGBoffset #, m2k_dac_a, m2k_dac_b, Buff0, Buff1
     global AWGAModeLabel, DevID, HWRevOne
     global AWGAShape, AWGBwaveform
     
@@ -9253,6 +9212,7 @@ def UpdateAWGA():
     AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
     #
     buffer = [AWGAwaveform, AWGBwaveform]
+    # aout.stop()
     aout.setCyclic(True)
     aout.push(buffer)
     # 
@@ -9294,7 +9254,7 @@ def BAWGBOffset(temp):
         AWGBOffsetEntry.insert(0, AWGBOffsetvalue)
     
 def BAWGBFreq(temp):
-    global aout, AWGBFreqEntry, AWGBFreqvalue, AWGBSampleRate, m2k_dac_b, AWGBgain, AWGBgain7M, AWGBgain75M
+    global aout, AWGBFreqEntry, AWGBFreqvalue, AWGBSampleRate, m2k_dac_b
 
     try:
         AWGBFreqvalue = float(eval(AWGBFreqEntry.get()))
@@ -9312,12 +9272,11 @@ def BAWGBFreq(temp):
         AWGBFreqEntry.insert(0, AWGBFreqvalue)
     if AWGBFreqvalue <= 10000: # 10 times 7500
         AWGBSampleRate = 7500000
-        AWGBgain = AWGBgain7M
 ##    elif AWGBFreqvalue > 7500 and AWGBFreqvalue < 75000: # 10 times 75000
 ##        AWGBSampleRate = 7500000
     elif AWGBFreqvalue > 10000 and AWGBFreqvalue < 25000000: # 10 times 750000
         AWGBSampleRate = 75000000
-        AWGBgain = AWGBgain75M
+    # aout.stop()
     aout.setSampleRate(1, AWGBSampleRate) # m2k_dac_b.attrs["sampling_frequency"].value = str(AWGBSampleRate)
 
 def BAWGBPhaseDelay():
@@ -9369,8 +9328,7 @@ def BAWGBDutyCycle(temp):
         AWGBDutyCycleEntry.insert(0, AWGBDutyCyclevalue)
 #
 def AWGBReadFile():
-    global aout, AWGBwaveform, AWGBLength, awgwindow, AWGBSampleRate, AWGBgain
-    global AWGBgain75M, AWGBgain7M, AWGBgain750K, AWGBgain75K
+    global aout, AWGBwaveform, AWGBLength, awgwindow, AWGBSampleRate
 
     # Read values from CVS file
     filename = askopenfilename(defaultextension = ".csv", filetypes=[("CSV files", "*.csv")], parent=awgwindow)
@@ -9386,14 +9344,6 @@ def AWGBReadFile():
         AWGBSampleRate = int(RequestRate)
     except:
         AWGBSampleRate = 75000
-    if AWGBSampleRate == 75000000:
-        AWGBgain = AWGBgain75M
-    if AWGBSampleRate == 7500000:
-        AWGBgain = AWGBgain7M
-    if AWGBSampleRate == 750000:
-        AWGBgain = AWGBgain750K
-    if AWGBSampleRate == 75000:
-        AWGBgain = AWGBgain75K
     aout.setSampleRate(1, AWGBSampleRate) # m2k_dac_b.attrs["sampling_frequency"].value = str(AWGBSampleRate)
     AWGBwaveform = []
     ColumnNum = 0
@@ -9413,7 +9363,6 @@ def AWGBReadFile():
 def AWGBReadWAV():
     global aout, AWGBwaveform, AWGBLength, awgwindow
     global AWGBSampleRate, m2k_dac_b, AWGBOffsetvalue, AWGBAmplvalue
-    global AWGBgain75M, AWGBgain7M, AWGBgain750K, AWGBgain75K, AWGBgain
 
     temp = 0
     BAWGBAmpl(temp)
@@ -9436,14 +9385,6 @@ def AWGBReadWAV():
         AWGBSampleRate = float(RequestRate)
     except:
         AWGBSampleRate = 75000
-    if AWGBSampleRate == 75000000:
-        AWGBgain = AWGBgain75M
-    if AWGBSampleRate == 7500000:
-        AWGBgain = AWGBgain7M
-    if AWGBSampleRate == 750000:
-        AWGBgain = AWGBgain750K
-    if AWGBSampleRate == 75000:
-        AWGBgain = AWGBgain75K
     aout.setSampleRate(1, AWGBSampleRate) # m2k_dac_b.attrs["sampling_frequency"].value = str(AWGBSampleRate)
     AWGBwaveform = []
     #Extract Raw Audio from Wav File
@@ -9467,7 +9408,7 @@ def AWGBEnterMath():
     global AWGAwaveform, AWGBSampleRate, VBuffA, VBuffB, VFilterA, VFilterB
     global AWGBwaveform, VmemoryA, VmemoryB, ImemoryA, ImemoryB, AWGBMathString
     global FFTBuffA, FFTBuffB, FFTwindowshape, AWGBLength, awgwindow
-    global DFiltACoef, DFiltBCoef, AWGBgain, AWGBoffset
+    global DFiltACoef, DFiltBCoef, AWGBoffset
 
     TempString = AWGBMathString
     AWGBMathString = askstring("AWG 2 Math Formula", "Current Formula: " + AWGBMathString + "\n\nNew Formula:\n", initialvalue=AWGBMathString, parent=awgwindow)
@@ -9479,7 +9420,7 @@ def AWGBMakeMath():
     global AWGAwaveform, AWGBSampleRate, VBuffA, VBuffB, VFilterA, VFilterB
     global AWGBwaveform, VmemoryA, VmemoryB, ImemoryA, ImemoryB, AWGBMathString
     global FFTBuffA, FFTBuffB, FFTwindowshape, AWGBLength, awgwindow
-    global DFiltACoef, DFiltBCoef, AWGBgain, AWGBoffset
+    global DFiltACoef, DFiltBCoef, AWGBoffset
 
     AWGBwaveform = eval(AWGBMathString)
     AWGBwaveform = numpy.array(AWGBwaveform)
@@ -9487,7 +9428,7 @@ def AWGBMakeMath():
 def AWGBMakeDC():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGBSampleRate, AWGBDutyCyclevalue, AWGBPhasevalue
-    global AWGBgain, AWGBoffset, phaseblab, duty2lab
+    global AWGBoffset, phaseblab, duty2lab
     
     temp = 0
     BAWGBAmpl(temp)
@@ -9521,7 +9462,7 @@ def AWGBMakeDC():
 #
 def AWGBMakeSine():
     global AWGBwaveform, AWGBSampleRate, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBperiodvalue
-    global AWGBDutyCyclevalue, AWGBFreqvalue, duty2lab, AWGBgain, AWGBoffset, AWGBPhaseDelay, AWGBperiodvalue
+    global AWGBDutyCyclevalue, AWGBFreqvalue, duty2lab, AWGBoffset, AWGBPhaseDelay, AWGBperiodvalue
     
     temp = 0
     BAWGBAmpl(temp)
@@ -9557,7 +9498,7 @@ def AWGBMakeSine():
 #
 def AWGBMakeFourier():
     global AWGBwaveform, AWGBSampleRate, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength
-    global AWGBDutyCyclevalue, AWGBFreqvalue, duty2lab, AWGBgain, AWGBoffset
+    global AWGBDutyCyclevalue, AWGBFreqvalue, duty2lab, AWGBoffset
     
     temp = 0
     BAWGBAmpl(temp)
@@ -9581,7 +9522,7 @@ def AWGBMakeFourier():
 #
 def AWGBMakeSinc():
     global AWGBwaveform, AWGBSampleRate, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBperiodvalue
-    global AWGBDutyCyclevalue, AWGBFreqvalue, duty2lab, AWGBgain, AWGBoffset, AWGBPhaseDelay, AWGBperiodvalue
+    global AWGBDutyCyclevalue, AWGBFreqvalue, duty2lab, AWGBoffset, AWGBPhaseDelay, AWGBperiodvalue
     
     temp = 0
     BAWGBAmpl(temp)
@@ -9656,7 +9597,7 @@ def AWGBMakePWMSine():
 def AWGBMakeSSQ():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGBSampleRate, AWGBDutyCyclevalue, AWGBPhasevalue
-    global AWGBgain, AWGBoffset, phaseblab, duty2lab
+    global AWGBoffset, phaseblab, duty2lab
 
     temp = 0
     BAWGBAmpl(temp)
@@ -9711,7 +9652,7 @@ def AWGBMakeSSQ():
 def AWGBMakeSquare():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGBSampleRate, AWGBDutyCyclevalue, AWGBPhasevalue
-    global AWGBgain, AWGBoffset, phaseblab, duty2lab
+    global AWGBoffset, phaseblab, duty2lab
     
     temp = 0
     BAWGBAmpl(temp)
@@ -9757,7 +9698,7 @@ def AWGBMakeSquare():
 def AWGBMakeTrapazoid():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGBSampleRate, AWGBDutyCyclevalue, AWGBPhasevalue
-    global AWGBgain, AWGBoffset, phaseblab, duty2lab
+    global AWGBoffset, phaseblab, duty2lab
     
     temp = 0
     BAWGBAmpl(temp)
@@ -9817,7 +9758,7 @@ def AWGBMakeTrapazoid():
 def AWGBMakeRamp():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGBSampleRate, AWGBDutyCyclevalue, AWGBPhasevalue
-    global AWGBgain, AWGBoffset, phaseblab, duty2lab
+    global AWGBoffset, phaseblab, duty2lab
     
     temp = 0
     BAWGBAmpl(temp)
@@ -9874,7 +9815,7 @@ def AWGBMakeRamp():
 def AWGBMakeUpDownRamp():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGBSampleRate, AWGBDutyCyclevalue, AWGBPhasevalue
-    global AWGBgain, AWGBoffset, duty2lab
+    global AWGBoffset, duty2lab
     
     temp = 0
     BAWGBAmpl(temp)
@@ -9940,7 +9881,7 @@ def AWGBMakeSawtooth():
 def AWGBMakeImpulse():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGBSampleRate, AWGBDutyCyclevalue, AWGBPhasevalue
-    global AWGBgain, AWGBoffset
+    global AWGBoffset
     
     temp = 0
     BAWGBAmpl(temp)
@@ -9976,7 +9917,7 @@ def AWGBMakeImpulse():
 def AWGBMakeStair():
     global AWGBwaveform, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBPhaseDelay
     global AWGBFreqvalue, AWGBperiodvalue, AWGBSampleRate, AWGBDutyCyclevalue, AWGBPhasevalue
-    global AWGBgain, AWGBoffset, duty2lab
+    global AWGBoffset, duty2lab
     
     temp = 0
     BAWGBAmpl(temp)
@@ -10019,7 +9960,7 @@ def AWGBMakeStair():
 def AWGBMakeUUNoise():
     global AWGBwaveform, AWGBSampleRate, AWGBAmplvalue, AWGBOffsetvalue, AWGBFreqvalue
     global AWGBLength, AWGBperiodvalue
-    global AWGBgain, AWGBoffset
+    global AWGBoffset
     
     temp = 0
     BAWGBAmpl(temp)
@@ -10041,8 +9982,7 @@ def AWGBMakeUUNoise():
     
 def AWGBMakeUGNoise():
     global AWGBwaveform, AWGBSampleRate, AWGBAmplvalue, AWGBOffsetvalue, AWGBFreqvalue
-    global AWGBLength, AWGBperiodvalue
-    global AWGBgain, AWGBoffset
+    global AWGBLength, AWGBperiodvalue, AWGBoffset
     
     temp = 0
     BAWGBAmpl(temp)
@@ -10069,7 +10009,7 @@ def UpdateAWGB():
     global AWGBSampleRate, AWG2Offset, AWGBWave, AWGBMode, AWGBwaveform
     global ctx, ad5625, m2k_AWG2pd, m2k_fabric, Buff0, Buff1, m2k_dac_a, m2k_dac_b
     global AWGBMode, AWGBIOMode, AWGBModeLabel, DevID, HWRevOne
-    global AWGBShape, AWGAwaveform, AWGAgain, AWGBgain, AWGBbinform
+    global AWGBShape, AWGAwaveform, AWGBbinform
     
     if AWGBFreqvalue > 0.0:
         AWGBperiodvalue = AWGBSampleRate/AWGBFreqvalue
@@ -10141,7 +10081,7 @@ def UpdateAWGB():
     AWGBModeLabel.config(text = label_txt ) # change displayed value
 #
     AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
-    
+    # aout.stop()
     buffer = [AWGAwaveform, AWGBwaveform]
     aout.setCyclic(True)
     aout.push(buffer)
@@ -17257,8 +17197,8 @@ Optionmenu.menu.add_command(label="SnapShot [s]", command=BSnapShot)
 Optionmenu.menu.add_radiobutton(label='Black BG', variable=ColorMode, value=0, command=BgColor)
 Optionmenu.menu.add_radiobutton(label='White BG', variable=ColorMode, value=1, command=BgColor)
 Optionmenu.menu.add_command(label="Run Self Cal", command=BSelfCalibration)
-Optionmenu.menu.add_command(label="Save Cal file", command=SaveCalibration)
-Optionmenu.menu.add_command(label="Load Cal file", command=LoadCalibration)
+#Optionmenu.menu.add_command(label="Save Cal file", command=SaveCalibration)
+#Optionmenu.menu.add_command(label="Load Cal file", command=LoadCalibration)
 Optionmenu.pack(side=LEFT, anchor=W)
 #
 dropmenu2 = Frame( frame2r )
