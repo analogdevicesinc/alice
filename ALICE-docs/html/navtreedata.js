@@ -24,11 +24,11 @@ var NAVTREE =
 [
   [ "ALICE 1.3", "index.html", [
     [ "ALICE", "md__r_e_a_d_m_e.html", [
-      [ "Background:", "md__r_e_a_d_m_e.html#autotoc_md6", null ],
-      [ "Required files:", "md__r_e_a_d_m_e.html#autotoc_md7", [
-        [ "Windows:", "md__r_e_a_d_m_e.html#autotoc_md8", null ],
-        [ "Linux and OSX:", "md__r_e_a_d_m_e.html#autotoc_md9", null ],
-        [ "Manually installing libsmu / pysmu and ALICE Desktop Python source", "md__r_e_a_d_m_e.html#autotoc_md10", null ]
+      [ "Background:", "md__r_e_a_d_m_e.html#autotoc_md13", null ],
+      [ "Required files:", "md__r_e_a_d_m_e.html#autotoc_md14", [
+        [ "Windows:", "md__r_e_a_d_m_e.html#autotoc_md15", null ],
+        [ "Linux and OSX:", "md__r_e_a_d_m_e.html#autotoc_md16", null ],
+        [ "Manually installing libsmu / pysmu and ALICE Desktop Python source", "md__r_e_a_d_m_e.html#autotoc_md17", null ]
       ] ]
     ] ],
     [ "Namespaces", "namespaces.html", [
@@ -62,13 +62,15 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"alice-desktop-1_83_8pyw.html",
-"alice-desktop-1_83_8pyw.html#a293af21eda19edc691a77699aae8595b",
-"alice-desktop-1_83_8pyw.html#a54ee8a3b86afbbb21ca1b4d681f609bf",
-"alice-desktop-1_83_8pyw.html#a7b8eb696ef6d1335a16f6f69b70a6de3",
-"alice-desktop-1_83_8pyw.html#aa220d3e586479ac5964792bb142efeb7",
-"alice-desktop-1_83_8pyw.html#acc3408b2c21aaa21d3f8619afd86217d",
-"alice-desktop-1_83_8pyw.html#af56214b1f2286dc0557775589a7afed6"
+"alice-desktop-1_83-linux-test_8pyw.html",
+"alice-desktop-1_83-linux-test_8pyw.html#a290842dba793c8fd02a0650cad4f7f35",
+"alice-desktop-1_83-linux-test_8pyw.html#a57ced0e64d713466ab296801033ab0d1",
+"alice-desktop-1_83-linux-test_8pyw.html#a7eab1796ee96e5652081258d41fd88d2",
+"alice-desktop-1_83-linux-test_8pyw.html#aa6bf045030d0f657f086b5b8cb0f8fbf",
+"alice-desktop-1_83-linux-test_8pyw.html#ace3d083d53367cd4a4419b588e33346f",
+"alice-desktop-1_83-linux-test_8pyw.html#af5cdb25532909802e539962979ba2b15",
+"alice-desktop-1_83_8pyw.html#a680779ecf3042a865b852da5dc83f0cb",
+"alice-desktop-1_83_8pyw.html#add7d12226bc2cbc42ea79e262c384141"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

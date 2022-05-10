@@ -1,6 +1,4 @@
 var searchData=
 [
-  ['language_5fconfig_2etxt_1589',['language_config.txt',['../language__config_8txt.html',1,'']]],
-  ['linux_2dinstall_2dsteps_2dv1_2e3_2etxt_1590',['linux-install-steps-v1.3.txt',['../linux-install-steps-v1_83_8txt.html',1,'']]],
-  ['load_2ddamped_2dsine_2etxt_1591',['load-damped-sine.txt',['../load-damped-sine_8txt.html',1,'']]]
+  ['either_2dcolor_2dchooser_2dtest_2epy_1629',['either-color-chooser-test.py',['../either-color-chooser-test_8py.html',1,'']]]
 ];

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['hidetip_1834',['hidetip',['../classalice-desktop-1_1_1_create_tool_tip.html#ab5e9ac7b2957f299e378b70d47760a88',1,'alice-desktop-1::CreateToolTip']]]
+  ['getcolor_1891',['getcolor',['../namespaceeither-color-chooser-test.html#a1e39994274492051dd419c2bd8411e9d',1,'either-color-chooser-test']]]
 ];

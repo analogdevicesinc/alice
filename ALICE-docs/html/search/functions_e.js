@@ -1,11 +1,7 @@
 var searchData=
 [
-  ['reinterploatetrigger_1986',['ReInterploateTrigger',['../namespacealice-desktop-1.html#a5eb9e7fbba2984a6278431dd4acabb58',1,'alice-desktop-1']]],
-  ['remakeawgwaves_1987',['ReMakeAWGwaves',['../namespacealice-desktop-1.html#a76521eab39671699e2a493d6e4a1fc12',1,'alice-desktop-1']]],
-  ['resetago_1988',['ReSetAGO',['../namespacealice-desktop-1.html#a1ec00f856804a28151ed765540f7c292',1,'alice-desktop-1']]],
-  ['resetaigo_1989',['ReSetAIGO',['../namespacealice-desktop-1.html#a2bde6692e70d68c95fe4ee8129e35994',1,'alice-desktop-1']]],
-  ['resetbgo_1990',['ReSetBGO',['../namespacealice-desktop-1.html#a69a740c6f78d0ac4e9cba5add9faf9ce',1,'alice-desktop-1']]],
-  ['resetbigo_1991',['ReSetBIGO',['../namespacealice-desktop-1.html#a2036ec9ccdbe5ea47da50aeaf70e127c',1,'alice-desktop-1']]],
-  ['rexecutefromstring_1992',['RExecuteFromString',['../namespacealice-desktop-1.html#a190473303fcdd94a1b08bfb72d8d636a',1,'alice-desktop-1']]],
-  ['runscript_1993',['RunScript',['../namespacealice-desktop-1.html#add698f9137b1dc21d8e7caaaff135fe4',1,'alice-desktop-1']]]
+  ['phacaresize_2041',['PhACaresize',['../namespacealice-desktop-1.html#aeb2507129deba215b4203a76aff9f9f1',1,'alice-desktop-1']]],
+  ['phacheckbox_2042',['PhACheckBox',['../namespacealice-desktop-1.html#a305d6f40c1ab8f30584f83d48af67cb6',1,'alice-desktop-1']]],
+  ['pinknoise_2043',['PinkNoise',['../namespacealice-desktop-1.html#a3ae39d2c7b43df944f292b8423d697aa',1,'alice-desktop-1']]],
+  ['plotphafromfile_2044',['PlotPhAFromFile',['../namespacealice-desktop-1.html#a28390544928b7a7f052dc3e9163b59c4',1,'alice-desktop-1']]]
 ];

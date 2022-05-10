@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
 #
-# ADALM1000 alice-desktop 1.3.py(w) (1-26-2022)
+# ADALM1000 alice-desktop 1.3.py(w) (5-7-2022)
 # For Python version 2.7 or 3.7, Windows OS and Linux OS
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -50,6 +50,7 @@ if sys.version_info[0] == 2:
     from tkFileDialog import asksaveasfilename
     from tkSimpleDialog import askstring
     from tkMessageBox import *
+    from tkColorChooser import askcolor
 if sys.version_info[0] == 3:
     print ("Python 3.x")    
     import urllib.request, urllib.error, urllib.parse
@@ -60,6 +61,7 @@ if sys.version_info[0] == 3:
     from tkinter.filedialog import asksaveasfilename
     from tkinter.simpledialog import askstring
     from tkinter.messagebox import *
+    from tkinter.colorchooser import askcolor
 #
 import webbrowser
 try:
@@ -71,9 +73,9 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "26 Jan 2022"
-SWRev = "1.3 "
-Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.12/alice-desktop-1.3-setup.exe'
+RevDate = "7 May 2022"
+SWRev = "1.3.13 "
+Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.13/alice-desktop-1.3-setup.exe'
 # small bit map of ADI logo for window icon
 TBicon = """
 R0lGODlhIAAgAHAAACH5BAEAAAIALAAAAAAgACAAgQAAAP///wAAAAAAAAJJhI+py+0PYwtBWkDp
@@ -131,28 +133,36 @@ FontSize = 8
 BorderSize = 1
 MouseX = MouseY = -10
 MouseCAV = MouseCAI = MouseCBV = MouseCBI = MouseMuxA = MouseMuxB = MouseMuxC = MouseMuxD = -10
-## Colors that can be modified
-COLORframes = "#000080"   # Color = "#rrggbb" rr=red gg=green bb=blue, Hexadecimal values 00 - ff
-COLORcanvas = "#000000"   # 100% black
-COLORgrid = "#808080"     # 50% Gray
-COLORzeroline = "#0000ff" # 100% blue
-COLORtrace1 = "#00ff00"   # 100% green
-COLORtrace2 = "#ff8000"   # 100% orange
-COLORtrace3 = "#00ffff"   # 100% cyan
-COLORtrace4 = "#ffff00"   # 100% yellow
-COLORtrace5 = "#ff00ff"   # 100% magenta
-COLORtrace6 = "#C80000"   # 90% red
-COLORtrace7 = "#8080ff"   # 100% purple
-COLORtraceR1 = "#008000"   # 50% green
-COLORtraceR2 = "#905000"   # 50% orange
-COLORtraceR3 = "#008080"   # 50% cyan
-COLORtraceR4 = "#808000"   # 50% yellow
-COLORtraceR5 = "#800080"   # 50% magenta
-COLORtraceR6 = "#800000"   # 80% red
-COLORtraceR7 = "#4040a0"  # 80% purple
-COLORtext = "#ffffff"     # 100% white
-COLORtrigger = "#ff0000"  # 100% red
-COLORsignalband = "#ff0000" # 100% red
+## Colors that can be modified Use function to reset to "factory" colors
+def ResetColors():
+    global COLORtext, COLORcanvas, COLORtrigger, COLORsignalband, COLORframes, COLORgrid, COLORzeroline
+    global COLORtrace1, COLORtraceR1, COLORtrace2, COLORtraceR2, COLORtrace3, COLORtraceR3, COLORtrace4, COLORtraceR4
+    global COLORtrace5, COLORtraceR5, COLORtrace6, COLORtraceR6, COLORtrace7, COLORtraceR7
+    
+    COLORtext = "#ffffff"     # 100% white
+    COLORtrigger = "#ff0000"  # 100% red
+    COLORsignalband = "#ff0000" # 100% red
+    COLORframes = "#000080"   # Color = "#rrggbb" rr=red gg=green bb=blue, Hexadecimal values 00 - ff
+    COLORcanvas = "#000000"   # 100% black
+    COLORgrid = "#808080"     # 50% Gray
+    COLORzeroline = "#0000ff" # 100% blue
+    COLORtrace1 = "#00ff00"   # 100% green
+    COLORtrace2 = "#ff8000"   # 100% orange
+    COLORtrace3 = "#00ffff"   # 100% cyan
+    COLORtrace4 = "#ffff00"   # 100% yellow
+    COLORtrace5 = "#ff00ff"   # 100% magenta
+    COLORtrace6 = "#C80000"   # 90% red
+    COLORtrace7 = "#8080ff"   # 100% purple
+    COLORtraceR1 = "#008000"   # 50% green
+    COLORtraceR2 = "#905000"   # 50% orange
+    COLORtraceR3 = "#008080"   # 50% cyan
+    COLORtraceR4 = "#808000"   # 50% yellow
+    COLORtraceR5 = "#800080"   # 50% magenta
+    COLORtraceR6 = "#800000"   # 80% red
+    COLORtraceR7 = "#4040a0"  # 80% purple
+    
+#
+ResetColors()
 ButtonGreen = "#00ff00"   # 100% green
 ButtonRed = "#ff0000" # 100% red
 GUITheme = "Light"
@@ -263,6 +273,7 @@ AWGB_Ext_Gain = DoubleVar(0)
 AWGB_Ext_Gain.set(1.0)
 AWGB_Ext_Offset = DoubleVar(0)
 AWGB_Ext_Offset.set(0.0)
+LockFreq = IntVar(0) # Flag to lock AWG A and AWG B to same frequency
 AWG_2X = IntVar(0) # selection variable to set AWG DAC channes for 2X samplerate modes
 Two_X_Sample = IntVar(0) # selection variable to set ADC channes for 2X samplerate mode
 Two_X_Sample.set(0)
@@ -476,11 +487,11 @@ DCVMuxA = MinVMuxA = MaxVMuxA = MidVMuxA = PPVMuxA = SVMuxA = 0
 DCVMuxB = MinVMuxB = MaxVMuxB = MidVMuxB = PPVMuxB = SVMuxB = 0
 DCVMuxC = MinVMuxC = MaxVMuxC = MidVMuxC = PPVMuxC = SVMuxC = 0
 DCVMuxD = MinVMuxD = MaxVMuxD = MidVMuxD = PPVMuxD = SVMuxD = 0
-PeakVA = PeakVB = PeakIA = PeakIB = 0.0
+PeakVA = PeakVB = PeakVAB = PeakIA = PeakIB = PeakIAB = 0.0
 PeakVMA = PeakVMB = PeakVMC = PeakVMD = 0.0
 PeakphaseVMA = PeakphaseVMB = PeakphaseVMC = PeakphaseVMD = 0.0
-PeakfreqVA = PeakfreqVB = PeakfreqIA = PeakfreqIB = 0.0
-PeakphaseVA = PeakphaseVB = PeakphaseIA = PeakphaseIB = PeakphaseVAB = 0.0
+PeakfreqVA = PeakfreqVB = PeakfreqIA = PeakfreqIB = PeakfreqIAB = 0.0
+PeakphaseVA = PeakphaseVB = PeakphaseIA = PeakphaseIB = PeakphaseVAB = PeakphaseIAB = 0.0
 CHADCy = CHBDCy = 0
 DCI1 = DCI2 = MinI1 = MaxI1 = MinI2 = MaxI2 = MidI1 = PPI1 = MidI2 = PPI2 = SV2 = SI2 = 0
 CHAperiod = CHAfreq = CHBperiod = CHBfreq = 0
@@ -522,8 +533,10 @@ VAresult = []
 VBresult = []
 IAresult = []
 IBresult = []
+IABresult = []
 PhaseIA = []
 PhaseIB = []
+PhaseIAB = []
 PhaseVA = []
 PhaseVB = []
 DFiltACoef = [1]
@@ -532,8 +545,10 @@ DigFiltA = IntVar(0)
 DigFiltA.set(0)
 DigFiltABoxCar = IntVar(0)
 DigFiltBBoxCar = IntVar(0)
-DigDeSkewA = IntVar(0)
-DigDeSkewB = IntVar(0)
+DigDeSkewVA = IntVar(0)
+DigDeSkewVB = IntVar(0)
+DigDeSkewIA = IntVar(0)
+DigDeSkewIB = IntVar(0)
 DigFiltB = IntVar(0)
 DigFiltB.set(0)
 DigBuffA = IntVar(0)
@@ -781,7 +796,7 @@ MinSamplesSA = 64
 MaxSamplesSA = 65536
 #
 MathScreenStatus = IntVar(0)
-#
+ColorScreenStatus = IntVar(0)
 XYScreenStatus = IntVar(0)
 Xsignal = IntVar(0)   # Signal for X axis variable
 Xsignal.set(1)
@@ -995,12 +1010,14 @@ def BSaveConfig(filename):
     global phawindow, PhAca, PhAScreenStatus, PhADisp
     global GRWPhA, X0LPhA, GRHPhA, Y0TPhA, BoardStatus, boardwindow, BrdSel
     global VScale, IScale, RefphEntry, EnableScopeOnly, Roll_Mode
-    global vat_btn, vbt_btn, iat_btn, ibt_btn, vabt_btn
+    global vat_btn, vbt_btn, iat_btn, ibt_btn, vabt_btn, iapbt_btn
     global ShowPB_A, ShowPB_B, ShowPB_C, ShowPB_D, ScreenWidth, ScreenHeight
     global AWGANoiseEntry, AWGBNoiseEntry, AWGAsbnoise, AWGBsbnoise
     global AWGFiltA, AWGALenEntry, AWGFiltABoxCar, AWGFiltALength, digfltwindow
     global AWGFiltB, AWGBLenEntry, AWGFiltBBoxCar, AWGFiltBLength
-    
+    global COLORtext, COLORcanvas, COLORtrigger, COLORsignalband, COLORframes, COLORgrid, COLORzeroline
+    global COLORtrace1, COLORtraceR1, COLORtrace2, COLORtraceR2, COLORtrace3, COLORtraceR3, COLORtrace4, COLORtraceR4
+    global COLORtrace5, COLORtraceR5, COLORtrace6, COLORtraceR6, COLORtrace7, COLORtraceR7
     # open Config file for Write?
     try:
         ConfgFile = open(filename, "w")
@@ -1023,6 +1040,28 @@ def BSaveConfig(filename):
     ConfgFile.write('MathYString = "' + MathYString + '"\n')
     ConfgFile.write('MathYUnits = "' + MathYUnits + '"\n')
     ConfgFile.write('MathYAxis = "' + MathYAxis + '"\n')
+    # Save Color Def
+    ConfgFile.write('COLORtext = "' + COLORtext + '"\n')
+    ConfgFile.write('COLORcanvas = "' + COLORcanvas + '"\n')
+    ConfgFile.write('COLORtrigger = "' + COLORtrigger + '"\n')
+    ConfgFile.write('COLORsignalband = "' + COLORsignalband + '"\n')
+    ConfgFile.write('COLORframes = "' + COLORframes + '"\n')
+    ConfgFile.write('COLORgrid = "' + COLORgrid + '"\n')
+    ConfgFile.write('COLORtrace1 = "' + COLORtrace1 + '"\n')
+    ConfgFile.write('COLORtraceR1 = "' + COLORtraceR1 + '"\n')
+    ConfgFile.write('COLORtrace2 = "' + COLORtrace2 + '"\n')
+    ConfgFile.write('COLORtraceR2 = "' + COLORtraceR2 + '"\n')
+    ConfgFile.write('COLORtrace3 = "' + COLORtrace3 + '"\n')
+    ConfgFile.write('COLORtraceR3 = "' + COLORtraceR3 + '"\n')
+    ConfgFile.write('COLORtrace4 = "' + COLORtrace4 + '"\n')
+    ConfgFile.write('COLORtraceR4 = "' + COLORtraceR4 + '"\n')
+    ConfgFile.write('COLORtrace5 = "' + COLORtrace5 + '"\n')
+    ConfgFile.write('COLORtraceR5 = "' + COLORtraceR5 + '"\n')
+    ConfgFile.write('COLORtrace6 = "' + COLORtrace6 + '"\n')
+    ConfgFile.write('COLORtraceR6 = "' + COLORtraceR6 + '"\n')
+    ConfgFile.write('COLORtrace7 = "' + COLORtrace7 + '"\n')
+    ConfgFile.write('COLORtraceR7 = "' + COLORtraceR7 + '"\n')
+    #
     if BoardStatus.get() > 0:
         ConfgFile.write('MakeBoardScreen()\n')
         ConfgFile.write("boardwindow.geometry('+" + str(boardwindow.winfo_x()) + '+' + str(boardwindow.winfo_y()) + "')\n")
@@ -1231,6 +1270,10 @@ def BSaveConfig(filename):
             ConfgFile.write('ibt_btn.config(text="OFF", style="Stop.TButton")\n')
         else:
             ConfgFile.write('ibt_btn.config(text="ON", style="Run.TButton")\n')
+        if iapbt_btn.config('text')[-1] == 'OFF':
+            ConfgFile.write('iapbt_btn.config(text="OFF", style="Stop.TButton")\n')
+        else:
+            ConfgFile.write('iapbt_btn.config(text="ON", style="Run.TButton")\n')
         #
     else:
         ConfgFile.write('DestroyPhAScreen()\n')
@@ -1627,13 +1670,15 @@ def BLoadConfig(filename):
     global phawindow, PhAca, PhAScreenStatus, PhADisp
     global GRWPhA, X0LPhA, GRHPhA, Y0TPhA, EnableScopeOnly
     global VScale, IScale, RefphEntry, SMPfft, BoardStatus, boardwindow, BrdSel
-    global vat_btn, vbt_btn, iat_btn, ibt_btn, vabt_btn, RollBt, Roll_Mode
+    global vat_btn, vbt_btn, iat_btn, ibt_btn, vabt_btn, iapbt_btn, RollBt, Roll_Mode
     global ShowPB_A, ShowPB_B, ShowPB_C, ShowPB_D, ScreenWidth, ScreenHeight
     global TRACEwidth, ColorMode, ca, COLORcanvas, COLORtrace4, COLORtraceR4, COLORtext
     global AWGANoiseEntry, AWGBNoiseEntry, AWGAsbnoise, AWGBsbnoise
     global AWGFiltA, AWGALenEntry, AWGFiltABoxCar, AWGFiltALength, digfltwindow
     global AWGFiltB, AWGBLenEntry, AWGFiltBBoxCar, AWGFiltBLength
-    
+    global COLORtext, COLORcanvas, COLORtrigger, COLORsignalband, COLORframes, COLORgrid, COLORzeroline
+    global COLORtrace1, COLORtraceR1, COLORtrace2, COLORtraceR2, COLORtrace3, COLORtraceR3, COLORtrace4, COLORtraceR4
+    global COLORtrace5, COLORtraceR5, COLORtrace6, COLORtraceR6, COLORtrace7, COLORtraceR7
     # Read configuration values from file
     try:
         ConfgFile = open(filename)
@@ -1715,20 +1760,20 @@ def BLoadConfig(filename):
             BAWGBModeLabel()
             BAWGAPhaseDelay()
             BAWGBPhaseDelay()
-        if ColorMode.get() > 0: # White background
-            # print("White background")
-            if TRACEwidth.get() < 2:
-                TRACEwidth.set(2)
-            COLORtext = "#000000"   # 100% black
-            COLORtrace4 = "#a0a000" # 50% yellow
-            COLORtraceR4 = "#606000"   # 25% yellow
-            COLORcanvas = "#ffffff"     # 100% white
-        else:
-            # print("Black background")
-            COLORcanvas = "#000000"   # 100% black
-            COLORtrace4 = "#ffff00" # 100% yellow
-            COLORtraceR4 = "#808000"   # 50% yellow
-            COLORtext = "#ffffff"     # 100% white
+##        if ColorMode.get() > 0: # White background
+##            # print("White background")
+##            if TRACEwidth.get() < 2:
+##                TRACEwidth.set(2)
+##            COLORtext = "#000000"   # 100% black
+##            COLORtrace4 = "#a0a000" # 50% yellow
+##            COLORtraceR4 = "#606000"   # 25% yellow
+##            COLORcanvas = "#ffffff"     # 100% white
+##        else:
+##            # print("Black background")
+##            COLORcanvas = "#000000"   # 100% black
+##            COLORtrace4 = "#ffff00" # 100% yellow
+##            COLORtraceR4 = "#808000"   # 50% yellow
+##            COLORtext = "#ffffff"     # 100% white
         ca.config(background=COLORcanvas)
         # Needs to reload from waveform files
         if AWGAShape.get()==6:  
@@ -1805,6 +1850,12 @@ def ReMakeAWGwaves(): # re make awg waveforms ib case something changed
     elif AWGAShape.get()==22:
         AWGAMakeAMSine()
         AWGAShapeLabel.config(text = "AM Sine") # change displayed value
+    elif AWGAShape.get()==23:
+        AWGAMakeFullWaveSine()
+        AWGAShapeLabel.config(text = "Full Wave") # change displayed value
+    elif AWGAShape.get()==24:
+        AWGAMakeHalfWaveSine()
+        AWGAShapeLabel.config(text = "Half Wave") # change displayed value
     elif AWGAShape.get()==7:
         AWGAMakeUUNoise()
         AWGAShapeLabel.config(text = "UU Noise") # change displayed value
@@ -1862,6 +1913,12 @@ def ReMakeAWGwaves(): # re make awg waveforms ib case something changed
     elif AWGBShape.get()==20:
         AWGBMakePulse()
         AWGBShapeLabel.config(text = "Pulse") # change displayed value
+    elif AWGBShape.get()==23:
+        AWGBMakeFullWaveSine()
+        AWGBShapeLabel.config(text = "Full Wave") # change displayed value
+    elif AWGBShape.get()==24:
+        AWGBMakeHalfWaveSine()
+        AWGBShapeLabel.config(text = "Half Wave") # change displayed value
     elif AWGBShape.get()==7:
         AWGBMakeUUNoise()
         AWGBShapeLabel.config(text = "UU Noise") # change displayed value
@@ -2029,6 +2086,351 @@ def BgColor():
     if BodeScreenStatus.get() > 0:
         Bodeca.config(background=COLORcanvas)
         UpdateBodeScreen()
+## Color Selector / Editor
+def ColorSelector():
+    global ColorScreenStatus, FrameBG, SWRev, RevDate, ColorWindow
+    global COLORtext, COLORcanvas, COLORtrigger, COLORsignalband, COLORframes, COLORgrid, COLORzeroline
+    global COLORtrace1, COLORtraceR1, COLORtrace2, COLORtraceR2, COLORtrace3, COLORtraceR3, COLORtrace4, COLORtraceR4
+    global COLORtrace5, COLORtraceR5, COLORtrace6, COLORtraceR6, COLORtrace7, COLORtraceR7
+
+    if ColorScreenStatus.get() == 0:
+        ColorScreenStatus.set(1)
+        #
+        ColorWindow = Toplevel()
+        ColorWindow.title("Color Selector " + SWRev + RevDate)
+        ColorWindow.resizable(FALSE,FALSE)
+        ColorWindow.protocol("WM_DELETE_WINDOW", DestroyColorScreen)
+        ColorWindow.configure(background=FrameBG)
+        
+        Colorframe1 = LabelFrame(ColorWindow, text="Trace Colors", style="A10R1.TLabelframe") #"A10T5.TLabelframe")
+        Colorframe1.pack(side=TOP, expand=1, fill=Y)
+    # Color value = "#rrggbb" rr=red gg=green bb=blue, Hexadecimal values 00 - ff
+        trace1bt = Button(Colorframe1, text="COLORtrace1", style="T1W16.TButton", command=SetColorT1 ) #COLORtrace1 = "#00ff00"   # 100% green
+        trace1bt.grid(row=0, column=0, columnspan=1, sticky=W)
+        #
+        trace2bt = Button(Colorframe1, text="COLORtrace2", style="T2W16.TButton", command=SetColorT2 ) #COLORtrace2 = "#ff8000"   # 100% orange
+        trace2bt.grid(row=0, column=1, columnspan=1, sticky=W)
+        #
+        trace3bt = Button(Colorframe1, text="COLORtrace3", style="T3W16.TButton", command=SetColorT3 ) #COLORtrace3 = "#00ffff"   # 100% cyan
+        trace3bt.grid(row=0, column=2, columnspan=1, sticky=W)
+        #
+        trace4bt = Button(Colorframe1, text="COLORtrace4", style="T4W16.TButton", command=SetColorT4 ) #COLORtrace4 = "#ffff00"   # 100% yellow
+        trace4bt.grid(row=0, column=3, columnspan=1, sticky=W)
+        #
+        trace5bt = Button(Colorframe1, text="COLORtrace5", style="T5W16.TButton", command=SetColorT5 ) #COLORtrace5 = "#ff00ff"   # 100% magenta
+        trace5bt.grid(row=1, column=0, columnspan=1, sticky=W)
+        #
+        trace6bt = Button(Colorframe1, text="COLORtrace6", style="T6W16.TButton", command=SetColorT6 ) #COLORtrace6 = "#C80000"   # 90% red
+        trace6bt.grid(row=1, column=1, columnspan=1, sticky=W)
+        #
+        trace7bt = Button(Colorframe1, text="COLORtrace7", style="T7W16.TButton", command=SetColorT7 ) #COLORtrace7 = "#8080ff"   # 100% purple
+        trace7bt.grid(row=1, column=2, columnspan=1, sticky=W)
+        #
+        tracer1bt = Button(Colorframe1, text="COLORtraceR1", style="TR1W16.TButton", command=SetColorTR1 ) #COLORtraceR1 = "#008000"   # 50% green
+        tracer1bt.grid(row=2, column=0, columnspan=1, sticky=W)
+        #
+        tracer2rbt = Button(Colorframe1, text="COLORtraceR2", style="TR2W16.TButton", command=SetColorTR2 ) #COLORtraceR2 = "#905000"   # 50% orange
+        tracer2rbt.grid(row=2, column=1, columnspan=1, sticky=W)
+        #
+        tracer3bt = Button(Colorframe1, text="COLORtraceR3", style="TR3W16.TButton", command=SetColorTR3 ) #COLORtraceR3 = "#008080"   # 50% cyan
+        tracer3bt.grid(row=2, column=2, columnspan=1, sticky=W)
+        #
+        tracer4bt = Button(Colorframe1, text="COLORtraceR4", style="TR4W16.TButton", command=SetColorTR4 ) #COLORtraceR4 = "#808000"   # 50% yellow
+        tracer4bt.grid(row=2, column=3, columnspan=1, sticky=W)
+        #
+        tracer5bt = Button(Colorframe1, text="COLORtraceR5", style="TR5W16.TButton", command=SetColorTR5 ) #COLORtraceR5 = "#800080"   # 50% magenta
+        tracer5bt.grid(row=3, column=0, columnspan=1, sticky=W)
+        #
+        tracer6bt = Button(Colorframe1, text="COLORtraceR6", style="TR6W16.TButton", command=SetColorTR6 ) #COLORtraceR6 = "#800000"   # 80% red
+        tracer6bt.grid(row=3, column=1, columnspan=1, sticky=W)
+        #
+        tracer7bt = Button(Colorframe1, text="COLORtraceR7", style="TR7W16.TButton", command=SetColorTR7 ) #COLORtraceR7 = "#4040a0"  # 80% purple
+        tracer7bt.grid(row=3, column=2, columnspan=1, sticky=W)
+        #
+        gridbt = Button(Colorframe1, text="COLORgrid", style="W16.TButton", command=SetColorGrid ) #COLORgrid = "#808080"     # 50% Gray
+        gridbt.grid(row=4, column=0, columnspan=1, sticky=W)
+        zerolinebt = Button(Colorframe1, text="COLORzeroline", style="ZLW16.TButton", command=SetColorZLine ) #COLORzeroline = "#0000ff" # 100% blue
+        zerolinebt.grid(row=4, column=1, columnspan=1, sticky=W)
+        ctriggerbt = Button(Colorframe1, text="COLORtrigger", style="TGW16.TButton", command=SetColorTrig ) #COLORtrigger = "#ff0000"  # 100% red
+        ctriggerbt.grid(row=4, column=2, columnspan=1, sticky=W)
+    #
+        ctextbt = Button(Colorframe1, text="COLORtext", style="W16.TButton", command=SetColorText ) #COLORtext = "#ffffff"     # 100% white
+        ctextbt.grid(row=4, column=3, columnspan=1, sticky=W)
+    #
+        cdismissbt = Button(Colorframe1, text="Dismiss", style="W16.TButton", command=DestroyColorScreen )
+        cdismissbt.grid(row=5, column=0, columnspan=1, sticky=W)
+        cresetbt = Button(Colorframe1, text="Reset Colors", style="W16.TButton", command=ResetAllColors )
+        cresetbt.grid(row=5, column=1, columnspan=1, sticky=W)
+##
+def DestroyColorScreen():
+    global ColorScreenStatus, ColorWindow
+    
+    if ColorScreenStatus.get() == 1:
+        ColorScreenStatus.set(0)
+        ColorWindow.destroy()
+##
+def ResetAllColors():
+    global COLORtext, COLORcanvas, COLORtrigger, COLORsignalband, COLORframes, COLORgrid, COLORzeroline
+    global COLORtrace1, COLORtraceR1, COLORtrace2, COLORtraceR2, COLORtrace3, COLORtraceR3, COLORtrace4, COLORtraceR4
+    global COLORtrace5, COLORtraceR5, COLORtrace6, COLORtraceR6, COLORtrace7, COLORtraceR7
+    
+    ResetColors()
+    root.style.configure("T1W16.TButton", background=COLORtrace1)
+    root.style.configure("Rtrace1.TButton", background=COLORtrace1)
+    root.style.configure("Strace1.TButton", background=COLORtrace1)
+    root.style.configure("Ctrace1.TButton", background=COLORtrace1)
+    root.style.configure("Strace1.TCheckbutton", background=COLORtrace1)
+    root.style.configure("T2W16.TButton", background=COLORtrace2)
+    root.style.configure("Rtrace2.TButton", background=COLORtrace2)
+    root.style.configure("Strace2.TButton", background=COLORtrace2)
+    root.style.configure("Ctrace2.TButton", background=COLORtrace2)
+    root.style.configure("Strace2.TCheckbutton", background=COLORtrace2)
+    root.style.configure("T3W16.TButton", background=COLORtrace3)
+    root.style.configure("Rtrace3.TButton", background=COLORtrace3)
+    root.style.configure("Strace3.TButton", background=COLORtrace3)
+    root.style.configure("Ctrace3.TButton", background=COLORtrace3)
+    root.style.configure("Strace3.TCheckbutton", background=COLORtrace3)
+    root.style.configure("T4W16.TButton", background=COLORtrace4)
+    root.style.configure("Rtrace4.TButton", background=COLORtrace4)
+    root.style.configure("Strace4.TButton", background=COLORtrace4)
+    root.style.configure("Ctrace4.TButton", background=COLORtrace4)
+    root.style.configure("Strace4.TCheckbutton", background=COLORtrace4)
+    root.style.configure("T5W16.TButton", background=COLORtrace5)
+    root.style.configure("T6W16.TButton", background=COLORtrace6)
+    root.style.configure("Rtrace6.TButton", background=COLORtrace6)
+    root.style.configure("Strace6.TButton", background=COLORtrace6)
+    root.style.configure("Strace6.TCheckbutton", background=COLORtrace6)
+    root.style.configure("T7W16.TButton", background=COLORtrace7)
+    root.style.configure("Rtrace7.TButton", background=COLORtrace7)
+    root.style.configure("Strace7.TButton", background=COLORtrace7)
+    root.style.configure("Strace7.TCheckbutton", background=COLORtrace7)
+    root.style.configure("TR1W16.TButton", background=COLORtraceR1)
+    root.style.configure("TR2W16.TButton", background=COLORtraceR2)
+    root.style.configure("TR3W16.TButton", background=COLORtraceR3)
+    root.style.configure("TR4W16.TButton", background=COLORtraceR4)
+    root.style.configure("TR5W16.TButton", background=COLORtraceR6)
+    root.style.configure("TR6W16.TButton", background=COLORtraceR5)
+    root.style.configure("TR5W16.TButton", background=COLORtraceR7)
+    root.style.configure("TGW16.TButton", background=COLORtrigger)
+##    
+def SetColorT1():
+    global COLORtrace1
+
+    tempwindow = Tk()
+    tempwindow.state("withdrawn")
+    rgb,hexcolor = askcolor(parent=tempwindow, title="Choose color for COLORtrace1", initialcolor=(COLORtrace1))
+    tempwindow.destroy()
+    if hexcolor != None:
+        COLORtrace1 = str(hexcolor) # hexcolor
+        root.style.configure("T1W16.TButton", background=COLORtrace1)
+        root.style.configure("Rtrace1.TButton", background=COLORtrace1)
+        root.style.configure("Strace1.TButton", background=COLORtrace1)
+        root.style.configure("Ctrace1.TButton", background=COLORtrace1)
+        root.style.configure("Strace1.TCheckbutton", background=COLORtrace1)
+##
+def SetColorT2():
+    global COLORtrace2
+    
+    tempwindow = Tk()
+    tempwindow.state("withdrawn")
+    rgb,hexcolor = askcolor(parent=tempwindow, title="Choose color for COLORtrace2", initialcolor=(COLORtrace2))
+    tempwindow.destroy()
+    if hexcolor != None:
+        COLORtrace2 = str(hexcolor) # hexcolor
+        root.style.configure("T2W16.TButton", background=COLORtrace2)
+        root.style.configure("Rtrace2.TButton", background=COLORtrace2)
+        root.style.configure("Strace2.TButton", background=COLORtrace2)
+        root.style.configure("Ctrace2.TButton", background=COLORtrace2)
+        root.style.configure("Strace2.TCheckbutton", background=COLORtrace2)
+##
+def SetColorT3():
+    global COLORtrace3
+
+    tempwindow = Tk()
+    tempwindow.state("withdrawn")
+    rgb,hexcolor = askcolor(parent=tempwindow, title="Choose color for COLORtrace3", initialcolor=(COLORtrace3))
+    tempwindow.destroy()
+    if hexcolor != None:
+        COLORtrace3 = str(hexcolor) # hexcolor
+        root.style.configure("T3W16.TButton", background=COLORtrace3)
+        root.style.configure("Rtrace3.TButton", background=COLORtrace3)
+        root.style.configure("Strace3.TButton", background=COLORtrace3)
+        root.style.configure("Ctrace3.TButton", background=COLORtrace3)
+        root.style.configure("Strace3.TCheckbutton", background=COLORtrace3)
+##
+def SetColorT4():
+    global COLORtrace4
+
+    tempwindow = Tk()
+    tempwindow.state("withdrawn")
+    rgb,hexcolor = askcolor(parent=tempwindow, title="Choose color for COLORtrace4", initialcolor=(COLORtrace4))
+    tempwindow.destroy()
+    if hexcolor != None:
+        COLORtrace4 = str(hexcolor) # hexcolor
+        root.style.configure("T4W16.TButton", background=COLORtrace4)
+        root.style.configure("Rtrace4.TButton", background=COLORtrace4)
+        root.style.configure("Strace4.TButton", background=COLORtrace4)
+        root.style.configure("Ctrace4.TButton", background=COLORtrace4)
+        root.style.configure("Strace4.TCheckbutton", background=COLORtrace4)
+##
+def SetColorT5():
+    global COLORtrace5
+
+    tempwindow = Tk()
+    tempwindow.state("withdrawn")
+    rgb,hexcolor = askcolor(parent=tempwindow, title="Choose color for COLORtrace5", initialcolor=(COLORtrace5))
+    tempwindow.destroy()
+    if hexcolor != None:
+        COLORtrace5 = str(hexcolor) # hexcolor
+        root.style.configure("T5W16.TButton", background=COLORtrace5)
+##
+def SetColorT6():
+    global COLORtrace6
+
+    tempwindow = Tk()
+    tempwindow.state("withdrawn")
+    rgb,hexcolor = askcolor(parent=tempwindow, title="Choose color for COLORtrace6", initialcolor=(COLORtrace6))
+    tempwindow.destroy()
+    if hexcolor != None:
+        COLORtrace6 = str(hexcolor) # hexcolor
+        root.style.configure("T6W16.TButton", background=COLORtrace6)
+        root.style.configure("Rtrace6.TButton", background=COLORtrace6)
+        root.style.configure("Strace6.TButton", background=COLORtrace6)
+        root.style.configure("Strace6.TCheckbutton", background=COLORtrace6)
+##
+def SetColorT7():
+    global COLORtrace7
+
+    tempwindow = Tk()
+    tempwindow.state("withdrawn")
+    rgb,hexcolor = askcolor(parent=tempwindow, title="Choose color for COLORtrace7", initialcolor=(COLORtrace7))
+    tempwindow.destroy()
+    if hexcolor != None:
+        COLORtrace7 = str(hexcolor) # hexcolor
+        root.style.configure("T7W16.TButton", background=COLORtrace7)
+        root.style.configure("Rtrace7.TButton", background=COLORtrace7)
+        root.style.configure("Strace7.TButton", background=COLORtrace7)
+        root.style.configure("Strace7.TCheckbutton", background=COLORtrace7)
+##
+def SetColorTR1():
+    global COLORtraceR1
+
+    tempwindow = Tk()
+    tempwindow.state("withdrawn")
+    rgb,hexcolor = askcolor(parent=tempwindow, title="Choose color for COLORtraceR1", initialcolor=(COLORtraceR1))
+    tempwindow.destroy()
+    if hexcolor != None:
+        COLORtraceR1 = str(hexcolor) # hexcolor
+        root.style.configure("TR1W16.TButton", background=COLORtraceR1)
+##
+def SetColorTR2():
+    global COLORtraceR2
+
+    tempwindow = Tk()
+    tempwindow.state("withdrawn")
+    rgb,hexcolor = askcolor(parent=tempwindow, title="Choose color for COLORtraceR2", initialcolor=(COLORtraceR2))
+    tempwindow.destroy()
+    if hexcolor != None:
+        COLORtraceR2 = str(hexcolor) # hexcolor
+        root.style.configure("TR2W16.TButton", background=COLORtraceR2)
+##
+def SetColorTR3():
+    global COLORtraceR3
+
+    tempwindow = Tk()
+    tempwindow.state("withdrawn")
+    rgb,hexcolor = askcolor(parent=tempwindow, title="Choose color for COLORtraceR3", initialcolor=(COLORtraceR3))
+    tempwindow.destroy()
+    if hexcolor != None:
+        COLORtraceR3 = str(hexcolor) # hexcolor
+        root.style.configure("TR3W16.TButton", background=COLORtraceR3)
+##
+def SetColorTR4():
+    global COLORtraceR4
+
+    tempwindow = Tk()
+    tempwindow.state("withdrawn")
+    rgb,hexcolor = askcolor(parent=tempwindow, title="Choose color for COLORtraceR4", initialcolor=(COLORtraceR4))
+    tempwindow.destroy()
+    if hexcolor != None:
+        COLORtraceR4 = str(hexcolor) # hexcolor
+        root.style.configure("TR4W16.TButton", background=COLORtraceR4)
+##
+def SetColorTR5():
+    global COLORtraceR5
+
+    tempwindow = Tk()
+    tempwindow.state("withdrawn")
+    rgb,hexcolor = askcolor(parent=tempwindow, title="Choose color for COLORtraceR5", initialcolor=(COLORtraceR5))
+    tempwindow.destroy()
+    if hexcolor != None:
+        COLORtraceR5 = str(hexcolor) # hexcolor
+        root.style.configure("TR5W16.TButton", background=COLORtraceR5)
+##
+def SetColorTR6():
+    global COLORtraceR6
+
+    tempwindow = Tk()
+    tempwindow.state("withdrawn")
+    rgb,hexcolor = askcolor(parent=tempwindow, title="Choose color for COLORtraceR6", initialcolor=(COLORtraceR6))
+    tempwindow.destroy()
+    if hexcolor != None:
+        COLORtraceR6 = str(hexcolor) # hexcolor
+        root.style.configure("TR6W16.TButton", background=COLORtraceR6)
+##
+def SetColorTR7():
+    global COLORtraceR7
+
+    tempwindow = Tk()
+    tempwindow.state("withdrawn")
+    rgb,hexcolor = askcolor(parent=tempwindow, title="Choose color for COLORtraceR7", initialcolor=(COLORtraceR7))
+    tempwindow.destroy()
+    if hexcolor != None:
+        COLORtraceR7 = str(hexcolor) # hexcolor
+        root.style.configure("TR7W16.TButton", background=COLORtraceR7)
+##
+def SetColorGrid():
+    global COLORgrid
+
+    tempwindow = Tk()
+    tempwindow.state("withdrawn")
+    rgb,hexcolor = askcolor(parent=tempwindow, title="Choose color for COLORgrid", initialcolor=(COLORgrid))
+    tempwindow.destroy()
+    if hexcolor != None:
+        COLORgrid = str(hexcolor) # hexcolor
+##
+def SetColorText():
+    global COLORtext
+
+    tempwindow = Tk()
+    tempwindow.state("withdrawn")
+    rgb,hexcolor = askcolor(parent=tempwindow, title="Choose color for COLORtext", initialcolor=(COLORtext))
+    tempwindow.destroy()
+    if hexcolor != None:
+        COLORtext = str(hexcolor) # hexcolor
+##
+def SetColorTrig():
+    global COLORtrigger
+
+    tempwindow = Tk()
+    tempwindow.state("withdrawn")
+    rgb,hexcolor = askcolor(parent=tempwindow, title="Choose color for COLORtrigger", initialcolor=(COLORtrigger))
+    tempwindow.destroy()
+    if hexcolor != None:
+        COLORtrigger = str(hexcolor) # hexcolor
+        root.style.configure("TGW16.TButton", background=COLORtrigger)
+##
+def SetColorZLine():
+    global COLORzeroline
+
+    tempwindow = Tk()
+    tempwindow.state("withdrawn")
+    rgb,hexcolor = askcolor(parent=tempwindow, title="Choose color for COLORzeroline", initialcolor=(COLORzeroline))
+    tempwindow.destroy()
+    if hexcolor != None:
+        COLORzeroline = str(hexcolor) # hexcolor
+        root.style.configure("ZLW16.TButton", background=COLORzeroline)
+#
 ## Save scope canvas as encapsulated postscript file
 def BSaveScreen():
     global CANVASwidth, CANVASheight
@@ -2110,7 +2512,10 @@ def BSaveData():
     DataFile = open(filename, 'w')
     DataFile.write( 'Sample-#, CA-V, CA-I, CB-V, CB-I \n' )
     for index in range(len(VBuffA)):
-        TimePnt = float((index+0.0)/SAMPLErate)
+        if Roll_Mode.get() > 0:
+            TimePnt = float(index+0.0)
+        else:
+            TimePnt = float((index+0.0)/SAMPLErate)
         DataFile.write( str(TimePnt) + ', ' + str(VBuffA[index]) + ', ' + str(IBuffA[index]) + ', '
                         + str(VBuffB[index]) + ', ' + str(IBuffB[index]) + '\n')
     DataFile.close()
@@ -2180,6 +2585,50 @@ def BSaveChannelData():
             TimePnt = float((index+0.0)/SAMPLErate)
             DataFile.write( str(TimePnt) + ', ' + str(VBuffMD[index]) + '\n')
     DataFile.close()
+# place text string on clipboard
+def BSaveToClipBoard(TempBuffer):
+    global VBuffA, VBuffB, IBuffA, IBuffB, VBuffMA, VBuffMB, VBuffMC, VBuffMD, SAMPLErate
+    
+    root.clipboard_clear()
+    for index in range(len(TempBuffer)):
+        root.clipboard_append(str(TempBuffer[index])+ '\n')
+    root.update()
+
+# Get text string from clipboard
+def BReadFromClipboard():
+
+    TempBuffer = []
+    try:
+        clip_text = root.clipboard_get()
+        TempBuffer = numpy.fromstring( clip_text, dtype=float, sep='\n' )
+        return(TempBuffer)
+    except:
+        return(TempBuffer)
+
+def BLoadDFiltAClip():
+    global DFiltACoef
+    
+    DFiltACoef = BReadFromClipboard()
+    DifFiltALength.config(text = "Length = " + str(int(len(DFiltACoef)))) # change displayed length value
+
+def BLoadDFiltBClip():
+    global DFiltBCoef
+    
+    DFiltBCoef = BReadFromClipboard()
+    DifFiltBLength.config(text = "Length = " + str(int(len(DFiltBCoef)))) # change displayed length value
+    
+def BLoadAWGAFiltClip():
+    global AWGFiltACoef
+    
+    AWGFiltACoef = BReadFromClipboard()
+    AWGFiltALength.config(text = "Length = " + str(int(len(AWGFiltACoef)))) # change displayed length value
+    
+def BLoadAWGBFiltClip():
+    global AWGFiltBCoef
+    
+    AWGFiltBCoef = BReadFromClipboard()
+    AWGFiltBLength.config(text = "Length = " + str(int(len(AWGFiltBCoef)))) # change displayed length value
+    
 ## Read scope all time array data from saved file
 def BReadData():
     global VBuffA, VBuffB, IBuffA, IBuffB, SHOWsamples
@@ -3528,6 +3977,8 @@ def Analog_In():
                 Analog_Freq_In()
         elif OhmRunStatus.get() == 1 and OhmDisp.get() == 1:
             Ohm_Analog_In()
+        else:
+            time.sleep(0.01) # slow down loop while not running to reduce CPU usage
         root.update_idletasks()
         root.update()
 ## Ohmmeter loop
@@ -3725,8 +4176,8 @@ def Analog_Time_In():
 def Analog_Phase_In():
     global ADsignal1, VBuffA, VBuffB, IBuffA, IBuffB
     global VBuffMA, VBuffMB, VBuffMC, VBuffMD
-    global VAresult, VBresult, IAresult, IBresult, VABresult
-    global PhaseVA, PhaseVB, PhaseIA, PhaseIB, PhaseVAB
+    global VAresult, VBresult, IAresult, IBresult, VABresult, IABresult
+    global PhaseVA, PhaseVB, PhaseIA, PhaseIB, PhaseVAB, PhaseIAB
     global VMAresult, VMBresult,VMCresult, VMDresult
     global PhaseVMA, PhaseVMB, PhaseVMC, PhaseVMD
     global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2
@@ -3749,6 +4200,7 @@ def Analog_Phase_In():
     PhaseVA = []
     PhaseIA = []
     PhaseIB = []
+    PhaseIAB = []
     # Convert list to numpy array REX for faster Numpy calculations
     # Take the first SMPfft samples of VBuffA
     REX = numpy.array(VBuffA[StartSmp:StopSmp]-DCV1)    # Make a numpy arry of the list
@@ -3897,7 +4349,7 @@ def Analog_Phase_In():
             RMScorr = 7.07106 / SMPfft # For rms VOLTAGE!
             VMDresult = RMScorr * ALL
     # Now IA array
-    REX = numpy.array(IBuffA[StartSmp:StopSmp])    # -DCI1 Make a numpy arry of the list
+    REX = numpy.array(IBuffA[StartSmp:StopSmp]-DCI1) # Make a numpy arry of the list
 
     # Set Analog level display value MAX value is 0.2 amps for ALM1000
     REX = REX / 0.5
@@ -3917,7 +4369,7 @@ def Analog_Phase_In():
     IAresult = RMScorr * ALL
     
     # Now IB array
-    REX = numpy.array(IBuffB[StartSmp:StopSmp])    # -DCI2 Make a numpy arry of the list
+    REX = numpy.array(IBuffB[StartSmp:StopSmp]-DCI2) # Make a numpy arry of the list
 
     # Set Analog level display value MAX value is 0.2 amps for ALM1000
     REX = REX / 0.5
@@ -3935,6 +4387,27 @@ def Analog_Phase_In():
     PhaseIB = PhaseIB[0:le]
     RMScorr = 0.707106 / SMPfft # RMS For current!
     IBresult = RMScorr * ALL
+    # Now IA+B array
+    IDC = DCI1 + DCI2
+    REX = numpy.array(IBuffA[StartSmp:StopSmp]+IBuffB[StartSmp:StopSmp])    # -DCI1 Make a numpy arry of the list
+    REX = REX - IDC
+    # Set Analog level display value MAX value is 0.2 amps for ALM1000
+    REX = REX / 0.5
+
+    # Do the FFT window function 
+    REX = REX * FFTwindowshape[0:len(REX)]      # The windowing shape function only over the samples
+
+    # FFT with numpy 
+    ALL = numpy.fft.fft(REX, n=SMPfft)  # Do FFT + zerostuffing till n=fftsamples with NUMPY  ALL = Real + Imaginary part
+    PhaseIAB = numpy.angle(ALL, deg=True)     # calculate angle
+    ALL = numpy.absolute(ALL)               # Make absolute SQR(REX*REX + IMX*IMX) for VOLTAGE!
+
+    le = int(len(ALL) / 2)                       # Only half is used, other half is mirror
+    ALL = ALL[0:le]                          # So take only first half of the array
+    PhaseIAB = PhaseIAB[0:le]
+    RMScorr = 0.707106 / SMPfft # RMS For current!
+    IABresult = RMScorr * ALL
+    
 #
     UpdatePhAAll()
 #
@@ -3980,7 +4453,7 @@ def Analog_Roll_time():
     global PIO_0, PIO_1, PIO_2, PIO_3, PIO_4, PIO_5, PIO_6, PIO_7
 
     # Starting acquisition
-    DCVA0 = DCVB0 = DCIA0 = DCIB0= 0.0 # initalize measurment variable
+    DCVA0 = DCVB0 = DCIA0 = DCIB0 = 0.0 # initalize measurment variable
     #
     NumSamples = 10 # int(SAMPLErate/TIMEdiv)
     if First_Slow_sweep == 0:
@@ -4039,14 +4512,11 @@ def Analog_Roll_time():
     DCVB0 = DCVB0/(NumSamples) # calculate V average
     DCIA0 = DCIA0/(NumSamples) # calculate I average
     DCIB0 = DCIB0/(NumSamples) # calculate I average
-    #
-    #
+    # Adjust for gain and offset
     DCVA0 = (DCVA0 - InOffA) * InGainA
     DCVB0 = (DCVB0 - InOffB) * InGainB
-    DCIA0 = (DCIA0 - CurOffA) * CurGainA
-    DCIB0 = (DCIB0 - CurOffB) * CurGainB
-    DCIA0 = DCIA0 * 1000 # convert to mA
-    DCIB0 = DCIB0 * 1000 # convert to mA
+    DCIA0 = ((DCIA0*1000) - CurOffA) * CurGainA # convert to mA
+    DCIB0 = ((DCIB0*1000) - CurOffB) * CurGainB # convert to mA
 # next new sample
     VBuffA = shift_buffer(VBuffA, -1, DCVA0)
     VBuffB = shift_buffer(VBuffB, -1, DCVB0)
@@ -4184,7 +4654,8 @@ def Analog_Fast_time():
     global DCVMuxC, MinVMuxC, MaxVMuxC, MidVMuxC, PPVMuxC, SVMuxC
     global DCVMuxD, MinVMuxD, MaxVMuxD, MidVMuxD, PPVMuxD, SVMuxD
     global PIO_0, PIO_1, PIO_2, PIO_3, PIO_4, PIO_5, PIO_6, PIO_7
-    global BCASkewEntry, BCBSkewEntry, DigDeSkewA, DigDeSkewB
+    global BCVASkewEntry, BCVBSkewEntry, DigDeSkewVA, DigDeSkewVB
+    global BCIASkewEntry, BCIBSkewEntry, DigDeSkewIA, DigDeSkewIB
 
     if TRACEmodeTime.get() == 0 and TRACEresetTime == False:
         TRACEresetTime = True               # Clear the memory for averaging
@@ -4607,14 +5078,22 @@ def Analog_Fast_time():
                 IBuffB = Digital_RC_High_Pass( IBuffB, TC1B, Gain1B )
                 #IBuffB = Digital_RC_High_Pass( IBuffB, TC2B, Gain2B )
 # Check if need to DeSkew waveform data
-    if DigDeSkewA.get() > 0:
-        Shift = int(BCASkewEntry.get())
+    if DigDeSkewVA.get() > 0:
+        Shift = int(BCVASkewEntry.get())
         if Shift != 0:
             VBuffA = numpy.roll(VBuffA, Shift)
-    if DigDeSkewB.get() > 0:
-        Shift = int(BCBSkewEntry.get())
+    if DigDeSkewVB.get() > 0:
+        Shift = int(BCVBSkewEntry.get())
         if Shift != 0:
             VBuffB = numpy.roll(VBuffB, Shift)
+    if DigDeSkewIA.get() > 0:
+        Shift = int(BCIASkewEntry.get())
+        if Shift != 0:
+            IBuffA = numpy.roll(IBuffA, Shift)
+    if DigDeSkewIB.get() > 0:
+        Shift = int(BCIBSkewEntry.get())
+        if Shift != 0:
+            IBuffB = numpy.roll(IBuffB, Shift)
 # check if digital filter box checked
     if DigFiltA.get() == 1:
         if len(DFiltACoef) > 1:
@@ -7832,6 +8311,7 @@ def MakeTimeScreen():
             #V_label = V_label + Units
             V_label = V_label + ", Freq " + DFreq + " KHz"
         # place in upper left unless specified otherwise
+        TxScale = FontSize + 2
         x = X0L + 5
         y = Y0T + 7
         Justify = 'w'
@@ -7841,7 +8321,7 @@ def MakeTimeScreen():
             Justify = 'e'
         if MarkerLoc == 'LL' or MarkerLoc == 'll':
             x = X0L + 5
-            y = Y0T + GRH + 7 - (MarkerNum*10)
+            y = Y0T + GRH + 7 - (MarkerNum*TxScale)
             Justify = 'w'
         if MarkerLoc == 'LR' or MarkerLoc == 'lr':
             x = X0L + GRW - 5
@@ -7937,7 +8417,7 @@ def MakeTimeScreen():
             txt = "Device ID " + DevID[17:31] + " Rolling Sweep " + sttxt
     x = X0L+2
     y = 12
-    ca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
+    ca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
     # digital I/O indicators
     x2 = X0L + GRW
     BoxColor = "#808080"   # gray
@@ -7978,7 +8458,7 @@ def MakeTimeScreen():
             ca.create_rectangle(x2-54, 6, x2-42, 18, fill=BoxColor)
         else:
             ca.create_rectangle(x2-54, 6, x2-42, 18, fill="yellow")
-        ca.create_text(x2-56, 12, text="Digital Inputs", anchor=E, fill=COLORtext)
+        ca.create_text(x2-56, 12, text="Digital Inputs", anchor=E, fill=COLORtext, font=("arial", FontSize ))
     # Time sweep information and view at information
     vx = TIMEdiv/Mulx
     if vx >= 1000:
@@ -8063,7 +8543,7 @@ def MakeTimeScreen():
          
     x = X0L
     y = Y0T+GRH+int(2.5 *FontSize) # 20
-    ca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
+    ca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
     if MeasTopV1.get() == 1 or MeasBaseV1.get() == 1 or MeasTopV2.get() == 1 or MeasBaseV2.get() == 1:
         MakeHistogram()
     txt = " "
@@ -8134,7 +8614,7 @@ def MakeTimeScreen():
         
     x = X0L
     y = Y0T+GRH+(4*FontSize) # 32
-    ca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
+    ca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
     txt= " "
     # Channel B information
     if MuxScreenStatus.get() == 1:
@@ -8223,7 +8703,7 @@ def MakeTimeScreen():
             
     x = X0L
     y = Y0T+GRH+int(5.5*FontSize) # 44
-    ca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
+    ca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
 ## Update the XY screen traces and text
 def MakeXYScreen():
     global XYlineVA, XYlineIA, XYlineVB, XYlineIB, XYlineM, XYlineMX, XYlineMY # active trave lines
@@ -8609,7 +9089,6 @@ def MakeXYScreen():
         Yconv1 = float(GRHXY/10.0) / CH1IpdvRange
         Xconv1 = float(GRWXY/10.0) / CH1pdvRange
         y1 = Y0TXY + GRHXY
-        # print Yconv1, y1
         c2 = GRWXY / 2.0 + X0LXY   # Hor correction factor
         while b < 4999: #
             if HistAsPercent == 1: # convert to percent of total sample count
@@ -8625,7 +9104,7 @@ def MakeXYScreen():
             xlo = HBuffA[1][b] - CHAOffset
             xlo = int(c2 + Xconv1 * xlo)
             Dline = [xlo,y1,xlo,ylo]
-            XYca.create_line(Dline, fill=COLORtrace1)
+            XYca.create_line(Dline, fill=COLORtrace1, width=TRACEwidth.get())
             b = b + 1
     if  Xsignal.get() == 7:
         MakeHistogram()
@@ -8648,11 +9127,14 @@ def MakeXYScreen():
             xlo = HBuffB[1][b] - CHBOffset
             xlo = int(c2 + Xconv1 * xlo)
             Dline = [xlo,y1,xlo,ylo]
-            XYca.create_line(Dline, fill=COLORtrace2)
+            XYca.create_line(Dline, fill=COLORtrace2, width=TRACEwidth.get())
             b = b + 1
 # Draw X - Y Cursor lines if required
     COLORXmarker = COLORtrace1
     COLORYmarker = COLORtrace2
+    Xconv1 = float(GRWXY/10) / CH1pdvRange
+    Xoffset1 = CHAOffset
+    X_label = " V"
     if Xsignal.get() == 1 or Xsignal.get() == 6:
         Xconv1 = float(GRWXY/10) / CH1pdvRange
         Xoffset1 = CHAOffset
@@ -8695,7 +9177,10 @@ def MakeXYScreen():
             Xconv1 = float(GRWXY/10) / CH1pdvRange
             Xoffset1 = CHAOffset
             COLORXmarker = COLORtrace1
-#
+# Set variables just incase
+    Yconv1 = float(GRHXY/10.0) / CH1pdvRange
+    Yoffset1 = CHAOffset
+    Y_label = " V"
     if YsignalVA.get() == 1 or YsignalM.get() == 1:
         Yconv1 = float(GRHXY/10.0) / CH1pdvRange
         Yoffset1 = CHAOffset
@@ -8796,7 +9281,7 @@ def MakeXYScreen():
         txt = "Device ID " + DevID[17:31] + " Sample rate: " + str(SAMPLErate) + " " + sttxt
     x = X0LXY
     y = 12
-    XYca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
+    XYca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
     # digital I/O indicators
     x2 = X0LXY + GRWXY
     BoxColor = "#808080"   # gray
@@ -8837,7 +9322,7 @@ def MakeXYScreen():
             XYca.create_rectangle(x2-54, 6, x2-42, 18, fill=BoxColor)
         else:
             XYca.create_rectangle(x2-54, 6, x2-42, 18, fill="yellow")
-        XYca.create_text(x2-56, 12, text="Digital Inputs", anchor=E, fill=COLORtext)
+        XYca.create_text(x2-56, 12, text="Digital Inputs", anchor=E, fill=COLORtext, font=("arial", FontSize ))
     # print period and frequency of displayed channels
     txt = " "
     if Xsignal.get() == 1 or Xsignal.get() == 3:
@@ -8869,7 +9354,7 @@ def MakeXYScreen():
             
     x = X0LXY
     y = Y0TXY+GRHXY+int(2.5*FontSize) # 20
-    XYca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
+    XYca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
     txt = " "
     if Xsignal.get() == 1 or YsignalVA.get() == 1 or Xsignal.get() == 6:
     # Channel A information
@@ -8931,7 +9416,7 @@ def MakeXYScreen():
         
     x = X0LXY
     y = Y0TXY+GRHXY+int(4*FontSize) # 32
-    XYca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
+    XYca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
     txt= " "
     # Channel B information
     if Xsignal.get() == 3 or YsignalVB.get() == 1 or Xsignal.get() == 7:
@@ -8993,7 +9478,7 @@ def MakeXYScreen():
             
     x = X0LXY
     y = Y0TXY+GRHXY+int(5.5 * FontSize) # 44
-    XYca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
+    XYca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
 #
 def SetScaleA():
     global MarkerScale, CHAlab, CHBlab, CHAIlab, CHBIlab
@@ -9555,20 +10040,21 @@ def onCanvasClickLeft(event):
             else:
                 V_label = V_label  + " Delta " + DeltaV + Units
         # place in upper left unless specified otherwise
+        TxScale = FontSize + 2
         x = X0L + 5
-        y = Y0T + 3 + (MarkerNum*10)
+        y = Y0T + 3 + (MarkerNum*TxScale)
         Justify = 'w'
         if MarkerLoc == 'UR' or MarkerLoc == 'ur':
             x = X0L + GRW - 5
-            y = Y0T + 3 + (MarkerNum*10)
+            y = Y0T + 3 + (MarkerNum*TxScale)
             Justify = 'e'
         if MarkerLoc == 'LL' or MarkerLoc == 'll':
             x = X0L + 5
-            y = Y0T + GRH + 3 - (MarkerNum*10)
+            y = Y0T + GRH + 3 - (MarkerNum*TxScale)
             Justify = 'w'
         if MarkerLoc == 'LR' or MarkerLoc == 'lr':
             x = X0L + GRW - 5
-            y = Y0T + GRH + 3 - (MarkerNum*10)
+            y = Y0T + GRH + 3 - (MarkerNum*TxScale)
             Justify = 'e'
         ca.create_text(event.x+4, event.y, text=str(MarkerNum), fill=COLORtext, anchor=Justify, font=("arial", FontSize ))
         ca.create_text(x, y, text=V_label, fill=COLORmarker, anchor=Justify, font=("arial", FontSize ))
@@ -10175,7 +10661,7 @@ def BAWGAOffset(temp):
             AWGAOffsetEntry.insert(0, AWGAOffsetvalue)
 #
 def BAWGAFreq(temp):
-    global AWGAFreqEntry, AWGAFreqvalue, AWG_2X
+    global AWGAFreqEntry, AWGAFreqvalue, AWG_2X, LockFreq
     global BodeScreenStatus, BodeDisp, AWGRecLength
 
     try:
@@ -10207,6 +10693,9 @@ def BAWGAFreq(temp):
         AWGAFreqvalue = 10
         AWGAFreqEntry.delete(0,"end")
         AWGAFreqEntry.insert(0, AWGAFreqvalue)
+    if LockFreq.get() == 1: # If freq lock flag set change AWGB Freq to same value
+        AWGBFreqEntry.delete(0,"end")
+        AWGBFreqEntry.insert(0, AWGAFreqvalue)
     #UpdateAWGA()
 
 def ToggleAWGAPhaseDelay():
@@ -10676,6 +11165,131 @@ def AWGAMakeAMSine():
             offset = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get()
     AWGAwaveform = (AWGAwaveform * amplitude) + offset # scale and offset the waveform
     AWGAwaveform = numpy.roll(AWGAwaveform, int(AWGAdelayvalue))
+#
+    SplitAWGAwaveform() # if needed
+    UpdateAwgCont()
+#
+def AWGAMakeFullWaveSine():
+    global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
+    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay, AWGAMode
+    global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate, phasealab, AWG_Amp_Mode
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset, AWGRecLength
+    
+    BAWGAAmpl(0)
+    BAWGAOffset(0)
+    BAWGAFreq(0)
+# 
+    if AWGAFreqvalue > 0.0:
+        if AWG_2X.get() == 1:
+            AWGAperiodvalue = (BaseSampleRate*2)/AWGAFreqvalue
+        else:
+            AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
+    else:
+        AWGAperiodvalue = 10.0
+        
+    if AWGAPhaseDelay.get() == 0:
+        if AWGAPhasevalue > 0:
+            AWGAdelayvalue = AWGAperiodvalue * AWGAPhasevalue / 360.0
+        else:
+            AWGAdelayvalue = 0.0
+    elif AWGAPhaseDelay.get() == 1:
+        AWGAdelayvalue = AWGAPhasevalue * SAMPLErate / 1000
+        
+    Cycles = int(AWGRecLength/AWGAperiodvalue)
+    if Cycles < 1:
+        Cycles = 1
+    RecLength = int(Cycles * AWGAperiodvalue)
+    if RecLength % 2 != 0: # make sure record length is even so 2X mode works for all Freq
+        RecLength = RecLength + 1
+    AWGAwaveform = []
+    AWGAwaveform = numpy.cos(numpy.linspace(0, 2*Cycles*numpy.pi, RecLength))
+    AWGAwaveform = numpy.absolute(AWGAwaveform) * -1.0
+    AWGAwaveform = AWGAwaveform + 0.5
+    AWGAwaveform = AWGAwaveform * 2.0
+    if AWG_Amp_Mode.get() == 0:
+        if AWGAMode.get() == 1: # convert to mA
+            amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2000.0
+            offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2000.0
+        else:
+            amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2.0
+            offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2.0
+    else:
+        if AWGAMode.get() == 1: # convert to mA
+            amplitude = AWGAAmplvalue/1000.0
+            offset = AWGAOffsetvalue/1000.0
+        else:
+            amplitude = AWGAAmplvalue*AWGA_Ext_Gain.get()
+            offset = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get()
+    AWGAwaveform = (AWGAwaveform * amplitude) + offset # scale and offset the waveform
+    AWGAwaveform = numpy.roll(AWGAwaveform, int(AWGAdelayvalue))
+#
+    SplitAWGAwaveform()
+    BAWGAPhaseDelay()
+    duty1lab.config(text="%")
+    UpdateAwgCont()
+#
+    SplitAWGAwaveform() # if needed
+    UpdateAwgCont()
+# 
+def AWGAMakeHalfWaveSine():
+    global AWGAwaveform, AWGSAMPLErate, AWGAAmplvalue, AWGAOffsetvalue, AWGALength, AWGAperiodvalue
+    global AWGADutyCyclevalue, AWGAFreqvalue, duty1lab, AWGAgain, AWGAoffset, AWGAPhaseDelay, AWGAMode
+    global AWGA2X, AWG_2X, SAMPLErate, BaseSampleRate, phasealab, AWG_Amp_Mode
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset, AWGRecLength
+    
+    BAWGAAmpl(0)
+    BAWGAOffset(0)
+    BAWGAFreq(0)
+# 
+    if AWGAFreqvalue > 0.0:
+        if AWG_2X.get() == 1:
+            AWGAperiodvalue = (BaseSampleRate*2)/AWGAFreqvalue
+        else:
+            AWGAperiodvalue = BaseSampleRate/AWGAFreqvalue
+    else:
+        AWGAperiodvalue = 10.0
+        
+    if AWGAPhaseDelay.get() == 0:
+        if AWGAPhasevalue > 0:
+            AWGAdelayvalue = AWGAperiodvalue * AWGAPhasevalue / 360.0
+        else:
+            AWGAdelayvalue = 0.0
+    elif AWGAPhaseDelay.get() == 1:
+        AWGAdelayvalue = AWGAPhasevalue * SAMPLErate / 1000
+        
+    Cycles = int(AWGRecLength/AWGAperiodvalue)
+    if Cycles < 1:
+        Cycles = 1
+    RecLength = int(Cycles * AWGAperiodvalue)
+    if RecLength % 2 != 0: # make sure record length is even so 2X mode works for all Freq
+        RecLength = RecLength + 1
+    AWGAwaveform = []
+    AWGAwaveform = numpy.cos(numpy.linspace(0, 2*Cycles*numpy.pi, RecLength))
+    AWGAwaveform = numpy.minimum(AWGAwaveform, numpy.zeros(RecLength))
+    AWGAwaveform = AWGAwaveform + 0.5
+    AWGAwaveform = AWGAwaveform * 2.0
+    # minimum, maximum
+    if AWG_Amp_Mode.get() == 0:
+        if AWGAMode.get() == 1: # convert to mA
+            amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2000.0
+            offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2000.0
+        else:
+            amplitude = (AWGAOffsetvalue-AWGAAmplvalue) / -2.0
+            offset = (AWGAOffsetvalue+AWGAAmplvalue) / 2.0
+    else:
+        if AWGAMode.get() == 1: # convert to mA
+            amplitude = AWGAAmplvalue/1000.0
+            offset = AWGAOffsetvalue/1000.0
+        else:
+            amplitude = AWGAAmplvalue*AWGA_Ext_Gain.get()
+            offset = (AWGAOffsetvalue * AWGA_Ext_Gain.get()) + AWGA_Ext_Offset.get()
+    AWGAwaveform = (AWGAwaveform * amplitude) + offset # scale and offset the waveform
+    AWGAwaveform = numpy.roll(AWGAwaveform, int(AWGAdelayvalue))
+#
+    SplitAWGAwaveform()
+    BAWGAPhaseDelay()
+    duty1lab.config(text="%")
+    UpdateAwgCont()
 #
     SplitAWGAwaveform() # if needed
     UpdateAwgCont()
@@ -11946,6 +12560,148 @@ def AWGBMakeBodeSine():
     AWGBwaveform = []
     AWGBwaveform = numpy.cos(numpy.linspace(0, 2*Cycles*numpy.pi, RecLength))
 
+    if AWG_Amp_Mode.get() == 0:
+        if AWGBMode.get() == 1: # convert to mA
+            amplitude = (AWGBOffsetvalue-AWGBAmplvalue) / -2000.0
+            offset = (AWGBOffsetvalue+AWGBAmplvalue) / 2000.0
+        else:
+            amplitude = (AWGBOffsetvalue-AWGBAmplvalue) / -2.0
+            offset = (AWGBOffsetvalue+AWGBAmplvalue) / 2.0
+    else:
+        if AWGBMode.get() == 1: # convert to mA
+            amplitude = AWGBAmplvalue/1000.0
+            offset = AWGBOffsetvalue/1000.0
+        else:
+            amplitude = AWGBAmplvalue*AWGB_Ext_Gain.get()
+            offset = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get()
+    AWGBwaveform = (AWGBwaveform * amplitude) + offset # scale and offset the waveform
+    AWGBwaveform = numpy.roll(AWGBwaveform, int(AWGBdelayvalue))
+    #
+    if AWG_2X.get() == 2:
+        Tempwaveform = []
+        AWGB2X = []
+        AWGB2X = AWGBwaveform[::2] # even numbered samples
+        Tempwaveform = AWGBwaveform[1::2] # odd numbered samples Tempwaveform
+        AWGBwaveform = Tempwaveform
+    BAWGBPhaseDelay()
+    duty2lab.config(text="%")
+    UpdateAwgCont()
+#
+def AWGBMakeFullWaveSine():
+    global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBperiodvalue
+    global AWGBDutyCyclevalue, AWGBFreqvalue, duty2lab, AWGBgain, AWGBoffset, AWGBPhaseDelay, AWGBMode
+    global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate, AWG_Amp_Mode
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset, AWGRecLength
+
+    BAWGBAmpl(0)
+    BAWGBOffset(0)
+    BAWGBFreq(0)
+    BAWGBPhase(0)
+    BAWGBDutyCycle(0)
+    MinFreq = float(AWGSAMPLErate)/float(AWGRecLength)
+    if AWGBFreqvalue < MinFreq: # if frequency is less than 1 cycle in record length Hz use libsmu sine function
+        AWGBShape.set(1)
+        BAWGBShape()
+        UpdateAwgCont()
+        return
+
+    if AWGBFreqvalue > 0.0:
+        if AWG_2X.get() == 2:
+            AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
+        else:
+            AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
+    else:
+        AWGBperiodvalue = 10.0
+
+    if AWGBPhaseDelay.get() == 0:
+        if AWGBPhasevalue > 0:
+            AWGBdelayvalue = AWGBperiodvalue * AWGBPhasevalue / 360.0
+        else:
+            AWGBdelayvalue = 0.0
+    elif AWGBPhaseDelay.get() == 1:
+        AWGBdelayvalue = AWGBPhasevalue * AWGSAMPLErate / 1000
+    Cycles = int(AWGRecLength/AWGBperiodvalue)
+    if Cycles < 1:
+        Cycles = 1
+    RecLength = int(Cycles * AWGBperiodvalue)
+    if RecLength % 2 != 0: # make sure record length is even so 2X mode works for all Freq
+        RecLength = RecLength + 1
+    AWGBwaveform = []
+    AWGBwaveform = numpy.cos(numpy.linspace(0, 2*Cycles*numpy.pi, RecLength))
+    AWGBwaveform = numpy.absolute(AWGBwaveform) * -1.0
+    AWGBwaveform = AWGBwaveform + 0.5
+    AWGBwaveform = AWGBwaveform * 2.0
+    if AWG_Amp_Mode.get() == 0:
+        if AWGBMode.get() == 1: # convert to mA
+            amplitude = (AWGBOffsetvalue-AWGBAmplvalue) / -2000.0
+            offset = (AWGBOffsetvalue+AWGBAmplvalue) / 2000.0
+        else:
+            amplitude = (AWGBOffsetvalue-AWGBAmplvalue) / -2.0
+            offset = (AWGBOffsetvalue+AWGBAmplvalue) / 2.0
+    else:
+        if AWGBMode.get() == 1: # convert to mA
+            amplitude = AWGBAmplvalue/1000.0
+            offset = AWGBOffsetvalue/1000.0
+        else:
+            amplitude = AWGBAmplvalue*AWGB_Ext_Gain.get()
+            offset = (AWGBOffsetvalue * AWGB_Ext_Gain.get()) + AWGB_Ext_Offset.get()
+    AWGBwaveform = (AWGBwaveform * amplitude) + offset # scale and offset the waveform
+    AWGBwaveform = numpy.roll(AWGBwaveform, int(AWGBdelayvalue))
+    #
+    if AWG_2X.get() == 2:
+        Tempwaveform = []
+        AWGB2X = []
+        AWGB2X = AWGBwaveform[::2] # even numbered samples
+        Tempwaveform = AWGBwaveform[1::2] # odd numbered samples Tempwaveform
+        AWGBwaveform = Tempwaveform
+    BAWGBPhaseDelay()
+    duty2lab.config(text="%")
+    UpdateAwgCont()
+#
+def AWGBMakeHalfWaveSine():
+    global AWGBwaveform, AWGSAMPLErate, AWGBAmplvalue, AWGBOffsetvalue, AWGBLength, AWGBperiodvalue
+    global AWGBDutyCyclevalue, AWGBFreqvalue, duty2lab, AWGBgain, AWGBoffset, AWGBPhaseDelay, AWGBMode
+    global AWGB2X, AWG_2X, SAMPLErate, BaseSampleRate, AWG_Amp_Mode
+    global AWGA_Ext_Gain, AWGA_Ext_Offset, AWGB_Ext_Gain, AWGB_Ext_Offset, AWGRecLength
+
+    BAWGBAmpl(0)
+    BAWGBOffset(0)
+    BAWGBFreq(0)
+    BAWGBPhase(0)
+    BAWGBDutyCycle(0)
+    MinFreq = float(AWGSAMPLErate)/float(AWGRecLength)
+    if AWGBFreqvalue < MinFreq: # if frequency is less than 1 cycle in record length Hz use libsmu sine function
+        AWGBShape.set(1)
+        BAWGBShape()
+        UpdateAwgCont()
+        return
+
+    if AWGBFreqvalue > 0.0:
+        if AWG_2X.get() == 2:
+            AWGBperiodvalue = (BaseSampleRate*2)/AWGBFreqvalue
+        else:
+            AWGBperiodvalue = BaseSampleRate/AWGBFreqvalue
+    else:
+        AWGBperiodvalue = 10.0
+
+    if AWGBPhaseDelay.get() == 0:
+        if AWGBPhasevalue > 0:
+            AWGBdelayvalue = AWGBperiodvalue * AWGBPhasevalue / 360.0
+        else:
+            AWGBdelayvalue = 0.0
+    elif AWGBPhaseDelay.get() == 1:
+        AWGBdelayvalue = AWGBPhasevalue * AWGSAMPLErate / 1000
+    Cycles = int(AWGRecLength/AWGBperiodvalue)
+    if Cycles < 1:
+        Cycles = 1
+    RecLength = int(Cycles * AWGBperiodvalue)
+    if RecLength % 2 != 0: # make sure record length is even so 2X mode works for all Freq
+        RecLength = RecLength + 1
+    AWGBwaveform = []
+    AWGBwaveform = numpy.cos(numpy.linspace(0, 2*Cycles*numpy.pi, RecLength))
+    AWGBwaveform = numpy.minimum(AWGBwaveform, numpy.zeros(RecLength))
+    AWGBwaveform = AWGBwaveform + 0.5
+    AWGBwaveform = AWGBwaveform * 2.0
     if AWG_Amp_Mode.get() == 0:
         if AWGBMode.get() == 1: # convert to mA
             amplitude = (AWGBOffsetvalue-AWGBAmplvalue) / -2000.0
@@ -14639,7 +15395,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
         
     x = X0LBP
     y = 12
-    idTXT = Bodeca.create_text (x, y, text=txt, anchor=W, fill=COLORtext)
+    idTXT = Bodeca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
 
     # Start and stop frequency and dB/div and trace mode
     txt = str(BeginFreq) + " to " + str(EndFreq) + " Hz"
@@ -14649,7 +15405,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
     
     x = X0LBP
     y = Y0TBP+GRHBP+23
-    idTXT = Bodeca.create_text (x, y, text=txt, anchor=W, fill=COLORtext)
+    idTXT = Bodeca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
     
     if FreqTraceMode.get() == 1:
         txt ="Normal mode "
@@ -14674,7 +15430,7 @@ def MakeBodeScreen():       # Update the screen with traces and text
         txt = txt + "  Freq Step = " + str(LoopNum.get())
     x = X0LBP
     y = Y0TBP+GRHBP+34
-    IDtxt  = Bodeca.create_text (x, y, text=txt, anchor=W, fill=COLORtext)
+    IDtxt  = Bodeca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
 
 # Impedance analyzer routines -----
 def UpdateIAAll():        # Update Data, trace and screen
@@ -15078,7 +15834,7 @@ def MakeIAScreen():       # Update the screen with traces and text
         txt = txt + " Sweep OFF"
     x = X0LIA
     y = 12
-    idTXT = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext)
+    idTXT = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
     #
     x = X0LIA + GRWIA + 4
     y = 24
@@ -15252,7 +16008,7 @@ def MakeIAScreen():       # Update the screen with traces and text
         
     x = X0LIA
     y = Y0TIA+GRHIA-13
-    idTXT = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext)
+    idTXT = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
     txt = " "
     if FreqTraceMode.get() == 1:
         txt ="Normal mode "
@@ -15271,7 +16027,7 @@ def MakeIAScreen():       # Update the screen with traces and text
     else:
         txt = txt + "  Running "
     y = Y0TIA+GRHIA
-    IDtxt  = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext)
+    IDtxt  = IAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
 #
 def IACaresize(event):
     global IAca, GRWIA, XOLIA, GRHIA, Y0TIA, CANVASwidthIA, CANVASheightIA, FontSize
@@ -15296,8 +16052,8 @@ def MakeIAWindow():
         IADisp.set(1)
         IACheckBox()
         CutDC.set(1) # set to remove DC
-        CANVASwidthIA = 170 + GRWIA + 2 * X0LIA     # The canvas width
-        CANVASheightIA = GRHIA + Y0TIA + 10         # The canvas height
+        CANVASwidthIA = GRWIA + 2 * X0LIA + int(21.25 * FontSize)     # The canvas width
+        CANVASheightIA = GRHIA + Y0TIA + int(2.25 * FontSize)         # The canvas height
         AWGAMode.set(0) # Set AWG A to SVMI
         AWGAShape.set(18) # Set Shape to Bode Sine
         ReMakeAWGwaves()
@@ -15879,6 +16635,14 @@ def IBtoggle():
     else:
         ibt_btn.config(text='ON', style="Run.TButton")
 #
+def IApBtoggle():
+    global iapbt_btn
+
+    if iapbt_btn.config('text')[-1] == 'ON':
+        iapbt_btn.config(text='OFF', style="Stop.TButton")
+    else:
+        iapbt_btn.config(text='ON', style="Run.TButton")
+#
 # ================ Make Phase Ana Window ==========================
 def MakePhAWindow():
     global phawindow, PhAca, logo, PhAScreenStatus, PhADisp, AWGSync
@@ -15886,7 +16650,7 @@ def MakePhAWindow():
     global FFTwindow, CutDC, ColorMode, RefPhase, CHvpdiv, CHipdiv
     global GRWPhA, X0LPhA, GRHPhA, Y0TPhA, DeBugMode, SWRev, PhAPlotMode
     global VScale, IScale, RefphEntry, MuxScreenStatus, AppendPhAData
-    global vat_btn, vbt_btn, iat_btn, ibt_btn, vabt_btn
+    global vat_btn, vbt_btn, iat_btn, ibt_btn, vabt_btn, iapbt_btn
     global ShowPB_A, ShowPB_B, ShowPB_C, ShowPB_D
     global FrameRefief, BorderSize
 
@@ -15895,8 +16659,8 @@ def MakePhAWindow():
         PhADisp.set(1)
         PhACheckBox()
         CutDC.set(1) # set to remove DC
-        CANVASwidthPhA = 170 + GRWPhA + 2 * X0LPhA     # The canvas width
-        CANVASheightPhA = GRHPhA + Y0TPhA + 10         # The canvas height
+        CANVASwidthPhA = GRWPhA + 2 * X0LPhA + int(21.25 * FontSize)    # The canvas width
+        CANVASheightPhA = GRHPhA + Y0TPhA + int(2.25 * FontSize)         # The canvas height
         phawindow = Toplevel()
         phawindow.title("Phase Analyzer " + SWRev + RevDate)
         phawindow.protocol("WM_DELETE_WINDOW", DestroyPhAScreen)
@@ -16045,6 +16809,12 @@ def MakePhAWindow():
         ibtblab.pack(side=LEFT)
         ibt_btn = Button(ibtb, text="OFF", style="Stop.TButton", width=4, command=IBtoggle)
         ibt_btn.pack(side=LEFT)
+        iabtb = Frame( frame2phar )
+        iabtb.pack(side=TOP)
+        iapbbtblab = Label(iabtb, text="CA+B I ")
+        iapbbtblab.pack(side=LEFT)
+        iapbt_btn = Button(iabtb, text="OFF", style="Stop.TButton", width=4, command=IApBtoggle)
+        iapbt_btn.pack(side=LEFT)
         # Current Scale Spinbox
         issb = Frame( frame2phar )
         issb.pack(side=TOP)
@@ -16098,12 +16868,12 @@ def UpdatePhAScreen():     # Update screen with trace and text
 #
 # Place holder
 def MakePhATrace():        # Update the grid and trace
-    global VAresult, VBresult, IAresult, IBresult, VABresult, PhaseIA, PhaseIB, PhaseVA, PhaseVB, PhaseVAB
+    global VAresult, VBresult, IAresult, IBresult, VABresult, IABresult, PhaseIA, PhaseIB, PhaseVA, PhaseVB, PhaseVAB, PhaseIAB
     global VMAresult, VMBresult, VMCresult, VMDresult, PhaseVMD, PhaseVMA, PhaseVMB, PhaseVMC
-    global PeakVA, PeakVB, PeakIA, PeakIB, PeakVAB
+    global PeakVA, PeakVB, PeakIA, PeakIB, PeakVAB, PeakIAB
     global PeakVMA, PeakVMB, PeakVMC, PeakVMD
     global PeakfreqVA, PeakfreqVB, PeakfreqIA, PeakfreqIB
-    global PeakphaseVA, PeakphaseVB, PeakphaseIA, PeakphaseIB, PeakphaseVAB
+    global PeakphaseVA, PeakphaseVB, PeakphaseIA, PeakphaseIB, PeakphaseVAB, PeakphaseIAB
     global PeakphaseVMA, PeakphaseVMB, PeakphaseVMC, PeakphaseVMD
     global PeakfreqVMA, PeakfreqVMB, PeakfreqVMC, PeakfreqVMD
     global GRHPhA          # Screenheight
@@ -16138,8 +16908,8 @@ def MakePhATrace():        # Update the grid and trace
         STOPsample = MAXsample
 
     n = STARTsample +1
-    PeakVA = PeakVB = PeakIA = PeakIB = PeakVAB = 0.0
-    PeakfreqVA = PeakfreqVB = PeakfreqIA = PeakfreqIB = F = n * Fsample
+    PeakVA = PeakVB = PeakIA = PeakIB = PeakVAB = PeakIAB = 0.0
+    PeakfreqVA = PeakfreqVB = PeakfreqIA = PeakfreqIB = PeakfreqIAB = F = n * Fsample
     PeakphaseVA = PhaseVA[n]
     if MuxScreenStatus.get() == 0:
         PeakphaseVB = PhaseVB[n]
@@ -16147,6 +16917,7 @@ def MakePhATrace():        # Update the grid and trace
         PeakphaseVMA = PeakphaseVMB = PeakphaseVMC = PeakphaseVMD = 0.0
     PeakphaseIA = PhaseIA[n]
     PeakphaseIB = PhaseIB[n]
+    PeakphaseIAB = PhaseIAB[n]
     PeakSampleVB = PeakSampleVA = PeakSampleIA = PeakSampleIB = n
     PeakSampleVMA = PeakSampleVMB = PeakSampleVMC = PeakSampleVMD = n
     if MuxChan == 0 or ChopMuxMode.get() > 0: #
@@ -16263,7 +17034,18 @@ def MakePhATrace():        # Update the grid and trace
             PeakphaseIB = PhaseIB[n]
             PeakSampleIB = n
 
+        try:
+            IAB = float(IABresult[n]) #  
+        except:
+            IAB = 0.0
+        if IAB > PeakIAB:
+            PeakIAB = IAB
+            PeakfreqIAB = F
+            PeakphaseIAB = PhaseIAB[n]
+            PeakSampleIAB = n
+
         n = n + 1
+    
     # Check to see that V, Vnux and I peaks are in same frequency bin?
     if PeakSampleVA != PeakSampleIA:
         PeakphaseIA = PhaseIA[PeakSampleVA]
@@ -16299,9 +17081,9 @@ def MakePhATrace():        # Update the grid and trace
 #
 # Draw the Phase Analyzer screen
 def MakePhAScreen():       # Update the screen with traces and text
-    global PeakVA, PeakVB, PeakIA, PeakIB
+    global PeakVA, PeakVB, PeakIA, PeakIB, PeakVAB, PeakIAB
     global PeakfreqVA, PeakfreqVB, PeakfreqIA, PeakfreqIB
-    global PeakphaseVA, PeakphaseVB, PeakphaseIA, PeakphaseIB
+    global PeakphaseVA, PeakphaseVB, PeakphaseIA, PeakphaseIB, PeakphaseVAB, PeakphaseIAB
     global PeakVMA, PeakVMB, PeakVMC, PeakVMD
     global PeakphaseVMA, PeakphaseVMB, PeakphaseVMC, PeakphaseVMD
     global PeakfreqVMA, PeakfreqVMB, PeakfreqVMC, PeakfreqVMD
@@ -16322,7 +17104,7 @@ def MakePhAScreen():       # Update the screen with traces and text
     global TRACEaverage # Number of traces for averageing
     global FreqTraceMode    # 1 normal 2 max 3 average
     global Vdiv, VScale, IScale         # Number of vertical divisions
-    global vat_btn, vbt_btn, iat_btn, ibt_btn, vabt_btn
+    global vat_btn, vbt_btn, iat_btn, ibt_btn, vabt_btn, iapbt_btn
     global AWGBMode, AWGBIOMode, ShowPB_A, ShowPB_B, ShowPB_C, ShowPB_D
     global ShowC1_V, ShowC2_V, ShowC1_I, ShowC2_I, CHA_RC_HP, CHB_RC_HP
     global DCV1, DCV2, MinV1, MaxV1, MinV2, MaxV2, CHAHW, CHALW, CHADCy, CHAperiod, CHAfreq
@@ -16417,24 +17199,28 @@ def MakePhAScreen():       # Update the screen with traces and text
         CAIphase = PeakphaseVA - PeakphaseIA
         CBIphase = PeakphaseVA - PeakphaseIB + PhErr
         CABVphase = PeakphaseVA - PeakphaseVAB
+        CABIphase = PeakphaseVA - PeakphaseIAB
     elif RefphEntry.get() == "CB-V":
         CBVphase = 0.0
         CAVphase = PeakphaseVB - PeakphaseVA - PhErr
         CAIphase = PeakphaseVB - PeakphaseIA - PhErr
         CBIphase = PeakphaseVB - PeakphaseIB
         CABVphase = PeakphaseVB - PeakphaseVAB
+        CABIphase = PeakphaseVB - PeakphaseIAB
     elif RefphEntry.get() == "CA-I":
         CAIphase = 0.0
         CAVphase = PeakphaseIA - PeakphaseVA
         CBVphase = PeakphaseIA - PeakphaseVB + PhErr
         CBIphase = PeakphaseIA - PeakphaseIB + PhErr
         CABVphase = PeakphaseIA - PeakphaseVAB
+        CABIphase = PeakphaseIA - PeakphaseIAB
     elif RefphEntry.get() == "CB-I":
         CBIphase = 0.0
         CAVphase = PeakphaseIB - PeakphaseVA - PhErr
         CBVphase = PeakphaseIB - PeakphaseVB
         CAIphase = PeakphaseIB - PeakphaseIA - PhErr
         CABVphase = PeakphaseIB - PeakphaseVAB
+        CABIphase = PeakphaseIB - PeakphaseIAB
     #
     if MuxScreenStatus.get() > 0:
         CBVphase = 0.0
@@ -16495,6 +17281,14 @@ def MakePhAScreen():       # Update the screen with traces and text
         CBIphase = CBIphase - 360
     elif CBIphase < -180:
         CBIphase = CBIphase + 360
+    if CABVphase > 180:
+        CABVphase = CABVphase - 360
+    elif CABVphase < -180:
+        CABVphase = CABVphase + 360
+    if CABIphase > 180:
+        CABIphase = CABIphase - 360
+    elif CABIphase < -180:
+        CABIphase = CABIphase + 360    
     #
     if vat_btn.config('text')[-1] == 'ON':
         MagRadius = PeakVA / VoltsperPixel
@@ -16619,6 +17413,7 @@ def MakePhAScreen():       # Update the screen with traces and text
             x1 = xcenter - xright
         PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace4, arrow="last", width=TRACEwidth.get())
     if MuxScreenStatus.get() == 0:
+        # plot VA - VB vector
         if vabt_btn.config('text')[-1] == 'ON':
             MagRadius = PeakVAB / VoltsperPixel
             
@@ -16632,7 +17427,22 @@ def MakePhAScreen():       # Update the screen with traces and text
                 x1 = xright
             elif x1 < -500:
                 x1 = xcenter - xright
-            PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace5, arrow="last", width=TRACEwidth.get())   
+            PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace5, arrow="last", width=TRACEwidth.get())
+        # plot IA + IB vector
+        if iapbt_btn.config('text')[-1] == 'ON':
+            MagRadius = PeakIAB / mAperPixel
+            
+            y1 = ycenter - MagRadius*math.sin(math.radians(CABIphase))
+            if y1 > 1500:
+                y1 = xright
+            elif y1 < -500:
+                y1 = ycenter - xright
+            x1 = xcenter + MagRadius*math.cos(math.radians(CABIphase))
+            if x1 > 1500:
+                x1 = xright
+            elif x1 < -500:
+                x1 = xcenter - xright
+            PhAca.create_line(xcenter, ycenter, x1, y1, fill=COLORtrace7, arrow="last", width=TRACEwidth.get())
 # display warning if input out of range
     if OverRangeFlagA == 1:
         x = X0LPhA+GRWPhA+10
@@ -16651,7 +17461,7 @@ def MakePhAScreen():       # Update the screen with traces and text
         
     x = X0LPhA
     y = 12
-    idTXT = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext)
+    idTXT = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
     #
     x = X0LPhA + GRWPhA + 4
     y = 24
@@ -16680,6 +17490,10 @@ def MakePhAScreen():       # Update the screen with traces and text
             txt = "Mux D " + ' {0:.3f} '.format(PeakVMD) + " RMS V" 
             TXT10  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace4, font=("arial", FontSize+4 ))
             y = y + 24
+    if vabt_btn.config('text')[-1] == 'ON':
+        txt = "VA-VB " + ' {0:.3f} '.format(PeakVAB) + " RMS V" 
+        TXT10  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace5, font=("arial", FontSize+4 ))
+        y = y + 24
     if iat_btn.config('text')[-1] == 'ON':
         txt = "CA " + ' {0:.2f} '.format(PeakIA) + " RMS mA" 
         TXT11  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace3, font=("arial", FontSize+4 ))
@@ -16687,6 +17501,10 @@ def MakePhAScreen():       # Update the screen with traces and text
     if ibt_btn.config('text')[-1] == 'ON':
         txt = "CB " + ' {0:.2f} '.format(PeakIB) + " RMS mA" 
         TXT12  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace4, font=("arial", FontSize+4 ))
+        y = y + 24
+    if iapbt_btn.config('text')[-1] == 'ON':
+        txt = "IA+IB " + ' {0:.2f} '.format(PeakIAB) + " RMS mA" 
+        TXT12  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace7, font=("arial", FontSize+4 ))
         y = y + 24
     if ChopMuxMode.get() == 0:
         txt = "CA V Phase " + ' {0:.1f} '.format(CAVphase) + " Degrees"
@@ -16713,6 +17531,10 @@ def MakePhAScreen():       # Update the screen with traces and text
             txt = "Mux D Phase " + ' {0:.1f} '.format(CMDphase) + " Degrees"
             TXT14  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace4, font=("arial", FontSize+4 ))
             y = y + 24
+    if vabt_btn.config('text')[-1] == 'ON':
+        txt = "VA-VB Phase " + ' {0:.1f} '.format(CABVphase) + " Degrees"
+        TXT13  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace5, font=("arial", FontSize+4 ))
+        y = y + 24
     if iat_btn.config('text')[-1] == 'ON':
         txt = "CA I Phase " + ' {0:.1f} '.format(CAIphase) + " Degrees"
         TXT15  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace3, font=("arial", FontSize+4 ))
@@ -16720,6 +17542,10 @@ def MakePhAScreen():       # Update the screen with traces and text
     if ibt_btn.config('text')[-1] == 'ON':
         txt = "CB I Phase " + ' {0:.1f} '.format(CBIphase) + " Degrees"
         TXT16  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace4, font=("arial", FontSize+4 ))
+        y = y + 24
+    if iapbt_btn.config('text')[-1] == 'ON':
+        txt = "IA+IB Phase " + ' {0:.1f} '.format(CABIphase) + " Degrees"
+        TXT16  = PhAca.create_text (x, y, text=txt, anchor=W, fill=COLORtrace7, font=("arial", FontSize+4 ))
         y = y + 24
     #
     if ChopMuxMode.get() == 0:
@@ -16790,7 +17616,7 @@ def MakePhAScreen():       # Update the screen with traces and text
          
     x = X0LPhA
     y = YBot + int(2.5 *FontSize) #
-    TXT18 = PhAca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
+    TXT18 = PhAca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
     txt = " "
     if ShowC1_V.get() == 1:
     # Channel A information
@@ -16857,7 +17683,7 @@ def MakePhAScreen():       # Update the screen with traces and text
         
     x = X0LPhA
     y = YBot + int(4*FontSize) # 
-    TXT19 = PhAca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
+    TXT19 = PhAca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
     txt= " "
     # Channel B information
     if MuxScreenStatus.get() == 1:
@@ -16943,7 +17769,7 @@ def MakePhAScreen():       # Update the screen with traces and text
             
     x = X0LPhA
     y = YBot + int(5.5 *FontSize) # 
-    TXT20 = PhAca.create_text(x, y, text=txt, anchor=W, fill=COLORtext)
+    TXT20 = PhAca.create_text(x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
 #
 def BSavePhAData():
     global PeakVA, PeakVB, PeakIA, PeakIB
@@ -17549,7 +18375,7 @@ def MakeFreqScreen():       # Update the screen with traces and text
         
     x = X0LF
     y = 12
-    idTXT = Freqca.create_text (x, y, text=txt, anchor=W, fill=COLORtext)
+    idTXT = Freqca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
 
     # Start and stop frequency and dB/div and trace mode
     txt = str(StartFrequency) + " to " + str(StopFrequency) + " Hz"
@@ -17562,7 +18388,7 @@ def MakeFreqScreen():       # Update the screen with traces and text
     
     x = X0LF
     y = Y0TF+GRHF+23
-    idTXT = Freqca.create_text (x, y, text=txt, anchor=W, fill=COLORtext)
+    idTXT = Freqca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
     
     if FreqTraceMode.get() == 1:
         txt ="Normal mode "
@@ -17587,7 +18413,7 @@ def MakeFreqScreen():       # Update the screen with traces and text
             txt = txt + "  Display off "
     x = X0LF
     y = Y0TF+GRHF+34
-    IDtxt  = Freqca.create_text (x, y, text=txt, anchor=W, fill=COLORtext)
+    IDtxt  = Freqca.create_text (x, y, text=txt, anchor=W, fill=COLORtext, font=("arial", FontSize ))
 
 def INITIALIZEstart():
     global SMPfft, FFTwindow
@@ -18301,7 +19127,7 @@ def MakeAWGWindow():
     global AwgLayout, AWG_Amp_Mode, awgsync, SWRev # 0 = Min/Max mode, 1 = Amp/Offset
     global amp1lab, amp2lab, off1lab, off2lab, Reset_Freq, AWG_2X, BisCompA, FWRevOne
     global ModeAMenu, ShapeAMenu, amp1lab, off1lab, freq1lab, awgaph, awgadel, ModeBMenu, ShapeBMenu
-    global amp2lab, off2lab, freq2lab, awgbph, awgbdel, bcompa, awgsync
+    global amp2lab, off2lab, freq2lab, awgbph, awgbdel, bcompa, awgsync, LockFreq
     global AWGANoiseEntry, AWGBNoiseEntry, AWGAsbnoise, AWGBsbnoise, NoiseList
     
     if AWGScreenStatus.get() == 0:
@@ -18363,8 +19189,11 @@ def MakeAWGWindow():
             ShapeAMenu.menu.add_radiobutton(label="PWM Sine", variable=AWGAShape, value=17, command=ReMakeAWGwaves)
             ShapeAMenu.menu.add_radiobutton(label="FM Sine", variable=AWGAShape, value=21, command=AWGAMakeFMSine)
             ShapeAMenu.menu.add_radiobutton(label="AM Sine", variable=AWGAShape, value=22, command=AWGAMakeAMSine)
-            ShapeAMenu.menu.add_radiobutton(label="UU Noise", variable=AWGAShape, value=7, command=ReMakeAWGwaves)
-            ShapeAMenu.menu.add_radiobutton(label="UG Noise", variable=AWGAShape, value=8, command=ReMakeAWGwaves)
+            ShapeAMenu.menu.add_radiobutton(label="Full Wave", variable=AWGAShape, value=23, command=ReMakeAWGwaves)
+            ShapeAMenu.menu.add_radiobutton(label="Half Wave", variable=AWGAShape, value=24, command=ReMakeAWGwaves)
+            # These stand alone shapes are now redundant, use add noise to 0 amplt sine
+            # ShapeAMenu.menu.add_radiobutton(label="UU Noise", variable=AWGAShape, value=7, command=ReMakeAWGwaves)
+            # ShapeAMenu.menu.add_radiobutton(label="UG Noise", variable=AWGAShape, value=8, command=ReMakeAWGwaves)
         else:
             ShapeAMenu.menu.add_separator()
         ShapeAMenu.menu.add_radiobutton(label="Math", variable=AWGAShape, value=10, command=AWGAMakeMath)
@@ -18481,13 +19310,17 @@ def MakeAWGWindow():
         AWGANoiseEntry.delete(0,"end")
         AWGANoiseEntry.insert(0,0.0)
         #
+        freqlock = Checkbutton(frame2, text="Lock Freq", variable=LockFreq) # , command=)
+        freqlock.pack(side=TOP)
         if FWRevOne > 2.16:
             awg2x1 = Radiobutton(frame2, text="Both CH 1X", variable=AWG_2X, value=0, command=BAWG2X)
             awg2x1.pack(side=TOP)
-            awg2x2 = Radiobutton(frame2, text="CH A 2X", variable=AWG_2X, value=1, command=BAWG2X)
-            awg2x2.pack(side=TOP)
-            awg2x3 = Radiobutton(frame2, text="CH B 2X", variable=AWG_2X, value=2, command=BAWG2X)
-            awg2x3.pack(side=TOP)
+            axg2xf = Frame( frame2 )
+            axg2xf.pack(side=TOP)
+            awg2x2 = Radiobutton(axg2xf, text="CH A 2X", variable=AWG_2X, value=1, command=BAWG2X)
+            awg2x2.pack(side=LEFT, anchor=W)
+            awg2x3 = Radiobutton(axg2xf, text="CH B 2X", variable=AWG_2X, value=2, command=BAWG2X)
+            awg2x3.pack(side=LEFT, anchor=W)
         else:
             awgsync = Checkbutton(frame2, text="Sync AWG", variable=AWGSync, command=BAWGSync)
             awgsync.pack(side=TOP)
@@ -18530,8 +19363,11 @@ def MakeAWGWindow():
             ShapeBMenu.menu.add_radiobutton(label="Fourier Series", variable=AWGBShape, value=14, command=AWGBMakeFourier)
             ShapeBMenu.menu.add_radiobutton(label="Sin X/X", variable=AWGBShape, value=19, command=ReMakeAWGwaves)
             ShapeBMenu.menu.add_radiobutton(label="PWM Sine", variable=AWGBShape, value=17, command=ReMakeAWGwaves)
-            ShapeBMenu.menu.add_radiobutton(label="UU Noise", variable=AWGBShape, value=7, command=ReMakeAWGwaves)
-            ShapeBMenu.menu.add_radiobutton(label="UG Noise", variable=AWGBShape, value=8, command=ReMakeAWGwaves)
+            ShapeBMenu.menu.add_radiobutton(label="Full Wave", variable=AWGBShape, value=23, command=ReMakeAWGwaves)
+            ShapeBMenu.menu.add_radiobutton(label="Half Wave", variable=AWGBShape, value=24, command=ReMakeAWGwaves)
+            # These stand alone shapes are now redundant, use add noise to 0 amplt sine
+            # ShapeBMenu.menu.add_radiobutton(label="UU Noise", variable=AWGBShape, value=7, command=ReMakeAWGwaves)
+            # ShapeBMenu.menu.add_radiobutton(label="UG Noise", variable=AWGBShape, value=8, command=ReMakeAWGwaves)
         else:
             ShapeBMenu.menu.add_separator()
         ShapeBMenu.menu.add_radiobutton(label="Math", variable=AWGBShape, value=10, command=AWGBMakeMath)
@@ -19069,7 +19905,7 @@ def MakeBodeWindow():
         BodeDisp.set(1)
         BodeCheckBox()
         CANVASwidthBP = GRWBP + 2 * X0LBP    # The Bode canvas width
-        CANVASheightBP = GRHBP + 80         # The ode canvas height
+        CANVASheightBP = GRHBP + int(10 * FontSize) # The bode canvas height
         CutDC.set(1) # set to remove DC
         AWGAMode.set(0) # Set AWG A to SVMI
         AWGAShape.set(1) # Set Shape to Sine
@@ -19973,8 +20809,8 @@ def MakeXYWindow():
             math_tip = CreateToolTip(mathbt, 'Open Math window')
             bsxy_tip = CreateToolTip(sbxy, 'Stop acquiring data')
             brxy_tip = CreateToolTip(rbxy, 'Start acquiring data')
-            snapbutton_tip = CreateToolTip(snapbutton, 'Take snap shot of current trace')
-            savebutton_tip = CreateToolTip(savebutton, 'Save current trace to EPS file')
+            #snapbutton_tip = CreateToolTip(snapbutton, 'Take snap shot of current trace')
+            #savebutton_tip = CreateToolTip(savebutton, 'Save current trace to EPS file')
             dismissxybutton_tip = CreateToolTip(dismissxybutton, 'Diamiss X-Y plot window')
             CHAxylab_tip = CreateToolTip(CHAxylab, 'Select CHA-V vertical range/position axis to be used for markers and drawn color')
             CHBxylab_tip = CreateToolTip(CHBxylab, 'Select CHB-V vertical range/position axis to be used for markers and drawn color')
@@ -21279,7 +22115,8 @@ def MakeDigFiltWindow():
     global digfltwindow, DigFiltStatus, RevDate, SWRev, DeBugMode
     global DigFiltA, DigFiltB, DifFiltALength, DifFiltBLength, DifFiltAFile, DifFiltBFile
     global DigFiltABoxCar, DigFiltBBoxCar, BCALenEntry, BCBLenEntry
-    global BCASkewEntry, BCBSkewEntry, DigDeSkewA, DigDeSkewB
+    global BCVASkewEntry, BCVBSkewEntry, DigDeSkewVA, DigDeSkewVB
+    global BCIASkewEntry, BCIBSkewEntry, DigDeSkewIA, DigDeSkewIB
     global AWGFiltA, AWGALenEntry, AWGFiltABoxCar, AWGFiltALength, AWGFiltAFile
     global AWGFiltB, AWGBLenEntry, AWGFiltBBoxCar, AWGFiltBLength, AWGFiltBFile
 
@@ -21328,23 +22165,37 @@ def MakeDigFiltWindow():
         DifFiltALength.grid(row=2, column=0, sticky=W)
         DifFiltAFile = Label(digfilta, text="File Name, none ")
         DifFiltAFile.grid(row=3, column=0, columnspan=3, sticky=W)
-        cald = Button(digfilta, text='Load CH A Filter Coef', command=BLoadDFiltA)
+        cald = Button(digfilta, text='Load From File', command=BLoadDFiltA)
         cald.grid(row=4, column=0, columnspan=3, sticky=W)
+        cacb = Button(digfilta, text='Load From Clip Board', command=BLoadDFiltAClip)
+        cacb.grid(row=5, column=0, columnspan=3, sticky=W)
         camath = Button(digfilta, text='CH A Filter formula', command=BDFiltAMath)
-        camath.grid(row=5, column=0, columnspan=3, sticky=W)
+        camath.grid(row=6, column=0, columnspan=3, sticky=W)
         
         # Deskew controls
-        lab5 = Checkbutton(digfilta, text="DeSkew A", variable=DigDeSkewA)# , command=BuildBoxCarA)
-        lab5.grid(row=6, column=0, sticky=W)
-        BCASkewEntry = Entry(digfilta, width=3, cursor='double_arrow')
-        BCASkewEntry.bind('<MouseWheel>', onTextScroll)
-        BCASkewEntry.bind("<Button-4>", onTextScroll)# with Linux OS
-        BCASkewEntry.bind("<Button-5>", onTextScroll)
-        BCASkewEntry.grid(row=6, column=1, sticky=W)
-        BCASkewEntry.delete(0,"end")
-        BCASkewEntry.insert(0,0)
+        lab5 = Checkbutton(digfilta, text="DeSkew VA", variable=DigDeSkewVA)# , command=BuildBoxCarA)
+        lab5.grid(row=7, column=0, sticky=W)
+        BCVASkewEntry = Entry(digfilta, width=3, cursor='double_arrow')
+        BCVASkewEntry.bind('<MouseWheel>', onTextScroll)
+        BCVASkewEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+        BCVASkewEntry.bind("<Button-5>", onTextScroll)
+        BCVASkewEntry.grid(row=7, column=1, sticky=W)
+        BCVASkewEntry.delete(0,"end")
+        BCVASkewEntry.insert(0,0)
         bcasklab = Label(digfilta, text="# Samples")
-        bcasklab.grid(row=6, column=2, sticky=W)
+        bcasklab.grid(row=7, column=2, sticky=W)
+        #
+        lab5i = Checkbutton(digfilta, text="DeSkew IA", variable=DigDeSkewIA)# , command=BuildBoxCarA)
+        lab5i.grid(row=8, column=0, sticky=W)
+        BCIASkewEntry = Entry(digfilta, width=3, cursor='double_arrow')
+        BCIASkewEntry.bind('<MouseWheel>', onTextScroll)
+        BCIASkewEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+        BCIASkewEntry.bind("<Button-5>", onTextScroll)
+        BCIASkewEntry.grid(row=8, column=1, sticky=W)
+        BCIASkewEntry.delete(0,"end")
+        BCIASkewEntry.insert(0,0)
+        bcaisklab = Label(digfilta, text="# Samples")
+        bcaisklab.grid(row=8, column=2, sticky=W)
         #
         #dismissdfbutton = Button(digfilta, text="Dismiss", style="W8.TButton", command=DestroyDigFiltScreen)
         #dismissdfbutton.grid(row=7, column=0, columnspan=1, sticky=W)
@@ -21370,22 +22221,36 @@ def MakeDigFiltWindow():
         DifFiltBLength.grid(row=2, column=0, sticky=W)
         DifFiltBFile = Label(digfiltb,text="File Name, none ")
         DifFiltBFile.grid(row=3, column=0, columnspan=3, sticky=W)
-        cbld = Button(digfiltb, text='Load CH B Filter Coef', command=BLoadDFiltB)
+        cbld = Button(digfiltb, text='Load From File', command=BLoadDFiltB)
         cbld.grid(row=4, column=0, columnspan=3, sticky=W)
+        cacb = Button(digfiltb, text='Load From Clip Board', command=BLoadDFiltBClip)
+        cacb.grid(row=5, column=0, columnspan=3, sticky=W)
         cbmath = Button(digfiltb, text='CH B Filter formula', command=BDFiltBMath)
-        cbmath.grid(row=5, column=0, columnspan=3, sticky=W)
+        cbmath.grid(row=6, column=0, columnspan=3, sticky=W)
         # Deskew controls
-        lab6 = Checkbutton(digfiltb,text="DeSkew B", variable=DigDeSkewB)# , command=BuildBoxCarA)
-        lab6.grid(row=6, column=0, sticky=W)
-        BCBSkewEntry = Entry(digfiltb, width=3, cursor='double_arrow')
-        BCBSkewEntry.bind('<MouseWheel>', onTextScroll)
-        BCBSkewEntry.bind("<Button-4>", onTextScroll)# with Linux OS
-        BCBSkewEntry.bind("<Button-5>", onTextScroll)
-        BCBSkewEntry.grid(row=6, column=1, sticky=W)
-        BCBSkewEntry.delete(0,"end")
-        BCBSkewEntry.insert(0,0)
+        lab6 = Checkbutton(digfiltb,text="DeSkew VB", variable=DigDeSkewVB)# , command=BuildBoxCarA)
+        lab6.grid(row=7, column=0, sticky=W)
+        BCVBSkewEntry = Entry(digfiltb, width=3, cursor='double_arrow')
+        BCVBSkewEntry.bind('<MouseWheel>', onTextScroll)
+        BCVBSkewEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+        BCVBSkewEntry.bind("<Button-5>", onTextScroll)
+        BCVBSkewEntry.grid(row=7, column=1, sticky=W)
+        BCVBSkewEntry.delete(0,"end")
+        BCVBSkewEntry.insert(0,0)
         bcbsklab = Label(digfiltb, text="# Samples")
-        bcbsklab.grid(row=6, column=2, sticky=W)
+        bcbsklab.grid(row=7, column=2, sticky=W)
+        #
+        lab6i = Checkbutton(digfiltb,text="DeSkew IB", variable=DigDeSkewIB)# , command=BuildBoxCarA)
+        lab6i.grid(row=8, column=0, sticky=W)
+        BCIBSkewEntry = Entry(digfiltb, width=3, cursor='double_arrow')
+        BCIBSkewEntry.bind('<MouseWheel>', onTextScroll)
+        BCIBSkewEntry.bind("<Button-4>", onTextScroll)# with Linux OS
+        BCIBSkewEntry.bind("<Button-5>", onTextScroll)
+        BCIBSkewEntry.grid(row=8, column=1, sticky=W)
+        BCIBSkewEntry.delete(0,"end")
+        BCIBSkewEntry.insert(0,0)
+        bcbisklab = Label(digfiltb, text="# Samples")
+        bcbisklab.grid(row=8, column=2, sticky=W)
         # AWG A controls
         awgfilta = Frame( frame4 )
         awgfilta.pack(side=LEFT)
@@ -21408,10 +22273,12 @@ def MakeDigFiltWindow():
         AWGFiltALength.grid(row=2, column=0, sticky=W)
         AWGFiltAFile = Label(awgfilta, text="File Name, none ")
         AWGFiltAFile.grid(row=3, column=0, columnspan=3, sticky=W)
-        awgaload = Button(awgfilta, text='Load AWG A Filter Coef', command=BLoadAWGFiltA)
+        awgaload = Button(awgfilta, text='Load From File', command=BLoadAWGFiltA)
         awgaload.grid(row=4, column=0, columnspan=3, sticky=W)
+        awgacb = Button(awgfilta, text='Load From Clip Board', command=BLoadAWGAFiltClip)
+        awgacb.grid(row=5, column=0, columnspan=3, sticky=W)
         awgamath = Button(awgfilta, text='AWG A Filter formula', command=BAWGFiltAMath)
-        awgamath.grid(row=5, column=0, columnspan=3, sticky=W)
+        awgamath.grid(row=6, column=0, columnspan=3, sticky=W)
         #
         # AWG B controls
         awgfiltb = Frame( frame5 )
@@ -21435,10 +22302,12 @@ def MakeDigFiltWindow():
         AWGFiltBLength.grid(row=2, column=0, sticky=W)
         AWGFiltBFile = Label(awgfiltb, text="File Name, none ")
         AWGFiltBFile.grid(row=3, column=0, columnspan=3, sticky=W)
-        awgbload = Button(awgfiltb, text='Load AWG B Filter Coef', command=BLoadAWGFiltB)
+        awgbload = Button(awgfiltb, text='Load From File', command=BLoadAWGFiltB)
         awgbload.grid(row=4, column=0, columnspan=3, sticky=W)
+        awgbcb = Button(awgfiltb, text='Load From Clip Board', command=BLoadAWGBFiltClip)
+        awgbcb.grid(row=5, column=0, columnspan=3, sticky=W)
         awgbmath = Button(awgfiltb, text='AWG B Filter formula', command=BAWGFiltBMath)
-        awgbmath.grid(row=5, column=0, columnspan=3, sticky=W)
+        awgbmath.grid(row=6, column=0, columnspan=3, sticky=W)
         #
 def onRetDigFiltA(event):
     BuildBoxCarA()
@@ -23685,6 +24554,22 @@ root.style.configure("Rtrace6.TButton", background=COLORtrace6, foreground="#000
 root.style.configure("Strace6.TButton", background=COLORtrace6, foreground="#000000", width=7, relief=SUNKEN)
 root.style.configure("Rtrace7.TButton", background=COLORtrace7, foreground="#000000", width=7, relief=RAISED)
 root.style.configure("Strace7.TButton", background=COLORtrace7, foreground="#000000", width=7, relief=SUNKEN)
+root.style.configure("T1W16.TButton", background=COLORtrace1, width=16, relief=ButRelief)
+root.style.configure("T2W16.TButton", background=COLORtrace2, width=16, relief=ButRelief)
+root.style.configure("T3W16.TButton", background=COLORtrace3, width=16, relief=ButRelief)
+root.style.configure("T4W16.TButton", background=COLORtrace4, width=16, relief=ButRelief)
+root.style.configure("T5W16.TButton", background=COLORtrace5, width=16, relief=ButRelief)
+root.style.configure("T6W16.TButton", background=COLORtrace6, width=16, relief=ButRelief)
+root.style.configure("T7W16.TButton", background=COLORtrace7, width=16, relief=ButRelief)
+root.style.configure("TR1W16.TButton", background=COLORtraceR1, width=16, relief=ButRelief)
+root.style.configure("TR2W16.TButton", background=COLORtraceR2, width=16, relief=ButRelief)
+root.style.configure("TR3W16.TButton", background=COLORtraceR3, width=16, relief=ButRelief)
+root.style.configure("TR4W16.TButton", background=COLORtraceR4, width=16, relief=ButRelief)
+root.style.configure("TR5W16.TButton", background=COLORtraceR5, width=16, relief=ButRelief)
+root.style.configure("TR6W16.TButton", background=COLORtraceR6, width=16, relief=ButRelief)
+root.style.configure("TR7W16.TButton", background=COLORtraceR7, width=16, relief=ButRelief)
+root.style.configure("TGW16.TButton", background=COLORtrigger, width=16, relief=ButRelief)
+root.style.configure("ZLW16.TButton", background=COLORzeroline, width=16, relief=ButRelief)
 root.style.configure("RGray.TButton", background="#808080", width=7, relief=RAISED)
 root.style.configure("SGray.TButton", background="#808080", width=7, relief=SUNKEN)
 #
@@ -23815,7 +24700,7 @@ Showmenu.menu.add_command(label="None", command=BShowCurvesNone)
 Showmenu.menu.add_checkbutton(label='CA-V (1)', background=COLORtrace1, variable=ShowC1_V, command=TraceSelectADC_Mux)
 Showmenu.menu.add_checkbutton(label='CA-I (3)', background=COLORtrace3, variable=ShowC1_I, command=TraceSelectADC_Mux)
 Showmenu.menu.add_checkbutton(label='CB-V (2)', background=COLORtrace2, variable=ShowC2_V, command=TraceSelectADC_Mux)
-Showmenu.menu.add_checkbutton(label='CB-I (4)', background=COLORtrace4,variable=ShowC2_I, command=TraceSelectADC_Mux)
+Showmenu.menu.add_checkbutton(label='CB-I (4)', background=COLORtrace4, variable=ShowC2_I, command=TraceSelectADC_Mux)
 Showmenu.menu.add_checkbutton(label='Math-X', background=COLORtrace6, variable=Show_MathX, command=UpdateTimeTrace)
 Showmenu.menu.add_checkbutton(label='Math-Y', background=COLORtrace7, variable=Show_MathY, command=UpdateTimeTrace)
 Showmenu.menu.add_command(label="-Auto Vert Center-", foreground="blue", command=donothing)
@@ -23958,6 +24843,7 @@ Optionmenu.menu.add_checkbutton(label='Persistance', variable=ScreenTrefresh)
 Optionmenu.menu.add_command(label='Set Marker Location', command=BSetMarkerLocation)
 Optionmenu.menu.add_command(label='Change Plot Label', command=BUserCustomPlotText)
 Optionmenu.menu.add_command(label="SnapShot (s)", command=BSnapShot)
+Optionmenu.menu.add_command(label="Color Selector", command=ColorSelector)
 Optionmenu.menu.add_radiobutton(label='Black BG', variable=ColorMode, value=0, command=BgColor)
 Optionmenu.menu.add_radiobutton(label='White BG', variable=ColorMode, value=1, command=BgColor)
 Optionmenu.menu.add_command(label="Run Self Cal", command=SelfCalibration)
