@@ -1,10 +1,10 @@
 Version 1.3.13 May 7 2022
-* Added new Color Chooser daialog (found in Options drop down).
-* Two new advanced wave shapes were added to AWG. Full Wave and Half Wave rectified sinewavs.
+* Added new Color Chooser dialog (found in Options drop down).
+* Two new advanced wave shapes were added to AWG. Full Wave and Half Wave rectified sine waves.
 * Now possible to lock the frequency of AWG channel B to the frequency entry of AWG channel A.
 * In the Phase Analizer tool, Added ability to display both VA-VB and IA+IB phasors.
 * Now possible to copy waveform data buffer to Clip Board or paste from Clip Board to waveform buffer.
-* In the Digital filtering controls it is now possible to load fiter coefficients from the Clip Board.
+* In the Digital filtering controls it is now possible to load filter coefficients from the Clip Board.
 * In the Digital filtering controls it is now possible to shift (time skew) both voltage and current time waveforms.
 * Fixed a number of places where text font was not being scaled by FontSize variable.
 * A few other misc. typo and bug fixes.

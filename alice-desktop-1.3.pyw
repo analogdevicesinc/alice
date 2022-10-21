@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
 #
-# ADALM1000 alice-desktop 1.3.py(w) (5-7-2022)
+# ADALM1000 alice-desktop 1.3.py(w) (5-23-2022)
 # For Python version 2.7 or 3.7, Windows OS and Linux OS
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -73,8 +73,8 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "7 May 2022"
-SWRev = "1.3.13 "
+RevDate = "23 May 2022"
+SWRev = "1.3.14 "
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.13/alice-desktop-1.3-setup.exe'
 # small bit map of ADI logo for window icon
 TBicon = """
@@ -439,7 +439,11 @@ if sys.version_info[0] == 2:
     default_font = tkFont.nametofont("TkDefaultFont")
 if sys.version_info[0] == 3:
     default_font = tkinter.font.nametofont("TkDefaultFont")
-default_font.configure(size=FontSize)
+try:
+    default_font.config(size=FontSize) # or .configure ?
+except:
+    print("Warning! Default Font Size was not set")
+#
 ## Vertical Sensitivity list in v/div
 CHvpdiv = (0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0)
 ## Vertical Sensitivity list in mA/div

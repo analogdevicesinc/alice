@@ -5,7 +5,7 @@
 import __future__
 import sys
 if sys.version_info[0] == 2:
-    print ("Python 2.x")
+    print("Python 2.x")
     import urllib2
     import tkFont
     from Tkinter import *
@@ -15,7 +15,7 @@ if sys.version_info[0] == 2:
     from tkSimpleDialog import askstring
     from tkMessageBox import *
 if sys.version_info[0] == 3:
-    print ("Python 3.x")    
+    print("Python 3.x")    
     import urllib.request, urllib.error, urllib.parse
     from tkinter.font import *
     from tkinter import *
@@ -39,7 +39,7 @@ except:
     pysmu_found = False
 #
 root = Tk()
-RevDate = "(16 May 2021)"
+RevDate = "(20 May 2022)"
 SWRev = "1.3 "
 # small bit map of ADI logo for window icon
 TBicon = """
@@ -709,7 +709,7 @@ Build_meter()
 if pysmu_found:
     session = Session(ignore_dataflow=True, queue_size=10000)
     if not session.devices:
-        print 'no device found'
+        print('no device found')
         root.destroy()
         exit()
     #

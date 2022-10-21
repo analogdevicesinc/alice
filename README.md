@@ -2,11 +2,10 @@
 
 Active Learning Interface (for) Circuits (and) Electronics:
 
-The ALICE Desktop software interface is a collection of software instruments written for use with the active learning hardware modules ADALM1000 (M1K) and ADALM2000 (M2K).
+The ALICE Desktop software interface is a collection of software instruments written for use with the active learning hardware module ADALM1000 (M1K).
 ### [ALICE 1.3 User Guide for M1K]:
-### [ALICE 2.0 User Guide for M2K]:
+
 [ALICE 1.3 User Guide for M1K]:https://wiki.analog.com/university/tools/m1k/alice/desk-top-users-guide
-[ALICE 2.0 User Guide for M2K]:https://wiki.analog.com/university/tools/m2k/alice/users-guide-m2k
 
 ## Background:
 

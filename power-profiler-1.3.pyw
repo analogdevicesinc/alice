@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 data logger tool (9-20-2022)
+# ADALM1000 power profiler tool (9-20-2022)
 # For Python version > = 2.7.8 and 3.7
 # With external module pysmu (libsmu > = 1.0 ADALM1000 )
 # Created by D Mercer ()
@@ -35,10 +35,10 @@ if len(sys.argv) > 1:
     InitFileName = str(sys.argv[1])
     print( 'Init file name: ' + InitFileName )
 else:
-    InitFileName = "datalogger_init.ini"
+    InitFileName = "profiler_init.ini"
 #
 RevDate = "(20 Sept 2022)"
-MouseFocus = 0
+MouseFocus = 1
 # Colors that can be modified
 COLORframes = "#000080"   # Color = "#rrggbb" rr=red gg=green bb=blue, Hexadecimal values 00 - ff
 COLORcanvas = "#000000"   # 100% black
@@ -62,7 +62,20 @@ COLORtext = "#ffffff"     # 100% white
 COLORtrigger = "#ff0000"  # 100% red
 COLORsignalband = "#ff0000" # 100% red
 # set up variables
+ButtonGreen = "#00ff00"   # 100% green
+ButtonRed = "#ff0000" # 100% red
+GUITheme = "Light"
+ButtonOrder = 0
+SBoxarrow = 11
+Closed = 0
 
+# # Can be Light or Dark or Blue or LtBlue or Custom where:
+FrameBG = "#d7d7d7" # Background color for frame
+ButtonText = "#000000" # Button Text color
+# Widget relief can be RAISED, GROOVE, RIDGE, and FLAT
+ButRelief = RAISED
+LabRelief = FLAT
+FrameRefief = RIDGE
 InOffA = InOffB = 0.0
 InGainA = InGainB = 1.0
 CANVASwidth = 1000
@@ -75,6 +88,11 @@ BaseSampleRate = 100000
 SampleRate = 50
 SampRates = (10, 25, 50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500)
 RunStatus = 0
+## Vertical Sensitivity list in v/div
+CHvpdiv = (0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0)
+## Vertical Sensitivity list in mA/div or mW/Div
+CHipdiv = (0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0, 500.0)
+##
 # Check if there is an init.ini file to read in
 # Check if there is an alice_init.ini file to read in
 try:
@@ -112,7 +130,7 @@ i8fUAgA7
 """
 
 root = Tk()
-root.title("ALICE 1.3 " + RevDate + ": ALM1000 Datalogger")
+root.title("ALICE 1.3 " + RevDate + ": ALM1000 Power Profiler")
 img = PhotoImage(data=TBicon)
 root.call('wm', 'iconphoto', root._w, '-default', img)
 #root.call('wm', 'iconphoto', root._w, img)
@@ -128,23 +146,23 @@ except:
 if MouseFocus == 1:
     root.tk_focusFollowsMouse()
 # define custom buttons
-root.style.configure("W3.TButton", width=3, relief=RAISED)
-root.style.configure("W4.TButton", width=4, relief=RAISED)
-root.style.configure("W5.TButton", width=5, relief=RAISED)
-root.style.configure("W7.TButton", width=7, relief=RAISED)
-root.style.configure("W8.TButton", width=8, relief=RAISED)
-root.style.configure("W9.TButton", width=9, relief=RAISED)
-root.style.configure("W10.TButton", width=10, relief=RAISED)
-root.style.configure("W11.TButton", width=11, relief=RAISED)
-root.style.configure("W16.TButton", width=16, relief=RAISED)
-root.style.configure("W17.TButton", width=17, relief=RAISED)
-root.style.configure("Stop.TButton", background="#ff0000", width=4, relief=RAISED)
-root.style.configure("Run.TButton", background="#00ff00", width=4, relief=RAISED)
-root.style.configure("Reset.TButton", background="#ffff00", width=5, relief=RAISED)
-root.style.configure("Pwr.TButton", background="#00ff00", width=7, relief=RAISED)
-root.style.configure("PwrOff.TButton", background="#ff0000", width=7, relief=RAISED)
-root.style.configure("RConn.TButton", background="#ff0000", width=5, relief=RAISED)
-root.style.configure("GConn.TButton", background="#00ff00", width=5, relief=RAISED)
+root.style.configure("W3.TButton", width=3, relief=ButRelief)
+root.style.configure("W4.TButton", width=4, relief=ButRelief)
+root.style.configure("W5.TButton", width=5, relief=ButRelief)
+root.style.configure("W7.TButton", width=7, relief=ButRelief)
+root.style.configure("W8.TButton", width=8, relief=ButRelief)
+root.style.configure("W9.TButton", width=9, relief=ButRelief)
+root.style.configure("W10.TButton", width=10, relief=ButRelief)
+root.style.configure("W11.TButton", width=11, relief=ButRelief)
+root.style.configure("W16.TButton", width=16, relief=ButRelief)
+root.style.configure("W17.TButton", width=17, relief=ButRelief)
+root.style.configure("Stop.TButton", background="#ff0000", width=4, relief=ButRelief)
+root.style.configure("Run.TButton", background="#00ff00", width=4, relief=ButRelief)
+root.style.configure("Reset.TButton", background="#ffff00", width=5, relief=ButRelief)
+root.style.configure("Pwr.TButton", background="#00ff00", width=7, relief=ButRelief)
+root.style.configure("PwrOff.TButton", background="#ff0000", width=7, relief=ButRelief)
+root.style.configure("RConn.TButton", background="#ff0000", width=5, relief=ButRelief)
+root.style.configure("GConn.TButton", background="#00ff00", width=5, relief=ButRelief)
 root.style.configure("Rtrace1.TButton", background=COLORtrace1, width=7, relief=RAISED)
 root.style.configure("Strace1.TButton", background=COLORtrace1, width=7, relief=SUNKEN)
 root.style.configure("Rtrace2.TButton", background=COLORtrace2, width=7, relief=RAISED)
@@ -153,6 +171,8 @@ root.style.configure("Rtrace3.TButton", background=COLORtrace3, width=7, relief=
 root.style.configure("Strace3.TButton", background=COLORtrace3, width=7, relief=SUNKEN)
 root.style.configure("Rtrace4.TButton", background=COLORtrace4, width=7, relief=RAISED)
 root.style.configure("Strace4.TButton", background=COLORtrace4, width=7, relief=SUNKEN)
+root.style.configure("Rtrace5.TButton", background=COLORtrace5, width=7, relief=RAISED)
+root.style.configure("Strace5.TButton", background=COLORtrace5, width=7, relief=SUNKEN)
 root.style.configure("Rtrace6.TButton", background=COLORtrace6, width=7, relief=RAISED)
 root.style.configure("Strace6.TButton", background=COLORtrace6, width=7, relief=SUNKEN)
 root.style.configure("Rtrace7.TButton", background=COLORtrace7, width=7, relief=RAISED)
@@ -175,6 +195,7 @@ root.style.configure("Enab.TCheckbutton", indicatorcolor="#00ff00")
 root.style.configure("WPhase.TRadiobutton", width=5, background="white", indicatorcolor=("red", "green"))
 root.style.configure("GPhase.TRadiobutton", width=5, background="gray", indicatorcolor=("red", "green"))
 #
+ColorMode = IntVar(0)
 RUNstatus = IntVar(0)
 CHAstatus = IntVar(0)
 CHBstatus = IntVar(0)
@@ -195,6 +216,7 @@ class StripChart:
     global CHAIGainEntry, CHAIOffsetEntry, CHBIGainEntry, CHBIOffsetEntry
     global labelAI, labelBI, labelAV, labelBV, labelAPW, labelBPW
     global CHAMaxV, CHAMinV, CHBMaxV, CHBMinV, Sglobal, RateScale
+    global CHAsb, CHAIsb, CHAPwsb, CHBsb, CHBIsb, CHBPwsb, CHAPosEntry, CHBPosEntry
     
     def __init__(self, root):
         global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry, SampleDelayEntry
@@ -220,105 +242,162 @@ class StripChart:
     def makeControls(self, frame):
         global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry, SRateScale
         global NumGrid, SelCHA, SelCHB, dlog, Dlog_open, chalab, chblab, SampleDelayEntry
-        global Run_For, RunForEntry, cf, CHAoffsetEntry, CHArangeEntry, CHBoffsetEntry, CHBrangeEntry
+        global Run_For, RunForEntry, cf, CHAsb, CHAIsb, CHAPwsb, CHBsb, CHBIsb, CHBPwsb
+        global CHAPosEntry, CHBPosEntry
         global SampRates, InOffA, InOffB, InGainA, InGainB
         
         cf = Frame(frame, borderwidth=1, relief="raised")
+        # trace selecters
+        SelCHA = IntVar(0)
+        lcha = Button(cf, text="CH A", style="Rtrace1.TButton")
+        lcha.grid(row=2, column=0, sticky=W)
+        selchao = Radiobutton(cf, text="Off", variable=SelCHA, value=0, command = self.ChangeGrid)
+        selchao.grid(row=2, column=1, sticky=W)
+        selchav = Radiobutton(cf, text="V ", variable=SelCHA, value=1, command = self.ChangeGrid)
+        selchav.grid(row=2, column=2, sticky=W)
+        selchai = Radiobutton(cf, text="I ", variable=SelCHA, value=2, command = self.ChangeGrid)
+        selchai.grid(row=2, column=3, sticky=W)
+        selchap = Radiobutton(cf, text="Pw  ", variable=SelCHA, value=3, command = self.ChangeGrid)
+        selchap.grid(row=2, column=4, sticky=W)
+        SelCHB = IntVar(0)
+        lchb = Button(cf, text="CH B", style="Rtrace2.TButton")
+        lchb.grid(row=3, column=0, sticky=W)
+        selchbo = Radiobutton(cf, text="Off", variable=SelCHB, value=0, command = self.ChangeGrid)
+        selchbo.grid(row=3, column=1, sticky=W)
+        selchbv = Radiobutton(cf, text="V ", variable=SelCHB, value=1, command = self.ChangeGrid)
+        selchbv.grid(row=3, column=2, sticky=W)
+        selchbi = Radiobutton(cf, text="I ", variable=SelCHB, value=2, command = self.ChangeGrid)
+        selchbi.grid(row=3, column=3, sticky=W)
+        selchbp = Radiobutton(cf, text="Pw ", variable=SelCHB, value=3, command = self.ChangeGrid)
+        selchbp.grid(row=3, column=4, sticky=W)
+        NumGrid = IntVar(0)
+        rb1 = Radiobutton(cf, text="1 Grid ", variable=NumGrid, value=0, command = self.ChangeGrid )
+        rb1.grid(row=2, column=5, sticky=W)
+        rb2 = Radiobutton(cf, text="2 Grid ", variable=NumGrid, value=1, command = self.ChangeGrid )
+        rb2.grid(row=3, column=5, sticky=W)
+        # Input ranges sub frame
+        #
+        RangeA = Frame( cf )
+        RangeA.grid(row=2, column=6, columnspan=1, sticky=W)
+        
+        # Voltage ranges
+        CHAsb = Spinbox(RangeA, width=4, values=CHvpdiv)#, command=BCHAlevel)
+        CHAsb.bind('<MouseWheel>', onSpinBoxScroll)
+        CHAsb.pack(side=LEFT)
+        CHAsb.delete(0,"end")
+        CHAsb.insert(0,0.5)
+        CHAlab = Button(RangeA, text="V/Div", style="Rtrace1.TButton")#, command=SetScaleA)
+        CHAlab.pack(side=LEFT)
+        # Current ranges
+        CHAIsb = Spinbox(RangeA, width=5, values=CHipdiv)#, command=BCHAIlevel)
+        CHAIsb.bind('<MouseWheel>', onSpinBoxScroll)
+        CHAIsb.pack(side=LEFT)
+        CHAIsb.delete(0,"end")
+        CHAIsb.insert(0,50.0)
+        CHAIlab = Button(RangeA, text="mA/Div", style="Strace3.TButton")#, command=SetScaleIA)
+        CHAIlab.pack(side=LEFT)
+        # Power ranges
+        CHAPwsb = Spinbox(RangeA, width=5, values=CHipdiv)#, command=BCHAIlevel)
+        CHAPwsb.bind('<MouseWheel>', onSpinBoxScroll)
+        CHAPwsb.pack(side=LEFT)
+        CHAPwsb.delete(0,"end")
+        CHAPwsb.insert(0,50.0)
+        CHAPwlab = Button(RangeA, text="mW/Div", style="Strace5.TButton")#, command=SetScaleIA)
+        CHAPwlab.pack(side=LEFT)
+        
+        CHAPosEntry = Entry(RangeA, width=5) #
+        CHAPosEntry.bind('<MouseWheel>', onTextScroll)
+        CHAPosEntry.pack(side=LEFT)
+        CHAPosEntry.delete(0,"end")
+        CHAPosEntry.insert(0,InOffA)
+        CHAPoslab = Button(RangeA, text="Poss", style="Strace1.TButton")#, command=SetScaleIA)
+        CHAPoslab.pack(side=LEFT)
+        # CH B
+        RangeB = Frame( cf )
+        RangeB.grid(row=3, column=6, columnspan=1, sticky=W)
+        # Voltage ranges
+        CHBsb = Spinbox(RangeB, width=4, values=CHvpdiv)#, command=BCHAlevel)
+        CHBsb.bind('<MouseWheel>', onSpinBoxScroll)
+        CHBsb.pack(side=LEFT)
+        CHBsb.delete(0,"end")
+        CHBsb.insert(0,0.5)
+        CHBlab = Button(RangeB, text="V/Div", style="Rtrace2.TButton")#, command=SetScaleA)
+        CHBlab.pack(side=LEFT)
+        # Current ranges
+        CHBIsb = Spinbox(RangeB, width=5, values=CHipdiv)#, command=BCHAIlevel)
+        CHBIsb.bind('<MouseWheel>', onSpinBoxScroll)
+        CHBIsb.pack(side=LEFT)
+        CHBIsb.delete(0,"end")
+        CHBIsb.insert(0,50.0)
+        CHBIlab = Button(RangeB, text="mA/Div", style="Strace4.TButton")#, command=SetScaleIA)
+        CHBIlab.pack(side=LEFT)
+        # Power ranges
+        CHBPwsb = Spinbox(RangeB, width=5, values=CHipdiv)#, command=BCHAIlevel)
+        CHBPwsb.bind('<MouseWheel>', onSpinBoxScroll)
+        CHBPwsb.pack(side=LEFT)
+        CHBPwsb.delete(0,"end")
+        CHBPwsb.insert(0,50.0)
+        CHBPwlab = Button(RangeB, text="mW/Div", style="Strace7.TButton")#, command=SetScaleIA)
+        CHBPwlab.pack(side=LEFT)
+
+        CHBPosEntry = Entry(RangeB, width=5) #
+        CHBPosEntry.bind('<MouseWheel>', onTextScroll)
+        CHBPosEntry.pack(side=LEFT)
+        CHBPosEntry.delete(0,"end")
+        CHBPosEntry.insert(0,InOffA)
+        CHBPoslab = Button(RangeB, text="Poss", style="Strace2.TButton")#, command=SetScaleIA)
+        CHBPoslab.pack(side=LEFT)
+        #
+        gap1 = Label(cf, text="   ")
+        gap1.grid(column=8, row=2)
         br = Button(cf, text="Run", style="Run.TButton", command=self.Run)
-        br.grid(column=2, row=2)
+        br.grid(column=9, row=2)
         bs = Button(cf, text="Stop", style="Stop.TButton",command=self.Stop)
-        bs.grid(column=3, row=2)
-        bt = Button(cf, text="Reset", style="Reset.TButton", command=self.Reset)
-        bt.grid(column=4, row=2)
-        bexit = Button(cf, text="Exit", style="W4.TButton", command=Bcloseexit)
-        bexit.grid(column=5,row=2)
-        bss = Button(cf, text="Save Screen", command=BSaveScreen)
-        bss.grid(column=6, row=2, columnspan=1)
+        bs.grid(column=10, row=2)
         brf = Label(cf, text="Run For")
-        brf.grid(column=7, row=2)
+        brf.grid(column=11, row=2)
         Run_For = IntVar()
         Run_For.set(0)
         runfor = Checkbutton(cf, text="Samples", variable=Run_For)
-        runfor.grid(column=8, row=2, columnspan=1)
+        runfor.grid(column=12, row=2, columnspan=1)
         RunForEntry = Entry(cf, width=4)
         RunForEntry.bind('<MouseWheel>', onTextScroll)
-        RunForEntry.grid(column=9,row=2)
+        RunForEntry.grid(column=13,row=2)
         RunForEntry.delete(0,"end")
         RunForEntry.insert(0,100)
         
         sampdeylab = Label(cf, text="Delay")
-        sampdeylab.grid(column=10,row=2)
+        sampdeylab.grid(column=14,row=2)
         SampleDelayEntry = Entry(cf, width=4)
         SampleDelayEntry.bind('<MouseWheel>', onTextScroll)
-        SampleDelayEntry.grid(column=11,row=2)
+        SampleDelayEntry.grid(column=15,row=2)
         SampleDelayEntry.delete(0,"end")
         SampleDelayEntry.insert(0,0.0)
-        # Channel data displays
-        chalab = Label(cf, text="CHA 0.000 V CHA Max 0.000 V CHA Min 0.000 V", font = "Arial 12 bold")
-        chalab.grid(row=2, column=0, sticky=W)
-        chblab = Label(cf, text="CHB 0.000 V CHB Max 0.000 V CHB Min 0.000 V", font = "Arial 12 bold")
-        chblab.grid(row=3, column=0, sticky=W)
-        # Input ranges sub frame
-        prlab = Label(cf, text=" Channel Range - Position ", font = "Arial 10")
-        prlab.grid(row=2, column=1, sticky=W)
         #
-        RangeA = Frame( cf )
-        RangeA.grid(row=3, column=1, columnspan=8, sticky=W)
-        gain1lab = Label(RangeA, text="CHA")
-        gain1lab.pack(side=LEFT)
-        CHArangeEntry = Entry(RangeA, width=5) #
-        CHArangeEntry.bind('<MouseWheel>', onTextScroll)
-        CHArangeEntry.pack(side=LEFT)
-        CHArangeEntry.delete(0,"end")
-        CHArangeEntry.insert(0,InGainA)
-        CHAoffsetEntry = Entry(RangeA, width=5) #
-        CHAoffsetEntry.bind('<MouseWheel>', onTextScroll)
-        CHAoffsetEntry.pack(side=LEFT)
-        CHAoffsetEntry.delete(0,"end")
-        CHAoffsetEntry.insert(0,InOffA)
-        #
-        gain2lab = Label(RangeA, text="CHB")
-        gain2lab.pack(side=LEFT)
-        CHBrangeEntry = Entry(RangeA, width=5) #
-        CHBrangeEntry.bind('<MouseWheel>', onTextScroll)
-        CHBrangeEntry.pack(side=LEFT)
-        CHBrangeEntry.delete(0,"end")
-        CHBrangeEntry.insert(0,InGainB)
-        CHBoffsetEntry = Entry(RangeA, width=5) #
-        CHBoffsetEntry.bind('<MouseWheel>', onTextScroll)
-        CHBoffsetEntry.pack(side=LEFT)
-        CHBoffsetEntry.delete(0,"end")
-        CHBoffsetEntry.insert(0,InOffB)
-        #
-        SelCHA = IntVar(0)
-        selcha = Checkbutton(cf, text="CH A", variable=SelCHA, command = self.ChangeGrid)
-        selcha.grid(row=3, column=5, sticky=W)
-        SelCHB = IntVar(0)
-        selchb = Checkbutton(cf, text="CH B", variable=SelCHB, command = self.ChangeGrid)
-        selchb.grid(row=3, column=6, sticky=W)
-        NumGrid = IntVar(0)
-        rb1 = Radiobutton(cf, text="1 Grid", variable=NumGrid, value=0, command = self.ChangeGrid )
-        rb1.grid(row=3, column=7, sticky=W)
-        rb2 = Radiobutton(cf, text="2 Grid", variable=NumGrid, value=1, command = self.ChangeGrid )
-        rb2.grid(row=3, column=8, sticky=W)
+        bexit = Button(cf, text="Exit", style="W4.TButton", command=Bcloseexit)
+        bexit.grid(column=10,row=3)
+        bt = Button(cf, text="Reset", style="Reset.TButton", command=self.Reset)
+        bt.grid(column=11, row=3)
+        bss = Button(cf, text="Save Screen", command=BSaveScreen)
+        bss.grid(column=12, row=3, columnspan=1)
         #
         SRateScale = Spinbox(cf, width=5, values=SampRates)
         SRateScale.bind('<MouseWheel>', onSpinBoxScroll)
-        SRateScale.grid(row=3, column=9, sticky=W)
+        SRateScale.grid(row=3, column=13, sticky=W)
         SRateScale.delete(0,END)
         SRateScale.insert(0, 50)
         #
         self.fps = Label(cf, text="0 Sps")
-        self.fps.grid(row=3, column=10, columnspan=1)
+        self.fps.grid(row=3, column=14, columnspan=1)
         dlog = IntVar()
         dlog.set(0)
         Dlog_open = IntVar()
         Dlog_open.set(0)
         dlog1 = Checkbutton(cf, text="Log to file", variable=dlog, command = Dloger_on_off)
-        dlog1.grid(column=11, row=3, columnspan=1)
+        dlog1.grid(row=3, column=15, columnspan=1)
         #
-        SelCHA.set(1)
-        SelCHB.set(1)
+        #SelCHA.set(1)
+        #SelCHB.set(1)
         MakeMeterSourceWindow()
         return(cf)
 
@@ -329,7 +408,6 @@ class StripChart:
         RUNstatus.set(1)
         if not session.continuous:
             #print "Run Is Not Continuous? ", session.continuous
-            #session.flush()
             session.start(0)
             UpdateAwgCont()
             #time.sleep(0.02)
@@ -377,15 +455,19 @@ class StripChart:
 #
     def Reset(self):
         global CHAMaxV, CHAMinV, CHBMaxV, CHBMinV
-        global InOffA, InGainA, InOffB, InGainB
+        global CHAMaxI, CHAMinI, CHBMaxI, CHBMinI
         global COLORcanvas
         
         self.Stop()
         self.clearstrip(self.gf.p, COLORcanvas)
-        CHAMaxV = (0.0 - InOffA) * InGainA
-        CHAMinV = (5.0 - InOffA) * InGainA
-        CHBMaxV = (0.0 - InOffB) * InGainB
-        CHBMinV = (5.0 - InOffB) * InGainB
+        CHAMaxV = 0.0
+        CHAMinV = 0.0
+        CHBMaxV = 0.0
+        CHBMinV = 0.0
+        CHAMaxI = 0.0
+        CHAMinI = 0.0
+        CHBMaxI = 0.0
+        CHBMinI = 0.0
 
     def ChangeGrid(self):
         if self.go == 1:
@@ -394,12 +476,13 @@ class StripChart:
             self.Run()
 
     def do_start(self):
-        global DCVA0, DCVB0
+        global DCVA0, DCVB0, DCIA0, DCIB0
         global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry
         global COLORcanvas, COLORgrid, COLORzeroline, COLORtrace1, COLORtrace2
         global NumGrid, SelCHA, SelCHB, SampleRate, SRateScale
-        global Run_For, RunForEntry, CHAoffsetEntry, CHArangeEntry, CHBoffsetEntry, CHBrangeEntry
+        global Run_For, RunForEntry # , CHAoffsetEntry, CHArangeEntry, CHBoffsetEntry, CHBrangeEntry
         global CHAoffset, CHArange, CHBoffset, CHBrange
+        global CHAsb, CHAIsb, CHAPwsb, CHBsb, CHBIsb, CHBPwsb, CHAPosEntry, CHBPosEntry
         
         t = 0
         y2 = 0
@@ -413,76 +496,146 @@ class StripChart:
             Analog_in()
             #
             try:
-                CHAoffset = float(eval(CHAoffsetEntry.get()))
+                CHAPos = float(eval(CHAPosEntry.get()))
             except:
-                CHAoffsetEntry.delete(0,END)
-                CHAoffsetEntry.insert(0, CHAoffset)
+                CHAPosEntry.delete(0,END)
+                CHAPosEntry.insert(0, CHAPos)
             try:
-                CHArange = float(eval(CHArangeEntry.get()))
+                CHBPos = float(eval(CHBPosEntry.get()))
             except:
-                CHArangeEntry.delete(0,END)
-                CHArangeEntry.insert(0, CHArange)
-            try:
-                CHBoffset = float(eval(CHBoffsetEntry.get()))
-            except:
-                CHBoffsetEntry.delete(0,END)
-                CHBoffsetEntry.insert(0, CHBoffset)
-            try:
-                CHBrange = float(eval(CHBrangeEntry.get()))
-            except:
-                CHBrangeEntry.delete(0,END)
-                CHBrangeEntry.insert(0, CHBrange)
+                CHBPosEntry.delete(0,END)
+                CHBPosEntry.insert(0, CHBPos)
             #
+            try:
+                CHArange = 0.5/float(CHAsb.get())
+            except:
+                CHArange = 1.0
+            try:
+                CHAIrange = 0.5/float(CHAIsb.get())
+            except:
+                CHAIrange = 1.0
+            try:
+                CHAPwrange = 0.5/float(CHAPwsb.get())
+            except:
+                CHAPwrange = 1.0
             if CHArange == 0:
                 CHArange = 0.00001
+            if SelCHA.get() > 0:
+                VA0 = (DCVA0-CHAPos)*CHArange
+                IA0 = (DCIA0-CHAPos)*CHAIrange
+                PwA0 = ((DCVA0*DCIA0)-CHAPos)*CHAPwrange
+                if VA0 > 5.0:
+                    VA0 = 5.0
+                if VA0 < 0.0:
+                    VA0 = 0.0
+                if IA0 > 5.0:
+                    IA0 = 5.0
+                if IA0 < 0.0:
+                    IA0 = 0.0
+                if PwA0 > 5.0:
+                    PwA0 = 5.0
+                if PwA0 < 0.0:
+                    PwA0 = 0.0
+            try:
+                CHBrange = 0.5/float(CHBsb.get())
+            except:
+                CHBrange = 1.0
+            try:
+                CHBIrange = 0.5/float(CHBIsb.get())
+            except:
+                CHBIrange = 1.0
+            try:
+                CHBPwrange = 0.5/float(CHBPwsb.get())
+            except:
+                CHBPwrange = 1.0
             if CHBrange == 0:
                 CHBrange = 0.00001
-            VA0 = (DCVA0-CHAoffset)/CHArange
-            VB0 = (DCVB0-CHBoffset)/CHBrange
-            if VB0 > 5.0:
-                VB0 = 5.0
-            if VA0 > 5.0:
-                VA0 = 5.0
-            if VB0 < 0.0:
-                VB0 = 0.0
-            if VA0 < 0.0:
-                VA0 = 0.0
+            if SelCHB.get() > 0:
+                VB0 = (DCVB0-CHBPos)*CHBrange
+                IB0 = (DCIB0-CHBPos)*CHBIrange
+                PwB0 = ((DCVB0*DCIB0)-CHBPos)*CHBPwrange
+                if VB0 > 5.0:
+                    VB0 = 5.0
+                if VB0 < 0.0:
+                    VB0 = 0.0
+                if IB0 > 5.0:
+                    IB0 = 5.0
+                if IB0 < 0.0:
+                    IB0 = 0.0
+                if PwB0 > 5.0:
+                    PwB0 = 5.0
+                if PwB0 < 0.0:
+                    PwB0 = 0.0
             if NumGrid.get() == 0: # both on one grid
-                y1 = (VA0/6.25)-0.4 # scale / 0ffset 0 to 5 V to +/- 0.4
-                y2 = (VB0/6.25)-0.4 # scale / 0ffset 0 to 5 V to +/- 0.4
-                if SelCHA.get() and SelCHB.get():
+                if SelCHA.get() == 1: # plot VA
+                    y1 = (VA0/5.0)-0.5 # scale / 0ffset 0 to 5 V to +/- 0.4
+                    COLORtraceA = COLORtrace1
+                elif SelCHA.get() == 2: # plot IA
+                    y1 = (IA0/5.0)-0.5 # scale / 0ffset -200 to 200 to +/- 0.4
+                    COLORtraceA = COLORtrace3
+                elif SelCHA.get() == 3: # plot PwA
+                    y1 = (PwA0/5.0)-0.5 # scale / 0ffset -200 to 200 to +/- 0.4
+                    COLORtraceA = COLORtrace5
+                if SelCHB.get() == 1: # plot VB
+                    y2 = (VB0/5.0)-0.5 # scale / 0ffset 0 to 5 V to +/- 0.4
+                    COLORtraceB = COLORtrace2
+                elif SelCHB.get() == 2: # plot IB
+                    y2 = (IB0/5.0)-0.5 # scale / 0ffset -200 to 200 V to +/- 0.4
+                    COLORtraceB = COLORtrace4
+                elif SelCHB.get() == 3: # plot PwB
+                    y2 = (PwB0/5.0)-0.5 # scale / 0ffset -200 to 200 V to +/- 0.4
+                    COLORtraceB = COLORtrace7
+                #
+                if SelCHA.get() > 0 and SelCHB.get() > 0:
                     self.scrollstrip(self.gf.p,
-                       (0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.5+y1,0.5+y2),
-                       (COLORgrid, COLORgrid, COLORgrid, COLORgrid, COLORzeroline, COLORgrid, COLORgrid, COLORgrid, COLORgrid,
-                        COLORtrace1, COLORtrace2), "" if t % SampleRate else "#088")
-                elif SelCHB.get():
+                       (0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.5+y1,0.5+y2),
+                       (COLORgrid, COLORgrid, COLORgrid, COLORgrid, COLORgrid, COLORzeroline, COLORgrid, COLORgrid, COLORgrid,
+                        COLORgrid, COLORgrid, COLORtraceA, COLORtraceB), "" if t % SampleRate else "#088")
+                elif SelCHB.get() > 0:
                     self.scrollstrip(self.gf.p,
-                       (0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.5+y2),
-                       (COLORgrid, COLORgrid, COLORgrid, COLORgrid, COLORzeroline, COLORgrid, COLORgrid, COLORgrid, COLORgrid,
-                        COLORtrace2), "" if t % SampleRate else "#088")
-                elif SelCHA.get():
+                       (0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,0.5+y2),
+                       (COLORgrid, COLORgrid, COLORgrid, COLORgrid, COLORgrid, COLORzeroline, COLORgrid, COLORgrid, COLORgrid,
+                        COLORgrid, COLORgrid, COLORtraceB), "" if t % SampleRate else "#088")
+                elif SelCHA.get() > 0:
                     self.scrollstrip(self.gf.p,
-                       (0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.5+y1),
-                       (COLORgrid, COLORgrid, COLORgrid, COLORgrid, COLORzeroline, COLORgrid, COLORgrid, COLORgrid, COLORgrid,
-                        COLORtrace1), "" if t % SampleRate else "#088")
+                       (0.0, 0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0, 0.5+y1),
+                       (COLORgrid, COLORgrid, COLORgrid, COLORgrid, COLORgrid, COLORzeroline, COLORgrid, COLORgrid, COLORgrid,
+                        COLORgrid, COLORgrid, COLORtraceA), "" if t % SampleRate else "#088")
             else: # two grids
-                y1 = (VA0/12.5)-0.2 # scale / 0ffset 0 to 5 V to +/- 0.2
-                y2 = (VB0/12.5)-0.2 # scale / 0ffset 0 to 5 V to +/- 0.2
-                if SelCHA.get() and SelCHB.get():
+                if SelCHA.get() == 1: # plot VA
+                    y1 = (VA0/10.0)-0.25 # scale / 0ffset 0 to 5 V to +/- 0.2
+                    COLORtraceA = COLORtrace1
+                elif SelCHA.get() == 2: # plot IA
+                    y1 = (IA0/10.0)-0.25 # scale / 0ffset -200 to 200 to +/- 0.2
+                    COLORtraceA = COLORtrace3
+                elif SelCHA.get() == 3: # plot PwA
+                    y1 = (PwA0/10.0)-0.25 # scale / 0ffset -200 to 200 to +/- 0.2
+                    COLORtraceA = COLORtrace5
+                if SelCHB.get() == 1: # plot VB
+                    y2 = (VB0/10.0)-0.25 # scale / 0ffset 0 to 5 V to +/- 0.2
+                    COLORtraceB = COLORtrace2
+                elif SelCHB.get() == 2: # plot IB
+                    y2 = (IB0/10.0)-0.25 # scale / 0ffset -200 to 200 V to +/- 0.2
+                    COLORtraceB = COLORtrace4
+                elif SelCHB.get() == 3: # plot PwB
+                    y2 = (PwB0/10.0)-0.25 # scale / 0ffset -200 to 200 V to +/- 0.2
+                    COLORtraceB = COLORtrace7
+                #
+                if SelCHA.get()>0 and SelCHB.get()>0:
                     self.scrollstrip(self.gf.p,
-                       (0.05,0.15,0.25,0.35,0.45,0.25+y1,0.55,0.65,0.75,0.85,0.95,0.75+y2),
-                       (COLORgrid,COLORgrid,COLORzeroline,COLORgrid,COLORgrid,COLORtrace1,COLORgrid,COLORgrid,COLORzeroline,
-                        COLORgrid,COLORgrid,COLORtrace2), "" if t % SampleRate else "#088")
-                elif SelCHB.get():
+                       (0.0,0.05,0.15,0.25,0.35,0.45,0.5,0.25+y1,0.55,0.65,0.75,0.85,0.95,1.0,0.75+y2),
+                       (COLORgrid,COLORgrid,COLORgrid,COLORzeroline,COLORgrid,COLORgrid,COLORgrid,COLORtraceA,
+                        COLORgrid,COLORgrid,COLORzeroline,COLORgrid,COLORgrid,COLORgrid,COLORtraceB), "" if t % SampleRate else "#088")
+                elif SelCHB.get()>0:
                     self.scrollstrip(self.gf.p,
-                       (0.05,0.15,0.25,0.35,0.45,0.55,0.65,0.75,0.85,0.95,0.75+y2),
-                       (COLORgrid,COLORgrid,COLORgrid,COLORgrid,COLORgrid,COLORgrid,COLORgrid,COLORzeroline,COLORgrid,COLORgrid,
-                        COLORtrace2), "" if t % SampleRate else "#088")
-                elif SelCHA.get():
+                       (0.0,0.05,0.15,0.25,0.35,0.45,0.50,0.55,0.65,0.75,0.85,0.95,1.0,0.75+y2),
+                       (COLORgrid,COLORgrid,COLORgrid,COLORgrid,COLORgrid,COLORgrid,COLORgrid,COLORgrid,
+                        COLORgrid,COLORgrid,COLORzeroline,COLORgrid,COLORgrid,COLORtraceB), "" if t % SampleRate else "#088")
+                elif SelCHA.get()>0:
                     self.scrollstrip(self.gf.p,
-                       (0.05,0.15,0.25,0.35,0.45,0.25+y1,0.55,0.65,0.75,0.85,0.95),
-                       (COLORgrid,COLORgrid,COLORzeroline,COLORgrid,COLORgrid,COLORtrace1,COLORgrid,COLORgrid,COLORgrid,COLORgrid,
-                        COLORgrid), "" if t % SampleRate else "#088")
+                       (0.0,0.05,0.15,0.25,0.35,0.45,0.5,0.25+y1,0.55,0.65,0.75,0.85,0.95,1.0),
+                       (COLORgrid,COLORgrid,COLORgrid,COLORgrid,COLORzeroline,COLORgrid,COLORgrid,COLORtraceA,
+                        COLORgrid,COLORgrid,COLORzeroline,COLORgrid,COLORgrid,COLORgrid), "" if t % SampleRate else "#088")
             t += 1
             try:
                 RateScale = int(SRateScale.get())
@@ -549,6 +702,7 @@ def onTextScroll(event):   # Use mouse wheel to scroll entry values, august 7
     Len = len(OldVal)
     Dot = OldVal.find (".")  # find decimal point position
     Decimals = Len - Dot - 1
+    NewVal = OldValfl
     if Dot == -1 : # no point
         Decimals = 0             
         Step = 10**(Len - Pos)
@@ -587,6 +741,7 @@ def Bcloseexit():
         DlogFile.close()
     except:
         Dlog_open.set(0)
+    devx.set_led(0b001) # Set LED.red on the way out
     root.destroy()
     exit()
 
@@ -630,9 +785,10 @@ def Analog_in():
     global DevID, CHA, CHB, devx, session, dlog, DlogFile
     global DCVA0, DCVB0, DCIA0, DCIB0, Ztime, SampleDelayEntry, ADsignal1
     global InOffA, InOffB, InGainA, InGainB, chalab, chblab
-    global labelADV, labelBDV
+    global labelAMaxI, labelBMaxI
     global labelAI, labelBI, labelAV, labelBV, labelAPW, labelBPW
-    global CHAMaxV, CHAMinV, CHBMaxV, CHBMinV, SRateScale, BaseSampleRate
+    global CHAMaxV, CHAMinV, CHBMaxV, CHBMinV
+    global CHAMaxI, CHAMinI, CHBMaxI, CHBMinI, SRateScale, BaseSampleRate
     global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry
     global CHAIGainEntry, CHAIOffsetEntry, CHBIGainEntry, CHBIOffsetEntry
     #
@@ -703,34 +859,7 @@ def Analog_in():
     DCVB0 = (DCVB0 - InOffB) * InGainB
     DCIA0 = ((DCIA0*1000.0) - CurOffA) * CurGainA
     DCIB0 = ((DCIB0*1000.0) - CurOffB) * CurGainB
-    try:
-        VAString = "CA V " + ' {0:.4f} '.format(DCVA0) # format with 4 decimal places
-        VBString = "CB V " + ' {0:.4f} '.format(DCVB0) # format with 4 decimal places
-        labelAV.config(text = VAString) # change displayed value
-        labelBV.config(text = VBString) # change displayed value
-        VAString = "A-B V " + ' {0:.4f} '.format(DCVA0-DCVB0) # format with 4 decimal places
-        VBString = "B-A V " + ' {0:.4f} '.format(DCVB0-DCVA0) # format with 4 decimal places
-        labelADV.config(text = VAString) # change displayed value
-        labelBDV.config(text = VBString) # change displayed value
-        if CHAstatus.get() == 0:
-            IAString = "CA mA ----"
-            PAString = "CA mW ----"
-        else:
-            IAString = "CA mA " + ' {0:.2f} '.format(DCIA0)
-            PAString = "CA mW " + ' {0:.2f} '.format(DCVA0*DCIA0)
-        if CHBstatus.get() == 0:
-            IBString = "CB mA ----"
-            PBString = "CB mW ----"
-        else:
-            IBString = "CB mA " + ' {0:.2f} '.format(DCIB0)
-            PBString = "CB mW " + ' {0:.2f} '.format(DCVB0*DCIB0)
-        
-        labelAI.config(text = IAString) # change displayed value
-        labelAPW.config(text = PAString) # change displayed value
-        labelBI.config(text = IBString) # change displayed value
-        labelBPW.config(text = PBString) # change displayed value
-    except:
-        donothing()
+    #
     if DCVA0 > CHAMaxV:
         CHAMaxV = DCVA0
     if DCVA0 < CHAMinV:
@@ -739,16 +868,48 @@ def Analog_in():
         CHBMaxV = DCVB0
     if DCVB0 < CHBMinV:
         CHBMinV = DCVB0
+    if DCIA0 > CHAMaxI:
+        CHAMaxI = DCIA0
+    if DCIA0 < CHAMinI:
+        CHAMinI = DCIA0
+    if DCIB0 > CHBMaxI:
+        CHBMaxI = DCIB0
+    if DCIB0 < CHBMinI:
+        CHBMinI = DCIB0
     try:
-        chalab.config(text = "CHA " + '{0:.3f} '.format(DCVA0) + "V CHA Max " + '{0:.3f} '.format(CHAMaxV) + "V CHA Min " + '{0:.3f} '.format(CHAMinV) + "V")
-        chblab.config(text = "CHB " + '{0:.3f} '.format(DCVB0) + "V CHB Max " + '{0:.3f} '.format(CHBMaxV) + "V CHB Min " + '{0:.3f} '.format(CHBMinV) + "V")
+        VAString = "CA V " + ' {0:.4f} '.format(DCVA0) # format with 4 decimal places
+        VBString = "CB V " + ' {0:.4f} '.format(DCVB0) # format with 4 decimal places
+        labelAV.config(text = VAString) # change displayed value
+        labelBV.config(text = VBString) # change displayed value
+        if CHAstatus.get() == 0:
+            IAString = "CA mA ----"
+            PAString = "CA mW ----"
+            AMaxIString = "Max I ----"
+        else:
+            IAString = "CA mA " + ' {0:.2f} '.format(DCIA0)
+            PAString = "CA mW " + ' {0:.2f} '.format(DCVA0*DCIA0)
+            AMaxIString = "Max I " + ' {0:.2f} '.format(CHAMaxI) # format with 2 decimal places
+        if CHBstatus.get() == 0:
+            IBString = "CB mA ----"
+            PBString = "CB mW ----"
+            BMaxIString = "Max I ----"
+        else:
+            IBString = "CB mA " + ' {0:.2f} '.format(DCIB0)
+            PBString = "CB mW " + ' {0:.2f} '.format(DCVB0*DCIB0)
+            BMaxIString = "Max I " + ' {0:.2f} '.format(CHBMaxI) # format with 2 decimal places
+        labelAI.config(text = IAString) # change displayed value
+        labelAPW.config(text = PAString) # change displayed value
+        labelBI.config(text = IBString) # change displayed value
+        labelBPW.config(text = PBString) # change displayed value
+        labelAMaxI.config(text = AMaxIString) # change displayed value
+        labelBMaxI.config(text = BMaxIString) # change displayed value
     except:
-        time.sleep(float(SampleDelayEntry.get()))
+        donothing()
     if dlog.get() > 0:
         tstr1 = time.time()-Ztime
         DlogString = '{0:.3f}, '.format(tstr1) + '{0:.3f}, '.format(DCVA0) + '{0:.3f}, '.format(DCVB0) + '{0:.3f}, '.format(DCIA0) + '{0:.3f} '.format(DCIB0) + " \n"
         DlogFile.write( DlogString )
-    # wait for sample delsy time
+    # wait for sample delay time
     time.sleep(float(SampleDelayEntry.get()))
 #
 def donothing():
@@ -757,6 +918,7 @@ def donothing():
 def BSaveCal():
     global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry
     global CHAIGainEntry, CHAIOffsetEntry, CHBIGainEntry, CHBIOffsetEntry
+    global CHAsb, CHAIsb, CHAPwsb, CHBsb, CHBIsb, CHBPwsb, CHAPosEntry, CHBPosEntry
     global NumGrid, SelCHA, SelCHB, AWGAIOMode, AWGBIOMode, CHAstatus, CHBstatus
     global CHATestVEntry, CHBTestVEntry, CHATestIEntry, CHBTestVEntry, CHAmode, CHBmode 
     global Run_For, RunForEntry, CHAoffsetEntry, CHArangeEntry, CHBoffsetEntry, CHBrangeEntry
@@ -810,15 +972,24 @@ def BSaveCal():
     CalFile.write('CHBTestVEntry.delete(0,END)\n')
     CalFile.write('CHBTestVEntry.insert(4, ' + CHBTestVEntry.get() + ')\n')
 
-    CalFile.write('CHAoffsetEntry.delete(0,END)\n')
-    CalFile.write('CHAoffsetEntry.insert(4, ' + CHAoffsetEntry.get() + ')\n')
-    CalFile.write('CHArangeEntry.delete(0,END)\n')
-    CalFile.write('CHArangeEntry.insert(4, ' + CHArangeEntry.get() + ')\n')
-    CalFile.write('CHBoffsetEntry.delete(0,END)\n')
-    CalFile.write('CHBoffsetEntry.insert(4, ' + CHBoffsetEntry.get() + ')\n')
-    CalFile.write('CHBrangeEntry.delete(0,END)\n')
-    CalFile.write('CHBrangeEntry.insert(4, ' + CHBrangeEntry.get() + ')\n')
-
+    CalFile.write('CHAPosEntry.delete(0,END)\n')
+    CalFile.write('CHAPosEntry.insert(4, ' + CHAPosEntry.get() + ')\n')
+    CalFile.write('CHAsb.delete(0,END)\n')
+    CalFile.write('CHAsb.insert(4, ' + CHAsb.get() + ')\n')
+    CalFile.write('CHAIsb.delete(0,END)\n')
+    CalFile.write('CHAIsb.insert(4, ' + CHAIsb.get() + ')\n')
+    CalFile.write('CHAPwsb.delete(0,END)\n')
+    CalFile.write('CHAPwsb.insert(4, ' + CHAPwsb.get() + ')\n')
+    #
+    CalFile.write('CHBPosEntry.delete(0,END)\n')
+    CalFile.write('CHBPosEntry.insert(4, ' + CHBPosEntry.get() + ')\n')
+    CalFile.write('CHBsb.delete(0,END)\n')
+    CalFile.write('CHBsb.insert(4, ' + CHBsb.get() + ')\n')
+    CalFile.write('CHBIsb.delete(0,END)\n')
+    CalFile.write('CHBIsb.insert(4, ' + CHBIsb.get() + ')\n')
+    CalFile.write('CHBPwsb.delete(0,END)\n')
+    CalFile.write('CHBPwsb.insert(4, ' + CHBPwsb.get() + ')\n')
+    
     CalFile.write('RunForEntry.delete(0,END)\n')
     CalFile.write('RunForEntry.insert(4, ' + RunForEntry.get() + ')\n')
     CalFile.write('SampleDelayEntry.delete(0,END)\n')
@@ -831,6 +1002,7 @@ def BSaveCal():
 def BLoadCal():
     global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry
     global CHAIGainEntry, CHAIOffsetEntry, CHBIGainEntry, CHBIOffsetEntry
+    global CHAsb, CHAIsb, CHAPwsb, CHBsb, CHBIsb, CHBPwsb, CHAPosEntry, CHBPosEntry
     global NumGrid, SelCHA, SelCHB, AWGAIOMode, AWGBIOMode, CHAstatus, CHBstatus
     global CHATestVEntry, CHBTestVEntry, CHATestIEntry, CHBTestVEntry
     global Run_For, RunForEntry, CHAoffsetEntry, CHArangeEntry, CHBoffsetEntry, CHBrangeEntry
@@ -997,14 +1169,15 @@ def MakeMeterSourceWindow():
     global CHAIGainEntry, CHAIOffsetEntry, CHBIGainEntry, CHBIOffsetEntry
     global CHATestVEntry, CHATestIEntry, CHBTestVEntry, CHBTestIEntry
     global labelAI, labelBI, labelAV, labelBV, labelAPW, labelBPW
-    global labelADV, labelBDV, mswindow
+    global labelAMaxI, labelBMaxI, mswindow
     global CHAMaxV, CHAMinV, CHBMaxV, CHBMinV, Sglobal, RateScale
+    global CHAMaxI, CHAMinI, CHBMaxI, CHBMinI
 
     if MSScreenStatus.get() == 0:
         MSScreenStatus.set(1)
         #
         mswindow = Toplevel()
-        mswindow.title("Merter Source 1.3 " + RevDate)
+        mswindow.title("Power Profiler 1.3 " + RevDate)
         mswindow.resizable(FALSE,FALSE)
         mswindow.protocol("WM_DELETE_WINDOW", DestroyMeterSourceScreen)
         #
@@ -1032,13 +1205,14 @@ def MakeMeterSourceWindow():
         labelAV.grid(row=1, column=0, columnspan=2, sticky=W)
         labelAV.config(text = "CA-V 0.0000")
 
-        labelADV = Label(frame1, font = "Arial 16 bold")
-        labelADV.grid(row=2, column=0, columnspan=2, sticky=W)
-        labelADV.config(text = "A-B V 0.0000")
-
         labelAI = Label(frame1, font = "Arial 16 bold")
-        labelAI.grid(row=3, column=0, columnspan=2, sticky=W)
+        labelAI.grid(row=2, column=0, columnspan=2, sticky=W)
         labelAI.config(text = "CA-I 0.00")
+
+        labelAMaxI = Label(frame1, font = "Arial 16 bold")
+        labelAMaxI.grid(row=3, column=0, columnspan=2, sticky=W)
+        labelAMaxI.config(text = "Max I 0.00")
+        
         # input probe wigets
         calAlab = Label(frame1, text="CH A Gain/Offset calibration")
         calAlab.grid(row=4, column=0, sticky=W)
@@ -1089,13 +1263,14 @@ def MakeMeterSourceWindow():
         labelBV.grid(row=1, column=0, columnspan=2, sticky=W)
         labelBV.config(text = "CB-V 0.0000")
 
-        labelBDV = Label(frame2, font = "Arial 16 bold")
-        labelBDV.grid(row=2, column=0, columnspan=2, sticky=W)
-        labelBDV.config(text = "B-A V 0.0000")
-
         labelBI = Label(frame2, font = "Arial 16 bold")
-        labelBI.grid(row=3, column=0, columnspan=2, sticky=W)
+        labelBI.grid(row=2, column=0, columnspan=2, sticky=W)
         labelBI.config(text = "CB-I 0.00")
+
+        labelBMaxI = Label(frame2, font = "Arial 16 bold")
+        labelBMaxI.grid(row=3, column=0, columnspan=2, sticky=W)
+        labelBMaxI.config(text = "Max I 0.00")
+        
         # input probe wigets
         calBlab = Label(frame2, text="CH B Gain/Offset calibration")
         calBlab.grid(row=4, column=0, sticky=W)
@@ -1247,6 +1422,9 @@ def MakeMeterSourceWindow():
 def main():
     global DevID, CHA, CHB, session, root, devx, ADsignal1
     global CHAVGainEntry, CHBVGainEntry, CHAVOffsetEntry, CHBVOffsetEntry
+    global CHAMaxV, CHAMinV, CHBMaxV, CHBMinV
+    global CHAMaxI, CHAMinI, CHBMaxI, CHBMinI
+    
     # setup main window
     root.protocol("WM_DELETE_WINDOW", Bcloseexit)
     #
@@ -1269,11 +1447,16 @@ def main():
     CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
     CHB = devx.channels['B']    # Open CHB
     CHB.mode = Mode.HI_Z # Put CHB in Hi Z mode
+    devx.set_led(0b010) # LED.green
     ADsignal1 = []              # Ain signal array channel
     CHAMaxV = -100.0
     CHAMinV = 100.0
     CHBMaxV = -100.0
     CHBMinV = 100.0
+    CHAMaxI = -200.0
+    CHAMinI = 200.0
+    CHBMaxI = -200.0
+    CHBMinI = 200.0
     devx.ctrl_transfer(0x40, 0x51, 37, 0, 0, 0, 100) # set CHB 2.5 V switch to open
     devx.ctrl_transfer(0x40, 0x51, 38, 0, 0, 0, 100) # set CHB GND switch to open
     #root.update()
