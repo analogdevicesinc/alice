@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['either_2dcolor_2dchooser_2dtest_1618',['either-color-chooser-test',['../namespaceeither-color-chooser-test.html',1,'']]]
+  ['dataloging_2dfunction_1684',['dataloging-function',['../namespacedataloging-function.html',1,'']]]
 ];

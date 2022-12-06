@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 Milli Ohmmeter Tool 1.3 7-17-2021
+# ADALM1000 Milli Ohmmeter Tool 1.3 3-8-2022
 # For pysmu ( libsmu.rework > = 1.0 )
 #For Python version > = 2.7.8 and 3.7
 import __future__
@@ -119,6 +119,7 @@ def Analog_in():
             devx.ctrl_transfer(0x40, 0x51, 38, 0, 0, 0, 100) # set CHB GND switch to open
 # Update tasks and screens by TKinter
         else:
+            time.sleep(0.05) # add small sleep time while not running to reduce CPU usage
             if loopnum > 0:
                 CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
                 CHB.mode = Mode.HI_Z # Put CHB in Hi Z mode
@@ -213,7 +214,28 @@ def Clear_Auto_Zero():
     CHAIOffsetEntry.insert(0, 0.0) # change to mA
     CHBVOffsetEntry.delete(0,END)
     CHBVOffsetEntry.insert(0, 0.0)
+#
+def Bcloseexit():
+    global RUNstatus, session, CHA, CHB, devx, AWG_2X
     
+    RUNstatus.set(0)
+    # BSaveConfig("alice-last-config.cfg")
+    try:
+        # Put channels in Hi-Z and exit
+        CHA.mode = Mode.HI_Z_SPLIT # Put CHA in Hi Z split mode
+        CHB.mode = Mode.HI_Z_SPLIT # Put CHB in Hi Z split mode
+        devx.set_adc_mux(0) # set ADC mux conf to default
+        CHA.constant(0.0)
+        CHB.constant(0.0)
+        devx.set_led(0b001) # Set LED.red on the way out
+        if session.continuous:
+            session.end()
+    except:
+        donothing()
+
+    root.destroy()
+    exit()
+# setup main window
 # setup main window
 TBicon = """
 R0lGODlhIAAgAHAAACH5BAEAAAIALAAAAAAgACAAgQAAAP///wAAAAAAAAJJhI+py+0PYwtBWkDp
@@ -222,10 +244,11 @@ i8fUAgA7
 """
 
 root = Tk()
-root.title("ALM1000 Milli-Ohmmeter 1.3 (17 July 2021)")
+root.title("ALM1000 Milli-Ohmmeter 1.3 (8 March 2022)")
 img = PhotoImage(data=TBicon)
 root.call('wm', 'iconphoto', root._w, img)
 root.tk_focusFollowsMouse()
+root.protocol("WM_DELETE_WINDOW", Bcloseexit)
 root.minsize(175, 100)
 #
 RUNstatus = IntVar(0)

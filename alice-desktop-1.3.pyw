@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: cp1252 -*-
 #
-# ADALM1000 alice-desktop 1.3.py(w) (11-14-2022)
+# ADALM1000 alice-desktop 1.3.py(w) (11-29-2022)
 # For Python version 2.7 or 3.7, Windows OS and Linux OS
 # With external module pysmu ( libsmu >= 1.0.2 for ADALM1000 )
 # optional split I/O modes for Rev F hardware supported
@@ -73,7 +73,7 @@ except:
 # check which operating system
 import platform
 #
-RevDate = "14 Nov 2022"
+RevDate = "29 Nov 2022"
 SWRev = "1.3.14 "
 Version_url = 'https://github.com/analogdevicesinc/alice/releases/download/1.3.14/alice-desktop-1.3-setup.exe'
 # small bit map of ADI logo for window icon
@@ -3464,7 +3464,17 @@ def BStart():
     global RUNstatus, PowerStatus, devx, PwrBt, DevID, FWRevOne, session, AWGSync
     global contloop, discontloop, TIMEdiv, First_Slow_sweep
     global TimeDisp, XYDisp, PhADisp, FreqDisp, BodeDisp, IADisp
-    
+    global Dlog_open, dlog, Ztime
+
+    # Check if User wants data loging on or off
+    if Dlog_open.get() == 1 and dlog.get() > 0:
+        Ztime = time.time()
+    elif Dlog_open.get() == 0 and dlog.get() > 0:
+        DlogerOpen_out()
+        Ztime = time.time()
+    else:
+        Dlog_open.set(0)
+    #
     if DevID == "No Device":
         showwarning("WARNING","No Device Plugged In!")
     elif FWRevOne == 0.0:
@@ -3863,6 +3873,7 @@ def Analog_In():
     global DCVMuxB, MinVMuxB, MaxVMuxB, MidVMuxB, PPVMuxB, SVMuxB
     global DCVMuxC, MinVMuxC, MaxVMuxC, MidVMuxC, PPVMuxC, SVMuxC
     global DCVMuxD, MinVMuxD, MaxVMuxD, MidVMuxD, PPVMuxD, SVMuxD
+    global DlogFile, Dlog_open, dlog, UserAString, UserBString, MeasUserA, MeasUserB
     
     while (Closed == 0):       # Main loop
         # RUNstatus = 1 : Open Acquisition
@@ -3873,6 +3884,25 @@ def Analog_In():
                 if MuxScreenStatus.get() == 0:
                     MuxChan = -1
                     Analog_Time_In()
+                    if dlog.get() > 0: # Check to see if Data Logging is On
+                        tstr1 = time.time()-Ztime
+                        DlogString = '{0:.3f}, '.format(tstr1)
+                        if MeasUserA.get() == 1:
+                            try:
+                                TempValue = eval(UserAString)
+                                V1String = '{0:.4f}'.format(TempValue) + ", "
+                            except:
+                                V1String = "####, "
+                            DlogString = DlogString + V1String
+                        if MeasUserB.get() == 1:
+                            try:
+                                TempValue = eval(UserBString)
+                                V1String = '{0:.4f} '.format(TempValue) + ", "
+                            except:
+                                V1String = "####, "
+                            DlogString = DlogString + V1String
+                        DlogString = DlogString + " \n"
+                        DlogFile.write( DlogString )
                 else:
                     MuxChan = 0
                     if DualMuxMode.get() == 1: # force split I/O mode if dual mux mode set
@@ -10529,6 +10559,47 @@ def VioletNoise(N, mag):
     
     return y
 #
+def FourierSawTooth(Length, NumTerms, Ampl):
+    L = 1                        # Length of the interval
+    x = numpy.linspace(0, 2, Length); # Create Length points on the interval [-3L, 3L]
+    Const = -2/numpy.pi         # Constant factor in the expression for B_n
+    Sn = Const * numpy.sin(numpy.pi*x)  # Initialize vector sum series to zero
+
+    n = 2
+    while n <= NumTerms:
+        Const = -Const  # Efficient way to implement alternating sign
+        Bn = Const/n    # Coefficients inversely proportional to n
+        Fn = Bn * numpy.sin(n*numpy.pi*x)   # Calculate Fourier term
+        Sn = Sn + Fn    # Add the term to Fourier sum
+        n = n + 1
+    Sn = Sn * Ampl # Scale waveform by Ampl
+    return Sn
+#
+def SinePower(Length, Power, Phase, Ampl):
+    
+    # Generate a Sine Power Pulse waveform of length samples with Symmetry, Phase and Ampl
+    OutArray = []
+    t = 1.0E-5 # 10 uSec
+    frequency = 1.0/(t*Length) # Freq of one cycle
+    exponent_setting = numpy.clip(Power, -99.999999999, 100.000) / 100.0
+    if exponent_setting >= 0:
+        exponent = (1.0 - exponent_setting)
+    else:
+        exponent = 1.0 / (1.0 + exponent_setting)
+    #
+    Len = 0
+    while Len < Length:
+        x = t * Len * frequency + Phase / 360.0
+        plain_old_sine = numpy.sin(x * 2 * numpy.pi)
+        # In the SinePower wave function, the 'Power' value is used
+        # to indicate and exponent between 1.0 and 0.0.
+        y = numpy.copysign(numpy.abs(plain_old_sine) ** exponent, plain_old_sine)
+        OutArray.append(Ampl * y)
+        Len = Len + 1
+    #
+    OutArray = numpy.array(OutArray) + 2.5 # Center wavefrom on 2.5 V
+    return(OutArray)
+#
 def SchroederPhase(Length, NrTones, Ampl):
     # Generate a Schroeder Phase (Chirp) of Length samples and having NrTones
     OutArray = []
@@ -10824,7 +10895,7 @@ def AWGAReadFile():
     AWGALoadCSV()
 #
 def AWGALoadCSV():
-    global AWGAwaveform, AWGALength, awgwindow, AWG_2X, AWGA2X, AWGAcsvFile, AWGAOffsetvalue
+    global AWGAwaveform, AWGALength, awgwindow, AWG_2X, AWGA2X, AWGAcsvFile, AWGAOffsetvalue, AWGAShapeLabel
 
     BAWGAOffset(0)
     try:
@@ -10860,6 +10931,8 @@ def AWGALoadCSV():
     AWGAwaveform = AWGAwaveform + AWGAOffsetvalue # add DC offset from Max entry
     SplitAWGAwaveform()
     CSVFile.close()
+    AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
+    AWGAShapeLabel.config(text = "CSV File") # change displayed value
     UpdateAwgCont()
 
 # Split 2X sampled AWGAwaveform array into odd and even sample arrays
@@ -10942,6 +11015,7 @@ def AWGALoadWAV():
         AWGAwaveform = numpy.array(AWGAwaveform)
         SplitAWGAwaveform()
     spf.close()
+    AWGALength.config(text = "L = " + str(int(len(AWGAwaveform)))) # change displayed value
     UpdateAwgCont()
 
 def AWGAWriteFile():
@@ -12378,7 +12452,7 @@ def AWGBReadFile():
     AWGBLoadCSV()
 #
 def AWGBLoadCSV():
-    global AWGBwaveform, AWGBLength, awgwindow, AWG_2X, AWGB2X, AWGBcsvFile, AWGBOffsetvalue
+    global AWGBwaveform, AWGBLength, awgwindow, AWG_2X, AWGB2X, AWGBcsvFile, AWGBOffsetvalue, AWGBShapeLabel
 
     BAWGBOffset(0)
     try:
@@ -12412,6 +12486,8 @@ def AWGBLoadCSV():
     AWGBwaveform = AWGBwaveform + AWGBOffsetvalue # add DC offset from Max entry
     SplitAWGBwaveform()
     CSVFile.close()
+    AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
+    AWGBShapeLabel.config(text = "CSV File") # change displayed value
     UpdateAwgCont()
     
 # Split 2X sampled AWGBwaveform array into odd and even sample arrays 
@@ -12468,6 +12544,7 @@ def AWGBLoadWAV():
     AWGBwaveform = numpy.array(AWGBwaveform)
     SplitAWGBwaveform()
     spf.close()
+    AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
     UpdateAwgCont()
 
 def AWGBWriteFile():
@@ -12508,6 +12585,7 @@ def AWGBConfigMath():
     AWGBwaveform = eval(AWGBMathString)
     AWGBwaveform = numpy.array(AWGBwaveform)
     SplitAWGBwaveform()
+    AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
     UpdateAwgCont()
 #
 def AWGBMakeFourier():
@@ -12543,6 +12621,7 @@ def AWGBMakeFourier():
     SplitAWGBwaveform()
     duty2lab.config(text="Harmonics")
     BAWGBPhaseDelay()
+    AWGBLength.config(text = "L = " + str(int(len(AWGBwaveform)))) # change displayed value
     UpdateAwgCont()
 #
 def AWGBMakeBodeSine():
@@ -24522,7 +24601,46 @@ def DestroyOOTwindow():
     OOTScreenStatus.set(0)
     OOTwindow.destroy()
 #
+# Toggle Dlogger flag
+def Dloger_on_off(): 
+    global DlogFile, Dlog_open, dlog
+
+    if dlog.get() == 1:
+        DlogerOpen_out()
+        #print("Opening Dlog file")
+    else:
+        DlogerClose_out()
+        #print("Closing Dlog file")
 #
+# Close file for data logging
+def DlogerClose_out():
+    global DlogFile, Dlog_open, dlog
+
+    if Dlog_open.get() == 1:
+        try:
+            DlogFile.close()
+            #print("Closing Dlog file")
+        except:
+            Dlog_open.set(0)
+    else:
+        Dlog_open.set(0)
+#
+# Open file for data logging
+def DlogerOpen_out():
+    global DlogFile, Dlog_open, dlog, UserALabel, UserBLabel
+    
+    tme =  strftime("%Y%b%d-%H%M%S", gmtime())      # The time
+    filename = "DataLogger-" + tme
+    filename = filename + ".csv"
+    try:
+        DlogFile = open(filename, 'a')
+    except:
+        filename = asksaveasfilename(defaultextension = ".csv", filetypes=[("Comma Separated Values", "*.csv")])
+        DlogFile = open(filename, 'a')
+    DlogFile.write( "Time, " + UserALabel + ", " + UserBLabel + "\n" )
+    Dlog_open.set(1)
+#
+##
 # ================ Make main Screen ==========================
 TgInput = IntVar(0)   # Trigger Input variable
 SingleShot = IntVar(0) # variable for single shot triger
@@ -24697,6 +24815,10 @@ SAVScale = IntVar(0)
 SAVPSD = IntVar(0)
 SAvertmax = 1.0
 SAvertmin = 1.0E-6
+dlog = IntVar()
+dlog.set(0)
+Dlog_open = IntVar()
+Dlog_open.set(0)
 #
 if GUITheme == "Light": # Can be Light or Dark or Blue or LtBlue
     FrameBG = "#d7d7d7"
@@ -25027,6 +25149,7 @@ Filemenu.menu.add_command(label="Save Screen", command=BSaveScreen)
 Filemenu.menu.add_command(label="Save To CSV", command=BSaveData)
 Filemenu.menu.add_command(label="Load From CSV", command=BReadData)
 Filemenu.menu.add_command(label="Save PWL Data", command=BSaveChannelData)
+Filemenu.menu.add_checkbutton(label="DLog to file", variable=dlog, command=Dloger_on_off)
 Filemenu.menu.add_command(label="Help", command=BHelp)
 Filemenu.menu.add_command(label="About", command=BAbout)
 Filemenu.pack(side=LEFT, anchor=W)
@@ -25906,6 +26029,7 @@ if ShowBallonHelp > 0:
     gain2lab_tip = CreateToolTip(gain2lab, 'Reset Gain to 1.0 and Offset to 0.0')
     gainailab_tip = CreateToolTip(gainailab, 'Reset Gain to 1.0 and Offset to 0.0')
     gainbilab_tip = CreateToolTip(gainbilab, 'Reset Gain to 1.0 and Offset to 0.0')
+    prlab_tip = CreateToolTip(prlab, 'Open Resistor Divider Gain Offset Calculator')
 #
 root.geometry('+300+0')
 root.protocol("WM_DELETE_WINDOW", Bcloseexit)

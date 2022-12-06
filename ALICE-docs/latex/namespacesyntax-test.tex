@@ -1,0 +1,272 @@
+\hypertarget{namespacesyntax-test}{}\doxysection{syntax-\/test Namespace Reference}
+\label{namespacesyntax-test}\index{syntax-\/test@{syntax-\/test}}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{namespacesyntax-test_ab4de7f1616200028cc6433400caf6dcc}{Left\+Freq}} = float(eval(A\+W\+G\+A\+Freq\+Entry.\+get()))
+\item 
+\mbox{\hyperlink{namespacesyntax-test_a1d5ab3ad9572498cbb81f67812c0c515}{Right\+Freq}} = float(eval(A\+W\+G\+B\+Freq\+Entry.\+get()))
+\item 
+float \mbox{\hyperlink{namespacesyntax-test_aff87a2d67f6b6424fe4588939d27f6ef}{Carrier\+Freq}} = 38000.\+0
+\item 
+float \mbox{\hyperlink{namespacesyntax-test_a77bbbbf3ff032e1a225be940cbe4db86}{Pilot\+Freq}} = \mbox{\hyperlink{namespacesyntax-test_aff87a2d67f6b6424fe4588939d27f6ef}{Carrier\+Freq}}/2
+\item 
+float \mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}} = 100000.\+0
+\item 
+tuple \mbox{\hyperlink{namespacesyntax-test_ae7d39ec024b5ca5761125e663900ca83}{Leftperiodvalue}} = (Base\+Sample\+Rate$\ast$2)/\mbox{\hyperlink{namespacesyntax-test_ab4de7f1616200028cc6433400caf6dcc}{Left\+Freq}}
+\item 
+tuple \mbox{\hyperlink{namespacesyntax-test_a5cef7ae63e381a7e8961a7905e97a110}{Rightperiodvalue}} = (Base\+Sample\+Rate$\ast$2)/\mbox{\hyperlink{namespacesyntax-test_a1d5ab3ad9572498cbb81f67812c0c515}{Right\+Freq}}
+\item 
+tuple \mbox{\hyperlink{namespacesyntax-test_a9c152bd08d50f1cc81553a91a63bd204}{Pilotperiodvalue}} = (Base\+Sample\+Rate$\ast$2)/\mbox{\hyperlink{namespacesyntax-test_a77bbbbf3ff032e1a225be940cbe4db86}{Pilot\+Freq}}
+\item 
+tuple \mbox{\hyperlink{namespacesyntax-test_a3cc33dc421eea27de7b940d99d5269a4}{Carrierperiodvalue}} = (Base\+Sample\+Rate$\ast$2)/\mbox{\hyperlink{namespacesyntax-test_aff87a2d67f6b6424fe4588939d27f6ef}{Carrier\+Freq}}
+\item 
+\mbox{\hyperlink{namespacesyntax-test_a724468596c0b0c95a960d6e209a0877a}{Left\+Cycles}} = int(\mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}}/\mbox{\hyperlink{namespacesyntax-test_ae7d39ec024b5ca5761125e663900ca83}{Leftperiodvalue}})
+\item 
+\mbox{\hyperlink{namespacesyntax-test_a63c88e9a3575df8bd01a0e7e36667c1a}{Right\+Cycles}} = int(\mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}}/\mbox{\hyperlink{namespacesyntax-test_a5cef7ae63e381a7e8961a7905e97a110}{Rightperiodvalue}})
+\item 
+\mbox{\hyperlink{namespacesyntax-test_ad344947fac9d6ad7683ca783123a5213}{Pilot\+Cycles}} = int(\mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}}/\mbox{\hyperlink{namespacesyntax-test_a9c152bd08d50f1cc81553a91a63bd204}{Pilotperiodvalue}})
+\item 
+\mbox{\hyperlink{namespacesyntax-test_aa817ceb216f1075cb0fd34772abe4866}{Carrier\+Cycles}} = int(\mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}}/\mbox{\hyperlink{namespacesyntax-test_a3cc33dc421eea27de7b940d99d5269a4}{Carrierperiodvalue}})
+\item 
+\mbox{\hyperlink{namespacesyntax-test_ab2fd4eddc44a258267b025e809637ad4}{A\+W\+G\+Awaveform}} = numpy.\+cos(numpy.\+linspace(0, 2$\ast$\mbox{\hyperlink{namespacesyntax-test_a724468596c0b0c95a960d6e209a0877a}{Left\+Cycles}}$\ast$numpy.\+pi, \mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}}))
+\item 
+\mbox{\hyperlink{namespacesyntax-test_add508446835a442776293e8c6ced1671}{A\+W\+G\+Bwaveform}} = numpy.\+cos(numpy.\+linspace(0, 2$\ast$\mbox{\hyperlink{namespacesyntax-test_a63c88e9a3575df8bd01a0e7e36667c1a}{Right\+Cycles}}$\ast$numpy.\+pi, \mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}}))
+\item 
+\mbox{\hyperlink{namespacesyntax-test_a6c7f1b3135757be6b2205a71e9cde087}{LminusR}} = \mbox{\hyperlink{namespacesyntax-test_ab2fd4eddc44a258267b025e809637ad4}{A\+W\+G\+Awaveform}} -\/ \mbox{\hyperlink{namespacesyntax-test_add508446835a442776293e8c6ced1671}{A\+W\+G\+Bwaveform}}
+\item 
+float \mbox{\hyperlink{namespacesyntax-test_a0802e602a816baa79e1fc3ccbff1d081}{Pilot}} = 0.\+1$\ast$numpy.\+cos(numpy.\+linspace(0, 2$\ast$\mbox{\hyperlink{namespacesyntax-test_ad344947fac9d6ad7683ca783123a5213}{Pilot\+Cycles}}$\ast$numpy.\+pi, \mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}}))
+\item 
+\mbox{\hyperlink{namespacesyntax-test_a4c5d15a42e203eb7cdbf6473230eb544}{Carrier}} = numpy.\+cos(numpy.\+linspace(0, 2$\ast$\mbox{\hyperlink{namespacesyntax-test_aa817ceb216f1075cb0fd34772abe4866}{Carrier\+Cycles}}$\ast$numpy.\+pi, \mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}}))
+\item 
+\mbox{\hyperlink{namespacesyntax-test_a80b0d67eccd8a722b335bc1c9679a2f7}{Time}} = numpy.\+linspace(0, \mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}}, \mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}})
+\item 
+\mbox{\hyperlink{namespacesyntax-test_a22f45a3cb4f074e609f58ebaeef0ecf9}{label}}
+\item 
+\mbox{\hyperlink{namespacesyntax-test_aeee9f371db14fda0de35d16324a167df}{loc}}
+\item 
+\mbox{\hyperlink{namespacesyntax-test_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{namespacesyntax-test_ab2fd4eddc44a258267b025e809637ad4}\label{namespacesyntax-test_ab2fd4eddc44a258267b025e809637ad4}} 
+\index{syntax-\/test@{syntax-\/test}!AWGAwaveform@{AWGAwaveform}}
+\index{AWGAwaveform@{AWGAwaveform}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{AWGAwaveform}{AWGAwaveform}}
+{\footnotesize\ttfamily float A\+W\+G\+Awaveform = numpy.\+cos(numpy.\+linspace(0, 2$\ast$\mbox{\hyperlink{namespacesyntax-test_a724468596c0b0c95a960d6e209a0877a}{Left\+Cycles}}$\ast$numpy.\+pi, \mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}}))}
+
+
+
+Definition at line 23 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_add508446835a442776293e8c6ced1671}\label{namespacesyntax-test_add508446835a442776293e8c6ced1671}} 
+\index{syntax-\/test@{syntax-\/test}!AWGBwaveform@{AWGBwaveform}}
+\index{AWGBwaveform@{AWGBwaveform}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{AWGBwaveform}{AWGBwaveform}}
+{\footnotesize\ttfamily A\+W\+G\+Bwaveform = numpy.\+cos(numpy.\+linspace(0, 2$\ast$\mbox{\hyperlink{namespacesyntax-test_a63c88e9a3575df8bd01a0e7e36667c1a}{Right\+Cycles}}$\ast$numpy.\+pi, \mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}}))}
+
+
+
+Definition at line 24 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_a17afa58b2bc574dedcd1cc02e1fdf165}\label{namespacesyntax-test_a17afa58b2bc574dedcd1cc02e1fdf165}} 
+\index{syntax-\/test@{syntax-\/test}!block@{block}}
+\index{block@{block}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{block}{block}}
+{\footnotesize\ttfamily block}
+
+
+
+Definition at line 41 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_a4c5d15a42e203eb7cdbf6473230eb544}\label{namespacesyntax-test_a4c5d15a42e203eb7cdbf6473230eb544}} 
+\index{syntax-\/test@{syntax-\/test}!Carrier@{Carrier}}
+\index{Carrier@{Carrier}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{Carrier}{Carrier}}
+{\footnotesize\ttfamily Carrier = numpy.\+cos(numpy.\+linspace(0, 2$\ast$\mbox{\hyperlink{namespacesyntax-test_aa817ceb216f1075cb0fd34772abe4866}{Carrier\+Cycles}}$\ast$numpy.\+pi, \mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}}))}
+
+
+
+Definition at line 27 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_aa817ceb216f1075cb0fd34772abe4866}\label{namespacesyntax-test_aa817ceb216f1075cb0fd34772abe4866}} 
+\index{syntax-\/test@{syntax-\/test}!CarrierCycles@{CarrierCycles}}
+\index{CarrierCycles@{CarrierCycles}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{CarrierCycles}{CarrierCycles}}
+{\footnotesize\ttfamily Carrier\+Cycles = int(\mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}}/\mbox{\hyperlink{namespacesyntax-test_a3cc33dc421eea27de7b940d99d5269a4}{Carrierperiodvalue}})}
+
+
+
+Definition at line 21 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_aff87a2d67f6b6424fe4588939d27f6ef}\label{namespacesyntax-test_aff87a2d67f6b6424fe4588939d27f6ef}} 
+\index{syntax-\/test@{syntax-\/test}!CarrierFreq@{CarrierFreq}}
+\index{CarrierFreq@{CarrierFreq}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{CarrierFreq}{CarrierFreq}}
+{\footnotesize\ttfamily float Carrier\+Freq = 38000.\+0}
+
+
+
+Definition at line 6 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_a3cc33dc421eea27de7b940d99d5269a4}\label{namespacesyntax-test_a3cc33dc421eea27de7b940d99d5269a4}} 
+\index{syntax-\/test@{syntax-\/test}!Carrierperiodvalue@{Carrierperiodvalue}}
+\index{Carrierperiodvalue@{Carrierperiodvalue}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{Carrierperiodvalue}{Carrierperiodvalue}}
+{\footnotesize\ttfamily tuple Carrierperiodvalue = (Base\+Sample\+Rate$\ast$2)/\mbox{\hyperlink{namespacesyntax-test_aff87a2d67f6b6424fe4588939d27f6ef}{Carrier\+Freq}}}
+
+
+
+Definition at line 15 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_a22f45a3cb4f074e609f58ebaeef0ecf9}\label{namespacesyntax-test_a22f45a3cb4f074e609f58ebaeef0ecf9}} 
+\index{syntax-\/test@{syntax-\/test}!label@{label}}
+\index{label@{label}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{label}{label}}
+{\footnotesize\ttfamily label}
+
+
+
+Definition at line 35 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_a724468596c0b0c95a960d6e209a0877a}\label{namespacesyntax-test_a724468596c0b0c95a960d6e209a0877a}} 
+\index{syntax-\/test@{syntax-\/test}!LeftCycles@{LeftCycles}}
+\index{LeftCycles@{LeftCycles}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{LeftCycles}{LeftCycles}}
+{\footnotesize\ttfamily Left\+Cycles = int(\mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}}/\mbox{\hyperlink{namespacesyntax-test_ae7d39ec024b5ca5761125e663900ca83}{Leftperiodvalue}})}
+
+
+
+Definition at line 17 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_ab4de7f1616200028cc6433400caf6dcc}\label{namespacesyntax-test_ab4de7f1616200028cc6433400caf6dcc}} 
+\index{syntax-\/test@{syntax-\/test}!LeftFreq@{LeftFreq}}
+\index{LeftFreq@{LeftFreq}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{LeftFreq}{LeftFreq}}
+{\footnotesize\ttfamily Left\+Freq = float(eval(A\+W\+G\+A\+Freq\+Entry.\+get()))}
+
+
+
+Definition at line 4 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_ae7d39ec024b5ca5761125e663900ca83}\label{namespacesyntax-test_ae7d39ec024b5ca5761125e663900ca83}} 
+\index{syntax-\/test@{syntax-\/test}!Leftperiodvalue@{Leftperiodvalue}}
+\index{Leftperiodvalue@{Leftperiodvalue}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{Leftperiodvalue}{Leftperiodvalue}}
+{\footnotesize\ttfamily tuple Leftperiodvalue = (Base\+Sample\+Rate$\ast$2)/\mbox{\hyperlink{namespacesyntax-test_ab4de7f1616200028cc6433400caf6dcc}{Left\+Freq}}}
+
+
+
+Definition at line 12 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_a6c7f1b3135757be6b2205a71e9cde087}\label{namespacesyntax-test_a6c7f1b3135757be6b2205a71e9cde087}} 
+\index{syntax-\/test@{syntax-\/test}!LminusR@{LminusR}}
+\index{LminusR@{LminusR}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{LminusR}{LminusR}}
+{\footnotesize\ttfamily LminusR = \mbox{\hyperlink{namespacesyntax-test_ab2fd4eddc44a258267b025e809637ad4}{A\+W\+G\+Awaveform}} -\/ \mbox{\hyperlink{namespacesyntax-test_add508446835a442776293e8c6ced1671}{A\+W\+G\+Bwaveform}}}
+
+
+
+Definition at line 25 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_aeee9f371db14fda0de35d16324a167df}\label{namespacesyntax-test_aeee9f371db14fda0de35d16324a167df}} 
+\index{syntax-\/test@{syntax-\/test}!loc@{loc}}
+\index{loc@{loc}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{loc}{loc}}
+{\footnotesize\ttfamily loc}
+
+
+
+Definition at line 39 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_a0802e602a816baa79e1fc3ccbff1d081}\label{namespacesyntax-test_a0802e602a816baa79e1fc3ccbff1d081}} 
+\index{syntax-\/test@{syntax-\/test}!Pilot@{Pilot}}
+\index{Pilot@{Pilot}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{Pilot}{Pilot}}
+{\footnotesize\ttfamily float Pilot = 0.\+1$\ast$numpy.\+cos(numpy.\+linspace(0, 2$\ast$\mbox{\hyperlink{namespacesyntax-test_ad344947fac9d6ad7683ca783123a5213}{Pilot\+Cycles}}$\ast$numpy.\+pi, \mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}}))}
+
+
+
+Definition at line 26 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_ad344947fac9d6ad7683ca783123a5213}\label{namespacesyntax-test_ad344947fac9d6ad7683ca783123a5213}} 
+\index{syntax-\/test@{syntax-\/test}!PilotCycles@{PilotCycles}}
+\index{PilotCycles@{PilotCycles}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{PilotCycles}{PilotCycles}}
+{\footnotesize\ttfamily Pilot\+Cycles = int(\mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}}/\mbox{\hyperlink{namespacesyntax-test_a9c152bd08d50f1cc81553a91a63bd204}{Pilotperiodvalue}})}
+
+
+
+Definition at line 20 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_a77bbbbf3ff032e1a225be940cbe4db86}\label{namespacesyntax-test_a77bbbbf3ff032e1a225be940cbe4db86}} 
+\index{syntax-\/test@{syntax-\/test}!PilotFreq@{PilotFreq}}
+\index{PilotFreq@{PilotFreq}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{PilotFreq}{PilotFreq}}
+{\footnotesize\ttfamily float Pilot\+Freq = \mbox{\hyperlink{namespacesyntax-test_aff87a2d67f6b6424fe4588939d27f6ef}{Carrier\+Freq}}/2}
+
+
+
+Definition at line 7 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_a9c152bd08d50f1cc81553a91a63bd204}\label{namespacesyntax-test_a9c152bd08d50f1cc81553a91a63bd204}} 
+\index{syntax-\/test@{syntax-\/test}!Pilotperiodvalue@{Pilotperiodvalue}}
+\index{Pilotperiodvalue@{Pilotperiodvalue}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{Pilotperiodvalue}{Pilotperiodvalue}}
+{\footnotesize\ttfamily tuple Pilotperiodvalue = (Base\+Sample\+Rate$\ast$2)/\mbox{\hyperlink{namespacesyntax-test_a77bbbbf3ff032e1a225be940cbe4db86}{Pilot\+Freq}}}
+
+
+
+Definition at line 14 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}\label{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}} 
+\index{syntax-\/test@{syntax-\/test}!RecLength@{RecLength}}
+\index{RecLength@{RecLength}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{RecLength}{RecLength}}
+{\footnotesize\ttfamily float Rec\+Length = 100000.\+0}
+
+
+
+Definition at line 10 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_a63c88e9a3575df8bd01a0e7e36667c1a}\label{namespacesyntax-test_a63c88e9a3575df8bd01a0e7e36667c1a}} 
+\index{syntax-\/test@{syntax-\/test}!RightCycles@{RightCycles}}
+\index{RightCycles@{RightCycles}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{RightCycles}{RightCycles}}
+{\footnotesize\ttfamily Right\+Cycles = int(\mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}}/\mbox{\hyperlink{namespacesyntax-test_a5cef7ae63e381a7e8961a7905e97a110}{Rightperiodvalue}})}
+
+
+
+Definition at line 19 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_a1d5ab3ad9572498cbb81f67812c0c515}\label{namespacesyntax-test_a1d5ab3ad9572498cbb81f67812c0c515}} 
+\index{syntax-\/test@{syntax-\/test}!RightFreq@{RightFreq}}
+\index{RightFreq@{RightFreq}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{RightFreq}{RightFreq}}
+{\footnotesize\ttfamily Right\+Freq = float(eval(A\+W\+G\+B\+Freq\+Entry.\+get()))}
+
+
+
+Definition at line 5 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_a5cef7ae63e381a7e8961a7905e97a110}\label{namespacesyntax-test_a5cef7ae63e381a7e8961a7905e97a110}} 
+\index{syntax-\/test@{syntax-\/test}!Rightperiodvalue@{Rightperiodvalue}}
+\index{Rightperiodvalue@{Rightperiodvalue}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{Rightperiodvalue}{Rightperiodvalue}}
+{\footnotesize\ttfamily tuple Rightperiodvalue = (Base\+Sample\+Rate$\ast$2)/\mbox{\hyperlink{namespacesyntax-test_a1d5ab3ad9572498cbb81f67812c0c515}{Right\+Freq}}}
+
+
+
+Definition at line 13 of file syntax-\/test.\+py.
+
+\mbox{\Hypertarget{namespacesyntax-test_a80b0d67eccd8a722b335bc1c9679a2f7}\label{namespacesyntax-test_a80b0d67eccd8a722b335bc1c9679a2f7}} 
+\index{syntax-\/test@{syntax-\/test}!Time@{Time}}
+\index{Time@{Time}!syntax-\/test@{syntax-\/test}}
+\doxysubsubsection{\texorpdfstring{Time}{Time}}
+{\footnotesize\ttfamily Time = numpy.\+linspace(0, \mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}}, \mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}})}
+
+
+
+Definition at line 31 of file syntax-\/test.\+py.
+

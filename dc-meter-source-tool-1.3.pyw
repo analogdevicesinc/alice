@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 DC volt meter / source tool 7-17-2021
+# ADALM1000 DC volt meter / source tool 11-14-2022
 # For use with pysmu / libsmu.rework >= 1.0
 # For Python version > = 2.7.8 and 3.7
 import __future__
@@ -19,15 +19,79 @@ if sys.version_info[0] == 3:
     from tkinter.simpledialog import askstring
     print ("Python 3.x")
 import time
+import math
 from pysmu import *
+#
+root = Tk()
+RevDate = "14 Nov 2022)"
+SWRev = "1.3 "
+# small bit map of ADI logo for window icon
+TBicon = """
+R0lGODlhIAAgAHAAACH5BAEAAAIALAAAAAAgACAAgQAAAP///wAAAAAAAAJJhI+py+0PYwtBWkDp
+hTnv2XlfEobjUZZnmn4se72vJMtcbYN4ruz44uORgiodsfI4Im++2M5VW81OmBbVULxiRVrUsgsO
+i8fUAgA7
+"""
 
+root.title("ALM1000 Meter-Source 1.3 " + RevDate)
+img = PhotoImage(data=TBicon)
+root.call('wm', 'iconphoto', root._w, '-default', img)
+#
+root.tk_focusFollowsMouse()
+#
+windowingsystem = root.tk.call('tk', 'windowingsystem')
+# 'aqua' built-in native Mac OS X only; Native Mac OS X
+if (root.tk.call('tk', 'windowingsystem')=='aqua'):
+    Style_String = 'aqua'
+    # On Macs, allow the dock icon to deiconify.
+    root.createcommand('::tk::mac::ReopenApplication', root.deiconify)
+    root.createcommand('::tk::mac::Quit', Bcloseexit)
+    # On Macs, set up menu bar to be minimal.
+    root.option_add('*tearOff', False)
+    menubar = tk.Menu(root)
+    appmenu = tk.Menu(menubar, name='apple')
+    menubar.add_cascade(menu=appmenu)
+    # appmenu.add_command(label='Exit', command=Bcloseexit)
+    root['menu'] = menubar
+else:
+    Style_String = 'alt'
+print("Windowing System is " + str(windowingsystem))
+#root.style.configure("Stop.TRadiobutton", background="red")
+#root.style.configure("Run.TRadiobutton", background="green")
 # define button actions
+RUNstatus = IntVar(0)
+CHAstatus = IntVar(0)
+CHBstatus = IntVar(0)
+CHAmode = IntVar(0)
+CHBmode = IntVar(0)
+AWGAIOMode = IntVar(0)
+AWGBIOMode = IntVar(0)
 loopnum = 0
-RevDate = "17 July 2021)"
 PIO_0 = 28
 PIO_1 = 29
 PIO_2 = 47
 PIO_3 = 3
+#
+FontSize = 8
+COLORwhite = "#ffffff" # 100% white
+COLORblack = "#000000" # 100% black
+#
+#
+RDX0L = 20  # Left top X value of Res Div Schem
+RDY0T = 20  # Left top Y value of Res Div Schem
+RDGRW = 530 - ( RDX0L + 230 ) # Width of the Res Div Schem
+RDGRH = 275 - ( 2 * RDY0T )   # Height of the Res Div Schem
+R1 = StringVar()  
+R2 = StringVar()
+Voff = StringVar()
+VR2 = StringVar()
+ResDivStatus = IntVar(0)
+ResDivDisp = IntVar(0)
+Rint = 1000000.0 # 1 Meg Ohm M1k internal resistor to ground
+RDeffective = Rint
+RDGain = 1.0
+RDOffset = 0.0
+CHAIleak = 0.0 # 400E-9 # Channel A leakage current
+CHBIleak = 0.0 # 400E-9 # Channel B leakage current
 #
 def EnabAwg():
     global InOffA, InGainA, InOffB, InGainB, CHAmode, CHBmode
@@ -331,6 +395,7 @@ def Analog_in():
             loopnum = loopnum + 1
     # Update tasks and screens by TKinter
         else:
+            time.sleep(0.05) # add small sleep time while not running to reduce CPU usage
             if loopnum > 0:
                 CHA.mode = Mode.HI_Z # Put CHA in Hi Z mode
                 CHB.mode = Mode.HI_Z # Put CHB in Hi Z mode
@@ -825,46 +890,195 @@ def Bcloseexit():
 
     root.destroy()
     exit()
-# setup main window
-TBicon = """
-R0lGODlhIAAgAHAAACH5BAEAAAIALAAAAAAgACAAgQAAAP///wAAAAAAAAJJhI+py+0PYwtBWkDp
-hTnv2XlfEobjUZZnmn4se72vJMtcbYN4ruz44uORgiodsfI4Im++2M5VW81OmBbVULxiRVrUsgsO
-i8fUAgA7
-"""
-
-root = Tk()
-root.title("ALM1000 Meter-Source 1.3 " + RevDate)
-img = PhotoImage(data=TBicon)
-root.call('wm', 'iconphoto', root._w, '-default', img)
 #
-root.tk_focusFollowsMouse()
+def ReSetAGO():
+    global CHAVGainEntry, CHAVOffsetEntry
+
+    CHAVGainEntry.delete(0,"end")
+    CHAVGainEntry.insert(0,1.0)
+    CHAVOffsetEntry.delete(0,"end")
+    CHAVOffsetEntry.insert(0,0.0)
+#
+def ReSetBGO():
+    global CHBVGainEntry, CHBVOffsetEntry
+
+    CHBVGainEntry.delete(0,"end")
+    CHBVGainEntry.insert(0,1.0)
+    CHBVOffsetEntry.delete(0,"end")
+    CHBVOffsetEntry.insert(0,0.0)
+#
+# Converts User input string with "M" or "k" to floating point number
+# So calculations can be done on the user inputs
+def UnitConvert(Value):
+    
+    Value = Value.upper()
+    if 'K' in Value:
+        Value = str.strip(Value,'K') #
+        Value = float(Value) * math.pow(10,3)
+    elif 'M' in Value:
+        Value = str.strip(Value,'M') #
+        Value = float(Value) * math.pow(10,6)
+    else:
+        Value = float(Value)
+    return Value
+#
+# Calculate resistor divider gain and offset voltage
+def RDbutton(): 
+    global Rint, RDX0L, display9, display8, Voff, R1, R2, resdivwindow
+    global RDGain, RDOffset, RDeffective
+    #
+    try:
+        X = UnitConvert(Voff.get())
+        Y = UnitConvert(R1.get())
+        Z = UnitConvert(R2.get())
+        ZE = (Z * Rint) / (Z + Rint)
+        YE = (Y * Rint) / (Y + Rint)
+        RDGain =  (Y + ZE) / ZE
+        RDOffset = (X * YE)/(YE + Z)
+        RDeffective = (Y * ZE) / (Y + ZE)
+    except:
+        RDOffset = None
+        RDGain = None
+        X = None
+        Y = None
+        Z = None
+
+    if ((RDOffset is None) or (X is None) or (Y is None) or (Z is None) or (RDGain is None)):
+        display = Label(resdivwindow, text="Calculation Error", foreground = "Red").place(x = RDX0L+80, y = 260)
+    else:
+        display = Label(resdivwindow, text="Calculation Successful", foreground = "Dark Green").place(x = RDX0L+80, y = 260)
+        display9.config(text="%f Offset" %RDOffset)
+        display8.config(text="%f Gain" %RDGain)		
+#
+# Draw a resistor shape at location
+def DrawRes(X, Y): 
+    global Sche, COLORblack
+
+    ResW = 10
+    Sche.create_line(X, Y, X, Y+20, fill=COLORblack, width=3)
+    Sche.create_line(X, Y+20, X+ResW, Y+25, fill=COLORblack, width=3)
+    Sche.create_line(X+ResW, Y+25, X-ResW, Y+35, fill=COLORblack, width=3)
+    Sche.create_line(X-ResW, Y+35, X+ResW, Y+45, fill=COLORblack, width=3)
+    Sche.create_line(X+ResW, Y+45, X-ResW, Y+55, fill=COLORblack, width=3)
+    Sche.create_line(X-ResW, Y+55, X, Y+60, fill=COLORblack, width=3)
+    Sche.create_line(X, Y+60, X, Y+80, fill=COLORblack, width=3)
+#
+def RDSetAGO():
+    global CHAVGainEntry, CHAVOffsetEntry
+    global RDGain, RDOffset, CHAIleak, RDeffective
+
+    DivOffset = RDOffset + (CHAIleak * RDeffective)
+    Gain_str = '{0:.3f}'.format(RDGain)
+    Voff_str = '{0:.3f}'.format(DivOffset)
+    CHAVGainEntry.delete(0,"end")
+    CHAVGainEntry.insert(0,Gain_str)
+    CHAVOffsetEntry.delete(0,"end")
+    CHAVOffsetEntry.insert(0,Voff_str)
+#
+def RDSetBGO():
+    global CHBVGainEntry, CHBVOffsetEntry
+    global RDGain, RDOffset, CHBIleak, RDeffective
+
+    DivOffset = RDOffset + (CHBIleak * RDeffective)
+    Gain_str = '{0:.3f}'.format(RDGain)
+    Voff_str = '{0:.3f}'.format(DivOffset)
+    CHBVGainEntry.delete(0,"end")
+    CHBVGainEntry.insert(0,Gain_str)
+    CHBVOffsetEntry.delete(0,"end")
+    CHBVOffsetEntry.insert(0,Voff_str)
+#
+#
+def MakeResDivWindow():
+    global SWRev, RevDate, ResDivStatus, ResDivDisp, R1, R2, Voff, COLORblack, COLORwhite
+    global display8, display9, Sche, resdivwindow, RDGRW, RDGRH, RDY0T, RDX0L
+    
+    if ResDivStatus.get() == 0:
+        ResDivStatus.set(1)
+        ResDivDisp.set(1)
+        resdivwindow = Toplevel()
+        resdivwindow.title("Input Resistor Divider " + SWRev + RevDate)
+        resdivwindow.resizable(FALSE,FALSE)
+        resdivwindow.protocol("WM_DELETE_WINDOW", DestroyResDivScreen)
+        resdivwindow.geometry("530x310")
+# from here down we build GUI
+        Font_tuple = ("Comic Sans MS", 10, "bold")
+        #
+        display = Label(resdivwindow, text="M1k Input Resistor Divider", foreground= "Blue",font = Font_tuple)
+        display.place(x = RDX0L, y = RDY0T)
+        
+        display1 = Label(resdivwindow, text="Resistor - R1")
+        display1.place(x = RDX0L, y = 60)
+        display2 = Entry(resdivwindow,textvariable=R1)
+        display2.place(x = RDX0L+80, y = 60)
+        
+        display3 = Label(resdivwindow, text="Resistor - R2")
+        display3.place(x = RDX0L, y = 100)
+        display4 = Entry(resdivwindow,textvariable=R2)
+        display4.place(x = RDX0L+80, y = 100)
+        
+        display5 = Label(resdivwindow, text="Offset Voltage")
+        display5.place(x = RDX0L, y = 140)
+        display6 = Entry(resdivwindow,textvariable=Voff)
+        display6.place(x = RDX0L+80, y = 140)
+        
+        display7 = Label(resdivwindow, text="Divider Offset")
+        display7.place(x = RDX0L, y = 180)
+        
+        display9 = Label(resdivwindow, text="To be calculated", foreground = "Blue")
+        display9.place(x = RDX0L+80, y = 180)
+
+        display10 = Label(resdivwindow, text="Divider Gain")
+        display10.place(x = RDX0L, y = 220)
+        
+        display8 = Label(resdivwindow, text="To be calculated", foreground = "Blue")
+        display8.place(x = RDX0L+80, y = 220)
+        
+        Calbutton = Button(resdivwindow, text = "Calculate", command=RDbutton)
+        Calbutton.place(x = RDX0L, y = 260)
+        
+        ResDivdismissbutton = Button(resdivwindow, text="Dismiss", command=DestroyResDivScreen)
+        ResDivdismissbutton.place(x = 230, y = 260)
+
+        ResDivCHAsetbutton = Button(resdivwindow, text="Set CH A", command=RDSetAGO)
+        ResDivCHAsetbutton.place(x = 330, y = 260)
+
+        ResDivCHBsetbutton = Button(resdivwindow, text="Set CH B", command=RDSetBGO)
+        ResDivCHBsetbutton.place(x = 430, y = 260)
+        
+        Sche = Canvas(resdivwindow, width=RDGRW, height=RDGRH, background=COLORwhite)
+        Sche.place(x = 230, y = RDY0T) #
+        
+        # Draw Schematic
+        DrawRes(115, 40)
+        Sche.create_text(140, 80, text = "R1", fill=COLORblack, font=("arial", FontSize+4 ))
+        DrawRes(115, 120)
+        Sche.create_text(140, 160, text = "R2", fill=COLORblack, font=("arial", FontSize+4 ))
+        DrawRes(190, 120)
+        Sche.create_text(220, 160, text = "Rint", fill=COLORblack, font=("arial", FontSize+4 ))
+        Sche.create_text(225, 180, text = "1 Meg", fill=COLORblack, font=("arial", FontSize+4 ))
+        Sche.create_line(70, 40, 115, 40, fill=COLORblack, width=3)
+        Sche.create_line(70, 200, 115, 200, fill=COLORblack, width=3)
+        Sche.create_line(115, 120, 235, 120, fill=COLORblack, width=3)
+        Sche.create_line(175, 200, 205, 200, fill=COLORblack, width=3)
+        Sche.create_line(175, 200, 190, 220, fill=COLORblack, width=3)
+        Sche.create_line(205, 200, 190, 220, fill=COLORblack, width=3)
+        Sche.create_rectangle(40, 30, 70, 50, width=3) #
+        Sche.create_text(45, 15, text = "V Input", fill=COLORblack, font=("arial", FontSize+4 ))
+        Sche.create_rectangle(40, 190, 70, 210, width=3) #
+        Sche.create_text(47, 175, text = "V Offset", fill=COLORblack, font=("arial", FontSize+4 ))
+        Sche.create_rectangle(235, 110, 265, 130, width=3) #
+        Sche.create_text(235, 95, text = "M1k Input", fill=COLORblack, font=("arial", FontSize+4 ))
+#
+def DestroyResDivScreen():
+    global resdivwindow, ResDivStatus, ResDivDisp
+    
+    ResDivStatus.set(0)
+    ResDivDisp.set(0)
+    resdivwindow.destroy()
+#
+# setup main window
+#
 root.protocol("WM_DELETE_WINDOW", Bcloseexit)
-windowingsystem = root.tk.call('tk', 'windowingsystem')
-# 'aqua' built-in native Mac OS X only; Native Mac OS X
-if (root.tk.call('tk', 'windowingsystem')=='aqua'):
-    Style_String = 'aqua'
-    # On Macs, allow the dock icon to deiconify.
-    root.createcommand('::tk::mac::ReopenApplication', root.deiconify)
-    root.createcommand('::tk::mac::Quit', Bcloseexit)
-    # On Macs, set up menu bar to be minimal.
-    root.option_add('*tearOff', False)
-    menubar = tk.Menu(root)
-    appmenu = tk.Menu(menubar, name='apple')
-    menubar.add_cascade(menu=appmenu)
-    # appmenu.add_command(label='Exit', command=Bcloseexit)
-    root['menu'] = menubar
-else:
-    Style_String = 'alt'
-print("Windowing System is " + str(windowingsystem))
-#root.style.configure("Stop.TRadiobutton", background="red")
-#root.style.configure("Run.TRadiobutton", background="green")
-RUNstatus = IntVar(0)
-CHAstatus = IntVar(0)
-CHBstatus = IntVar(0)
-CHAmode = IntVar(0)
-CHBmode = IntVar(0)
-AWGAIOMode = IntVar(0)
-AWGBIOMode = IntVar(0)
 #
 buttons = Frame( root )
 buttons.grid(row=0, column=0, columnspan=4, sticky=W)
@@ -911,12 +1125,12 @@ labelAI = Label(frame1, font = "Arial 16 bold")
 labelAI.grid(row=3, column=0, columnspan=2, sticky=W)
 labelAI.config(text = "CA-I 0.00")
 # input probe wigets
-calAlab = Label(frame1, text="CH A Gain/Offset calibration")
+calAlab = Button(frame1, text="Adjust CH A Gain/Offset", command=MakeResDivWindow)
 calAlab.grid(row=4, column=0, sticky=W)
 # Input Probes sub frame 
 ProbeAV = Frame( frame1 )
 ProbeAV.grid(row=5, column=0, sticky=W)
-gainavlab = Label(ProbeAV, text="VA")
+gainavlab = Button(ProbeAV, text="VA", command=ReSetAGO)
 gainavlab.pack(side=LEFT)
 CHAVGainEntry = Entry(ProbeAV, width=6) #
 CHAVGainEntry.bind('<MouseWheel>', onTextScroll)
@@ -935,7 +1149,7 @@ CHAVOffsetEntry.insert(0,0.0)
 #
 ProbeAI = Frame( frame1 )
 ProbeAI.grid(row=6, column=0, sticky=W)
-gainailab = Label(ProbeAI, text=" IA ")
+gainailab = Button(ProbeAI, text=" IA")
 gainailab.pack(side=LEFT)
 CHAIGainEntry = Entry(ProbeAI, width=6) #
 CHAIGainEntry.bind('<MouseWheel>', onTextScroll)
@@ -968,12 +1182,12 @@ labelBI = Label(frame2, font = "Arial 16 bold")
 labelBI.grid(row=3, column=0, columnspan=2, sticky=W)
 labelBI.config(text = "CB-I 0.00")
 # input probe wigets
-calBlab = Label(frame2, text="CH B Gain/Offset calibration")
+calBlab = Button(frame2, text="Adjust CH B Gain/Offset", command=MakeResDivWindow)
 calBlab.grid(row=4, column=0, sticky=W)
 #
 ProbeBV = Frame( frame2 )
 ProbeBV.grid(row=5, column=0, sticky=W)
-gainbvlab = Label(ProbeBV, text="VB")
+gainbvlab = Button(ProbeBV, text="VB", command=ReSetBGO) 
 gainbvlab.pack(side=LEFT)
 CHBVGainEntry = Entry(ProbeBV, width=6) #
 CHBVGainEntry.bind('<MouseWheel>', onTextScroll)
@@ -992,7 +1206,7 @@ CHBVOffsetEntry.insert(0,0.0)
 #
 ProbeBI = Frame( frame2 )
 ProbeBI.grid(row=6, column=0, sticky=W)
-gainbilab = Label(ProbeBI, text=" IB ")
+gainbilab = Button(ProbeBI, text=" IB")
 gainbilab.pack(side=LEFT)
 CHBIGainEntry = Entry(ProbeBI, width=6) #
 CHBIGainEntry.bind('<MouseWheel>', onTextScroll)

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# ADALM1000 DC Ohmmeter Tool 1.3 7-17-2021
+# ADALM1000 DC Ohmmeter Tool 1.3 3-8-2022
 # For pysmu ( libsmu.rework > = 1.0 )
 #For Python version > = 2.7.8 and 3.7
 import __future__
@@ -137,6 +137,7 @@ def Analog_in():
             devx.ctrl_transfer(0x40, 0x51, 38, 0, 0, 0, 100) # set CHB GND switch to open
 # Update tasks and screens by TKinter
         else:
+            time.sleep(0.05) # add small sleep time while not running to reduce CPU usage
             if loopnum > 0:
                 # print "stop"
                 # session.end()
@@ -265,7 +266,7 @@ i8fUAgA7
 """
 
 root = Tk()
-root.title("ALM1000 Ohmmeter V Div 1.3 (17 July 2021)")
+root.title("ALM1000 Ohmmeter V Div 1.3 (8 March 2022)")
 img = PhotoImage(data=TBicon)
 root.call('wm', 'iconphoto', root._w, img)
 root.tk_focusFollowsMouse()

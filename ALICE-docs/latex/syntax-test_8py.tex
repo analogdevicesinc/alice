@@ -1,0 +1,54 @@
+\hypertarget{syntax-test_8py}{}\doxysection{syntax-\/test.py File Reference}
+\label{syntax-test_8py}\index{syntax-\/test.py@{syntax-\/test.py}}
+\doxysubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+ \mbox{\hyperlink{namespacesyntax-test}{syntax-\/test}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{namespacesyntax-test_ab4de7f1616200028cc6433400caf6dcc}{Left\+Freq}} = float(eval(A\+W\+G\+A\+Freq\+Entry.\+get()))
+\item 
+\mbox{\hyperlink{namespacesyntax-test_a1d5ab3ad9572498cbb81f67812c0c515}{Right\+Freq}} = float(eval(A\+W\+G\+B\+Freq\+Entry.\+get()))
+\item 
+float \mbox{\hyperlink{namespacesyntax-test_aff87a2d67f6b6424fe4588939d27f6ef}{Carrier\+Freq}} = 38000.\+0
+\item 
+float \mbox{\hyperlink{namespacesyntax-test_a77bbbbf3ff032e1a225be940cbe4db86}{Pilot\+Freq}} = Carrier\+Freq/2
+\item 
+float \mbox{\hyperlink{namespacesyntax-test_a5621716cce86f7b86b5b60c875db7ada}{Rec\+Length}} = 100000.\+0
+\item 
+tuple \mbox{\hyperlink{namespacesyntax-test_ae7d39ec024b5ca5761125e663900ca83}{Leftperiodvalue}} = (Base\+Sample\+Rate$\ast$2)/Left\+Freq
+\item 
+tuple \mbox{\hyperlink{namespacesyntax-test_a5cef7ae63e381a7e8961a7905e97a110}{Rightperiodvalue}} = (Base\+Sample\+Rate$\ast$2)/Right\+Freq
+\item 
+tuple \mbox{\hyperlink{namespacesyntax-test_a9c152bd08d50f1cc81553a91a63bd204}{Pilotperiodvalue}} = (Base\+Sample\+Rate$\ast$2)/Pilot\+Freq
+\item 
+tuple \mbox{\hyperlink{namespacesyntax-test_a3cc33dc421eea27de7b940d99d5269a4}{Carrierperiodvalue}} = (Base\+Sample\+Rate$\ast$2)/Carrier\+Freq
+\item 
+\mbox{\hyperlink{namespacesyntax-test_a724468596c0b0c95a960d6e209a0877a}{Left\+Cycles}} = int(Rec\+Length/Leftperiodvalue)
+\item 
+\mbox{\hyperlink{namespacesyntax-test_a63c88e9a3575df8bd01a0e7e36667c1a}{Right\+Cycles}} = int(Rec\+Length/Rightperiodvalue)
+\item 
+\mbox{\hyperlink{namespacesyntax-test_ad344947fac9d6ad7683ca783123a5213}{Pilot\+Cycles}} = int(Rec\+Length/Pilotperiodvalue)
+\item 
+\mbox{\hyperlink{namespacesyntax-test_aa817ceb216f1075cb0fd34772abe4866}{Carrier\+Cycles}} = int(Rec\+Length/Carrierperiodvalue)
+\item 
+\mbox{\hyperlink{namespacesyntax-test_ab2fd4eddc44a258267b025e809637ad4}{A\+W\+G\+Awaveform}} = numpy.\+cos(numpy.\+linspace(0, 2$\ast$Left\+Cycles$\ast$numpy.\+pi, Rec\+Length))
+\item 
+\mbox{\hyperlink{namespacesyntax-test_add508446835a442776293e8c6ced1671}{A\+W\+G\+Bwaveform}} = numpy.\+cos(numpy.\+linspace(0, 2$\ast$Right\+Cycles$\ast$numpy.\+pi, Rec\+Length))
+\item 
+\mbox{\hyperlink{namespacesyntax-test_a6c7f1b3135757be6b2205a71e9cde087}{LminusR}} = A\+W\+G\+Awaveform -\/ A\+W\+G\+Bwaveform
+\item 
+float \mbox{\hyperlink{namespacesyntax-test_a0802e602a816baa79e1fc3ccbff1d081}{Pilot}} = 0.\+1$\ast$numpy.\+cos(numpy.\+linspace(0, 2$\ast$Pilot\+Cycles$\ast$numpy.\+pi, Rec\+Length))
+\item 
+\mbox{\hyperlink{namespacesyntax-test_a4c5d15a42e203eb7cdbf6473230eb544}{Carrier}} = numpy.\+cos(numpy.\+linspace(0, 2$\ast$Carrier\+Cycles$\ast$numpy.\+pi, Rec\+Length))
+\item 
+\mbox{\hyperlink{namespacesyntax-test_a80b0d67eccd8a722b335bc1c9679a2f7}{Time}} = numpy.\+linspace(0, Rec\+Length, Rec\+Length)
+\item 
+\mbox{\hyperlink{namespacesyntax-test_a22f45a3cb4f074e609f58ebaeef0ecf9}{label}}
+\item 
+\mbox{\hyperlink{namespacesyntax-test_aeee9f371db14fda0de35d16324a167df}{loc}}
+\item 
+\mbox{\hyperlink{namespacesyntax-test_a17afa58b2bc574dedcd1cc02e1fdf165}{block}}
+\end{DoxyCompactItemize}

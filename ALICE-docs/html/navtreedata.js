@@ -69,8 +69,9 @@ var NAVTREEINDEX =
 "alice-desktop-1_83-linux-test_8pyw.html#aa6bf045030d0f657f086b5b8cb0f8fbf",
 "alice-desktop-1_83-linux-test_8pyw.html#ace3d083d53367cd4a4419b588e33346f",
 "alice-desktop-1_83-linux-test_8pyw.html#af5cdb25532909802e539962979ba2b15",
-"alice-desktop-1_83_8pyw.html#a680779ecf3042a865b852da5dc83f0cb",
-"alice-desktop-1_83_8pyw.html#add7d12226bc2cbc42ea79e262c384141"
+"alice-desktop-1_83_8pyw.html#a63af82f6822d24ff5c2dcf3fd3c2f212",
+"alice-desktop-1_83_8pyw.html#ad0e7f09a5d4ba308b323eb58c9a9994c",
+"namespacemembers_v.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -1,0 +1,25 @@
+var syntax_test_8py =
+[
+    [ "AWGAwaveform", "syntax-test_8py.html#ab2fd4eddc44a258267b025e809637ad4", null ],
+    [ "AWGBwaveform", "syntax-test_8py.html#add508446835a442776293e8c6ced1671", null ],
+    [ "block", "syntax-test_8py.html#a17afa58b2bc574dedcd1cc02e1fdf165", null ],
+    [ "Carrier", "syntax-test_8py.html#a4c5d15a42e203eb7cdbf6473230eb544", null ],
+    [ "CarrierCycles", "syntax-test_8py.html#aa817ceb216f1075cb0fd34772abe4866", null ],
+    [ "CarrierFreq", "syntax-test_8py.html#aff87a2d67f6b6424fe4588939d27f6ef", null ],
+    [ "Carrierperiodvalue", "syntax-test_8py.html#a3cc33dc421eea27de7b940d99d5269a4", null ],
+    [ "label", "syntax-test_8py.html#a22f45a3cb4f074e609f58ebaeef0ecf9", null ],
+    [ "LeftCycles", "syntax-test_8py.html#a724468596c0b0c95a960d6e209a0877a", null ],
+    [ "LeftFreq", "syntax-test_8py.html#ab4de7f1616200028cc6433400caf6dcc", null ],
+    [ "Leftperiodvalue", "syntax-test_8py.html#ae7d39ec024b5ca5761125e663900ca83", null ],
+    [ "LminusR", "syntax-test_8py.html#a6c7f1b3135757be6b2205a71e9cde087", null ],
+    [ "loc", "syntax-test_8py.html#aeee9f371db14fda0de35d16324a167df", null ],
+    [ "Pilot", "syntax-test_8py.html#a0802e602a816baa79e1fc3ccbff1d081", null ],
+    [ "PilotCycles", "syntax-test_8py.html#ad344947fac9d6ad7683ca783123a5213", null ],
+    [ "PilotFreq", "syntax-test_8py.html#a77bbbbf3ff032e1a225be940cbe4db86", null ],
+    [ "Pilotperiodvalue", "syntax-test_8py.html#a9c152bd08d50f1cc81553a91a63bd204", null ],
+    [ "RecLength", "syntax-test_8py.html#a5621716cce86f7b86b5b60c875db7ada", null ],
+    [ "RightCycles", "syntax-test_8py.html#a63c88e9a3575df8bd01a0e7e36667c1a", null ],
+    [ "RightFreq", "syntax-test_8py.html#a1d5ab3ad9572498cbb81f67812c0c515", null ],
+    [ "Rightperiodvalue", "syntax-test_8py.html#a5cef7ae63e381a7e8961a7905e97a110", null ],
+    [ "Time", "syntax-test_8py.html#a80b0d67eccd8a722b335bc1c9679a2f7", null ]
+];

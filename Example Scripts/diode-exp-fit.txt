@@ -32,7 +32,7 @@ plt.plot(VBuffB[0:500], [AmA * (numpy.exp(B*x)-1) for x in VBuffB[0:500]], 'b', 
 #plt.plot(xs, [2.2e-9 * (numpy.exp(x/(2.0*0.0259))-1) for x in xs], 'r', label='Guess')
 plt.title('Exponential Diode Fit')
 plt.xlabel('Volts')
-plt.ylabel('Amps')
+plt.ylabel('mAmps')
 plt.legend(loc='best')
 plt.tight_layout()
 plt.show(block=False)

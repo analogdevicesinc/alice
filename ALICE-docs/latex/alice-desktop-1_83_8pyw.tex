@@ -412,6 +412,10 @@ def \mbox{\hyperlink{namespacealice-desktop-1_a1a703425906a9281623ed9c1a1873e7c}
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a7d1f95d2979c0310031a28e3318f61b6}{Violet\+Noise}} (N, mag)
 \item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a44939c8944cb90fcdc4777b0c08ec50b}{Fourier\+Saw\+Tooth}} (Length, Num\+Terms, Ampl)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_ad173ce9683e5e12b3d163cbca1d57a33}{Sine\+Power}} (Length, Power, Phase, Ampl)
+\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_af1d25430997d9a3ad9c0783530d43db0}{Schroeder\+Phase}} (Length, Nr\+Tones, Ampl)
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_af7ea7f91b96b979c437da58325b4feb1}{Wrap}} (In\+Array, Wr\+Factor)
@@ -1024,6 +1028,20 @@ def \mbox{\hyperlink{namespacealice-desktop-1_a7701f3d02ce7bd4ab671c2f37ed4060e}
 \begin{DoxyCompactList}\small\item\em if askyesno(\char`\"{}\+Flash Failed\char`\"{}, \char`\"{}\+Failed to update firmware.\textbackslash{}n Try again?\char`\"{})\+: try\+: session.\+flash\+\_\+firmware(filename) except\+: showwarning(\char`\"{}\+Complete\char`\"{},\char`\"{}\+Flash Firmware Complete\+: \textbackslash{}n Un-\/plug board to cycle power.\char`\"{}) \end{DoxyCompactList}\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a441258a50cf64f862126ea87d621fd97}{Destroy\+Ohm\+Screen}} ()
 \item 
+def \mbox{\hyperlink{namespacealice-desktop-1_aa99e06bef54806c4df222cce04ad8411}{Unit\+Convert}} (Value)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_ab4f9575184e2cfd3303f9a8e96229db7}{R\+Dbutton}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_acce0316d9f7a4a92d413bb4de50b9d44}{Draw\+Res}} (X, Y)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_ab212836e674fe972c02908bc88502acd}{R\+D\+Set\+A\+GO}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_ad9b9b5e7ae491cef2489b9a081501fb9}{R\+D\+Set\+B\+GO}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a47e1ea1051c6302156b8089198315c36}{Make\+Res\+Div\+Window}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a6698c5559d8f9815fd7c00fb6fbda3e1}{Destroy\+Res\+Div\+Screen}} ()
+\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a910c00bbd6b4851b873f711caec7749e}{Make\+E\+T\+S\+Window}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a2aa23751e601541988ac9fb1144199e5}{Destroy\+E\+T\+S\+Screen}} ()
@@ -1067,9 +1085,51 @@ def \mbox{\hyperlink{namespacealice-desktop-1_ad7aa73ba8aed6b7b4e4ce79a1dded044}
 def \mbox{\hyperlink{namespacealice-desktop-1_a1c6cb71d76d5ffd43de5b2015c48b6ef}{Open\+Other\+Tools}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_ac9c36e47564aa9ec1d1160ecd7e3451c}{Destroy\+O\+O\+Twindow}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_af594515a8cecd8c145b8a1ed65fd8796}{Dloger\+\_\+on\+\_\+off}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a74ec9fbadba42c60afb69c3bac07bc95}{Dloger\+Close\+\_\+out}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a3992ec1e7b4c4babb0e68b590c0a869d}{Dloger\+Open\+\_\+out}} ()
 \end{DoxyCompactItemize}
 \doxysubsection*{Variables}
 \begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{namespacealice-desktop-1_a002f49fd4cc3db3e4cc8cc27ccbef837}{R\+D\+X0L}} = 20
+\item 
+int \mbox{\hyperlink{namespacealice-desktop-1_a1bc014f740057cee6b3cb84fc55e5e46}{R\+D\+Y0T}} = 20
+\item 
+int \mbox{\hyperlink{namespacealice-desktop-1_acb4ccf20c28bea559ce7ee0648eec701}{R\+D\+G\+RW}} = 530 -\/ ( R\+D\+X0L + 230 )
+\item 
+int \mbox{\hyperlink{namespacealice-desktop-1_a95aacf0250adc16eabbc7adeab72769e}{R\+D\+G\+RH}} = 275 -\/ ( 2 $\ast$ R\+D\+Y0T )
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_af77b6d983fa81a9af0cf8d750fe99152}{R1}} = String\+Var()
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ab477549012f7889a894f39499202efdf}{R2}} = String\+Var()
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a4cd0f7e7edd2d7da3b622c0f3db9c84e}{Voff}} = String\+Var()
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a34cc5b3fe90faed36052feba865a5f1b}{V\+R2}} = String\+Var()
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a3a82dbb1aedbe7f70a0bbe30bbc34d65}{Res\+Div\+Status}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a8a711fe84c7ae4ec8604c37f1b5d10c5}{Res\+Div\+Disp}} = Int\+Var(0)
+\item 
+float \mbox{\hyperlink{namespacealice-desktop-1_a492a6561e3f4a110c6f0aae798cf9134}{Rint}} = 1000000.\+0
+\item 
+float \mbox{\hyperlink{namespacealice-desktop-1_ae8862c0fa69ebdd12f2603e2e082a7d2}{R\+Deffective}} = Rint
+\item 
+float \mbox{\hyperlink{namespacealice-desktop-1_a24269bb43f7011a0667cf8c8d7126c1c}{R\+D\+Gain}} = 1.\+0
+\item 
+float \mbox{\hyperlink{namespacealice-desktop-1_ad2f7bcd8dad152cef42dbec2043fa51a}{R\+D\+Offset}} = 0.\+0
+\item 
+float \mbox{\hyperlink{namespacealice-desktop-1_aff672de12e786f4b4da0397c8c49013c}{C\+H\+A\+Ileak}} = 0.\+0
+\item 
+float \mbox{\hyperlink{namespacealice-desktop-1_ac3b4e539ca7e37b1d168bf831886f14e}{C\+H\+B\+Ileak}} = 0.\+0
+\item 
+string \mbox{\hyperlink{namespacealice-desktop-1_ac48e5f3fe97955544edbac4d67b167f9}{C\+O\+L\+O\+Rwhite}} = \char`\"{}\#ffffff\char`\"{}
+\item 
+string \mbox{\hyperlink{namespacealice-desktop-1_a1f2343511062c3a7bf31e06f8a922ad5}{C\+O\+L\+O\+Rblack}} = \char`\"{}\#000000\char`\"{}
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_aef216dff88221eb2b6277c21ce7921cc}{Lock\+Freq}} = Int\+Var(0)
 \item 
@@ -1077,5 +1137,19 @@ list \mbox{\hyperlink{namespacealice-desktop-1_aa65af8760c0d779a3e55bebaeca99f83
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_af49a5e8f5bac34c2db901c5abe255b4c}{Phase\+I\+AB}} = \mbox{[}$\,$\mbox{]}
 \item 
+\mbox{\hyperlink{namespacealice-desktop-1_ab074d848c0953a9967bed0603bf12a36}{Dig\+De\+Skew\+VA}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ab56fd1b4a81460de118e7068216df25e}{Dig\+De\+Skew\+VB}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a2bb80e342470978d33ccbd4ece832d04}{Dig\+De\+Skew\+IA}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ac92937c5b01d0c4def69ffb168c32c5d}{Dig\+De\+Skew\+IB}} = Int\+Var(0)
+\item 
 \mbox{\hyperlink{namespacealice-desktop-1_add7d12226bc2cbc42ea79e262c384141}{Color\+Screen\+Status}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a8302104ca614f3000c9d53ade932dfb1}{dlog}} = Int\+Var()
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a240d79167aab7cc9a5254eae69ad5960}{Dlog\+\_\+open}} = Int\+Var()
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ab4b9cbdce21638e6f1b5c13b26cb0a2d}{prlab\+\_\+tip}} = Create\+Tool\+Tip(prlab, \textquotesingle{}Open Resistor Divider Gain Offset Calculator\textquotesingle{})
 \end{DoxyCompactItemize}

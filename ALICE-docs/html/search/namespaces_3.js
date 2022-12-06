@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['my_5ftest_5ffunctions_1619',['my_test_functions',['../namespacemy__test__functions.html',1,'']]]
+  ['either_2dcolor_2dchooser_2dtest_1685',['either-color-chooser-test',['../namespaceeither-color-chooser-test.html',1,'']]]
 ];

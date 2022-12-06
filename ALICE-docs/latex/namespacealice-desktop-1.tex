@@ -1053,6 +1053,10 @@ def \mbox{\hyperlink{namespacealice-desktop-1_a07d0692ca9de3f14f87b636f5ea2f2d4}
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a719a987f8050544d8e0a0d438ee50113}{Set\+Color\+Z\+Line}} ()
 \item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a44939c8944cb90fcdc4777b0c08ec50b}{Fourier\+Saw\+Tooth}} (Length, Num\+Terms, Ampl)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_ad173ce9683e5e12b3d163cbca1d57a33}{Sine\+Power}} (Length, Power, Phase, Ampl)
+\item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a560f707445f9a635fa23a1768bb60117}{A\+W\+G\+A\+Make\+Full\+Wave\+Sine}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_afe5149130b5432cd1a9744dc8bdaa820}{A\+W\+G\+A\+Make\+Half\+Wave\+Sine}} ()
@@ -1062,6 +1066,26 @@ def \mbox{\hyperlink{namespacealice-desktop-1_ac2e0e1cbeee0557e264301e187447181}
 def \mbox{\hyperlink{namespacealice-desktop-1_a77c603c3736ccd2095b9aec90387ed50}{A\+W\+G\+B\+Make\+Half\+Wave\+Sine}} ()
 \item 
 def \mbox{\hyperlink{namespacealice-desktop-1_a0f2290ff7cb136c4b39e5b7ef6568ceb}{I\+Ap\+Btoggle}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_aa99e06bef54806c4df222cce04ad8411}{Unit\+Convert}} (Value)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_ab4f9575184e2cfd3303f9a8e96229db7}{R\+Dbutton}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_acce0316d9f7a4a92d413bb4de50b9d44}{Draw\+Res}} (X, Y)
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_ab212836e674fe972c02908bc88502acd}{R\+D\+Set\+A\+GO}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_ad9b9b5e7ae491cef2489b9a081501fb9}{R\+D\+Set\+B\+GO}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a47e1ea1051c6302156b8089198315c36}{Make\+Res\+Div\+Window}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a6698c5559d8f9815fd7c00fb6fbda3e1}{Destroy\+Res\+Div\+Screen}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_af594515a8cecd8c145b8a1ed65fd8796}{Dloger\+\_\+on\+\_\+off}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a74ec9fbadba42c60afb69c3bac07bc95}{Dloger\+Close\+\_\+out}} ()
+\item 
+def \mbox{\hyperlink{namespacealice-desktop-1_a3992ec1e7b4c4babb0e68b590c0a869d}{Dloger\+Open\+\_\+out}} ()
 \end{DoxyCompactItemize}
 \doxysubsection*{Variables}
 \begin{DoxyCompactItemize}
@@ -1751,11 +1775,11 @@ dictionary \mbox{\hyperlink{namespacealice-desktop-1_a72bae6ce8ce6d3512c4e255617
 \mbox{\hyperlink{namespacealice-desktop-1_a1d97981188e8a629bf43838ac22210be}{E\+T\+S\+Dir}} = Int\+Var(0)
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_a4918fba22ccb6f42a72c0488ebd7ee73}{A\+W\+G\+Awaveform}} = \mbox{[}$\,$\mbox{]}
-\item 
+\begin{DoxyCompactList}\small\item\em Cycles = int(37500/\+A\+W\+G\+Aperiodvalue) if Cycles $<$ 1\+: Cycles = 1 if Cycles $>$ 1\+: Extend = int((Cycles-\/1.\+0)$\ast$\+A\+W\+G\+Aperiodvalue/2.0) A\+W\+G\+Awaveform = numpy.\+pad(A\+W\+G\+Awaveform, (Extend,Extend), \textquotesingle{}wrap\textquotesingle{}) \end{DoxyCompactList}\item 
 list \mbox{\hyperlink{namespacealice-desktop-1_a385442952cd61c71af073f871badb7e3}{A\+W\+G\+A2X}} = \mbox{[}$\,$\mbox{]}
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_abc9f94134ec1e75dce23adc4e9268310}{A\+W\+G\+Bwaveform}} = \mbox{[}$\,$\mbox{]}
-\item 
+\begin{DoxyCompactList}\small\item\em Cycles = int(37500/\+A\+W\+G\+Bperiodvalue) if Cycles $<$ 1\+: Cycles = 1 if Cycles $>$ 1\+: Extend = int((Cycles-\/1.\+0)$\ast$\+A\+W\+G\+Bperiodvalue/2.0) A\+W\+G\+Bwaveform = numpy.\+pad(A\+W\+G\+Bwaveform, (Extend,Extend), \textquotesingle{}wrap\textquotesingle{}) \end{DoxyCompactList}\item 
 list \mbox{\hyperlink{namespacealice-desktop-1_ab3fe385d5dcaf263c359a035e5138dbb}{A\+W\+G\+B2X}} = \mbox{[}$\,$\mbox{]}
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a099b6aa1b55506e6cf96a15075f25776}{VmemoryA}} = numpy.\+ones(1)
@@ -2425,7 +2449,7 @@ tuple \mbox{\hyperlink{namespacealice-desktop-1_a64b568878876685251d6c61858407fa
 \mbox{\hyperlink{namespacealice-desktop-1_adc159accdb28e9e844373f851d86cf44}{C\+H\+B\+Ixyofflab\+\_\+tip}} = \mbox{\hyperlink{classalice-desktop-1_1_1_create_tool_tip}{Create\+Tool\+Tip}}(\mbox{\hyperlink{namespacealice-desktop-1_ab9276e4c933e1f482df2f8a22c909a8d}{C\+H\+B\+Iofflabxy}}, \textquotesingle{}Set C\+HB-\/I position to DC average of signal\textquotesingle{})
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a594189a8d36a9aa3312c8d29e823c4ec}{Tg\+Input}} = Int\+Var(0)
-\item 
+\begin{DoxyCompactList}\small\item\em ================ Make main Screen ========================== \end{DoxyCompactList}\item 
 \mbox{\hyperlink{namespacealice-desktop-1_a19a39b5cf5625d9ad5d6c12b19ba7c80}{Single\+Shot}} = Int\+Var(0)
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a05310f18e71749a88e3e3abe84ce1145}{Manual\+Trigger}} = Int\+Var(0)
@@ -3162,13 +3186,63 @@ string \mbox{\hyperlink{namespacealice-desktop-1_aad37cbc96795846e0ee55f27d55e8a
 \item 
 \mbox{\hyperlink{namespacealice-desktop-1_a7eab1796ee96e5652081258d41fd88d2}{Board\+Status}} = Int\+Var(0)
 \item 
+int \mbox{\hyperlink{namespacealice-desktop-1_a002f49fd4cc3db3e4cc8cc27ccbef837}{R\+D\+X0L}} = 20
+\item 
+int \mbox{\hyperlink{namespacealice-desktop-1_a1bc014f740057cee6b3cb84fc55e5e46}{R\+D\+Y0T}} = 20
+\item 
+int \mbox{\hyperlink{namespacealice-desktop-1_acb4ccf20c28bea559ce7ee0648eec701}{R\+D\+G\+RW}} = 530 -\/ ( \mbox{\hyperlink{namespacealice-desktop-1_a002f49fd4cc3db3e4cc8cc27ccbef837}{R\+D\+X0L}} + 230 )
+\item 
+int \mbox{\hyperlink{namespacealice-desktop-1_a95aacf0250adc16eabbc7adeab72769e}{R\+D\+G\+RH}} = 275 -\/ ( 2 $\ast$ \mbox{\hyperlink{namespacealice-desktop-1_a1bc014f740057cee6b3cb84fc55e5e46}{R\+D\+Y0T}} )
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_af77b6d983fa81a9af0cf8d750fe99152}{R1}} = String\+Var()
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ab477549012f7889a894f39499202efdf}{R2}} = String\+Var()
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a4cd0f7e7edd2d7da3b622c0f3db9c84e}{Voff}} = String\+Var()
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a34cc5b3fe90faed36052feba865a5f1b}{V\+R2}} = String\+Var()
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a3a82dbb1aedbe7f70a0bbe30bbc34d65}{Res\+Div\+Status}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a8a711fe84c7ae4ec8604c37f1b5d10c5}{Res\+Div\+Disp}} = Int\+Var(0)
+\item 
+float \mbox{\hyperlink{namespacealice-desktop-1_a492a6561e3f4a110c6f0aae798cf9134}{Rint}} = 1000000.\+0
+\item 
+float \mbox{\hyperlink{namespacealice-desktop-1_ae8862c0fa69ebdd12f2603e2e082a7d2}{R\+Deffective}} = \mbox{\hyperlink{namespacealice-desktop-1_a492a6561e3f4a110c6f0aae798cf9134}{Rint}}
+\item 
+float \mbox{\hyperlink{namespacealice-desktop-1_a24269bb43f7011a0667cf8c8d7126c1c}{R\+D\+Gain}} = 1.\+0
+\item 
+float \mbox{\hyperlink{namespacealice-desktop-1_ad2f7bcd8dad152cef42dbec2043fa51a}{R\+D\+Offset}} = 0.\+0
+\item 
+float \mbox{\hyperlink{namespacealice-desktop-1_aff672de12e786f4b4da0397c8c49013c}{C\+H\+A\+Ileak}} = 0.\+0
+\item 
+float \mbox{\hyperlink{namespacealice-desktop-1_ac3b4e539ca7e37b1d168bf831886f14e}{C\+H\+B\+Ileak}} = 0.\+0
+\item 
+string \mbox{\hyperlink{namespacealice-desktop-1_ac48e5f3fe97955544edbac4d67b167f9}{C\+O\+L\+O\+Rwhite}} = \char`\"{}\#ffffff\char`\"{}
+\item 
+string \mbox{\hyperlink{namespacealice-desktop-1_a1f2343511062c3a7bf31e06f8a922ad5}{C\+O\+L\+O\+Rblack}} = \char`\"{}\#000000\char`\"{}
+\item 
 \mbox{\hyperlink{namespacealice-desktop-1_aef216dff88221eb2b6277c21ce7921cc}{Lock\+Freq}} = Int\+Var(0)
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_aa65af8760c0d779a3e55bebaeca99f83}{I\+A\+Bresult}} = \mbox{[}$\,$\mbox{]}
 \item 
 list \mbox{\hyperlink{namespacealice-desktop-1_af49a5e8f5bac34c2db901c5abe255b4c}{Phase\+I\+AB}} = \mbox{[}$\,$\mbox{]}
 \item 
+\mbox{\hyperlink{namespacealice-desktop-1_ab074d848c0953a9967bed0603bf12a36}{Dig\+De\+Skew\+VA}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ab56fd1b4a81460de118e7068216df25e}{Dig\+De\+Skew\+VB}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a2bb80e342470978d33ccbd4ece832d04}{Dig\+De\+Skew\+IA}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ac92937c5b01d0c4def69ffb168c32c5d}{Dig\+De\+Skew\+IB}} = Int\+Var(0)
+\item 
 \mbox{\hyperlink{namespacealice-desktop-1_add7d12226bc2cbc42ea79e262c384141}{Color\+Screen\+Status}} = Int\+Var(0)
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a8302104ca614f3000c9d53ade932dfb1}{dlog}} = Int\+Var()
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_a240d79167aab7cc9a5254eae69ad5960}{Dlog\+\_\+open}} = Int\+Var()
+\item 
+\mbox{\hyperlink{namespacealice-desktop-1_ab4b9cbdce21638e6f1b5c13b26cb0a2d}{prlab\+\_\+tip}} = \mbox{\hyperlink{classalice-desktop-1_1_1_create_tool_tip}{Create\+Tool\+Tip}}(\mbox{\hyperlink{namespacealice-desktop-1_aabf4f9e899c52d4cc6bf0a66de9b8078}{prlab}}, \textquotesingle{}Open Resistor Divider Gain Offset Calculator\textquotesingle{})
 \end{DoxyCompactItemize}
 
 
@@ -3395,7 +3469,7 @@ Definition at line 10768 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 
-Definition at line 11161 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 11273 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_afe5149130b5432cd1a9744dc8bdaa820}\label{namespacealice-desktop-1_afe5149130b5432cd1a9744dc8bdaa820}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!AWGAMakeHalfWaveSine@{AWGAMakeHalfWaveSine}}
@@ -3405,7 +3479,7 @@ Definition at line 11161 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 11223 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 11335 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a8f72c508584398b8faf7e556ecda9592}\label{namespacealice-desktop-1_a8f72c508584398b8faf7e556ecda9592}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!AWGAMakeImpulse@{AWGAMakeImpulse}}
@@ -3615,7 +3689,7 @@ Definition at line 11916 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 
-Definition at line 12579 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 12696 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a77c603c3736ccd2095b9aec90387ed50}\label{namespacealice-desktop-1_a77c603c3736ccd2095b9aec90387ed50}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!AWGBMakeHalfWaveSine@{AWGBMakeHalfWaveSine}}
@@ -3625,7 +3699,7 @@ Definition at line 12579 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 12650 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 12767 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a1be68664385875833cd0cf75a2dd5a24}\label{namespacealice-desktop-1_a1be68664385875833cd0cf75a2dd5a24}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!AWGBMakeImpulse@{AWGBMakeImpulse}}
@@ -5444,7 +5518,7 @@ Color Selector / Editor.
 
 
 
-Definition at line 2088 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2117 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a59c515b5915d4dbffc6cfd6939af9cf9}\label{namespacealice-desktop-1_a59c515b5915d4dbffc6cfd6939af9cf9}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!ConnectDevice@{ConnectDevice}}
@@ -5518,7 +5592,7 @@ Definition at line 19401 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 
-Definition at line 2163 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2192 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_ad786091ef8f9e436932f6649020e509f}\label{namespacealice-desktop-1_ad786091ef8f9e436932f6649020e509f}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!DestroyCommandScreen@{DestroyCommandScreen}}
@@ -5720,6 +5794,16 @@ Definition at line 23500 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 Definition at line 16112 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
+\mbox{\Hypertarget{namespacealice-desktop-1_a6698c5559d8f9815fd7c00fb6fbda3e1}\label{namespacealice-desktop-1_a6698c5559d8f9815fd7c00fb6fbda3e1}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!DestroyResDivScreen@{DestroyResDivScreen}}
+\index{DestroyResDivScreen@{DestroyResDivScreen}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{DestroyResDivScreen()}{DestroyResDivScreen()}}
+{\footnotesize\ttfamily def alice-\/desktop-\/1.Destroy\+Res\+Div\+Screen (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Definition at line 23679 of file alice-\/desktop-\/1.\+3.\+pyw.
+
 \mbox{\Hypertarget{namespacealice-desktop-1_ad38383af5addc148620107f1030dd6c5}\label{namespacealice-desktop-1_ad38383af5addc148620107f1030dd6c5}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!DestroySampleRate@{DestroySampleRate}}
 \index{DestroySampleRate@{DestroySampleRate}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
@@ -5808,6 +5892,36 @@ Definition at line 20954 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 Definition at line 20919 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
+\mbox{\Hypertarget{namespacealice-desktop-1_af594515a8cecd8c145b8a1ed65fd8796}\label{namespacealice-desktop-1_af594515a8cecd8c145b8a1ed65fd8796}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!Dloger\_on\_off@{Dloger\_on\_off}}
+\index{Dloger\_on\_off@{Dloger\_on\_off}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{Dloger\_on\_off()}{Dloger\_on\_off()}}
+{\footnotesize\ttfamily def alice-\/desktop-\/1.Dloger\+\_\+on\+\_\+off (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Definition at line 24605 of file alice-\/desktop-\/1.\+3.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_a74ec9fbadba42c60afb69c3bac07bc95}\label{namespacealice-desktop-1_a74ec9fbadba42c60afb69c3bac07bc95}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!DlogerClose\_out@{DlogerClose\_out}}
+\index{DlogerClose\_out@{DlogerClose\_out}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{DlogerClose\_out()}{DlogerClose\_out()}}
+{\footnotesize\ttfamily def alice-\/desktop-\/1.Dloger\+Close\+\_\+out (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Definition at line 24616 of file alice-\/desktop-\/1.\+3.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_a3992ec1e7b4c4babb0e68b590c0a869d}\label{namespacealice-desktop-1_a3992ec1e7b4c4babb0e68b590c0a869d}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!DlogerOpen\_out@{DlogerOpen\_out}}
+\index{DlogerOpen\_out@{DlogerOpen\_out}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{DlogerOpen\_out()}{DlogerOpen\_out()}}
+{\footnotesize\ttfamily def alice-\/desktop-\/1.Dloger\+Open\+\_\+out (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Definition at line 24629 of file alice-\/desktop-\/1.\+3.\+pyw.
+
 \mbox{\Hypertarget{namespacealice-desktop-1_a710cb0dfad1a671c2e57ec935e65e97e}\label{namespacealice-desktop-1_a710cb0dfad1a671c2e57ec935e65e97e}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!DoFFT@{DoFFT}}
 \index{DoFFT@{DoFFT}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
@@ -5855,6 +5969,16 @@ Another Nop.
 
 
 Definition at line 2731 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_acce0316d9f7a4a92d413bb4de50b9d44}\label{namespacealice-desktop-1_acce0316d9f7a4a92d413bb4de50b9d44}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!DrawRes@{DrawRes}}
+\index{DrawRes@{DrawRes}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{DrawRes()}{DrawRes()}}
+{\footnotesize\ttfamily def alice-\/desktop-\/1.Draw\+Res (\begin{DoxyParamCaption}\item[{}]{X,  }\item[{}]{Y }\end{DoxyParamCaption})}
+
+
+
+Definition at line 23562 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a2aef4f52fcfd75987aa2fe012bedd683}\label{namespacealice-desktop-1_a2aef4f52fcfd75987aa2fe012bedd683}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!ETSCheckBox@{ETSCheckBox}}
@@ -5924,6 +6048,16 @@ Definition at line 5523 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 Definition at line 21792 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
+\mbox{\Hypertarget{namespacealice-desktop-1_a44939c8944cb90fcdc4777b0c08ec50b}\label{namespacealice-desktop-1_a44939c8944cb90fcdc4777b0c08ec50b}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!FourierSawTooth@{FourierSawTooth}}
+\index{FourierSawTooth@{FourierSawTooth}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{FourierSawTooth()}{FourierSawTooth()}}
+{\footnotesize\ttfamily def alice-\/desktop-\/1.Fourier\+Saw\+Tooth (\begin{DoxyParamCaption}\item[{}]{Length,  }\item[{}]{Num\+Terms,  }\item[{}]{Ampl }\end{DoxyParamCaption})}
+
+
+
+Definition at line 10562 of file alice-\/desktop-\/1.\+3.\+pyw.
+
 \mbox{\Hypertarget{namespacealice-desktop-1_a2fb362203d8bfad8557d4b5d5146d891}\label{namespacealice-desktop-1_a2fb362203d8bfad8557d4b5d5146d891}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!FreqCaresize@{FreqCaresize}}
 \index{FreqCaresize@{FreqCaresize}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
@@ -5992,7 +6126,7 @@ Definition at line 3365 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 
-Definition at line 16627 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 16744 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a94c6e913ebd9a73101c00e5f4579d2ff}\label{namespacealice-desktop-1_a94c6e913ebd9a73101c00e5f4579d2ff}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!IASourceSet@{IASourceSet}}
@@ -6412,6 +6546,16 @@ Definition at line 16144 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 Definition at line 15927 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_a47e1ea1051c6302156b8089198315c36}\label{namespacealice-desktop-1_a47e1ea1051c6302156b8089198315c36}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!MakeResDivWindow@{MakeResDivWindow}}
+\index{MakeResDivWindow@{MakeResDivWindow}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{MakeResDivWindow()}{MakeResDivWindow()}}
+{\footnotesize\ttfamily def alice-\/desktop-\/1.Make\+Res\+Div\+Window (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Definition at line 23598 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_abfdbe35390da7889a498a7c43842623c}\label{namespacealice-desktop-1_abfdbe35390da7889a498a7c43842623c}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!MakeSampleRateMenu@{MakeSampleRateMenu}}
@@ -7552,6 +7696,36 @@ Definition at line 10000 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 Definition at line 17028 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
+\mbox{\Hypertarget{namespacealice-desktop-1_ab4f9575184e2cfd3303f9a8e96229db7}\label{namespacealice-desktop-1_ab4f9575184e2cfd3303f9a8e96229db7}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!RDbutton@{RDbutton}}
+\index{RDbutton@{RDbutton}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{RDbutton()}{RDbutton()}}
+{\footnotesize\ttfamily def alice-\/desktop-\/1.R\+Dbutton (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Definition at line 23534 of file alice-\/desktop-\/1.\+3.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_ab212836e674fe972c02908bc88502acd}\label{namespacealice-desktop-1_ab212836e674fe972c02908bc88502acd}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!RDSetAGO@{RDSetAGO}}
+\index{RDSetAGO@{RDSetAGO}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{RDSetAGO()}{RDSetAGO()}}
+{\footnotesize\ttfamily def alice-\/desktop-\/1.R\+D\+Set\+A\+GO (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Definition at line 23574 of file alice-\/desktop-\/1.\+3.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_ad9b9b5e7ae491cef2489b9a081501fb9}\label{namespacealice-desktop-1_ad9b9b5e7ae491cef2489b9a081501fb9}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!RDSetBGO@{RDSetBGO}}
+\index{RDSetBGO@{RDSetBGO}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{RDSetBGO()}{RDSetBGO()}}
+{\footnotesize\ttfamily def alice-\/desktop-\/1.R\+D\+Set\+B\+GO (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Definition at line 23586 of file alice-\/desktop-\/1.\+3.\+pyw.
+
 \mbox{\Hypertarget{namespacealice-desktop-1_a225ae5f1f96df86c6e7b5f235a91a627}\label{namespacealice-desktop-1_a225ae5f1f96df86c6e7b5f235a91a627}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!ReInterploateTrigger@{ReInterploateTrigger}}
 \index{ReInterploateTrigger@{ReInterploateTrigger}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
@@ -7608,7 +7782,7 @@ Definition at line 23361 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 
-Definition at line 2170 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2199 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a09c0d9200acd8c56c418dde6c2f892c3}\label{namespacealice-desktop-1_a09c0d9200acd8c56c418dde6c2f892c3}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!ReSetBGO@{ReSetBGO}}
@@ -7642,7 +7816,7 @@ Colors that can be modified Use function to reset to \char`\"{}factory\char`\"{}
 
 
 
-Definition at line 137 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 154 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a3c87589195ccce37fc2d575153d778a2}\label{namespacealice-desktop-1_a3c87589195ccce37fc2d575153d778a2}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!RExecuteFromString@{RExecuteFromString}}
@@ -7810,7 +7984,7 @@ Definition at line 18970 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 
-Definition at line 2390 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2419 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_ac0c328bdda9cfce89a596475a9b4fc93}\label{namespacealice-desktop-1_ac0c328bdda9cfce89a596475a9b4fc93}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SetColorT1@{SetColorT1}}
@@ -7820,7 +7994,7 @@ Definition at line 2390 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 2214 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2243 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_ac676dd93be167d0f04e317ca6169796b}\label{namespacealice-desktop-1_ac676dd93be167d0f04e317ca6169796b}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SetColorT2@{SetColorT2}}
@@ -7830,7 +8004,7 @@ Definition at line 2214 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 2229 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2258 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a368d2e8c949877167b760bb7d54690af}\label{namespacealice-desktop-1_a368d2e8c949877167b760bb7d54690af}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SetColorT3@{SetColorT3}}
@@ -7840,7 +8014,7 @@ Definition at line 2229 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 2244 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2273 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_ad4cae69d45722d7e7732d8a13c857db1}\label{namespacealice-desktop-1_ad4cae69d45722d7e7732d8a13c857db1}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SetColorT4@{SetColorT4}}
@@ -7850,7 +8024,7 @@ Definition at line 2244 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 2259 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2288 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_af257a2f017e75f12245ae89b8443a1c1}\label{namespacealice-desktop-1_af257a2f017e75f12245ae89b8443a1c1}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SetColorT5@{SetColorT5}}
@@ -7860,7 +8034,7 @@ Definition at line 2259 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 2274 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2303 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_af29271502845b84c605b204b43e322d1}\label{namespacealice-desktop-1_af29271502845b84c605b204b43e322d1}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SetColorT6@{SetColorT6}}
@@ -7870,7 +8044,7 @@ Definition at line 2274 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 2285 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2314 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_ae3f503d470b5b1cedefaddabf0391e25}\label{namespacealice-desktop-1_ae3f503d470b5b1cedefaddabf0391e25}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SetColorT7@{SetColorT7}}
@@ -7880,7 +8054,7 @@ Definition at line 2285 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 2299 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2328 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_abd4179e2c5591f77da082efb0b636cad}\label{namespacealice-desktop-1_abd4179e2c5591f77da082efb0b636cad}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SetColorText@{SetColorText}}
@@ -7890,7 +8064,7 @@ Definition at line 2299 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 2400 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2429 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a7fb502250aa2893a29c3c3c932c590ca}\label{namespacealice-desktop-1_a7fb502250aa2893a29c3c3c932c590ca}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SetColorTR1@{SetColorTR1}}
@@ -7900,7 +8074,7 @@ Definition at line 2400 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 2313 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2342 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_af10e681756f6fad2ea9b5089ec33b9cc}\label{namespacealice-desktop-1_af10e681756f6fad2ea9b5089ec33b9cc}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SetColorTR2@{SetColorTR2}}
@@ -7910,7 +8084,7 @@ Definition at line 2313 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 2324 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2353 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a8964e5393fbe901f4c83f97dccda6762}\label{namespacealice-desktop-1_a8964e5393fbe901f4c83f97dccda6762}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SetColorTR3@{SetColorTR3}}
@@ -7920,7 +8094,7 @@ Definition at line 2324 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 2335 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2364 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_af403b0a4d3bdcc66661895d1797931ba}\label{namespacealice-desktop-1_af403b0a4d3bdcc66661895d1797931ba}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SetColorTR4@{SetColorTR4}}
@@ -7930,7 +8104,7 @@ Definition at line 2335 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 2346 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2375 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a63af82f6822d24ff5c2dcf3fd3c2f212}\label{namespacealice-desktop-1_a63af82f6822d24ff5c2dcf3fd3c2f212}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SetColorTR5@{SetColorTR5}}
@@ -7940,7 +8114,7 @@ Definition at line 2346 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 2357 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2386 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a26bc62f1bcba1273be81c7cfc3da85ef}\label{namespacealice-desktop-1_a26bc62f1bcba1273be81c7cfc3da85ef}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SetColorTR6@{SetColorTR6}}
@@ -7950,7 +8124,7 @@ Definition at line 2357 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 2368 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2397 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a0bdd2655b4cdd67481f071898e8452c7}\label{namespacealice-desktop-1_a0bdd2655b4cdd67481f071898e8452c7}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SetColorTR7@{SetColorTR7}}
@@ -7960,7 +8134,7 @@ Definition at line 2368 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 2379 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2408 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a07d0692ca9de3f14f87b636f5ea2f2d4}\label{namespacealice-desktop-1_a07d0692ca9de3f14f87b636f5ea2f2d4}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SetColorTrig@{SetColorTrig}}
@@ -7970,7 +8144,7 @@ Definition at line 2379 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 2410 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2439 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a719a987f8050544d8e0a0d438ee50113}\label{namespacealice-desktop-1_a719a987f8050544d8e0a0d438ee50113}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SetColorZLine@{SetColorZLine}}
@@ -7980,7 +8154,7 @@ Definition at line 2410 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 
 
-Definition at line 2421 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 2450 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_ab4001d35686f345cc8f5d1898b050ab1}\label{namespacealice-desktop-1_ab4001d35686f345cc8f5d1898b050ab1}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SetDualMuxMode@{SetDualMuxMode}}
@@ -8300,6 +8474,16 @@ Definition at line 5000 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 Definition at line 4937 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
+\mbox{\Hypertarget{namespacealice-desktop-1_ad173ce9683e5e12b3d163cbca1d57a33}\label{namespacealice-desktop-1_ad173ce9683e5e12b3d163cbca1d57a33}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SinePower@{SinePower}}
+\index{SinePower@{SinePower}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{SinePower()}{SinePower()}}
+{\footnotesize\ttfamily def alice-\/desktop-\/1.Sine\+Power (\begin{DoxyParamCaption}\item[{}]{Length,  }\item[{}]{Power,  }\item[{}]{Phase,  }\item[{}]{Ampl }\end{DoxyParamCaption})}
+
+
+
+Definition at line 10578 of file alice-\/desktop-\/1.\+3.\+pyw.
+
 \mbox{\Hypertarget{namespacealice-desktop-1_abe903a6d0d89d4e1598b18da61db3ae1}\label{namespacealice-desktop-1_abe903a6d0d89d4e1598b18da61db3ae1}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!SPIShiftOut@{SPIShiftOut}}
 \index{SPIShiftOut@{SPIShiftOut}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
@@ -8427,6 +8611,16 @@ Definition at line 11682 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 Definition at line 22430 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_aa99e06bef54806c4df222cce04ad8411}\label{namespacealice-desktop-1_aa99e06bef54806c4df222cce04ad8411}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!UnitConvert@{UnitConvert}}
+\index{UnitConvert@{UnitConvert}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{UnitConvert()}{UnitConvert()}}
+{\footnotesize\ttfamily def alice-\/desktop-\/1.Unit\+Convert (\begin{DoxyParamCaption}\item[{}]{Value }\end{DoxyParamCaption})}
+
+
+
+Definition at line 23520 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a17aa75e64af9e1c4d450130d60756f74}\label{namespacealice-desktop-1_a17aa75e64af9e1c4d450130d60756f74}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!UnWrap@{UnWrap}}
@@ -9577,6 +9771,10 @@ Definition at line 454 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 
+Cycles = int(37500/\+A\+W\+G\+Aperiodvalue) if Cycles $<$ 1\+: Cycles = 1 if Cycles $>$ 1\+: Extend = int((Cycles-\/1.\+0)$\ast$\+A\+W\+G\+Aperiodvalue/2.0) A\+W\+G\+Awaveform = numpy.\+pad(A\+W\+G\+Awaveform, (Extend,Extend), \textquotesingle{}wrap\textquotesingle{}) 
+
+
+
 Definition at line 556 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_ae5988b85ea3c39bc00a402d10544d872}\label{namespacealice-desktop-1_ae5988b85ea3c39bc00a402d10544d872}} 
@@ -9884,6 +10082,10 @@ Definition at line 461 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 \index{AWGBwaveform@{AWGBwaveform}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
 \doxysubsubsection{\texorpdfstring{AWGBwaveform}{AWGBwaveform}}
 {\footnotesize\ttfamily list A\+W\+G\+Bwaveform = \mbox{[}$\,$\mbox{]}}
+
+
+
+Cycles = int(37500/\+A\+W\+G\+Bperiodvalue) if Cycles $<$ 1\+: Cycles = 1 if Cycles $>$ 1\+: Extend = int((Cycles-\/1.\+0)$\ast$\+A\+W\+G\+Bperiodvalue/2.0) A\+W\+G\+Bwaveform = numpy.\+pad(A\+W\+G\+Bwaveform, (Extend,Extend), \textquotesingle{}wrap\textquotesingle{}) 
 
 
 
@@ -10949,6 +11151,16 @@ Definition at line 24863 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 Definition at line 19952 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
+\mbox{\Hypertarget{namespacealice-desktop-1_aff672de12e786f4b4da0397c8c49013c}\label{namespacealice-desktop-1_aff672de12e786f4b4da0397c8c49013c}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!CHAIleak@{CHAIleak}}
+\index{CHAIleak@{CHAIleak}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{CHAIleak}{CHAIleak}}
+{\footnotesize\ttfamily float C\+H\+A\+Ileak = 0.\+0}
+
+
+
+Definition at line 146 of file alice-\/desktop-\/1.\+3.\+pyw.
+
 \mbox{\Hypertarget{namespacealice-desktop-1_aa3a83b99e9c760c073e8cb5b58e9931c}\label{namespacealice-desktop-1_aa3a83b99e9c760c073e8cb5b58e9931c}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!CHAIofflab@{CHAIofflab}}
 \index{CHAIofflab@{CHAIofflab}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
@@ -11519,6 +11731,16 @@ Definition at line 24864 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 Definition at line 19997 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
+\mbox{\Hypertarget{namespacealice-desktop-1_ac3b4e539ca7e37b1d168bf831886f14e}\label{namespacealice-desktop-1_ac3b4e539ca7e37b1d168bf831886f14e}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!CHBIleak@{CHBIleak}}
+\index{CHBIleak@{CHBIleak}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{CHBIleak}{CHBIleak}}
+{\footnotesize\ttfamily float C\+H\+B\+Ileak = 0.\+0}
+
+
+
+Definition at line 147 of file alice-\/desktop-\/1.\+3.\+pyw.
+
 \mbox{\Hypertarget{namespacealice-desktop-1_a75f7d07852d9effa031596975ce9e8cf}\label{namespacealice-desktop-1_a75f7d07852d9effa031596975ce9e8cf}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!CHBIofflab@{CHBIofflab}}
 \index{CHBIofflab@{CHBIofflab}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
@@ -12057,6 +12279,16 @@ Definition at line 24176 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 Definition at line 161 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
+\mbox{\Hypertarget{namespacealice-desktop-1_a1f2343511062c3a7bf31e06f8a922ad5}\label{namespacealice-desktop-1_a1f2343511062c3a7bf31e06f8a922ad5}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!COLORblack@{COLORblack}}
+\index{COLORblack@{COLORblack}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{COLORblack}{COLORblack}}
+{\footnotesize\ttfamily string C\+O\+L\+O\+Rblack = \char`\"{}\#000000\char`\"{}}
+
+
+
+Definition at line 184 of file alice-\/desktop-\/1.\+3.\+pyw.
+
 \mbox{\Hypertarget{namespacealice-desktop-1_ad2aefe7cb02e5347daea684fb3b22090}\label{namespacealice-desktop-1_ad2aefe7cb02e5347daea684fb3b22090}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!COLORcanvas@{COLORcanvas}}
 \index{COLORcanvas@{COLORcanvas}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
@@ -12109,7 +12341,7 @@ Definition at line 162 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 
-Definition at line 797 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 826 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_ac5b3933bf695755e98c904bcf3c5130c}\label{namespacealice-desktop-1_ac5b3933bf695755e98c904bcf3c5130c}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!COLORsignalband@{COLORsignalband}}
@@ -12280,6 +12512,16 @@ Definition at line 152 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 Definition at line 154 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_ac48e5f3fe97955544edbac4d67b167f9}\label{namespacealice-desktop-1_ac48e5f3fe97955544edbac4d67b167f9}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!COLORwhite@{COLORwhite}}
+\index{COLORwhite@{COLORwhite}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{COLORwhite}{COLORwhite}}
+{\footnotesize\ttfamily string C\+O\+L\+O\+Rwhite = \char`\"{}\#ffffff\char`\"{}}
+
+
+
+Definition at line 183 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a1c00dcf6e93572440fd681ab527125a3}\label{namespacealice-desktop-1_a1c00dcf6e93572440fd681ab527125a3}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!COLORzeroline@{COLORzeroline}}
@@ -12779,6 +13021,46 @@ Definition at line 535 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 Definition at line 536 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
+\mbox{\Hypertarget{namespacealice-desktop-1_a2bb80e342470978d33ccbd4ece832d04}\label{namespacealice-desktop-1_a2bb80e342470978d33ccbd4ece832d04}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!DigDeSkewIA@{DigDeSkewIA}}
+\index{DigDeSkewIA@{DigDeSkewIA}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{DigDeSkewIA}{DigDeSkewIA}}
+{\footnotesize\ttfamily Dig\+De\+Skew\+IA = Int\+Var(0)}
+
+
+
+Definition at line 577 of file alice-\/desktop-\/1.\+3.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_ac92937c5b01d0c4def69ffb168c32c5d}\label{namespacealice-desktop-1_ac92937c5b01d0c4def69ffb168c32c5d}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!DigDeSkewIB@{DigDeSkewIB}}
+\index{DigDeSkewIB@{DigDeSkewIB}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{DigDeSkewIB}{DigDeSkewIB}}
+{\footnotesize\ttfamily Dig\+De\+Skew\+IB = Int\+Var(0)}
+
+
+
+Definition at line 578 of file alice-\/desktop-\/1.\+3.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_ab074d848c0953a9967bed0603bf12a36}\label{namespacealice-desktop-1_ab074d848c0953a9967bed0603bf12a36}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!DigDeSkewVA@{DigDeSkewVA}}
+\index{DigDeSkewVA@{DigDeSkewVA}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{DigDeSkewVA}{DigDeSkewVA}}
+{\footnotesize\ttfamily Dig\+De\+Skew\+VA = Int\+Var(0)}
+
+
+
+Definition at line 575 of file alice-\/desktop-\/1.\+3.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_ab56fd1b4a81460de118e7068216df25e}\label{namespacealice-desktop-1_ab56fd1b4a81460de118e7068216df25e}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!DigDeSkewVB@{DigDeSkewVB}}
+\index{DigDeSkewVB@{DigDeSkewVB}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{DigDeSkewVB}{DigDeSkewVB}}
+{\footnotesize\ttfamily Dig\+De\+Skew\+VB = Int\+Var(0)}
+
+
+
+Definition at line 576 of file alice-\/desktop-\/1.\+3.\+pyw.
+
 \mbox{\Hypertarget{namespacealice-desktop-1_a2a5e19d99fc30ea93e98d7c372c4d2aa}\label{namespacealice-desktop-1_a2a5e19d99fc30ea93e98d7c372c4d2aa}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!DigFiltA@{DigFiltA}}
 \index{DigFiltA@{DigFiltA}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
@@ -12936,6 +13218,26 @@ Definition at line 725 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 Definition at line 184 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_a8302104ca614f3000c9d53ade932dfb1}\label{namespacealice-desktop-1_a8302104ca614f3000c9d53ade932dfb1}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!dlog@{dlog}}
+\index{dlog@{dlog}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{dlog}{dlog}}
+{\footnotesize\ttfamily dlog = Int\+Var()}
+
+
+
+Definition at line 24818 of file alice-\/desktop-\/1.\+3.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_a240d79167aab7cc9a5254eae69ad5960}\label{namespacealice-desktop-1_a240d79167aab7cc9a5254eae69ad5960}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!Dlog\_open@{Dlog\_open}}
+\index{Dlog\_open@{Dlog\_open}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{Dlog\_open}{Dlog\_open}}
+{\footnotesize\ttfamily Dlog\+\_\+open = Int\+Var()}
+
+
+
+Definition at line 24820 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a53ac671de77e2a34f757ecd1d3bc6d32}\label{namespacealice-desktop-1_a53ac671de77e2a34f757ecd1d3bc6d32}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!dropmenu@{dropmenu}}
@@ -14339,7 +14641,7 @@ Definition at line 726 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 
-Definition at line 536 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 563 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a50b9f363b5d454b92bcf6575ab96dd86}\label{namespacealice-desktop-1_a50b9f363b5d454b92bcf6575ab96dd86}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!IADisp@{IADisp}}
@@ -14689,7 +14991,7 @@ Definition at line 170 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 
-Definition at line 276 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 295 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a4a09ca97a0b39816294aa85f6210443c}\label{namespacealice-desktop-1_a4a09ca97a0b39816294aa85f6210443c}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!logo@{logo}}
@@ -16193,7 +16495,7 @@ Definition at line 525 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 
-Definition at line 539 of file alice-\/desktop-\/1.\+3.\+pyw.
+Definition at line 566 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_acd78ab1e79871ca43c801d4a8b4e5bc5}\label{namespacealice-desktop-1_acd78ab1e79871ca43c801d4a8b4e5bc5}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!PhaseIB@{PhaseIB}}
@@ -16389,6 +16691,16 @@ Definition at line 676 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 Definition at line 24572 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
+\mbox{\Hypertarget{namespacealice-desktop-1_ab4b9cbdce21638e6f1b5c13b26cb0a2d}\label{namespacealice-desktop-1_ab4b9cbdce21638e6f1b5c13b26cb0a2d}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!prlab\_tip@{prlab\_tip}}
+\index{prlab\_tip@{prlab\_tip}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{prlab\_tip}{prlab\_tip}}
+{\footnotesize\ttfamily prlab\+\_\+tip = \mbox{\hyperlink{classalice-desktop-1_1_1_create_tool_tip}{Create\+Tool\+Tip}}(\mbox{\hyperlink{namespacealice-desktop-1_aabf4f9e899c52d4cc6bf0a66de9b8078}{prlab}}, \textquotesingle{}Open Resistor Divider Gain Offset Calculator\textquotesingle{})}
+
+
+
+Definition at line 26032 of file alice-\/desktop-\/1.\+3.\+pyw.
+
 \mbox{\Hypertarget{namespacealice-desktop-1_a72407aa67bde36ee4bb2be87880cd627}\label{namespacealice-desktop-1_a72407aa67bde36ee4bb2be87880cd627}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!ProbeA@{ProbeA}}
 \index{ProbeA@{ProbeA}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
@@ -16459,6 +16771,26 @@ Definition at line 23902 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 Definition at line 67 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
+\mbox{\Hypertarget{namespacealice-desktop-1_af77b6d983fa81a9af0cf8d750fe99152}\label{namespacealice-desktop-1_af77b6d983fa81a9af0cf8d750fe99152}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!R1@{R1}}
+\index{R1@{R1}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{R1}{R1}}
+{\footnotesize\ttfamily R1 = String\+Var()}
+
+
+
+Definition at line 136 of file alice-\/desktop-\/1.\+3.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_ab477549012f7889a894f39499202efdf}\label{namespacealice-desktop-1_ab477549012f7889a894f39499202efdf}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!R2@{R2}}
+\index{R2@{R2}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{R2}{R2}}
+{\footnotesize\ttfamily R2 = String\+Var()}
+
+
+
+Definition at line 137 of file alice-\/desktop-\/1.\+3.\+pyw.
+
 \mbox{\Hypertarget{namespacealice-desktop-1_a15a998dcb13715cc573683dc3a957f5b}\label{namespacealice-desktop-1_a15a998dcb13715cc573683dc3a957f5b}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!rb\_tip@{rb\_tip}}
 \index{rb\_tip@{rb\_tip}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
@@ -16468,6 +16800,76 @@ Definition at line 67 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 Definition at line 19720 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_ae8862c0fa69ebdd12f2603e2e082a7d2}\label{namespacealice-desktop-1_ae8862c0fa69ebdd12f2603e2e082a7d2}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!RDeffective@{RDeffective}}
+\index{RDeffective@{RDeffective}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{RDeffective}{RDeffective}}
+{\footnotesize\ttfamily float R\+Deffective = \mbox{\hyperlink{namespacealice-desktop-1_a492a6561e3f4a110c6f0aae798cf9134}{Rint}}}
+
+
+
+Definition at line 143 of file alice-\/desktop-\/1.\+3.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_a24269bb43f7011a0667cf8c8d7126c1c}\label{namespacealice-desktop-1_a24269bb43f7011a0667cf8c8d7126c1c}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!RDGain@{RDGain}}
+\index{RDGain@{RDGain}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{RDGain}{RDGain}}
+{\footnotesize\ttfamily float R\+D\+Gain = 1.\+0}
+
+
+
+Definition at line 144 of file alice-\/desktop-\/1.\+3.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_a95aacf0250adc16eabbc7adeab72769e}\label{namespacealice-desktop-1_a95aacf0250adc16eabbc7adeab72769e}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!RDGRH@{RDGRH}}
+\index{RDGRH@{RDGRH}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{RDGRH}{RDGRH}}
+{\footnotesize\ttfamily int R\+D\+G\+RH = 275 -\/ ( 2 $\ast$ \mbox{\hyperlink{namespacealice-desktop-1_a1bc014f740057cee6b3cb84fc55e5e46}{R\+D\+Y0T}} )}
+
+
+
+Definition at line 135 of file alice-\/desktop-\/1.\+3.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_acb4ccf20c28bea559ce7ee0648eec701}\label{namespacealice-desktop-1_acb4ccf20c28bea559ce7ee0648eec701}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!RDGRW@{RDGRW}}
+\index{RDGRW@{RDGRW}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{RDGRW}{RDGRW}}
+{\footnotesize\ttfamily int R\+D\+G\+RW = 530 -\/ ( \mbox{\hyperlink{namespacealice-desktop-1_a002f49fd4cc3db3e4cc8cc27ccbef837}{R\+D\+X0L}} + 230 )}
+
+
+
+Definition at line 134 of file alice-\/desktop-\/1.\+3.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_ad2f7bcd8dad152cef42dbec2043fa51a}\label{namespacealice-desktop-1_ad2f7bcd8dad152cef42dbec2043fa51a}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!RDOffset@{RDOffset}}
+\index{RDOffset@{RDOffset}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{RDOffset}{RDOffset}}
+{\footnotesize\ttfamily float R\+D\+Offset = 0.\+0}
+
+
+
+Definition at line 145 of file alice-\/desktop-\/1.\+3.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_a002f49fd4cc3db3e4cc8cc27ccbef837}\label{namespacealice-desktop-1_a002f49fd4cc3db3e4cc8cc27ccbef837}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!RDX0L@{RDX0L}}
+\index{RDX0L@{RDX0L}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{RDX0L}{RDX0L}}
+{\footnotesize\ttfamily int R\+D\+X0L = 20}
+
+
+
+Definition at line 132 of file alice-\/desktop-\/1.\+3.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_a1bc014f740057cee6b3cb84fc55e5e46}\label{namespacealice-desktop-1_a1bc014f740057cee6b3cb84fc55e5e46}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!RDY0T@{RDY0T}}
+\index{RDY0T@{RDY0T}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{RDY0T}{RDY0T}}
+{\footnotesize\ttfamily int R\+D\+Y0T = 20}
+
+
+
+Definition at line 133 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a0308edb8ed3b0758735d9aeaf798ad7c}\label{namespacealice-desktop-1_a0308edb8ed3b0758735d9aeaf798ad7c}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!RefIAAngline@{RefIAAngline}}
@@ -16549,6 +16951,26 @@ Definition at line 289 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 Definition at line 288 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
+\mbox{\Hypertarget{namespacealice-desktop-1_a8a711fe84c7ae4ec8604c37f1b5d10c5}\label{namespacealice-desktop-1_a8a711fe84c7ae4ec8604c37f1b5d10c5}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!ResDivDisp@{ResDivDisp}}
+\index{ResDivDisp@{ResDivDisp}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{ResDivDisp}{ResDivDisp}}
+{\footnotesize\ttfamily Res\+Div\+Disp = Int\+Var(0)}
+
+
+
+Definition at line 141 of file alice-\/desktop-\/1.\+3.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_a3a82dbb1aedbe7f70a0bbe30bbc34d65}\label{namespacealice-desktop-1_a3a82dbb1aedbe7f70a0bbe30bbc34d65}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!ResDivStatus@{ResDivStatus}}
+\index{ResDivStatus@{ResDivStatus}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{ResDivStatus}{ResDivStatus}}
+{\footnotesize\ttfamily Res\+Div\+Status = Int\+Var(0)}
+
+
+
+Definition at line 140 of file alice-\/desktop-\/1.\+3.\+pyw.
+
 \mbox{\Hypertarget{namespacealice-desktop-1_a2998500fc21ab74e576842b8a80dd73a}\label{namespacealice-desktop-1_a2998500fc21ab74e576842b8a80dd73a}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!Reset\_Freq@{Reset\_Freq}}
 \index{Reset\_Freq@{Reset\_Freq}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
@@ -16588,6 +17010,16 @@ Definition at line 74 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 Definition at line 23775 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_a492a6561e3f4a110c6f0aae798cf9134}\label{namespacealice-desktop-1_a492a6561e3f4a110c6f0aae798cf9134}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!Rint@{Rint}}
+\index{Rint@{Rint}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{Rint}{Rint}}
+{\footnotesize\ttfamily float Rint = 1000000.\+0}
+
+
+
+Definition at line 142 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a244a2fc081fe2fa74cb31c57a066616c}\label{namespacealice-desktop-1_a244a2fc081fe2fa74cb31c57a066616c}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!Roll\_Mode@{Roll\_Mode}}
@@ -18142,6 +18574,10 @@ Definition at line 23513 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 
+================ Make main Screen ========================== 
+
+
+
 Definition at line 23508 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_a78bfe34badc6180444d15a1412da40a8}\label{namespacealice-desktop-1_a78bfe34badc6180444d15a1412da40a8}} 
@@ -18989,6 +19425,26 @@ Definition at line 508 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
 
 
 Definition at line 509 of file alice-\/desktop-\/1.\+3-\/linux-\/test.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_a4cd0f7e7edd2d7da3b622c0f3db9c84e}\label{namespacealice-desktop-1_a4cd0f7e7edd2d7da3b622c0f3db9c84e}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!Voff@{Voff}}
+\index{Voff@{Voff}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{Voff}{Voff}}
+{\footnotesize\ttfamily Voff = String\+Var()}
+
+
+
+Definition at line 138 of file alice-\/desktop-\/1.\+3.\+pyw.
+
+\mbox{\Hypertarget{namespacealice-desktop-1_a34cc5b3fe90faed36052feba865a5f1b}\label{namespacealice-desktop-1_a34cc5b3fe90faed36052feba865a5f1b}} 
+\index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!VR2@{VR2}}
+\index{VR2@{VR2}!alice-\/desktop-\/1@{alice-\/desktop-\/1}}
+\doxysubsubsection{\texorpdfstring{VR2}{VR2}}
+{\footnotesize\ttfamily V\+R2 = String\+Var()}
+
+
+
+Definition at line 139 of file alice-\/desktop-\/1.\+3.\+pyw.
 
 \mbox{\Hypertarget{namespacealice-desktop-1_aeaf955c03eb04601d19d8b8720d63e32}\label{namespacealice-desktop-1_aeaf955c03eb04601d19d8b8720d63e32}} 
 \index{alice-\/desktop-\/1@{alice-\/desktop-\/1}!VUnAvgA@{VUnAvgA}}
